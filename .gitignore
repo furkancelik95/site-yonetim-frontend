@@ -10,3 +10,5 @@ coverage/
 .idea/
 .vs/
 *.user
+
+.env.local
