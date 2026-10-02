@@ -12,3 +12,4 @@ coverage/
 *.user
 
 .env.local
+*.tsbuildinfo

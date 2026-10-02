@@ -1,0 +1,118 @@
+/* Referans app.css'e eklenenler. Yalnız belirteç (CSS değişkeni) kullanılır, ham renk yok. */
+
+/* --- Dar ekranda menü: referansta 1024px altında kenar çubuğu tamamen gizleniyordu ------ */
+.topbar__menu { display: none; }
+
+@media (max-width: 1024px) {
+  .topbar__menu { display: inline-flex; }
+  .shell[data-nav-open="true"] .sidebar {
+    display: flex;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(17rem, 85vw);
+    height: 100dvh;
+    z-index: 40;
+    box-shadow: var(--shadow-lg);
+    animation: nav-in var(--dur) var(--ease);
+  }
+  .nav-scrim {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgb(15 23 42 / .45);
+    border: 0; padding: 0; cursor: pointer;
+  }
+}
+@keyframes nav-in { from { transform: translateX(-100%); } to { transform: none; } }
+
+/* Referansta en dar sütun 400px/300px sabitti; telefonda ekrandan taşıyordu. */
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); }
+.grid--sites { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+
+/* --- Yükleniyor ------------------------------------------------------------------------ */
+.spinner {
+  width: 1.1rem; height: 1.1rem; flex: none;
+  border: 2px solid var(--line-strong); border-top-color: var(--accent);
+  border-radius: var(--r-full);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading {
+  display: flex; align-items: center; justify-content: center; gap: var(--s-3);
+  min-height: 12rem; color: var(--fg-muted); font-size: .875rem;
+}
+
+.skeleton {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--bg-sunken) 25%, var(--bg-inset) 50%, var(--bg-sunken) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.btn[aria-busy="true"] { cursor: progress; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* --- Onay penceresi (<dialog>) ------------------------------------------------------- */
+.dialog {
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 0; width: min(28rem, calc(100vw - 2rem));
+  background: var(--bg-raised); color: var(--fg);
+  box-shadow: var(--shadow-lg);
+}
+.dialog::backdrop { background: rgb(15 23 42 / .5); }
+.dialog__body { padding: var(--s-5); display: grid; gap: var(--s-3); }
+.dialog__title { font-size: 1.0625rem; font-weight: 600; margin: 0; }
+.dialog__foot {
+  display: flex; justify-content: flex-end; gap: var(--s-2); flex-wrap: wrap;
+  padding: var(--s-3) var(--s-5); background: var(--bg-inset);
+  border-top: 1px solid var(--line); border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+/* --- Bildirim (işlem sonucu) --------------------------------------------------------- */
+.toast-region {
+  position: fixed; z-index: 50; right: var(--s-4); bottom: var(--s-4);
+  display: grid; gap: var(--s-2); width: min(24rem, calc(100vw - 2rem));
+}
+@media (max-width: 760px) {
+  .toast-region { bottom: calc(var(--tabbar-h) + var(--s-3) + env(safe-area-inset-bottom)); left: var(--s-4); right: var(--s-4); width: auto; }
+}
+.toast-region .alert { box-shadow: var(--shadow-md); animation: toast-in var(--dur) var(--ease); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* --- Sayfa başlığı -------------------------------------------------------------------- */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+.page-head h1 { margin: 0; }
+.page-head__actions { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+
+/* --- Filtre çubuğu -------------------------------------------------------------------- */
+.filters { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: flex-end; }
+.filters .field { min-width: 10rem; }
+@media (max-width: 640px) { .filters .field { flex: 1 1 100%; } }
+
+/* Parola göster/gizle */
+.field__wrap { position: relative; display: grid; }
+.field__wrap .field__input { width: 100%; }
+
+/* Sayfa değişince odak programla ana içeriğe taşınır; orada çerçeve gösterilmez. */
+main[tabindex="-1"]:focus { outline: none; }
+.field__wrap .field__input { padding-right: 3rem; }
+.field__toggle {
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  min-width: 44px; min-height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: none; color: var(--fg-muted); cursor: pointer; border-radius: var(--r-sm);
+}
+.field__toggle:hover { color: var(--fg); }
+.field__input[aria-invalid="true"] { border-color: var(--danger-solid); }
+
+/* Sakin alt menüsü: referans 4 sütuna sabitti; sekme sayısı kadar sütun (Giderler eklendi) */
+.tabbar { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding-bottom: env(safe-area-inset-bottom); }
+
+/* Tutar ve tarih ikiye bölünmesin ("9.626,11" / "₺"); tablo gerekirse kendi kabında kayar. */
+span.num, td.num, .nowrap { white-space: nowrap; }
+
+/* Dar ekranda ikincil sütun gizlenir (bilgi başka yerde de var) */
+@media (max-width: 640px) { .hide-sm { display: none; } }
+
+/* Lucide ikonları satır içinde hizalı dursun */
+.lucide { flex: none; stroke-width: 1.75; }

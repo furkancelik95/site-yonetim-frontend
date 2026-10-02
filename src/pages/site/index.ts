@@ -1,0 +1,21 @@
+// Yönetim paneli ekranları tek parça olarak (sakin ve platformdan ayrı) yüklenir.
+export { AnnouncementsPage } from "./AnnouncementsPage";
+export { AuditPage } from "./AuditPage";
+export { BudgetPage } from "./BudgetPage";
+export { CashPage } from "./CashPage";
+export { CashStatementPage } from "./CashStatementPage";
+export { ChargesPage } from "./ChargesPage";
+export { DashboardPage } from "./DashboardPage";
+export { DebtorsPage } from "./DebtorsPage";
+export { ExpensesPage } from "./ExpensesPage";
+export { ImportPage } from "./ImportPage";
+export { LedgerPage } from "./LedgerPage";
+export { ModulesPage } from "./ModulesPage";
+export { NewExpensePage } from "./NewExpensePage";
+export { PaymentsPage } from "./PaymentsPage";
+export { ReportsPage } from "./ReportsPage";
+export { RequestDetailPage } from "./RequestDetailPage";
+export { RequestsPage } from "./RequestsPage";
+export { SecurityPage } from "./SecurityPage";
+export { UnitDetailPage } from "./UnitDetailPage";
+export { UnitsPage } from "./UnitsPage";

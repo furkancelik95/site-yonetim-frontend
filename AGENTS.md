@@ -25,9 +25,11 @@ ve platform paneli burada. Tüm veri **backend API**'sinden gelir; bu repo iş k
 | Çatı | **React 19 + Vite + TypeScript** (strict) |
 | Yönlendirme | React Router |
 | Sunucu verisi | **TanStack Query** — önbellek, yükleniyor/hata durumları, yeniden deneme |
-| API tipleri | Backend'in OpenAPI şemasından **üretilir** (`openapi-typescript`). Elle tip yazma |
-| Sahte API | **MSW** (Mock Service Worker) — backend hazır olmadan ekran yapılır |
-| Stil | Tasarım belirteçleri CSS değişkeni olarak (`docs/02-tasarim-sistemi.md`); bileşen stilleri CSS Modules |
+| API tipleri | Backend'in OpenAPI şemasından **üretilir** (`openapi-typescript` → `src/api/schema.d.ts`). Elle tip yazma; kısa adlar `src/api/types.ts` |
+| Sahte API | **MSW**, yalnız henüz yazılmamış bir uç için. Şu an bütün uçlar hazır, MSW kurulu değil |
+| Stil | Referans CSS olduğu gibi `src/styles/app.css`; eklemeler `src/styles/extra.css` (yalnız belirteç, ham renk yok) |
+| Yazı tipi | `@fontsource` paketi — Google Fonts'a istek gitmez (KVKK: ziyaretçi IP'si yurt dışına gitmesin) |
+| TypeScript | **5.9'a sabit** — `openapi-typescript` TS 7 derleyici API'siyle çalışmıyor |
 | Ondalık | `decimal.js` (para hesabı gerekirse) |
 | HTML temizleme | `DOMPurify` — `dangerouslySetInnerHTML` yalnız bununla |
 | Test | Vitest + Testing Library; kritik akışlar için Playwright |
@@ -66,6 +68,22 @@ ve platform paneli burada. Tüm veri **backend API**'sinden gelir; bu repo iş k
 9. **Hata mesajı alanın altında.** Backend `422` + `fields` dönerse her mesajı ilgili alanın
    altına yaz. Genel hata üstte, `role="alert"`.
 10. **Emoji ikon olarak kullanılmaz.** Tek SVG ikon ailesi (Lucide).
+
+## Kod kalıpları (yeni ekran yazarken bunları kullan)
+
+| İhtiyaç | Kullan |
+|---|---|
+| Sitenin altındaki bir kaynağı okumak | `useSiteGet<T>("/debtors", { page })` (`src/api/hooks.ts`) |
+| Siteye yazmak | `useSiteMutation("POST", "/payments", { money: true })` — mesajı bildirim olarak gösterir, önbelleği tazeler; `money` → Idempotency-Key |
+| İzin / modül kontrolü | `const { can, shows } = useSite(); can(P.financeRead); shows(M.requests, P.requestsRead)` |
+| Sayfa ve filtre | `useUrlState({ q: "", page: "1" })` — adreste durur, geri tuşu çalışır |
+| Yükleniyor/hata/403/404 | `<Loading />`, `<ErrorState error={…} />` (403 ve 404'ü kendisi ayırır) |
+| Geri alınamaz işlem | `<ConfirmButton title body onConfirm>` |
+| Form alanı | `<Field label error hint>{(p) => <input {...p} />}</Field>` — etiket, aria, hata bağlı gelir |
+| Bölüm seçmek | `<UnitPicker>` — açılır liste değil arama (binlerce bölüm olabilir); güvenlik için `source="lookup"` |
+| Para girişi | `parseMoneyInput("1.234,56")` → `"1234.56"`; göstermek için `formatMoney` / `<Money>` |
+| Kod → Türkçe | `src/lib/labels.ts` |
+| Excel indirmek | `<ExcelButton path query fileName>` (yetkili istekle indirir) |
 
 ## Doküman haritası
 
