@@ -26,7 +26,7 @@ ve platform paneli burada. Tüm veri **backend API**'sinden gelir; bu repo iş k
 | Yönlendirme | React Router |
 | Sunucu verisi | **TanStack Query** — önbellek, yükleniyor/hata durumları, yeniden deneme |
 | API tipleri | Backend'in OpenAPI şemasından **üretilir** (`openapi-typescript` → `src/api/schema.d.ts`). Elle tip yazma; kısa adlar `src/api/types.ts` |
-| Sahte API | **MSW**, yalnız henüz yazılmamış bir uç için. Şu an bütün uçlar hazır, MSW kurulu değil |
+| Sahte API | **MSW** (`src/mocks/handlers.ts`), yalnız henüz yazılmamış uçlar; diğer istekler gerçek backend'e gider. Hangi uçların sahte olduğu: `docs/servis-istekleri/README.md`. Kapatmak: `.env.local` → `VITE_USE_MOCKS=false` |
 | Stil | Referans CSS olduğu gibi `src/styles/app.css`; eklemeler `src/styles/extra.css` (yalnız belirteç, ham renk yok) |
 | Yazı tipi | `@fontsource` paketi — Google Fonts'a istek gitmez (KVKK: ziyaretçi IP'si yurt dışına gitmesin) |
 | TypeScript | **5.9'a sabit** — `openapi-typescript` TS 7 derleyici API'siyle çalışmıyor |

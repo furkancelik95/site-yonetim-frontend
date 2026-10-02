@@ -7,6 +7,7 @@ import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/fo
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, allocationKind, ledgerSource, paymentMethod } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { AccountActions } from "./AccountActions";
 
 export function LedgerPage() {
   const { accountId = "" } = useParams();
@@ -38,6 +39,7 @@ export function LedgerPage() {
       </div>
 
       {can(P.paymentRecord) && !a.is_closed && <PaymentForm accountId={a.id} balance={a.balance} />}
+      {!a.is_closed && <AccountActions accountId={a.id} balance={a.balance} />}
 
       {last_charge && last_charge.lines.length > 0 && (
         <details className="card">
@@ -112,6 +114,7 @@ export function LedgerPage() {
 
 /** Tahsilat girişi. Tutar en eski borçtan başlayarak kapatılır (backend docs/04 §5.1). */
 function PaymentForm({ accountId, balance }: { accountId: string; balance: string }) {
+  const { site } = useSite();
   const cash = useSiteGet<CashAccounts>("/cash-accounts");
   const accounts = cash.data?.items.filter((c) => c.is_active) ?? [];
   const [f, setF] = useState({ amount: Number(balance) > 0 ? formatMoney(balance, false) : "", date: todayIso(), method: "bank_transfer", cash_account_id: "", reference: "", note: "" });
@@ -184,7 +187,8 @@ function PaymentForm({ accountId, balance }: { accountId: string; balance: strin
         {m.data && (
           <p className="small muted mb-0" role="status">
             Son tahsilat: {formatMoney(m.data.data.applied)} borca sayıldı
-            {Number(m.data.data.unapplied) > 0 && <>, {formatMoney(m.data.data.unapplied)} avans olarak kaldı</>}. Yeni bakiye {formatMoney(m.data.data.balance)}.
+            {Number(m.data.data.unapplied) > 0 && <>, {formatMoney(m.data.data.unapplied)} avans olarak kaldı</>}. Yeni bakiye {formatMoney(m.data.data.balance)}.{" "}
+            <Link to={`/s/${site.slug}/makbuz/${m.data.data.payment.id}`}>Makbuzu aç</Link>
           </p>
         )}
       </div>

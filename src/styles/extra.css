@@ -114,5 +114,33 @@ span.num, td.num, .nowrap { white-space: nowrap; }
 /* Dar ekranda ikincil sütun gizlenir (bilgi başka yerde de var) */
 @media (max-width: 640px) { .hide-sm { display: none; } }
 
+/* Talep panosu (kanban): dar ekranda sütunlar yatay kayar, sayfa kaymaz */
+.board {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(16rem, 1fr);
+  gap: var(--s-3); overflow-x: auto; padding-bottom: var(--s-2);
+}
+.board__col {
+  background: var(--bg-sunken); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: var(--s-3); min-height: 14rem; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.board__col--over { border-color: var(--accent); background: var(--accent-soft); }
+.board__head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: .875rem; margin-bottom: var(--s-3); }
+.board__count { font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+.board__cards { display: grid; gap: var(--s-2); }
+.board__card {
+  background: var(--bg-raised); border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
+  border-radius: var(--r-md); padding: var(--s-3); box-shadow: var(--shadow-sm); cursor: grab;
+}
+.board__card--urgent { border-left-color: var(--danger-solid); }
+.board__card:active { cursor: grabbing; }
+.board__move { font-size: .75rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-raised); color: var(--fg-muted); min-height: 32px; padding: 0 var(--s-1); cursor: pointer; }
+
+/* Yazdırılabilir belge (makbuz, borçsuzluk belgesi): yazdırırken yalnız belge çıkar */
+@media print {
+  .print-hide, .skip-link, .toast-region, .alert { display: none !important; }
+  .doc-print { border: 0; box-shadow: none; }
+  body { background: #fff; }
+}
+
 /* Lucide ikonları satır içinde hizalı dursun */
 .lucide { flex: none; stroke-width: 1.75; }
