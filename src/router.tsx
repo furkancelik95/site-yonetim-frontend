@@ -1,58 +1,57 @@
-import type { ReactElement } from "react";
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { createBrowserRouter, Outlet } from "react-router";
 import { ToastProvider } from "./components/toast";
-import { NotFound } from "./components/ui";
+import { Loading, NotFound } from "./components/ui";
 import { PlatformLayout, RequireAuth, RootIndex, SiteLayout } from "./layouts/guards";
 import { ResidentLayout } from "./layouts/ResidentLayout";
-import { ResidentAnnouncementsPage, ResidentExpensesPage, ResidentHomePage, ResidentRequestsPage, ResidentStatementPage } from "./pages/resident/ResidentPages";
-import { ComingSoon } from "./pages/ComingSoon";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
-import { AnnouncementsPage } from "./pages/site/AnnouncementsPage";
-import { AuditPage } from "./pages/site/AuditPage";
-import { BudgetPage } from "./pages/site/BudgetPage";
-import { CashPage } from "./pages/site/CashPage";
-import { CashStatementPage } from "./pages/site/CashStatementPage";
-import { ChargesPage } from "./pages/site/ChargesPage";
-import { DashboardPage } from "./pages/site/DashboardPage";
-import { DebtorsPage } from "./pages/site/DebtorsPage";
-import { ExpensesPage } from "./pages/site/ExpensesPage";
-import { ImportPage } from "./pages/site/ImportPage";
-import { LedgerPage } from "./pages/site/LedgerPage";
-import { ModulesPage } from "./pages/site/ModulesPage";
-import { NewExpensePage } from "./pages/site/NewExpensePage";
-import { PaymentsPage } from "./pages/site/PaymentsPage";
-import { ReportsPage } from "./pages/site/ReportsPage";
-import { RequestDetailPage } from "./pages/site/RequestDetailPage";
-import { RequestsPage } from "./pages/site/RequestsPage";
-import { SecurityPage } from "./pages/site/SecurityPage";
-import { UnitDetailPage } from "./pages/site/UnitDetailPage";
-import { UnitsPage } from "./pages/site/UnitsPage";
 import { SiteIndex } from "./site/SiteIndex";
 
+// Ekranlar açıldıkça yüklenir: sakin telefonda yönetim panelinin kodunu indirmez.
 // Adresler frontend docs/01-ekranlar.md ile aynı.
-const siteScreens: [string, ReactElement][] = [
-  ["daireler", <UnitsPage />],
-  ["daireler/:unitId", <UnitDetailPage />],
-  ["borclular", <DebtorsPage />],
-  ["cari/:accountId", <LedgerPage />],
-  ["tahsilat", <PaymentsPage />],
-  ["tahakkuk", <ChargesPage />],
-  ["isletme-projesi", <BudgetPage />],
-  ["giderler", <ExpensesPage />],
-  ["giderler/yeni", <NewExpensePage />],
-  ["kasa", <CashPage />],
-  ["kasa/:accountId", <CashStatementPage />],
-  ["raporlar", <ReportsPage />],
-  ["iceri-aktar", <ImportPage />],
-  ["talepler", <RequestsPage />],
-  ["talepler/:requestId", <RequestDetailPage />],
-  ["duyurular", <AnnouncementsPage />],
-  ["guvenlik", <SecurityPage />],
-  ["moduller", <ModulesPage />],
-  ["denetim", <AuditPage />],
+
+type Mod = Record<string, ComponentType>;
+const page = (load: () => Promise<unknown>, name: string): LazyExoticComponent<ComponentType> =>
+  lazy(() => load().then((m) => ({ default: (m as Mod)[name]! })));
+
+const site = () => import("./pages/site");
+const resident = () => import("./pages/resident/ResidentPages");
+const platform = () => import("./pages/platform/PlatformPages");
+
+function L({ c: C }: { c: LazyExoticComponent<ComponentType> }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <C />
+    </Suspense>
+  );
+}
+
+const siteScreens: [string, string][] = [
+  ["daireler", "UnitsPage"],
+  ["daireler/:unitId", "UnitDetailPage"],
+  ["borclular", "DebtorsPage"],
+  ["cari/:accountId", "LedgerPage"],
+  ["tahsilat", "PaymentsPage"],
+  ["tahakkuk", "ChargesPage"],
+  ["isletme-projesi", "BudgetPage"],
+  ["giderler", "ExpensesPage"],
+  ["giderler/yeni", "NewExpensePage"],
+  ["kasa", "CashPage"],
+  ["kasa/:accountId", "CashStatementPage"],
+  ["raporlar", "ReportsPage"],
+  ["iceri-aktar", "ImportPage"],
+  ["talepler", "RequestsPage"],
+  ["talepler/:requestId", "RequestDetailPage"],
+  ["duyurular", "AnnouncementsPage"],
+  ["guvenlik", "SecurityPage"],
+  ["moduller", "ModulesPage"],
+  ["denetim", "AuditPage"],
 ];
+
+const Dashboard = page(site, "DashboardPage");
+const Portfolio = page(() => import("./pages/PortfolioPage"), "PortfolioPage");
 
 export const router = createBrowserRouter([
   {
@@ -66,15 +65,15 @@ export const router = createBrowserRouter([
       {
         element: <RequireAuth />,
         children: [
-          { path: "/", element: <RootIndex portfolio={<ComingSoon title="Portföy" />} /> },
+          { path: "/", element: <RootIndex portfolio={<L c={Portfolio} />} /> },
           { path: "/parola-degistir", element: <ChangePasswordPage /> },
           { path: "/yetkisiz", element: <NoAccessPage /> },
           {
             path: "/s/:slug",
             element: <SiteLayout />,
             children: [
-              { index: true, element: <SiteIndex dashboard={<DashboardPage />} /> },
-              ...siteScreens.map(([path, element]) => ({ path, element })),
+              { index: true, element: <SiteIndex dashboard={<L c={Dashboard} />} /> },
+              ...siteScreens.map(([path, name]) => ({ path, element: <L c={page(site, name)} /> })),
               { path: "*", element: <NotFound /> },
             ],
           },
@@ -82,20 +81,20 @@ export const router = createBrowserRouter([
             path: "/yonetim",
             element: <PlatformLayout />,
             children: [
-              { index: true, element: <ComingSoon title="Genel bakış" /> },
-              { path: "musteri-ekle", element: <ComingSoon title="Müşteri ekle" /> },
-              { path: "site-ac", element: <ComingSoon title="Site aç" /> },
+              { index: true, element: <L c={page(platform, "PlatformOverviewPage")} /> },
+              { path: "musteri-ekle", element: <L c={page(platform, "NewCustomerPage")} /> },
+              { path: "site-ac", element: <L c={page(platform, "NewSitePage")} /> },
             ],
           },
           {
             path: "/sakin/:slug",
             element: <ResidentLayout />,
             children: [
-              { index: true, element: <ResidentHomePage /> },
-              { path: "borcum", element: <ResidentStatementPage /> },
-              { path: "duyurular", element: <ResidentAnnouncementsPage /> },
-              { path: "taleplerim", element: <ResidentRequestsPage /> },
-              { path: "giderler", element: <ResidentExpensesPage /> },
+              { index: true, element: <L c={page(resident, "ResidentHomePage")} /> },
+              { path: "borcum", element: <L c={page(resident, "ResidentStatementPage")} /> },
+              { path: "duyurular", element: <L c={page(resident, "ResidentAnnouncementsPage")} /> },
+              { path: "taleplerim", element: <L c={page(resident, "ResidentRequestsPage")} /> },
+              { path: "giderler", element: <L c={page(resident, "ResidentExpensesPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },

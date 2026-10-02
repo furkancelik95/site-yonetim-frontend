@@ -134,3 +134,6 @@ export function overdueTone(days: number): Tone {
   if (days > 30) return "warn";
   return "muted";
 }
+
+export const CATEGORIES = ["plumbing", "electrical", "elevator", "heating", "cleaning", "security", "garden", "common_area", "other"];
+export const PRIORITIES = ["low", "normal", "high", "urgent"];

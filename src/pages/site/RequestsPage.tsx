@@ -7,13 +7,11 @@ import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { CATEGORIES, PRIORITIES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
 type Req = Schemas["RequestOut"];
 
-export const CATEGORIES = ["plumbing", "electrical", "elevator", "heating", "cleaning", "security", "garden", "common_area", "other"];
-export const PRIORITIES = ["low", "normal", "high", "urgent"];
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
 
 export function RequestsPage() {

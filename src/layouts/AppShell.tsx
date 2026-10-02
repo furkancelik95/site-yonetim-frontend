@@ -114,7 +114,8 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
     return () => window.removeEventListener("keydown", onKey);
   }, [navOpen]);
 
-  const siteRole = siteCtx?.site.role;
+  // Site dışında (portföy) yönetim şirketindeki rol gösterilir
+  const siteRole = siteCtx?.site.role ?? me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
   return (
     <>
       <a className="skip-link" href="#main">

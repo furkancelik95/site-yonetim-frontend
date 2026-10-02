@@ -8,8 +8,7 @@ import type { AccountStatement, Page, Schemas } from "../../api/types";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
-import { accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
-import { CATEGORIES } from "../site/RequestsPage";
+import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
 type Home = Schemas["HomeOut"];
