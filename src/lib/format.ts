@@ -57,6 +57,16 @@ export function formatInt(v: number | null | undefined): string {
   return v === null || v === undefined ? "—" : intFmt.format(v);
 }
 
+/** Ondalıklı sayı (alan, katsayı): "102.30" → "102,3" */
+export function formatDecimal(v: string | number | null | undefined, maxDigits = 2): string {
+  if (v === null || v === undefined || v === "") return "—";
+  return new Intl.NumberFormat(TR, { maximumFractionDigits: maxDigits }).format(Number(v));
+}
+
+export function formatArea(v: string | number | null | undefined): string {
+  return v === null || v === undefined || v === "" ? "—" : `${formatDecimal(v)} m²`;
+}
+
 export function formatPercent(v: string | number | null | undefined, digits = 1): string {
   if (v === null || v === undefined || v === "") return "—";
   return `%${new Intl.NumberFormat(TR, { maximumFractionDigits: digits }).format(Number(v))}`;

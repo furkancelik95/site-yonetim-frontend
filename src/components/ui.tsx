@@ -96,7 +96,11 @@ export function Alert({ tone, title, children }: { tone: Tone; title?: string; c
 /** Formun üstündeki genel hata (alan hataları alanların altında gösterilir). */
 export function FormError({ error }: { error: unknown }) {
   if (!error) return null;
-  const message = error instanceof ApiError ? error.message : "İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin.";
+  // ApiError: backend'in Türkçe mesajı. Düz Error: formun kendi doğrulaması. TypeError: ağ hatası.
+  const message =
+    error instanceof ApiError || (error instanceof Error && !(error instanceof TypeError))
+      ? error.message
+      : "İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin.";
   return (
     <Alert tone="danger" title="İşlem yapılamadı">
       {message}

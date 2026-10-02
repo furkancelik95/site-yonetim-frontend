@@ -181,6 +181,22 @@ export async function blobUrl(path: string): Promise<string> {
   return URL.createObjectURL(await res.blob());
 }
 
+/**
+ * Yetkili belgeyi (fatura, dekont) yeni sekmede açar. Sekme tıklama anında açılır ki tarayıcı
+ * açılır pencere engeline takılmasın; içerik gelince adresi verilir.
+ */
+export async function openDocument(path: string) {
+  const w = window.open("", "_blank");
+  try {
+    const url = await blobUrl(path);
+    if (w) w.location.href = url;
+    else window.location.href = url;
+  } catch (e) {
+    w?.close();
+    throw e;
+  }
+}
+
 export function newIdempotencyKey() {
   return crypto.randomUUID();
 }

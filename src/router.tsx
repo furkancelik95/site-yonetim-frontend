@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { createBrowserRouter, Outlet } from "react-router";
 import { ToastProvider } from "./components/toast";
 import { NotFound } from "./components/ui";
@@ -6,29 +7,43 @@ import { ComingSoon } from "./pages/ComingSoon";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
+import { BudgetPage } from "./pages/site/BudgetPage";
+import { CashPage } from "./pages/site/CashPage";
+import { CashStatementPage } from "./pages/site/CashStatementPage";
+import { ChargesPage } from "./pages/site/ChargesPage";
+import { DashboardPage } from "./pages/site/DashboardPage";
+import { DebtorsPage } from "./pages/site/DebtorsPage";
+import { ExpensesPage } from "./pages/site/ExpensesPage";
+import { ImportPage } from "./pages/site/ImportPage";
+import { LedgerPage } from "./pages/site/LedgerPage";
+import { NewExpensePage } from "./pages/site/NewExpensePage";
+import { PaymentsPage } from "./pages/site/PaymentsPage";
+import { ReportsPage } from "./pages/site/ReportsPage";
+import { UnitDetailPage } from "./pages/site/UnitDetailPage";
+import { UnitsPage } from "./pages/site/UnitsPage";
 import { SiteIndex } from "./site/SiteIndex";
 
 // Adresler frontend docs/01-ekranlar.md ile aynı.
-const siteScreens: [string, string][] = [
-  ["daireler", "Daireler"],
-  ["daireler/:unitId", "Daire Ayrıntısı"],
-  ["borclular", "Borçlular"],
-  ["cari/:accountId", "Cari Ekstre"],
-  ["tahsilat", "Tahsilat"],
-  ["tahakkuk", "Tahakkuk"],
-  ["isletme-projesi", "İşletme Projesi"],
-  ["giderler", "Giderler"],
-  ["giderler/yeni", "Yeni Gider"],
-  ["kasa", "Kasa ve Banka"],
-  ["kasa/:accountId", "Hesap Ekstresi"],
-  ["raporlar", "Raporlar"],
-  ["iceri-aktar", "İçeri Aktar"],
-  ["talepler", "Talepler"],
-  ["talepler/:requestId", "Talep"],
-  ["duyurular", "Duyurular"],
-  ["guvenlik", "Güvenlik"],
-  ["moduller", "Modüller"],
-  ["denetim", "Denetim Kaydı"],
+const siteScreens: [string, ReactElement][] = [
+  ["daireler", <UnitsPage />],
+  ["daireler/:unitId", <UnitDetailPage />],
+  ["borclular", <DebtorsPage />],
+  ["cari/:accountId", <LedgerPage />],
+  ["tahsilat", <PaymentsPage />],
+  ["tahakkuk", <ChargesPage />],
+  ["isletme-projesi", <BudgetPage />],
+  ["giderler", <ExpensesPage />],
+  ["giderler/yeni", <NewExpensePage />],
+  ["kasa", <CashPage />],
+  ["kasa/:accountId", <CashStatementPage />],
+  ["raporlar", <ReportsPage />],
+  ["iceri-aktar", <ImportPage />],
+  ["talepler", <ComingSoon title="Talepler" />],
+  ["talepler/:requestId", <ComingSoon title="Talep" />],
+  ["duyurular", <ComingSoon title="Duyurular" />],
+  ["guvenlik", <ComingSoon title="Güvenlik" />],
+  ["moduller", <ComingSoon title="Modüller" />],
+  ["denetim", <ComingSoon title="Denetim Kaydı" />],
 ];
 
 export const router = createBrowserRouter([
@@ -50,9 +65,9 @@ export const router = createBrowserRouter([
             path: "/s/:slug",
             element: <SiteLayout />,
             children: [
-              { index: true, element: <SiteIndex dashboard={<ComingSoon title="Bugün" />} /> },
-              ...siteScreens.map(([path, title]) => ({ path, element: <ComingSoon title={title} /> })),
-              { path: "*", element: <NotFoundInShell /> },
+              { index: true, element: <SiteIndex dashboard={<DashboardPage />} /> },
+              ...siteScreens.map(([path, element]) => ({ path, element })),
+              { path: "*", element: <NotFound /> },
             ],
           },
           {
@@ -71,7 +86,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-
-function NotFoundInShell() {
-  return <NotFound />;
-}

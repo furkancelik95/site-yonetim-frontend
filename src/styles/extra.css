@@ -23,6 +23,10 @@
 }
 @keyframes nav-in { from { transform: translateX(-100%); } to { transform: none; } }
 
+/* Referansta en dar sütun 400px/300px sabitti; telefonda ekrandan taşıyordu. */
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); }
+.grid--sites { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+
 /* --- Yükleniyor ------------------------------------------------------------------------ */
 .spinner {
   width: 1.1rem; height: 1.1rem; flex: none;
@@ -100,6 +104,12 @@ main[tabindex="-1"]:focus { outline: none; }
 }
 .field__toggle:hover { color: var(--fg); }
 .field__input[aria-invalid="true"] { border-color: var(--danger-solid); }
+
+/* Tutar ve tarih ikiye bölünmesin ("9.626,11" / "₺"); tablo gerekirse kendi kabında kayar. */
+span.num, td.num, .nowrap { white-space: nowrap; }
+
+/* Dar ekranda ikincil sütun gizlenir (bilgi başka yerde de var) */
+@media (max-width: 640px) { .hide-sm { display: none; } }
 
 /* Lucide ikonları satır içinde hizalı dursun */
 .lucide { flex: none; stroke-width: 1.75; }
