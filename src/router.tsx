@@ -7,6 +7,8 @@ import { ComingSoon } from "./pages/ComingSoon";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
+import { AnnouncementsPage } from "./pages/site/AnnouncementsPage";
+import { AuditPage } from "./pages/site/AuditPage";
 import { BudgetPage } from "./pages/site/BudgetPage";
 import { CashPage } from "./pages/site/CashPage";
 import { CashStatementPage } from "./pages/site/CashStatementPage";
@@ -16,9 +18,13 @@ import { DebtorsPage } from "./pages/site/DebtorsPage";
 import { ExpensesPage } from "./pages/site/ExpensesPage";
 import { ImportPage } from "./pages/site/ImportPage";
 import { LedgerPage } from "./pages/site/LedgerPage";
+import { ModulesPage } from "./pages/site/ModulesPage";
 import { NewExpensePage } from "./pages/site/NewExpensePage";
 import { PaymentsPage } from "./pages/site/PaymentsPage";
 import { ReportsPage } from "./pages/site/ReportsPage";
+import { RequestDetailPage } from "./pages/site/RequestDetailPage";
+import { RequestsPage } from "./pages/site/RequestsPage";
+import { SecurityPage } from "./pages/site/SecurityPage";
 import { UnitDetailPage } from "./pages/site/UnitDetailPage";
 import { UnitsPage } from "./pages/site/UnitsPage";
 import { SiteIndex } from "./site/SiteIndex";
@@ -38,12 +44,12 @@ const siteScreens: [string, ReactElement][] = [
   ["kasa/:accountId", <CashStatementPage />],
   ["raporlar", <ReportsPage />],
   ["iceri-aktar", <ImportPage />],
-  ["talepler", <ComingSoon title="Talepler" />],
-  ["talepler/:requestId", <ComingSoon title="Talep" />],
-  ["duyurular", <ComingSoon title="Duyurular" />],
-  ["guvenlik", <ComingSoon title="Güvenlik" />],
-  ["moduller", <ComingSoon title="Modüller" />],
-  ["denetim", <ComingSoon title="Denetim Kaydı" />],
+  ["talepler", <RequestsPage />],
+  ["talepler/:requestId", <RequestDetailPage />],
+  ["duyurular", <AnnouncementsPage />],
+  ["guvenlik", <SecurityPage />],
+  ["moduller", <ModulesPage />],
+  ["denetim", <AuditPage />],
 ];
 
 export const router = createBrowserRouter([
