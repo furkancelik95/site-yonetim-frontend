@@ -3,6 +3,8 @@ import { createBrowserRouter, Outlet } from "react-router";
 import { ToastProvider } from "./components/toast";
 import { NotFound } from "./components/ui";
 import { PlatformLayout, RequireAuth, RootIndex, SiteLayout } from "./layouts/guards";
+import { ResidentLayout } from "./layouts/ResidentLayout";
+import { ResidentAnnouncementsPage, ResidentExpensesPage, ResidentHomePage, ResidentRequestsPage, ResidentStatementPage } from "./pages/resident/ResidentPages";
 import { ComingSoon } from "./pages/ComingSoon";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -85,7 +87,18 @@ export const router = createBrowserRouter([
               { path: "site-ac", element: <ComingSoon title="Site aç" /> },
             ],
           },
-          { path: "/sakin/:slug/*", element: <ComingSoon title="Sakin ekranı" /> },
+          {
+            path: "/sakin/:slug",
+            element: <ResidentLayout />,
+            children: [
+              { index: true, element: <ResidentHomePage /> },
+              { path: "borcum", element: <ResidentStatementPage /> },
+              { path: "duyurular", element: <ResidentAnnouncementsPage /> },
+              { path: "taleplerim", element: <ResidentRequestsPage /> },
+              { path: "giderler", element: <ResidentExpensesPage /> },
+              { path: "*", element: <NotFound /> },
+            ],
+          },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

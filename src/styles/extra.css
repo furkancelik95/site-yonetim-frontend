@@ -105,6 +105,9 @@ main[tabindex="-1"]:focus { outline: none; }
 .field__toggle:hover { color: var(--fg); }
 .field__input[aria-invalid="true"] { border-color: var(--danger-solid); }
 
+/* Sakin alt menüsü: referans 4 sütuna sabitti; sekme sayısı kadar sütun (Giderler eklendi) */
+.tabbar { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding-bottom: env(safe-area-inset-bottom); }
+
 /* Tutar ve tarih ikiye bölünmesin ("9.626,11" / "₺"); tablo gerekirse kendi kabında kayar. */
 span.num, td.num, .nowrap { white-space: nowrap; }
 
