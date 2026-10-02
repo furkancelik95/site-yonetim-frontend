@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Plus, Wrench } from "lucide-react";
+import { Columns3, Plus, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
@@ -25,7 +25,7 @@ export function RequestsPage() {
       <PageHead
         title="Talepler"
         subtitle={r.data ? `${r.data.total} talep` : undefined}
-        actions={can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}
+        actions={<><Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link>{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
       />
       {adding && <NewRequestForm onDone={() => setAdding(false)} />}
 

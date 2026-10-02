@@ -25,12 +25,22 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </QueryClientProvider>
-  </StrictMode>,
+// Geliştirmede henüz backend'de olmayan uçlar MSW ile taklit edilir (src/mocks). Kapatmak için
+// .env.local → VITE_USE_MOCKS=false. Üretim derlemesine MSW girmez.
+async function startMocks() {
+  if (!import.meta.env.DEV || import.meta.env.VITE_USE_MOCKS === "false") return;
+  const { worker } = await import("./mocks/browser");
+  await worker.start({ onUnhandledRequest: "bypass", quiet: true });
+}
+
+startMocks().then(() =>
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </StrictMode>,
+  ),
 );

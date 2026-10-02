@@ -8,6 +8,7 @@ import { formatDate, formatDateTime, formatMoney, formatMoneyShort } from "../..
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, runStatus, runTone, warningKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { ChargeSchedule } from "./ChargeSchedule";
 
 type Preview = Schemas["PreviewOut"];
 type Run = Schemas["ChargeRunOut"];
@@ -28,6 +29,8 @@ export function ChargesPage() {
       ) : (
         <PreviewView p={preview.data} canPost={can(P.chargePost)} s={s} set={set} />
       )}
+
+      {can(P.chargePost) && <ChargeSchedule />}
 
       <RunsCard canReverse={can(P.chargePost)} />
     </div>

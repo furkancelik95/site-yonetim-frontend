@@ -19,3 +19,5 @@ export { RequestsPage } from "./RequestsPage";
 export { SecurityPage } from "./SecurityPage";
 export { UnitDetailPage } from "./UnitDetailPage";
 export { UnitsPage } from "./UnitsPage";
+export { ClearanceCertificatePage, ReceiptPage } from "./DocumentPages";
+export { RequestBoardPage } from "./RequestBoardPage";

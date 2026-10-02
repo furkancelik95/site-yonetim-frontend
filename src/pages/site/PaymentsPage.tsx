@@ -56,6 +56,7 @@ export function PaymentsPage() {
                     <th scope="col">Yöntem</th>
                     <th scope="col">Kaydeden</th>
                     <th scope="col" className="right">Tutar</th>
+                    <th scope="col"><span className="visually-hidden">Makbuz</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -73,6 +74,7 @@ export function PaymentsPage() {
                       </td>
                       <td className="small">{p.created_by_name ?? "—"}</td>
                       <td className="right"><Money value={p.amount} /></td>
+                      <td className="right"><Link className="btn btn--ghost btn--sm" to={`/s/${site.slug}/makbuz/${p.id}`}>Makbuz</Link></td>
                     </tr>
                   ))}
                 </tbody>
