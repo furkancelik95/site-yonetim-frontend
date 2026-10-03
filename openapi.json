@@ -3251,6 +3251,109 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/charge-schedule": {
+   "get": {
+    "tags": [
+     "tahakkuk"
+    ],
+    "summary": "Otomatik aylık tahakkuk ayarı",
+    "description": "Hiç kaydedilmediyse varsayılan: kapalı, gün 1, vade 14.",
+    "operationId": "get_schedule_api_v1_sites__slug__charge_schedule_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScheduleOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "tahakkuk"
+    ],
+    "summary": "Otomatik aylık tahakkuk ayarını kaydet",
+    "operationId": "put_schedule_api_v1_sites__slug__charge_schedule_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScheduleIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ScheduleOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/sites/{slug}/imports/units/template.xlsx": {
    "get": {
     "tags": [
@@ -3918,6 +4021,301 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ReceiptOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/accounts/{account_id}/clearance-certificates": {
+   "post": {
+    "tags": [
+     "tahsilat ve cari"
+    ],
+    "summary": "Borçsuzluk belgesi düzenle",
+    "description": "Borçlu hesaba 409 `has_debt`, kapalı hesaba 409 `account_closed`.",
+    "operationId": "issue_certificate_api_v1_sites__slug__accounts__account_id__clearance_certificates_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "account_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Account Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+       "title": "Idempotency-Key"
+      },
+      "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_CertificateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/clearance-certificates/{certificate_id}": {
+   "get": {
+    "tags": [
+     "tahsilat ve cari"
+    ],
+    "summary": "Borçsuzluk belgesi (yazdırma)",
+    "operationId": "get_certificate_api_v1_sites__slug__clearance_certificates__certificate_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "certificate_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Certificate Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CertificateOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/accounts/{account_id}/opening-balance": {
+   "post": {
+    "tags": [
+     "tahsilat ve cari"
+    ],
+    "summary": "Devir bakiye (hesap başına bir kez)",
+    "description": "İkinci deneme 409 `already_exists`; tutar ≤ 0 ya da ileri tarih 422.",
+    "operationId": "record_opening_balance_api_v1_sites__slug__accounts__account_id__opening_balance_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "account_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Account Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+       "title": "Idempotency-Key"
+      },
+      "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OpeningBalanceIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_OpeningBalanceOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/refunds": {
+   "post": {
+    "tags": [
+     "tahsilat ve cari"
+    ],
+    "summary": "İade (alacaklı bakiyenin sakine geri ödenmesi)",
+    "description": "Para çıkışı: `finance.payment.record` + `finance.cash.manage`; `Idempotency-Key` zorunlu.\nAlacak yok 409 `no_credit`; alacağı aşan tutar 422 `fields.amount`.",
+    "operationId": "record_refund_api_v1_sites__slug__refunds_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+       "title": "Idempotency-Key"
+      },
+      "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RefundIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RefundOut_"
         }
        }
       }
@@ -8278,7 +8676,8 @@
      "payment",
      "expense",
      "transfer",
-     "opening"
+     "opening",
+     "refund"
     ],
     "title": "CashSource"
    },
@@ -8355,6 +8754,127 @@
      "count"
     ],
     "title": "CategoryTotalOut"
+   },
+   "CertificateAccount": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "reference_code": {
+      "type": "string",
+      "title": "Reference Code"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/AccountKind"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "person_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Name",
+      "description": "people.read izni yoksa null"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "reference_code",
+     "kind",
+     "unit_name",
+     "person_name"
+    ],
+    "title": "CertificateAccount"
+   },
+   "CertificateOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "string",
+      "title": "Number",
+      "description": "`BB-2026-00001` — site ve yıl bazında boşluksuz"
+     },
+     "site": {
+      "$ref": "#/components/schemas/CertificateSite"
+     },
+     "account": {
+      "$ref": "#/components/schemas/CertificateAccount",
+      "description": "belge anındaki hesap bilgisi"
+     },
+     "balance": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Balance",
+      "description": "belge anındaki bakiye (0 ya da eksi = alacaklı)",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "as_of": {
+      "type": "string",
+      "format": "date",
+      "title": "As Of"
+     },
+     "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Issued At"
+     },
+     "issued_by": {
+      "type": "string",
+      "title": "Issued By"
+     },
+     "valid_until": {
+      "type": "string",
+      "format": "date",
+      "title": "Valid Until"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "site",
+     "account",
+     "balance",
+     "as_of",
+     "issued_at",
+     "issued_by",
+     "valid_until"
+    ],
+    "title": "CertificateOut"
+   },
+   "CertificateSite": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "slug": {
+      "type": "string",
+      "title": "Slug"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "slug"
+    ],
+    "title": "CertificateSite"
    },
    "ChangePasswordRequest": {
     "properties": {
@@ -9948,6 +10468,17 @@
       ],
       "title": "Open Requests",
       "description": "açık talepleri (modül kapalıysa null)"
+     },
+     "payment_info": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PaymentInfo"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "sitenin IBAN'ı girilmemişse null (\"ödeme bilgisi için yönetimle görüşün\")"
      }
     },
     "type": "object",
@@ -9957,7 +10488,8 @@
      "total_balance",
      "recent_entries",
      "announcements",
-     "open_requests"
+     "open_requests",
+     "payment_info"
     ],
     "title": "HomeOut"
    },
@@ -10487,6 +11019,56 @@
     ],
     "title": "LastChargeOut"
    },
+   "LastRunOut": {
+    "properties": {
+     "run_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Id",
+      "description": "kesilen tahakkuk koşusu; atlandıysa null"
+     },
+     "period": {
+      "type": "string",
+      "title": "Period",
+      "description": "`10/2026`"
+     },
+     "ran_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Ran At"
+     },
+     "status": {
+      "$ref": "#/components/schemas/ScheduleRunStatus"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "run_id",
+     "period",
+     "ran_at",
+     "status",
+     "message"
+    ],
+    "title": "LastRunOut"
+   },
    "LedgerSource": {
     "type": "string",
     "enum": [
@@ -10495,7 +11077,9 @@
      "late_fee",
      "adjustment",
      "transfer",
-     "advance"
+     "advance",
+     "opening",
+     "refund"
     ],
     "title": "LedgerSource"
    },
@@ -11105,6 +11689,103 @@
      "notified_on"
     ],
     "title": "NotifyIn"
+   },
+   "OpeningBalanceIn": {
+    "properties": {
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "direction": {
+      "$ref": "#/components/schemas/OpeningDirection",
+      "description": "debit: sakin borçlu · credit: alacaklı"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date",
+      "description": "genelde sisteme geçiş tarihi; gelecekte olamaz"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     }
+    },
+    "type": "object",
+    "required": [
+     "amount",
+     "direction",
+     "date"
+    ],
+    "title": "OpeningBalanceIn"
+   },
+   "OpeningBalanceOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id",
+      "description": "defter hareketi (ekstrede `source: opening`)"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "direction": {
+      "$ref": "#/components/schemas/OpeningDirection"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "amount",
+     "direction",
+     "date",
+     "description"
+    ],
+    "title": "OpeningBalanceOut"
+   },
+   "OpeningDirection": {
+    "type": "string",
+    "enum": [
+     "debit",
+     "credit"
+    ],
+    "title": "OpeningDirection"
    },
    "OverviewOut": {
     "properties": {
@@ -12200,6 +12881,39 @@
     ],
     "title": "PaymentIn"
    },
+   "PaymentInfo": {
+    "properties": {
+     "bank_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bank Name"
+     },
+     "iban": {
+      "type": "string",
+      "title": "Iban",
+      "description": "boşluksuz, büyük harf; biçimlendirmeyi frontend yapar"
+     },
+     "account_holder": {
+      "type": "string",
+      "title": "Account Holder",
+      "description": "hesap sahibi: site adı"
+     }
+    },
+    "type": "object",
+    "required": [
+     "bank_name",
+     "iban",
+     "account_holder"
+    ],
+    "title": "PaymentInfo",
+    "description": "Sitenin kendi hesabı (platform parayı tutmaz, 6493). Havale açıklamasına hesabın\n`reference_code`'u yazılır (`accounts[]`)."
+   },
    "PaymentListItem": {
     "properties": {
      "id": {
@@ -13155,6 +13869,103 @@
     ],
     "title": "RecentEntry"
    },
+   "RefundIn": {
+    "properties": {
+     "ledger_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Ledger Account Id"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "cash_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Cash Account Id",
+      "description": "paranın çıktığı kasa/banka hesabı"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason",
+      "description": "zorunlu"
+     }
+    },
+    "type": "object",
+    "required": [
+     "ledger_account_id",
+     "amount",
+     "date",
+     "cash_account_id"
+    ],
+    "title": "RefundIn"
+   },
+   "RefundOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "ledger_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Ledger Account Id"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "cash_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Cash Account Id"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "ledger_account_id",
+     "amount",
+     "date",
+     "cash_account_id",
+     "reason"
+    ],
+    "title": "RefundOut"
+   },
    "RequestCategory": {
     "type": "string",
     "enum": [
@@ -13692,6 +14503,99 @@
      "total"
     ],
     "title": "RequestsOut"
+   },
+   "ScheduleIn": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled"
+     },
+     "charge_day": {
+      "type": "integer",
+      "title": "Charge Day",
+      "description": "ayın kaçında: 1–28"
+     },
+     "due_days": {
+      "type": "integer",
+      "title": "Due Days",
+      "description": "tahakkuktan kaç gün sonra son ödeme: 0–60"
+     },
+     "notify_on_run": {
+      "type": "boolean",
+      "title": "Notify On Run",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "enabled",
+     "charge_day",
+     "due_days"
+    ],
+    "title": "ScheduleIn"
+   },
+   "ScheduleOut": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled"
+     },
+     "charge_day": {
+      "type": "integer",
+      "title": "Charge Day"
+     },
+     "due_days": {
+      "type": "integer",
+      "title": "Due Days"
+     },
+     "notify_on_run": {
+      "type": "boolean",
+      "title": "Notify On Run",
+      "description": "bildirim sağlayıcısı yok (K5): şimdilik yalnız kayıt"
+     },
+     "next_run_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Run On",
+      "description": "kapalıysa null; İstanbul yerel tarihi"
+     },
+     "last_run": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/LastRunOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "enabled",
+     "charge_day",
+     "due_days",
+     "notify_on_run",
+     "next_run_on",
+     "last_run"
+    ],
+    "title": "ScheduleOut"
+   },
+   "ScheduleRunStatus": {
+    "type": "string",
+    "enum": [
+     "posted",
+     "skipped",
+     "failed"
+    ],
+    "title": "ScheduleRunStatus"
    },
    "ScopeKind": {
     "type": "string",
@@ -15535,6 +16439,23 @@
     ],
     "title": "Written[CashAccountOut]"
    },
+   "Written_CertificateOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/CertificateOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[CertificateOut]"
+   },
    "Written_ChargeRunOut_": {
     "properties": {
      "data": {
@@ -15637,6 +16558,23 @@
     ],
     "title": "Written[MovementOut]"
    },
+   "Written_OpeningBalanceOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/OpeningBalanceOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[OpeningBalanceOut]"
+   },
    "Written_PackageOut_": {
     "properties": {
      "data": {
@@ -15722,6 +16660,23 @@
     ],
     "title": "Written[PersonOut]"
    },
+   "Written_RefundOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RefundOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RefundOut]"
+   },
    "Written_RequestDetail_": {
     "properties": {
      "data": {
@@ -15738,6 +16693,23 @@
      "message"
     ],
     "title": "Written[RequestDetail]"
+   },
+   "Written_ScheduleOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ScheduleOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ScheduleOut]"
    },
    "Written_SiteOut_": {
     "properties": {

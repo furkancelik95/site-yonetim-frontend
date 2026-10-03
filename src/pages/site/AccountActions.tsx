@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import { FileCheck2, History, Undo2 } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
 import { ConfirmButton, Field, FormError, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
 import { P, useSite } from "../../site/SiteContext";
@@ -13,7 +12,7 @@ type Panel = "opening" | "refund" | null;
 
 /**
  * Cari hesap işlemleri (Apsiyon karşılaştırmasındaki eksikler):
- * borçsuzluk belgesi (01), devir bakiye (02), iade (03). Servisler gelene kadar sahte serviste.
+ * borçsuzluk belgesi (01), devir bakiye (02), iade (03) — backend #24–#26.
  */
 export function AccountActions({ accountId, balance }: { accountId: string; balance: string }) {
   const { site, can } = useSite();
@@ -31,7 +30,6 @@ export function AccountActions({ accountId, balance }: { accountId: string; bala
     <div className="card">
       <div className="card__head">
         <span className="card__title">Hesap işlemleri</span>
-        <span className="ml-auto"><MockBadge request="01–03" /></span>
       </div>
       <div className="card__body row" style={{ gap: "var(--s-2)" }}>
         <ConfirmButton

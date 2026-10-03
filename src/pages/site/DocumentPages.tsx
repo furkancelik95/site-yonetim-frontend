@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router";
 import { Printer } from "lucide-react";
 import { useSiteGet } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
 import { Alert, ErrorState, Loading, Money, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
 import { accountKind, paymentMethod } from "../../lib/labels";
@@ -11,18 +10,8 @@ import { useSite } from "../../site/SiteContext";
 
 type Receipt = Schemas["ReceiptOut"];
 
-/** Servis isteği 01'deki yanıt şekli — servis gelince üretilmiş tipe geçilir. */
-export interface Certificate {
-  id: string;
-  number: string;
-  site: { name: string; slug: string };
-  account: { id: string; reference_code: string; kind: string; unit_name: string; person_name: string | null };
-  balance: string;
-  as_of: string;
-  issued_at: string;
-  issued_by: string;
-  valid_until: string;
-}
+/** Borçsuzluk belgesi — `GET …/clearance-certificates/{id}` (servis isteği 01, backend #24). */
+export type Certificate = Schemas["CertificateOut"];
 
 function PrintBar({ back, children }: { back: string; children?: ReactNode }) {
   return (
@@ -106,7 +95,7 @@ export function ReceiptPage() {
   );
 }
 
-/** Borçsuzluk belgesi — servis isteği 01 (şimdilik sahte servis). */
+/** Borçsuzluk belgesi — servis isteği 01. Belge değişmez; bakiye belge anındaki defterden. */
 export function ClearanceCertificatePage() {
   useDocumentTitle("Borçsuzluk belgesi");
   const { certificateId = "" } = useParams();
@@ -118,7 +107,7 @@ export function ClearanceCertificatePage() {
 
   return (
     <div className="stack page--narrow">
-      <PrintBar back={`/s/${site.slug}/cari/${c.account.id}`}><MockBadge request="01" /></PrintBar>
+      <PrintBar back={`/s/${site.slug}/cari/${c.account.id}`} />
       <article className="card doc-print">
         <div className="card__body stack" style={{ gap: "var(--s-5)" }}>
           <header className="row row--between" style={{ alignItems: "flex-start" }}>

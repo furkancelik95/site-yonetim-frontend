@@ -1,19 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CalendarClock } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
+import type { Schemas } from "../../api/types";
 import { Alert, Field, FormError, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate } from "../../lib/format";
 
-/** Servis isteği 04'teki yanıt şekli. */
-export interface Schedule {
-  enabled: boolean;
-  charge_day: number;
-  due_days: number;
-  notify_on_run: boolean;
-  next_run_on: string | null;
-  last_run: { run_id: string; period: string; ran_at: string; status: "posted" | "skipped" | "failed"; message: string | null } | null;
-}
+/** `GET …/charge-schedule` (servis isteği 04, backend #27). `last_run.run_id` atlanan çalışmada null. */
+export type Schedule = Schemas["ScheduleOut"];
 
 /**
  * Otomatik aylık tahakkuk (Apsiyon "Otomatik Borçlandırma" karşılığı). Backend her ay seçilen
@@ -39,7 +32,6 @@ export function ChargeSchedule() {
         <span className="card__icon card__icon--info"><CalendarClock aria-hidden="true" /></span>
         <span className="card__title">Otomatik aylık tahakkuk</span>
         <span className="ml-auto row" style={{ gap: "var(--s-2)" }}>
-          <MockBadge request="04" />
           {q.data?.enabled && q.data.next_run_on && <span className="card__meta">sıradaki: {formatDate(q.data.next_run_on)}</span>}
         </span>
       </div>
