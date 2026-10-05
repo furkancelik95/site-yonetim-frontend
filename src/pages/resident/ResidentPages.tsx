@@ -5,6 +5,7 @@ import { ChevronRight, Copy, FileText, Package, Receipt, Wrench } from "lucide-r
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
+import { PollResults, type Poll } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
@@ -242,6 +243,7 @@ export function ResidentAnnouncementsPage() {
   if (q.isError) return <StaffNotice error={q.error} />;
   return (
     <div className="stack" style={{ gap: "var(--s-3)" }}>
+      <ResidentPolls />
       {q.data.items.length === 0 && <Empty title="Duyuru yok" />}
       {q.data.items.map((a) => <AnnouncementItem key={a.id} a={a} />)}
       <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
@@ -345,5 +347,61 @@ export function ResidentExpensesPage() {
         </>
       )}
     </>
+  );
+}
+
+/** Servis isteği 15: sakinin oy verdiği bölümler ve oyu. Sonuç oy verdikten ya da anket kapanınca görünür. */
+type ResidentPoll = Poll & { my_votes: { unit_id: string; unit_name: string; option_id: string | null }[] };
+
+function ResidentPolls() {
+  const q = useSiteGet<ResidentPoll[]>("/resident/polls");
+  if (!q.data || q.data.length === 0) return null;
+  return (
+    <section className="stack" style={{ gap: "var(--s-3)" }} aria-label="Anketler">
+      {q.data.map((p) => <ResidentPollCard key={p.id} p={p} />)}
+    </section>
+  );
+}
+
+function ResidentPollCard({ p }: { p: ResidentPoll }) {
+  const pending = p.status === "open" ? p.my_votes.filter((v) => !v.option_id) : [];
+  const [unitId, setUnitId] = useState(pending[0]?.unit_id ?? "");
+  const [choice, setChoice] = useState("");
+  const vote = useSiteMutation<{ unit_id: string; option_id: string }, { option_id: string }>("POST", `/resident/polls/${p.id}/vote`, { onSuccess: () => setChoice("") });
+  const voted = p.my_votes.find((v) => v.option_id)?.option_id ?? null;
+  const unit = pending.find((v) => v.unit_id === unitId) ?? pending[0];
+  return (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__title">{p.question}</span>
+        <span className="ml-auto">{p.status === "open" ? <Badge tone="info">Anket</Badge> : <Badge>Sonuçlandı</Badge>}</span>
+      </div>
+      <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+        {p.description && <p className="small mb-0">{p.description}</p>}
+        {unit ? (
+          <form className="stack" style={{ gap: "var(--s-2)" }} onSubmit={(e) => { e.preventDefault(); if (choice) vote.mutate({ unit_id: unit.unit_id, option_id: choice }); }}>
+            {pending.length > 1 && (
+              <Field label="Hangi bölüm adına">{(fp) => <select {...fp} className="field__input" value={unit.unit_id} onChange={(e) => setUnitId(e.target.value)}>{pending.map((v) => <option key={v.unit_id} value={v.unit_id}>{v.unit_name}</option>)}</select>}</Field>
+            )}
+            <fieldset className="stack" style={{ gap: "var(--s-1)", border: 0, padding: 0, margin: 0 }}>
+              <legend className="visually-hidden">{p.question}</legend>
+              {p.options.map((o) => (
+                <label key={o.id} className="check" style={{ minHeight: 44 }}>
+                  <input type="radio" name={`poll-${p.id}`} value={o.id} checked={choice === o.id} onChange={() => setChoice(o.id)} />
+                  <span>{o.label}</span>
+                </label>
+              ))}
+            </fieldset>
+            <FormError error={vote.error} />
+            <SubmitButton busy={vote.isPending} disabled={!choice}>{pending.length > 1 ? `${unit.unit_name} adına oy ver` : "Oy ver"}</SubmitButton>
+            <span className="small muted">Bitiş {formatDate(p.ends_on)} · Oyunuzu verdikten sonra değiştiremezsiniz.</span>
+          </form>
+        ) : p.total_votes != null ? (
+          <PollResults p={p} mine={voted} />
+        ) : (
+          <span className="small muted">Bu anket bölümünüzdeki rolünüze açık değil.</span>
+        )}
+      </div>
+    </div>
   );
 }

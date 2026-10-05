@@ -51,7 +51,7 @@ export function PublicRegistrationPage() {
     setErrs(next);
     const firstBad = Object.keys(next).find((k) => next[k]);
     if (firstBad) {
-      document.getElementById(`reg-${firstBad}`)?.focus();
+      document.querySelector<HTMLElement>(firstBad === "kvkk_ack" ? "#reg-kvkk_ack" : `[data-field="${firstBad}"]`)?.focus();
       return;
     }
     m.mutate({
@@ -88,20 +88,20 @@ export function PublicRegistrationPage() {
             <form className="stack" style={{ gap: "var(--s-4)", marginTop: "var(--s-4)" }} onSubmit={submit} noValidate>
               <FormError error={m.error} />
               <div className="grid grid--2">
-                <Field label="Ad" required error={err("first_name")}>{(p) => <input {...p} id="reg-first_name" className="field__input" autoComplete="given-name" maxLength={40} value={f.first_name} onChange={(e) => setF((x) => ({ ...x, first_name: e.target.value }))} onBlur={blur("first_name")} />}</Field>
-                <Field label="Soyad" required error={err("last_name")}>{(p) => <input {...p} id="reg-last_name" className="field__input" autoComplete="family-name" maxLength={40} value={f.last_name} onChange={(e) => setF((x) => ({ ...x, last_name: e.target.value }))} onBlur={blur("last_name")} />}</Field>
+                <Field label="Ad" required error={err("first_name")}>{(p) => <input {...p} data-field="first_name" className="field__input" autoComplete="given-name" maxLength={40} value={f.first_name} onChange={(e) => setF((x) => ({ ...x, first_name: e.target.value }))} onBlur={blur("first_name")} />}</Field>
+                <Field label="Soyad" required error={err("last_name")}>{(p) => <input {...p} data-field="last_name" className="field__input" autoComplete="family-name" maxLength={40} value={f.last_name} onChange={(e) => setF((x) => ({ ...x, last_name: e.target.value }))} onBlur={blur("last_name")} />}</Field>
               </div>
               <Field label="Cep telefonu" required hint="Türkiye (+90)" error={err("phone")}>
                 {(p) => (
                   <div className="row" style={{ gap: "var(--s-2)", flexWrap: "nowrap" }}>
                     <span className="field__input" style={{ width: "auto", display: "inline-flex", alignItems: "center" }} aria-hidden="true">+90</span>
-                    <input {...p} id="reg-phone" className="field__input" style={{ flex: 1, minWidth: 0 }} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="5XX XXX XX XX" value={maskPhone(digits(f.phone))} onChange={(e) => setF((x) => ({ ...x, phone: e.target.value }))} onBlur={blur("phone")} />
+                    <input {...p} data-field="phone" className="field__input" style={{ flex: 1, minWidth: 0 }} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="5XX XXX XX XX" value={maskPhone(digits(f.phone))} onChange={(e) => setF((x) => ({ ...x, phone: e.target.value }))} onBlur={blur("phone")} />
                   </div>
                 )}
               </Field>
-              <Field label="E-posta" hint="İsteğe bağlı; giriş bilgileri buraya da gönderilebilir." error={err("email")}>{(p) => <input {...p} id="reg-email" className="field__input" type="email" inputMode="email" autoComplete="email" maxLength={254} value={f.email} onChange={(e) => setF((x) => ({ ...x, email: e.target.value }))} onBlur={blur("email")} />}</Field>
+              <Field label="E-posta" hint="İsteğe bağlı; giriş bilgileri buraya da gönderilebilir." error={err("email")}>{(p) => <input {...p} data-field="email" className="field__input" type="email" inputMode="email" autoComplete="email" maxLength={254} value={f.email} onChange={(e) => setF((x) => ({ ...x, email: e.target.value }))} onBlur={blur("email")} />}</Field>
               <div className="grid grid--2">
-                <Field label="Blok / daire" required error={err("unit_text")}>{(p) => <input {...p} id="reg-unit_text" className="field__input" placeholder="ör. A blok 4" maxLength={60} value={f.unit_text} onChange={(e) => setF((x) => ({ ...x, unit_text: e.target.value }))} onBlur={blur("unit_text")} />}</Field>
+                <Field label="Blok / daire" required error={err("unit_text")}>{(p) => <input {...p} data-field="unit_text" className="field__input" placeholder="ör. A blok 4" maxLength={60} value={f.unit_text} onChange={(e) => setF((x) => ({ ...x, unit_text: e.target.value }))} onBlur={blur("unit_text")} />}</Field>
                 <Field label="Daireyle ilişkiniz" required error={err("relation")}>{(p) => <select {...p} className="field__input" value={f.relation} onChange={(e) => setF((x) => ({ ...x, relation: e.target.value }))}><option value="owner">Malik (ev sahibi)</option><option value="tenant">Kiracı</option></select>}</Field>
               </div>
 
@@ -114,10 +114,10 @@ export function PublicRegistrationPage() {
               </label>
               <div>
                 <label className="check check--rich">
-                  <input id="reg-kvkk_ack" type="checkbox" checked={f.kvkk_ack} aria-invalid={err("kvkk_ack") ? true : undefined} onChange={(e) => { const v = e.target.checked; setF((x) => ({ ...x, kvkk_ack: v })); if (v) setErrs((x) => ({ ...x, kvkk_ack: undefined })); }} />
+                  <input id="reg-kvkk_ack" type="checkbox" checked={f.kvkk_ack} aria-invalid={err("kvkk_ack") ? true : undefined} aria-describedby={err("kvkk_ack") ? "reg-kvkk_ack-err" : undefined} onChange={(e) => { const v = e.target.checked; setF((x) => ({ ...x, kvkk_ack: v })); if (v) setErrs((x) => ({ ...x, kvkk_ack: undefined })); }} />
                   <span><span className="strong">Bilgilendirme *</span><br /><span className="small muted">Verdiğim bilgilerin doğru olduğunu, başvurumun site yönetimi tarafından doğrulanacağını biliyorum.</span></span>
                 </label>
-                {err("kvkk_ack") && <span className="field__error" role="alert">{err("kvkk_ack")}</span>}
+                {err("kvkk_ack") && <span className="field__error" id="reg-kvkk_ack-err" role="alert">{err("kvkk_ack")}</span>}
               </div>
               <SubmitButton busy={m.isPending}>Başvuruyu gönder</SubmitButton>
             </form>

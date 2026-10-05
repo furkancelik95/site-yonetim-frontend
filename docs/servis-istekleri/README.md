@@ -27,6 +27,11 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [11](11-talep-departmanlari.md) | Talep departmanları | `…/departments`, `POST …/requests/{id}/department`, talep yanıtına alan | Talepler, pano, talep ayrıntısı | **Sahte servis** — issue açılacak |
 | [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Sahte servis** — issue açılacak |
 | [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Sahte servis** — issue açılacak |
+| [14](14-toplantilar.md) | Toplantılar ve genel kurul | `…/meetings`, `…/meetings/{id}/decisions`, `…/cancel` | `/toplantilar` | **Sahte servis** — issue açılacak |
+| [15](15-anket.md) | Anket | `…/polls`, `…/resident/polls/{id}/vote` | `/anketler`, sakin Duyurular | **Sahte servis** — issue açılacak |
+| [16](16-sozlesmeler.md) | Hizmet sözleşmeleri | `GET/POST/PATCH …/contracts` | `/sozlesmeler` | **Sahte servis** — issue açılacak |
+| [17](17-demirbas-stok.md) | Demirbaş ve stok | `…/assets`, `…/stock-items`, `…/stock-items/{id}/moves` | `/demirbas` | **Sahte servis** — issue açılacak |
+| [18](18-personel.md) | Site personeli | `GET/POST/PATCH …/staff` | `/personel` | **Sahte servis** — issue açılacak |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

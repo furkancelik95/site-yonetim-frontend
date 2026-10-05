@@ -4,10 +4,14 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   BarChart3,
+  Boxes,
   Building2,
+  CalendarDays,
   ClipboardList,
+  FileSignature,
   FileSpreadsheet,
   History,
+  IdCard,
   Inbox,
   Landmark,
   LayoutDashboard,
@@ -19,6 +23,7 @@ import {
   Smartphone,
   UserPlus,
   Users,
+  Vote,
   Wallet,
   Wrench,
 } from "lucide-react";
@@ -63,6 +68,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
     can(P.membersManage) ||
     can(P.peopleManage) ||
     can(P.auditRead);
+  // Servis istekleri 14–18 için yeni izin adı yok; mevcut izinlerle gösteriliyor (istek dosyalarında önerilen izinler var)
+  const mgmt = can(P.announcementsRead) || can(P.expensesRead) || can(P.peopleRead);
   return (
     <>
       <Group label={site.name}>
@@ -91,6 +98,15 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
+        </Group>
+      )}
+      {mgmt && (
+        <Group label="Yönetim">
+          {can(P.announcementsRead) && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
+          {can(P.announcementsRead) && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
+          {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
+          {can(P.expensesRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {can(P.peopleRead) && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
         </Group>
       )}
     </>

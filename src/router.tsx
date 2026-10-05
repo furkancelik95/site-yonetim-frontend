@@ -59,6 +59,12 @@ const siteScreens: [string, string][] = [
   ["denetim", "AuditPage"],
   ["kullanicilar", "MembersPage"],
   ["kayit-basvurulari", "RegistrationsPage"],
+  ["toplantilar", "MeetingsPage"],
+  ["toplantilar/:meetingId", "MeetingDetailPage"],
+  ["anketler", "PollsPage"],
+  ["sozlesmeler", "ContractsPage"],
+  ["demirbas", "InventoryPage"],
+  ["personel", "StaffPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
