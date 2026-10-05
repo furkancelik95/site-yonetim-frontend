@@ -36,6 +36,7 @@ export function UnitsPage() {
         actions={
           can(P.unitsManage) && (
             <>
+              <Link className="btn" to={`/s/${site.slug}/belge/hazirun`}>Hazirun listesi</Link>
               <Link className="btn" to={`/s/${site.slug}/iceri-aktar`}>Excel'den aktar</Link>
               <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
                 <Plus aria-hidden="true" /> Bölüm ekle

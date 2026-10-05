@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { LogIn, LogOut, Package, UserRound } from "lucide-react";
+import { LogIn, LogOut, Package, SearchCheck, Siren, UserRound } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
+import { MockBadge } from "../../components/MockBadge";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso, trUpper } from "../../lib/format";
-import { packageStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
+import { useUrlState } from "../../lib/hooks";
+import { incidentKind, packageStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
 import { M, P, useSite } from "../../site/SiteContext";
 
 type Pkg = Schemas["PackageOut"];
@@ -19,14 +21,177 @@ export function SecurityPage() {
   const { shows } = useSite();
   const pk = shows(M.packages, P.packages);
   const vs = shows(M.visitors, P.visitors);
+  const [s, set] = useUrlState({ sekme: "kapi" });
+  const tabs = [
+    { key: "kapi", label: "Kargo ve ziyaretçi" },
+    { key: "olay", label: "Olaylar" },
+    { key: "kayip", label: "Kayıp eşya" },
+  ];
   return (
     <div className="stack">
-      <PageHead title="Güvenlik" subtitle="Kargo ve ziyaretçi kaydı" />
-      <div className="grid grid--2">
-        {pk && <PackagesCard />}
-        {vs && <VisitorsCard />}
+      <PageHead title="Güvenlik" subtitle="Kargo, ziyaretçi, olay ve kayıp eşya kaydı" />
+      <div className="row" role="tablist" aria-label="Güvenlik bölümleri" style={{ gap: "var(--s-2)" }}>
+        {tabs.map((t) => (
+          <button key={t.key} type="button" role="tab" aria-selected={s.sekme === t.key} className={`btn btn--sm${s.sekme === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key })}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {s.sekme === "olay" ? (
+        <IncidentsCard />
+      ) : s.sekme === "kayip" ? (
+        <LostItemsCard />
+      ) : (
+        <div className="grid grid--2">
+          {pk && <PackagesCard />}
+          {vs && <VisitorsCard />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const INCIDENT_KINDS = ["theft", "damage", "noise", "fire", "water_leak", "suspicious", "accident", "other"];
+
+/** Servis isteği 09'daki yanıt şekli. */
+interface Incident {
+  id: string; number: number; occurred_at: string; kind: string; location: string; description: string;
+  unit_id: string | null; unit_name: string | null; status: "open" | "closed"; closed_note: string | null; closed_at: string | null; recorded_by: string;
+}
+/** Servis isteği 10'daki yanıt şekli. */
+interface LostItem {
+  id: string; number: number; found_at: string; description: string; location: string; found_by: string | null;
+  status: "waiting" | "returned" | "disposed"; returned_to: string | null; returned_at: string | null; recorded_by: string;
+}
+
+function IncidentsCard() {
+  const [status, setStatus] = useState("open");
+  const r = useSiteGet<Page<Incident>>("/incidents", { status, page_size: 50 });
+  const [unit, setUnit] = useState<PickedUnit | null>(null);
+  const [f, setF] = useState({ kind: "other", location: "", description: "" });
+  const add = useSiteMutation<Record<string, unknown>, Incident>("POST", "/incidents", { onSuccess: () => { setUnit(null); setF({ kind: "other", location: "", description: "" }); } });
+  return (
+    <div className="grid grid--2">
+      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ ...f, unit_id: unit?.id ?? null, unit_name: unit?.name ?? null }); }}>
+        <div className="card__head"><span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span><span className="card__title">Olay kaydet</span><span className="ml-auto"><MockBadge request="09" /></span></div>
+        <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+          <FormError error={add.error} />
+          <div className="grid grid--2">
+            <Field label="Tür" required error={fieldError(add.error, "kind")}>{(p) => <select {...p} className="field__input" value={f.kind} onChange={(e) => setF((x) => ({ ...x, kind: e.target.value }))}>{INCIDENT_KINDS.map((k) => <option key={k} value={k}>{incidentKind(k)}</option>)}</select>}</Field>
+            <Field label="Yer" required error={fieldError(add.error, "location")}>{(p) => <input {...p} className="field__input" value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} placeholder="ör. B blok otopark" />}</Field>
+          </div>
+          <UnitPicker label="İlgili bölüm (varsa)" source="lookup" value={unit} onChange={setUnit} allowEmptyLabel="ortak alan" />
+          <Field label="Ne oldu" required error={fieldError(add.error, "description")}>{(p) => <textarea {...p} className="field__input" rows={3} value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
+          <div><SubmitButton busy={add.isPending} className="btn btn--primary" disabled={!f.location.trim() || !f.description.trim()}>Olayı kaydet</SubmitButton></div>
+        </div>
+      </form>
+      <div className="card">
+        <div className="card__head">
+          <span className="card__title">Olaylar</span>
+          <div className="row ml-auto" role="group" aria-label="Olay durumu" style={{ gap: "var(--s-2)" }}>
+            {[["open", "Açık"], ["closed", "Kapanan"]].map(([k, l]) => <button key={k} type="button" className={`btn btn--sm${status === k ? " btn--primary" : ""}`} aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
+          {r.isPending ? <Loading /> : r.isError ? <div className="card__body"><ErrorState error={r.error} /></div> : r.data.items.length === 0 ? <Empty title={status === "open" ? "Açık olay yok" : "Kapanan olay yok"} /> : (
+            <div className="table-wrap">
+              <table className="data">
+                <caption className="visually-hidden">Olay kayıtları</caption>
+                <tbody>
+                  {r.data.items.map((i) => (
+                    <tr key={i.id}>
+                      <td>
+                        <div className="cell-main">#{i.number} {incidentKind(i.kind)} · {i.location}</div>
+                        <div className="cell-sub">{i.description}</div>
+                        <div className="cell-sub">{formatDateTime(i.occurred_at)} · {i.recorded_by}{i.unit_name ? ` · ${i.unit_name}` : ""}</div>
+                        {i.closed_note && <div className="cell-sub">Kapanış: {i.closed_note}</div>}
+                      </td>
+                      <td className="right">{i.status === "open" ? <CloseIncident i={i} /> : <Badge>Kapandı</Badge>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+function CloseIncident({ i }: { i: Incident }) {
+  const [note, setNote] = useState("");
+  const m = useSiteMutation<{ note: string }, Incident>("POST", `/incidents/${i.id}/close`);
+  return (
+    <ConfirmButton className="btn btn--sm" title={`#${i.number} olayını kapat`} confirmLabel="Kapat"
+      body={<div className="field"><label className="field__label" htmlFor={`inc-${i.id}`}>Ne yapıldı *</label><textarea id={`inc-${i.id}`} className="field__input" rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></div>}
+      onConfirm={() => { if (!note.trim()) throw new Error("Kapanış notu zorunlu."); return m.mutateAsync({ note: note.trim() }); }}>
+      Kapat
+    </ConfirmButton>
+  );
+}
+
+function LostItemsCard() {
+  const [status, setStatus] = useState("waiting");
+  const r = useSiteGet<Page<LostItem>>("/lost-items", { status, page_size: 50 });
+  const [f, setF] = useState({ description: "", location: "", found_by: "" });
+  const add = useSiteMutation<Record<string, unknown>, LostItem>("POST", "/lost-items", { onSuccess: () => setF({ description: "", location: "", found_by: "" }) });
+  return (
+    <div className="grid grid--2">
+      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate(f); }}>
+        <div className="card__head"><span className="card__icon card__icon--info"><SearchCheck aria-hidden="true" /></span><span className="card__title">Bulunan eşya kaydet</span><span className="ml-auto"><MockBadge request="10" /></span></div>
+        <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+          <FormError error={add.error} />
+          <Field label="Eşya" required error={fieldError(add.error, "description")}>{(p) => <input {...p} className="field__input" value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} placeholder="ör. Siyah sırt çantası" />}</Field>
+          <div className="grid grid--2">
+            <Field label="Bulunduğu yer" required error={fieldError(add.error, "location")}>{(p) => <input {...p} className="field__input" value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} />}</Field>
+            <Field label="Bulan">{(p) => <input {...p} className="field__input" value={f.found_by} onChange={(e) => setF((x) => ({ ...x, found_by: e.target.value }))} />}</Field>
+          </div>
+          <div><SubmitButton busy={add.isPending} className="btn btn--primary" disabled={!f.description.trim() || !f.location.trim()}>Kaydet</SubmitButton></div>
+        </div>
+      </form>
+      <div className="card">
+        <div className="card__head">
+          <span className="card__title">Kayıp eşya</span>
+          <div className="row ml-auto" role="group" aria-label="Eşya durumu" style={{ gap: "var(--s-2)" }}>
+            {[["waiting", "Bekleyen"], ["returned", "Teslim edilen"]].map(([k, l]) => <button key={k} type="button" className={`btn btn--sm${status === k ? " btn--primary" : ""}`} aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
+          {r.isPending ? <Loading /> : r.isError ? <div className="card__body"><ErrorState error={r.error} /></div> : r.data.items.length === 0 ? <Empty title={status === "waiting" ? "Bekleyen eşya yok" : "Teslim edilen eşya yok"} /> : (
+            <div className="table-wrap">
+              <table className="data">
+                <caption className="visually-hidden">Kayıp eşya kayıtları</caption>
+                <tbody>
+                  {r.data.items.map((i) => (
+                    <tr key={i.id}>
+                      <td>
+                        <div className="cell-main">#{i.number} {i.description}</div>
+                        <div className="cell-sub">{i.location} · {formatDateTime(i.found_at)}{i.found_by ? ` · bulan: ${i.found_by}` : ""}</div>
+                        {i.returned_to && <div className="cell-sub">Teslim alan: {i.returned_to} · {formatDateTime(i.returned_at)}</div>}
+                      </td>
+                      <td className="right">{i.status === "waiting" ? <ReturnItem i={i} /> : <Badge tone={i.status === "returned" ? "ok" : "muted"}>{i.status === "returned" ? "Teslim edildi" : "Elden çıkarıldı"}</Badge>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReturnItem({ i }: { i: LostItem }) {
+  const [to, setTo] = useState("");
+  const m = useSiteMutation<{ returned_to: string }, LostItem>("POST", `/lost-items/${i.id}/return`);
+  return (
+    <ConfirmButton className="btn btn--sm" title={`#${i.number} eşyayı teslim et`} confirmLabel="Teslim et"
+      body={<div className="field"><label className="field__label" htmlFor={`lost-${i.id}`}>Teslim alan</label><input id={`lost-${i.id}`} className="field__input" value={to} onChange={(e) => setTo(e.target.value)} /></div>}
+      onConfirm={() => { if (to.trim().length < 2) throw new Error("Teslim alanın adını yazın."); return m.mutateAsync({ returned_to: to.trim() }); }}>
+      Teslim et
+    </ConfirmButton>
   );
 }
 

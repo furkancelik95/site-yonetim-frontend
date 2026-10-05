@@ -6,8 +6,9 @@ import { Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, f
 import { formatDateTime } from "../../lib/format";
 import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { DepartmentAssign, type WithDepartment } from "./Departments";
 
-type Detail = Schemas["RequestDetail"];
+type Detail = Schemas["RequestDetail"] & WithDepartment;
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
 const NEEDS_RESOLUTION = new Set(["resolved", "closed"]);
 
@@ -35,6 +36,7 @@ export function RequestDetailPage() {
             <div className="kv"><span className="kv__k">Durum</span><span className="kv__v"><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Öncelik</span><span className="kv__v"><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ?? "—"}</span></div>
+            <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
             <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ?? "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
             {r.resolution && <div className="kv"><span className="kv__k">Çözüm</span><span className="kv__v">{r.resolution}</span></div>}

@@ -86,7 +86,7 @@ export function DebtorsPage() {
                       <td className="small nowrap">{formatDate(d.oldest_open_due_date)}</td>
                       <td className="right">{d.overdue_days > 0 ? <Badge tone={overdueTone(d.overdue_days)}>{d.overdue_days} gün</Badge> : <span className="subtle">—</span>}</td>
                       <td className="right"><Money value={d.balance} tone="balance" /></td>
-                      <td className="right"><Link className="btn btn--sm" to={`/s/${site.slug}/cari/${d.id}`}>Ekstre</Link></td>
+                      <td className="right nowrap"><Link className="btn btn--sm" to={`/s/${site.slug}/cari/${d.id}`}>Ekstre</Link> <Link className="btn btn--ghost btn--sm" to={`/s/${site.slug}/belge/ihtar/${d.id}`}>İhtar</Link></td>
                     </tr>
                   ))}
                 </tbody>
