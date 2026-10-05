@@ -19,7 +19,7 @@ export function PaymentsPage() {
 
   return (
     <div className="stack">
-      <PageHead title="Tahsilat" subtitle="Tahsilat girmek için hesabı bulun; tutar en eski borçtan başlayarak kapatılır." />
+      <PageHead title="Tahsilat" subtitle="Tahsilat girmek için hesabı bulun; tutar en eski borçtan başlayarak kapatılır." actions={can(P.paymentRecord) && <><Link className="btn" to={`/s/${site.slug}/banka-aktarim`}>Banka ekstresinden aktar</Link><Link className="btn" to={`/s/${site.slug}/tahsilat/toplu`}>Toplu tahsilat</Link></>} />
 
       {can(P.paymentRecord) && <AccountFinder slug={site.slug} />}
 
