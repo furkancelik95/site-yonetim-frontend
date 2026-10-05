@@ -21,3 +21,6 @@ export { UnitDetailPage } from "./UnitDetailPage";
 export { UnitsPage } from "./UnitsPage";
 export { ClearanceCertificatePage, ReceiptPage } from "./DocumentPages";
 export { RequestBoardPage } from "./RequestBoardPage";
+export { BankImportPage } from "./BankImportPage";
+export { BulkPaymentPage } from "./BulkPaymentPage";
+export { RecurringExpensesPage } from "./RecurringExpensesPage";

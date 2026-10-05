@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 import {
   AlertTriangle,
+  ArrowDownToLine,
   BarChart3,
   Building2,
   ClipboardList,
@@ -65,6 +66,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.unitsRead) && <Item to={`${base}/daireler`} icon={<Building2 aria-hidden="true" />} label="Daireler" />}
         {can(P.financeRead) && <Item to={`${base}/borclular`} icon={<AlertTriangle aria-hidden="true" />} label="Borçlular" />}
         {can(P.paymentRecord) && <Item to={`${base}/tahsilat`} icon={<Wallet aria-hidden="true" />} label="Tahsilat" />}
+        {can(P.paymentRecord) && <Item to={`${base}/banka-aktarim`} icon={<ArrowDownToLine aria-hidden="true" />} label="Banka Aktarımı" />}
         {can(P.financeRead) && <Item to={`${base}/tahakkuk`} icon={<ClipboardList aria-hidden="true" />} label="Tahakkuk" />}
         {can(P.financeRead) && <Item to={`${base}/isletme-projesi`} icon={<Receipt aria-hidden="true" />} label="İşletme Projesi" />}
         {can(P.expensesRead) && <Item to={`${base}/giderler`} icon={<Inbox aria-hidden="true" />} label="Giderler" />}

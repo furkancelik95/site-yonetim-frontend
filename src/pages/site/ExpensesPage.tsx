@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { FileText, Inbox, Plus } from "lucide-react";
+import { FileText, Inbox, Plus, Repeat } from "lucide-react";
 import { openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
@@ -34,6 +34,7 @@ export function ExpensesPage() {
         actions={
           <>
             <ExcelButton path={`/sites/${site.slug}/expenses/export.xlsx`} query={filters} fileName={`giderler-${s.year}.xlsx`} />
+            <Link className="btn" to="tekrarlanan"><Repeat aria-hidden="true" /> Tekrarlanan</Link>
             {can(P.expensesManage) && <Link className="btn btn--primary" to="yeni"><Plus aria-hidden="true" /> Gider ekle</Link>}
           </>
         }
