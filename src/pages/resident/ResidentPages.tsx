@@ -7,7 +7,7 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
-import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
+import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
 import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
@@ -75,7 +75,43 @@ export function ResidentHomePage() {
               <span className="kv__v"><Money value={a.balance} tone="balance" /></span>
             </div>
           ))}
-          <div className="calc">Havale açıklamasına referans kodunu yazmanız ödemenizin doğru hesaba işlenmesini kolaylaştırır.</div>
+        </div>
+      </div>
+
+      {/* Ödeme bilgileri (servis isteği 05): sitenin kendi hesabı — platform parayı tutmaz */}
+      <div className="card">
+        <div className="card__body">
+          <div className="section-title">Ödeme bilgileri</div>
+          {h.payment_info ? (
+            <>
+              {h.payment_info.account_holder && (
+                <div className="kv"><span className="kv__k">Alıcı</span><span className="kv__v">{h.payment_info.account_holder}</span></div>
+              )}
+              {h.payment_info.bank_name && (
+                <div className="kv"><span className="kv__k">Banka</span><span className="kv__v">{h.payment_info.bank_name}</span></div>
+              )}
+              <div className="kv">
+                <span className="kv__k">IBAN</span>
+                <span className="kv__v">
+                  <span className="mono xs">{formatIban(h.payment_info.iban)}</span>{" "}
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => navigator.clipboard?.writeText(h.payment_info!.iban.replace(/\s/g, "")).then(() => toast("IBAN kopyalandı."))}
+                  >
+                    <Copy aria-hidden="true" /> Kopyala
+                  </button>
+                </span>
+              </div>
+              <div className="kv">
+                <span className="kv__k">Açıklamaya yazın</span>
+                <span className="kv__v mono strong">{h.accounts.map((a) => a.reference_code).join(", ")}</span>
+              </div>
+              <div className="calc">Havale açıklamasına referans kodunu yazmanız ödemenizin doğru hesaba işlenmesini kolaylaştırır.</div>
+            </>
+          ) : (
+            <p className="small muted mb-0">Ödeme bilgisi için site yönetimiyle görüşün.</p>
+          )}
         </div>
       </div>
 

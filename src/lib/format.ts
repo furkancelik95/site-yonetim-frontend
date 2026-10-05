@@ -122,6 +122,11 @@ export function parseMoneyInput(raw: string): string | null {
   return new Decimal(s).toFixed(2);
 }
 
+/** "TR330006100519786457841326" → "TR33 0006 1005 1978 6457 8413 26" (okunur ve elle yazılabilir) */
+export function formatIban(iban: string): string {
+  return iban.replace(/\s/g, "").toLocaleUpperCase("tr-TR").replace(/(.{4})/g, "$1 ").trim();
+}
+
 export function todayIso(): string {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, "0");
