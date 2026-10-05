@@ -17,6 +17,8 @@ export { ReportsPage } from "./ReportsPage";
 export { RequestDetailPage } from "./RequestDetailPage";
 export { RequestsPage } from "./RequestsPage";
 export { SecurityPage } from "./SecurityPage";
+export { MembersPage } from "./MembersPage";
+export { RegistrationsPage } from "./RegistrationsPage";
 export { UnitDetailPage } from "./UnitDetailPage";
 export { UnitsPage } from "./UnitsPage";
 export { ClearanceCertificatePage, ReceiptPage } from "./DocumentPages";

@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Smartphone,
+  UserPlus,
+  Users,
   Wallet,
   Wrench,
 } from "lucide-react";
@@ -58,6 +60,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
     shows(M.requests, P.requestsRead) ||
     shows(M.announcements, P.announcementsRead) ||
     can(P.modulesManage) ||
+    can(P.membersManage) ||
+    can(P.peopleManage) ||
     can(P.auditRead);
   return (
     <>
@@ -83,6 +87,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {shows(M.announcements, P.announcementsRead) && (
             <Item to={`${base}/duyurular`} icon={<Megaphone aria-hidden="true" />} label="Duyurular" />
           )}
+          {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Kayıt Başvuruları" />}
+          {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
         </Group>

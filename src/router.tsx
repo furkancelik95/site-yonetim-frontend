@@ -6,6 +6,7 @@ import { PlatformLayout, RequireAuth, RootIndex, SiteLayout } from "./layouts/gu
 import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
+import { PrivacyNoticePage, PublicRegistrationPage } from "./pages/auth/PublicRegistrationPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
 import { SiteIndex } from "./site/SiteIndex";
 
@@ -56,6 +57,8 @@ const siteScreens: [string, string][] = [
   ["guvenlik", "SecurityPage"],
   ["moduller", "ModulesPage"],
   ["denetim", "AuditPage"],
+  ["kullanicilar", "MembersPage"],
+  ["kayit-basvurulari", "RegistrationsPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -70,6 +73,9 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: "/giris", element: <LoginPage /> },
+      // Oturumsuz: sakinin kendini kaydetmesi (servis isteği 13) ve aydınlatma metni.
+      { path: "/kayit/:code", element: <PublicRegistrationPage /> },
+      { path: "/aydinlatma", element: <PrivacyNoticePage /> },
       {
         element: <RequireAuth />,
         children: [
