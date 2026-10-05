@@ -148,3 +148,19 @@ export const incidentKind = label({
   accident: "Kaza / yaralanma",
   other: "Diğer",
 });
+
+// Servis istekleri 14–18 (toplantı, anket, sözleşme, demirbaş/stok, personel)
+export const meetingKind = label({ general_ordinary: "Olağan genel kurul", general_extraordinary: "Olağanüstü genel kurul", board: "Yönetim kurulu" });
+export const meetingStatus = label({ planned: "Planlandı", held: "Yapıldı", cancelled: "İptal" });
+export const meetingStatusTone = (v: string): Tone => (v === "held" ? "ok" : v === "cancelled" ? "muted" : "info");
+export const agendaResult = label({ accepted: "Kabul", rejected: "Ret", postponed: "Ertelendi", info: "Bilgi verildi" });
+export const agendaResultTone = (v: string | null): Tone => (v === "accepted" ? "ok" : v === "rejected" ? "danger" : v === "postponed" ? "warn" : "muted");
+export const pollAudience = label({ all: "Tüm bölümler", owners: "Yalnız malikler", tenants: "Yalnız oturanlar" });
+export const contractCategory = label({
+  elevator: "Asansör bakımı", cleaning: "Temizlik", security: "Güvenlik", garden: "Bahçe / peyzaj",
+  maintenance: "Teknik bakım", insurance: "Sigorta", pool: "Havuz", other: "Diğer",
+});
+export const contractPeriod = label({ monthly: "Aylık", yearly: "Yıllık", once: "Tek seferlik" });
+export const assetStatus = label({ in_use: "Kullanımda", broken: "Arızalı", retired: "Kullanım dışı" });
+export const assetStatusTone = (v: string): Tone => (v === "in_use" ? "ok" : v === "broken" ? "warn" : "muted");
+export const staffEmployer = label({ site: "Site kadrosu", contractor: "Taşeron firma" });

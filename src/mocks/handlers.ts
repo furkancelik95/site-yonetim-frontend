@@ -3,7 +3,8 @@
 // servis gelince silinir. Diğer bütün istekler gerçek backend'e gider (onUnhandledRequest: "bypass").
 //
 // Şu an sahte: 06 banka hareketi aktarımı, 07 tekrarlanan gider, 09 olay kaydı, 10 kayıp eşya,
-// 11 talep departmanları, 12 site kullanıcıları ve roller, 13 sakin kayıt başvurusu.
+// 11 talep departmanları, 12 site kullanıcıları ve roller, 13 sakin kayıt başvurusu, 14 toplantı,
+// 15 anket, 16 sözleşme, 17 demirbaş ve stok, 18 personel.
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -523,3 +524,326 @@ export const handlers: RequestHandler[] = [
     return HttpResponse.json({ data: r, message: `"${r!.description}" kaldırıldı. Daha önce oluşturulan giderler yerinde kalır.` });
   }),
 ];
+
+// --- 14 Toplantı · 15 Anket · 16 Sözleşme · 17 Demirbaş ve stok · 18 Personel ---------------
+interface AgendaItem {
+  id: string; order: number; title: string; decision: string | null; result: "accepted" | "rejected" | "postponed" | "info" | null;
+  votes_for: number | null; votes_against: number | null; votes_abstain: number | null;
+}
+interface Meeting {
+  id: string; number: number; kind: "general_ordinary" | "general_extraordinary" | "board"; title: string; scheduled_at: string; location: string;
+  status: "planned" | "held" | "cancelled"; agenda: AgendaItem[]; attendance_note: string | null; held_at: string | null;
+  cancel_reason: string | null; created_by: string; created_at: string;
+}
+interface PollOption { id: string; label: string; votes: number }
+interface Poll {
+  id: string; question: string; description: string | null; options: PollOption[]; audience: "all" | "owners" | "tenants"; ends_on: string;
+  status: "open" | "closed"; total_votes: number; created_by: string; created_at: string;
+}
+interface Contract {
+  id: string; vendor: string; subject: string; category: string; start_date: string; end_date: string; amount: string | null;
+  period: "monthly" | "yearly" | "once"; notice_days: number; auto_renew: boolean; note: string | null; is_archived: boolean; created_at: string;
+}
+interface Asset {
+  id: string; code: string; name: string; category: string; location: string; acquired_on: string | null; value: string | null;
+  status: "in_use" | "broken" | "retired"; assignee: string | null; note: string | null;
+}
+interface StockItem { id: string; name: string; unit_label: string; quantity: string; min_quantity: string; location: string | null }
+interface StockMove { id: string; item_id: string; direction: "in" | "out"; quantity: string; note: string | null; moved_at: string; moved_by: string }
+interface StaffMember {
+  id: string; full_name: string; position: string; employer: "site" | "contractor"; contractor_name: string | null; phone: string | null;
+  start_date: string; end_date: string | null; shift: string | null;
+}
+const meetings = loadMap<string, Meeting[]>("meetings");
+const polls = loadMap<string, Poll[]>("polls");
+const pollVotes = loadMap<string, string>("pollVotes"); // `${pollId}:${unitId}` → option_id
+const contracts = loadMap<string, Contract[]>("contracts");
+const assets = loadMap<string, Asset[]>("assets");
+const stockItems = loadMap<string, StockItem[]>("stockItems");
+const stockMoves = loadMap<string, StockMove[]>("stockMoves");
+const staff = loadMap<string, StaffMember[]>("staff");
+function listOf<T>(m: Map<string, T[]>, slug: string): T[] {
+  if (!m.has(slug)) m.set(slug, []);
+  return m.get(slug)!;
+}
+const MEETING_KINDS = ["general_ordinary", "general_extraordinary", "board"];
+const AGENDA_RESULTS = ["accepted", "rejected", "postponed", "info"];
+const CONTRACT_CATEGORIES = ["elevator", "cleaning", "security", "garden", "maintenance", "insurance", "pool", "other"];
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MONEY_RE = /^\d+(\.\d{1,2})?$/;
+const QTY_RE = /^\d+(\.\d{1,3})?$/;
+const daysUntil = (d: string) => Math.round((new Date(`${d}T00:00:00`).getTime() - new Date(`${iso(new Date())}T00:00:00`).getTime()) / 864e5);
+function contractOut(c: Contract) {
+  const days_left = daysUntil(c.end_date);
+  const state = c.is_archived ? "archived" : days_left < 0 ? "expired" : days_left <= c.notice_days ? "expiring" : "active";
+  return { ...c, days_left, state };
+}
+const pollOut = (p: Poll): Poll => ({ ...p, status: p.status === "open" && daysUntil(p.ends_on) < 0 ? "closed" : p.status });
+// Ondalık miktar: kayan nokta hatası olmasın diye binde bire çevirip tam sayıyla topla
+const milli = (s: string) => Math.round(Number(s) * 1000);
+const fromMilli = (n: number) => String(n / 1000);
+const VALIDATION = "Formda düzeltilmesi gereken alanlar var.";
+
+const yonetim: RequestHandler[] = [
+  // 14 — toplantılar
+  http.get(`${API}/meetings`, ({ request, params }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get("status");
+    const list = listOf(meetings, String(params.slug)).filter((m) => !status || m.status === status);
+    return HttpResponse.json(page([...list].sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)), url));
+  }),
+  http.get(`${API}/meetings/:id`, ({ params }) => {
+    const m = listOf(meetings, String(params.slug)).find((x) => x.id === params.id);
+    return m ? HttpResponse.json(m) : err(404, "not_found", "Toplantı bulunamadı.");
+  }),
+  http.post(`${API}/meetings`, async ({ request, params }) => {
+    const b = (await request.json()) as { kind?: string; title?: string; scheduled_at?: string; location?: string; agenda?: string[] };
+    const f: Record<string, string> = {};
+    if (!b.kind || !MEETING_KINDS.includes(b.kind)) f.kind = "Toplantı türünü seçin.";
+    if (!b.title?.trim()) f.title = "Toplantıya bir başlık verin.";
+    if (!b.scheduled_at || Number.isNaN(Date.parse(b.scheduled_at))) f.scheduled_at = "Tarih ve saati girin.";
+    if (!b.location?.trim()) f.location = "Toplantı yerini yazın.";
+    const agenda = (b.agenda ?? []).map((t) => t.trim()).filter(Boolean);
+    if (agenda.length === 0) f.agenda = "En az bir gündem maddesi yazın.";
+    if (agenda.length > 30) f.agenda = "En fazla 30 gündem maddesi.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const list = listOf(meetings, String(params.slug));
+    const m: Meeting = {
+      id: crypto.randomUUID(), number: list.length + 1, kind: b.kind as Meeting["kind"], title: b.title!.trim(), scheduled_at: b.scheduled_at!, location: b.location!.trim(),
+      status: "planned",
+      agenda: agenda.map((title, i) => ({ id: crypto.randomUUID(), order: i + 1, title, decision: null, result: null, votes_for: null, votes_against: null, votes_abstain: null })),
+      attendance_note: null, held_at: null, cancel_reason: null, created_by: await me(request), created_at: new Date().toISOString(),
+    };
+    list.push(m);
+    return HttpResponse.json({ data: m, message: `"${m.title}" planlandı.` }, { status: 201 });
+  }),
+  http.post(`${API}/meetings/:id/decisions`, async ({ request, params }) => {
+    const m = listOf(meetings, String(params.slug)).find((x) => x.id === params.id);
+    if (!m) return err(404, "not_found", "Toplantı bulunamadı.");
+    if (m.status !== "planned") return err(409, "not_planned", "Kararlar yalnız planlanan toplantıya girilir.");
+    const b = (await request.json()) as { attendance_note?: string; items?: Partial<AgendaItem>[] };
+    const f: Record<string, string> = {};
+    if (!b.attendance_note?.trim()) f.attendance_note = "Katılımı yazın (ör. 48 bölümden 31'i katıldı ya da temsil edildi).";
+    for (const it of m.agenda) {
+      const x = b.items?.find((y) => y.id === it.id);
+      if (!x?.result || !AGENDA_RESULTS.includes(x.result)) f[`items.${it.order}`] = `${it.order}. madde için sonucu seçin.`;
+      else if (x.result !== "info" && !x.decision?.trim()) f[`items.${it.order}`] = `${it.order}. maddenin karar metnini yazın.`;
+      for (const k of ["votes_for", "votes_against", "votes_abstain"] as const) {
+        const v = x?.[k];
+        if (v != null && (!Number.isInteger(v) || v < 0)) f[`items.${it.order}`] = `${it.order}. maddede oy sayıları sıfır ya da pozitif tam sayı olmalı.`;
+      }
+    }
+    if (Object.keys(f).length) return err(422, "validation", "Her gündem maddesi için sonuç ve karar metni gerekli.", f);
+    for (const it of m.agenda) {
+      const x = b.items!.find((y) => y.id === it.id)!;
+      Object.assign(it, { result: x.result, decision: x.decision?.trim() || null, votes_for: x.votes_for ?? null, votes_against: x.votes_against ?? null, votes_abstain: x.votes_abstain ?? null });
+    }
+    Object.assign(m, { status: "held", attendance_note: b.attendance_note!.trim(), held_at: new Date().toISOString() });
+    return HttpResponse.json({ data: m, message: "Kararlar kaydedildi; toplantı yapıldı olarak işaretlendi. Kayıt artık değiştirilemez." });
+  }),
+  http.post(`${API}/meetings/:id/cancel`, async ({ request, params }) => {
+    const m = listOf(meetings, String(params.slug)).find((x) => x.id === params.id);
+    if (!m) return err(404, "not_found", "Toplantı bulunamadı.");
+    if (m.status !== "planned") return err(409, "not_planned", "Yalnız planlanan toplantı iptal edilir.");
+    const b = (await request.json()) as { reason?: string };
+    if (!b.reason?.trim()) return err(422, "validation", "İptal gerekçesi zorunlu.", { reason: "Gerekçe yazın." });
+    Object.assign(m, { status: "cancelled", cancel_reason: b.reason.trim() });
+    return HttpResponse.json({ data: m, message: `"${m.title}" iptal edildi.` });
+  }),
+
+  // 15 — anketler (personel)
+  http.get(`${API}/polls`, ({ request, params }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get("status");
+    const list = listOf(polls, String(params.slug)).map(pollOut).filter((p) => !status || p.status === status);
+    return HttpResponse.json(page([...list].reverse(), url));
+  }),
+  http.post(`${API}/polls`, async ({ request, params }) => {
+    const b = (await request.json()) as { question?: string; description?: string; options?: string[]; audience?: string; ends_on?: string };
+    const f: Record<string, string> = {};
+    const options = (b.options ?? []).map((o) => o.trim()).filter(Boolean);
+    if (!b.question?.trim() || b.question.trim().length < 5) f.question = "Soruyu yazın.";
+    if (options.length < 2 || options.length > 8) f.options = "2 ile 8 arasında seçenek yazın.";
+    else if (new Set(options.map((o) => o.toLocaleLowerCase("tr-TR"))).size !== options.length) f.options = "Aynı seçenek iki kez yazılmış.";
+    if (!["all", "owners", "tenants"].includes(b.audience ?? "")) f.audience = "Kimin oy vereceğini seçin.";
+    if (!b.ends_on || !DATE_RE.test(b.ends_on) || daysUntil(b.ends_on) < 0) f.ends_on = "Bugün ya da ileri bir bitiş tarihi seçin.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const p: Poll = {
+      id: crypto.randomUUID(), question: b.question!.trim(), description: b.description?.trim() || null,
+      options: options.map((label) => ({ id: crypto.randomUUID(), label, votes: 0 })),
+      audience: b.audience as Poll["audience"], ends_on: b.ends_on!, status: "open", total_votes: 0, created_by: await me(request), created_at: new Date().toISOString(),
+    };
+    listOf(polls, String(params.slug)).push(p);
+    return HttpResponse.json({ data: p, message: "Anket açıldı; sakinler kendi ekranlarında görüyor." }, { status: 201 });
+  }),
+  http.post(`${API}/polls/:id/close`, ({ params }) => {
+    const p = listOf(polls, String(params.slug)).find((x) => x.id === params.id);
+    if (!p) return err(404, "not_found", "Anket bulunamadı.");
+    if (pollOut(p).status === "closed") return err(409, "already_closed", "Anket zaten kapandı.");
+    p.status = "closed";
+    return HttpResponse.json({ data: p, message: "Anket kapatıldı; sonuç sakinlere açıldı." });
+  }),
+  // 15 — anketler (sakin): her bağımsız bölüm bir oy
+  http.get(`${API}/resident/polls`, async ({ request, params }) => {
+    const home = await real<{ units: { unit_id: string; unit_name: string; role: string }[] }>(request, `/api/v1/sites/${params.slug}/resident/home`);
+    if (home.status !== 200) return HttpResponse.json(home.body, { status: home.status });
+    const units = home.body!.units;
+    const list = listOf(polls, String(params.slug)).map(pollOut).filter((p) => p.status === "open" || daysUntil(p.ends_on) > -30);
+    return HttpResponse.json([...list].reverse().map((p) => {
+      const eligible = units.filter((u) => p.audience === "all" || (p.audience === "owners" ? u.role === "owner" : u.role !== "owner"));
+      const my_votes = eligible.map((u) => ({ unit_id: u.unit_id, unit_name: u.unit_name, option_id: pollVotes.get(`${p.id}:${u.unit_id}`) ?? null }));
+      const showResults = p.status === "closed" || my_votes.some((v) => v.option_id);
+      return { ...p, options: p.options.map((o) => ({ ...o, votes: showResults ? o.votes : null })), total_votes: showResults ? p.total_votes : null, my_votes };
+    }));
+  }),
+  http.post(`${API}/resident/polls/:id/vote`, async ({ request, params }) => {
+    const p = listOf(polls, String(params.slug)).find((x) => x.id === params.id);
+    if (!p) return err(404, "not_found", "Anket bulunamadı.");
+    if (pollOut(p).status === "closed") return err(409, "poll_closed", "Anket kapandı; oy verilemez.");
+    const b = (await request.json()) as { unit_id?: string; option_id?: string };
+    const home = await real<{ units: { unit_id: string; role: string }[] }>(request, `/api/v1/sites/${params.slug}/resident/home`);
+    const u = home.body?.units.find((x) => x.unit_id === b.unit_id);
+    if (!u) return err(404, "not_found", "Bu bölüm adına oy veremezsiniz.");
+    const eligible = p.audience === "all" || (p.audience === "owners" ? u.role === "owner" : u.role !== "owner");
+    if (!eligible) return err(403, "not_eligible", "Bu anket bölümünüzdeki rolünüze açık değil.");
+    const o = p.options.find((x) => x.id === b.option_id);
+    if (!o) return err(422, "validation", "Bir seçenek işaretleyin.", { option_id: "Bir seçenek işaretleyin." });
+    const key = `${p.id}:${u.unit_id}`;
+    if (pollVotes.has(key)) return err(409, "already_voted", "Bu bölüm adına zaten oy verildi.");
+    pollVotes.set(key, o.id);
+    o.votes += 1;
+    p.total_votes += 1;
+    return HttpResponse.json({ data: { option_id: o.id }, message: "Oyunuz kaydedildi." });
+  }),
+
+  // 16 — sözleşmeler
+  http.get(`${API}/contracts`, ({ request, params }) => {
+    const archived = new URL(request.url).searchParams.get("archived") === "true";
+    const list = listOf(contracts, String(params.slug)).filter((c) => c.is_archived === archived).map(contractOut);
+    return HttpResponse.json(list.sort((a, b) => a.end_date.localeCompare(b.end_date)));
+  }),
+  ...(["post", "patch"] as const).map((verb) =>
+    http[verb](verb === "post" ? `${API}/contracts` : `${API}/contracts/:id`, async ({ request, params }) => {
+      const list = listOf(contracts, String(params.slug));
+      const cur = verb === "patch" ? list.find((x) => x.id === params.id) : undefined;
+      if (verb === "patch" && !cur) return err(404, "not_found", "Sözleşme bulunamadı.");
+      const b: Partial<Contract> = { ...(cur ?? {}), ...((await request.json()) as Partial<Contract>) };
+      const f: Record<string, string> = {};
+      if (!b.vendor?.trim()) f.vendor = "Firma adını yazın.";
+      if (!b.subject?.trim()) f.subject = "Sözleşmenin konusunu yazın.";
+      if (!CONTRACT_CATEGORIES.includes(b.category ?? "")) f.category = "Tür seçin.";
+      if (!b.start_date || !DATE_RE.test(b.start_date)) f.start_date = "Başlangıç tarihini girin.";
+      if (!b.end_date || !DATE_RE.test(b.end_date)) f.end_date = "Bitiş tarihini girin.";
+      else if (b.start_date && b.end_date < b.start_date) f.end_date = "Bitiş, başlangıçtan önce olamaz.";
+      if (b.amount && !MONEY_RE.test(b.amount)) f.amount = "Tutarı geçerli girin.";
+      if (!["monthly", "yearly", "once"].includes(b.period ?? "")) f.period = "Ödeme dönemini seçin.";
+      if (!Number.isInteger(b.notice_days) || b.notice_days! < 0 || b.notice_days! > 365) f.notice_days = "Uyarı süresi 0–365 gün.";
+      if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+      const c: Contract = {
+        id: cur?.id ?? crypto.randomUUID(), vendor: b.vendor!.trim(), subject: b.subject!.trim(), category: b.category!, start_date: b.start_date!, end_date: b.end_date!,
+        amount: b.amount || null, period: b.period!, notice_days: b.notice_days!, auto_renew: !!b.auto_renew, note: b.note?.trim() || null,
+        is_archived: !!b.is_archived, created_at: cur?.created_at ?? new Date().toISOString(),
+      };
+      const archivedNow = c.is_archived && !cur?.is_archived;
+      if (cur) Object.assign(cur, c); else list.push(c);
+      const msg = verb === "post" ? `${c.vendor} sözleşmesi eklendi.` : archivedNow ? `${c.vendor} sözleşmesi arşive kaldırıldı.` : `${c.vendor} sözleşmesi güncellendi.`;
+      return HttpResponse.json({ data: contractOut(c), message: msg }, { status: verb === "post" ? 201 : 200 });
+    }),
+  ),
+
+  // 17 — demirbaş
+  http.get(`${API}/assets`, ({ request, params }) => {
+    const status = new URL(request.url).searchParams.get("status");
+    return HttpResponse.json(listOf(assets, String(params.slug)).filter((a) => !status || a.status === status));
+  }),
+  ...(["post", "patch"] as const).map((verb) =>
+    http[verb](verb === "post" ? `${API}/assets` : `${API}/assets/:id`, async ({ request, params }) => {
+      const list = listOf(assets, String(params.slug));
+      const cur = verb === "patch" ? list.find((x) => x.id === params.id) : undefined;
+      if (verb === "patch" && !cur) return err(404, "not_found", "Demirbaş bulunamadı.");
+      const b: Partial<Asset> = { ...(cur ?? {}), ...((await request.json()) as Partial<Asset>) };
+      const f: Record<string, string> = {};
+      if (!b.name?.trim()) f.name = "Demirbaşın adını yazın.";
+      if (!b.category?.trim()) f.category = "Grubunu yazın (ör. Bahçe ekipmanı).";
+      if (!b.location?.trim()) f.location = "Nerede durduğunu yazın.";
+      if (b.acquired_on && !DATE_RE.test(b.acquired_on)) f.acquired_on = "Tarihi geçerli girin.";
+      if (b.value && !MONEY_RE.test(b.value)) f.value = "Tutarı geçerli girin.";
+      if (!["in_use", "broken", "retired"].includes(b.status ?? "in_use")) f.status = "Durum seçin.";
+      if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+      const a: Asset = {
+        id: cur?.id ?? crypto.randomUUID(), code: cur?.code ?? `DB-${String(list.length + 1).padStart(4, "0")}`, name: b.name!.trim(), category: b.category!.trim(),
+        location: b.location!.trim(), acquired_on: b.acquired_on || null, value: b.value || null, status: b.status ?? "in_use",
+        assignee: b.assignee?.trim() || null, note: b.note?.trim() || null,
+      };
+      if (cur) Object.assign(cur, a); else list.push(a);
+      return HttpResponse.json({ data: a, message: verb === "post" ? `${a.code} ${a.name} eklendi.` : `${a.code} ${a.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
+    }),
+  ),
+  // 17 — stok
+  http.get(`${API}/stock-items`, ({ params }) => HttpResponse.json(listOf(stockItems, String(params.slug)))),
+  http.post(`${API}/stock-items`, async ({ request, params }) => {
+    const b = (await request.json()) as Partial<StockItem>;
+    const list = listOf(stockItems, String(params.slug));
+    const f: Record<string, string> = {};
+    if (!b.name?.trim()) f.name = "Malzemenin adını yazın.";
+    else if (list.some((x) => x.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla bir malzeme var.";
+    if (!b.unit_label?.trim()) f.unit_label = "Birimi seçin.";
+    if (!QTY_RE.test(b.min_quantity ?? "")) f.min_quantity = "Asgari miktarı sayı olarak girin.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const s: StockItem = { id: crypto.randomUUID(), name: b.name!.trim(), unit_label: b.unit_label!.trim(), quantity: "0", min_quantity: b.min_quantity!, location: b.location?.trim() || null };
+    list.push(s);
+    return HttpResponse.json({ data: s, message: `${s.name} eklendi. Mevcudu girmek için giriş hareketi yapın.` }, { status: 201 });
+  }),
+  http.get(`${API}/stock-items/:id/moves`, ({ params }) =>
+    HttpResponse.json(listOf(stockMoves, String(params.slug)).filter((m) => m.item_id === params.id).reverse()),
+  ),
+  http.post(`${API}/stock-items/:id/moves`, async ({ request, params }) => {
+    const s = listOf(stockItems, String(params.slug)).find((x) => x.id === params.id);
+    if (!s) return err(404, "not_found", "Malzeme bulunamadı.");
+    const b = (await request.json()) as Partial<StockMove>;
+    if (b.direction !== "in" && b.direction !== "out") return err(422, "validation", "Giriş mi çıkış mı seçin.", { direction: "Seçin." });
+    if (!QTY_RE.test(b.quantity ?? "") || milli(b.quantity!) === 0) {
+      return err(422, "validation", "Miktarı girin.", { quantity: "Sıfırdan büyük bir miktar girin (en çok 3 ondalık)." });
+    }
+    const next = milli(s.quantity) + (b.direction === "in" ? 1 : -1) * milli(b.quantity!);
+    if (next < 0) return err(409, "insufficient_stock", `Stokta ${Number(s.quantity).toLocaleString("tr-TR", { maximumFractionDigits: 3 })} ${s.unit_label} var; daha fazlası çıkarılamaz.`);
+    s.quantity = fromMilli(next);
+    const m: StockMove = { id: crypto.randomUUID(), item_id: s.id, direction: b.direction, quantity: b.quantity!, note: b.note?.trim() || null, moved_at: new Date().toISOString(), moved_by: await me(request) };
+    listOf(stockMoves, String(params.slug)).push(m);
+    return HttpResponse.json({ data: { item: s, move: m }, message: `${s.name}: ${b.direction === "in" ? "giriş" : "çıkış"} kaydedildi.` }, { status: 201 });
+  }),
+
+  // 18 — personel
+  http.get(`${API}/staff`, ({ request, params }) => {
+    const active = new URL(request.url).searchParams.get("active") !== "false";
+    return HttpResponse.json(listOf(staff, String(params.slug)).filter((s) => (s.end_date === null || daysUntil(s.end_date) >= 0) === active));
+  }),
+  ...(["post", "patch"] as const).map((verb) =>
+    http[verb](verb === "post" ? `${API}/staff` : `${API}/staff/:id`, async ({ request, params }) => {
+      const list = listOf(staff, String(params.slug));
+      const cur = verb === "patch" ? list.find((x) => x.id === params.id) : undefined;
+      if (verb === "patch" && !cur) return err(404, "not_found", "Personel bulunamadı.");
+      const b: Partial<StaffMember> = { ...(cur ?? {}), ...((await request.json()) as Partial<StaffMember>) };
+      const f: Record<string, string> = {};
+      const name = (b.full_name ?? "").trim().replace(/\s+/g, " ");
+      if (name.length < 3 || name.length > 60 || !/^[A-Za-zÇĞİÖŞÜçğıöşü' -]+$/u.test(name)) f.full_name = "Ad soyad yazın (yalnız harf, 3–60 karakter).";
+      if (!b.position?.trim()) f.position = "Görevini yazın.";
+      if (b.employer !== "site" && b.employer !== "contractor") f.employer = "Kadro türünü seçin.";
+      else if (b.employer === "contractor" && !b.contractor_name?.trim()) f.contractor_name = "Taşeron firmanın adını yazın.";
+      if (b.phone && !/^\+905\d{9}$/.test(b.phone)) f.phone = "Cep telefonu 5 ile başlayan 10 hane olmalı.";
+      if (!b.start_date || !DATE_RE.test(b.start_date)) f.start_date = "İşe başlama tarihini girin.";
+      if (b.end_date && (!DATE_RE.test(b.end_date) || b.end_date < (b.start_date ?? ""))) f.end_date = "Ayrılış tarihi başlangıçtan önce olamaz.";
+      if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+      const s: StaffMember = {
+        id: cur?.id ?? crypto.randomUUID(), full_name: name, position: b.position!.trim(), employer: b.employer!,
+        contractor_name: b.employer === "contractor" ? b.contractor_name!.trim() : null, phone: b.phone || null,
+        start_date: b.start_date!, end_date: b.end_date || null, shift: b.shift?.trim() || null,
+      };
+      const leftNow = !!s.end_date && !cur?.end_date;
+      if (cur) Object.assign(cur, s); else list.push(s);
+      const msg = verb === "post" ? `${s.full_name} eklendi.` : leftNow ? `${s.full_name} için ayrılış kaydedildi.` : `${s.full_name} güncellendi.`;
+      return HttpResponse.json({ data: s, message: msg }, { status: verb === "post" ? 201 : 200 });
+    }),
+  ),
+];
+handlers.push(...yonetim);
