@@ -50,6 +50,8 @@ const siteScreens: [string, string][] = [
   ["talepler/:requestId", "RequestDetailPage"],
   ["makbuz/:paymentId", "ReceiptPage"],
   ["belge/borcsuzluk/:certificateId", "ClearanceCertificatePage"],
+  ["belge/ihtar/:accountId", "DunningLetterPage"],
+  ["belge/hazirun", "AttendanceListPage"],
   ["duyurular", "AnnouncementsPage"],
   ["guvenlik", "SecurityPage"],
   ["moduller", "ModulesPage"],

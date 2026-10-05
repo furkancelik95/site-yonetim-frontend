@@ -9,24 +9,27 @@ import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { CATEGORIES, PRIORITIES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { DepartmentFilter, DepartmentManager, type WithDepartment } from "./Departments";
 
-type Req = Schemas["RequestOut"];
+type Req = Schemas["RequestOut"] & WithDepartment;
 
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
 
 export function RequestsPage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ status: "", category: "", priority: "", page: "1" });
-  const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, page: s.page, page_size: 50 });
+  const [s, set] = useUrlState({ status: "", category: "", priority: "", departman: "", page: "1" });
+  const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, department_id: s.departman, page: s.page, page_size: 50 });
   const [adding, setAdding] = useState(false);
+  const [managing, setManaging] = useState(false);
 
   return (
     <div className="stack">
       <PageHead
         title="Talepler"
         subtitle={r.data ? `${r.data.total} talep` : undefined}
-        actions={<><Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link>{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
+        actions={<>{can(P.requestsAssign) && <button className="btn" type="button" aria-expanded={managing} onClick={() => setManaging((v) => !v)}>Departmanlar</button>}<Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link>{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
       />
+      {managing && <DepartmentManager onClose={() => setManaging(false)} />}
       {adding && <NewRequestForm onDone={() => setAdding(false)} />}
 
       <div className="filters">
@@ -51,6 +54,7 @@ export function RequestsPage() {
             {PRIORITIES.map((x) => <option key={x} value={x}>{requestPriority(x)}</option>)}
           </select>
         </div>
+        <DepartmentFilter id="r-dep" value={s.departman} onChange={(v) => set({ departman: v })} />
       </div>
 
       <div className="card">
@@ -66,7 +70,7 @@ export function RequestsPage() {
               <table className="data">
                 <caption className="visually-hidden">Talepler</caption>
                 <thead>
-                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum</th><th scope="col">Atanan</th><th scope="col">Açılış</th></tr>
+                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum</th><th scope="col">Departman / atanan</th><th scope="col">Açılış</th></tr>
                 </thead>
                 <tbody>
                   {r.data.items.map((q) => (
@@ -80,7 +84,7 @@ export function RequestsPage() {
                         <Badge tone={requestStatusTone(q.status)}>{q.status_label || requestStatus(q.status)}</Badge>
                         {(q.priority === "high" || q.priority === "urgent") && <div style={{ marginTop: 4 }}><Badge tone={priorityTone(q.priority)}>{requestPriority(q.priority)}</Badge></div>}
                       </td>
-                      <td className="small">{q.assigned_to ?? <span className="subtle">—</span>}</td>
+                      <td className="small">{q.department_name && <Badge tone="info">{q.department_name}</Badge>}<div>{q.assigned_to ?? (q.department_name ? null : <span className="subtle">—</span>)}</div></td>
                       <td className="small nowrap">{formatDateTime(q.created_at)}</td>
                     </tr>
                   ))}

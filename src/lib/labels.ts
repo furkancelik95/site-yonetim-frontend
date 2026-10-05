@@ -137,3 +137,14 @@ export function overdueTone(days: number): Tone {
 
 export const CATEGORIES = ["plumbing", "electrical", "elevator", "heating", "cleaning", "security", "garden", "common_area", "other"];
 export const PRIORITIES = ["low", "normal", "high", "urgent"];
+
+export const incidentKind = label({
+  theft: "Hırsızlık",
+  damage: "Hasar",
+  noise: "Gürültü / rahatsızlık",
+  fire: "Yangın / duman",
+  water_leak: "Su baskını / sızıntı",
+  suspicious: "Şüpheli durum",
+  accident: "Kaza / yaralanma",
+  other: "Diğer",
+});

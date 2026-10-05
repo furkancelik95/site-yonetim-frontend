@@ -7,8 +7,10 @@ import { Badge, ErrorState, FormError, Loading, PageHead } from "../../component
 import { formatDateTime } from "../../lib/format";
 import { priorityTone, requestCategory, requestPriority, requestStatus } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { useUrlState } from "../../lib/hooks";
+import { DepartmentFilter, type WithDepartment } from "./Departments";
 
-type Req = Schemas["RequestOut"];
+type Req = Schemas["RequestOut"] & WithDepartment;
 type Status = Req["status"];
 
 // Panoda aktif akış; kapanan/iptal edilenler listede görünür
@@ -22,11 +24,13 @@ const NEEDS_RESOLUTION = new Set<Status>(["resolved", "closed"]);
 export function RequestBoardPage() {
   const { site, can } = useSite();
   const canMove = can(P.requestsAssign);
+  const [s, set] = useUrlState({ departman: "" });
+  const dep = s.departman;
   const cols = {
-    open: useSiteGet<Page<Req>>("/requests", { status: "open", page_size: 100 }),
-    in_progress: useSiteGet<Page<Req>>("/requests", { status: "in_progress", page_size: 100 }),
-    waiting: useSiteGet<Page<Req>>("/requests", { status: "waiting", page_size: 100 }),
-    resolved: useSiteGet<Page<Req>>("/requests", { status: "resolved", page_size: 100 }),
+    open: useSiteGet<Page<Req>>("/requests", { status: "open", department_id: dep, page_size: 100 }),
+    in_progress: useSiteGet<Page<Req>>("/requests", { status: "in_progress", department_id: dep, page_size: 100 }),
+    waiting: useSiteGet<Page<Req>>("/requests", { status: "waiting", department_id: dep, page_size: 100 }),
+    resolved: useSiteGet<Page<Req>>("/requests", { status: "resolved", department_id: dep, page_size: 100 }),
   } as Record<string, ReturnType<typeof useSiteGet<Page<Req>>>>;
   const [pending, setPending] = useState<{ req: Req; to: Status } | null>(null);
   const [over, setOver] = useState<Status | null>(null);
@@ -56,6 +60,7 @@ export function RequestBoardPage() {
         subtitle={canMove ? "Kartı sürükleyerek ya da \"Taşı\" seçimiyle durumunu değiştirin." : "Taleplerin duruma göre dağılımı."}
         actions={<Link className="btn" to={`/s/${site.slug}/talepler`}><List aria-hidden="true" /> Liste görünümü</Link>}
       />
+      <div className="filters"><DepartmentFilter id="b-dep" value={dep} onChange={(v) => set({ departman: v })} /></div>
       <FormError error={move.error} />
       {anyError && <ErrorState error={anyError.error} />}
 
@@ -89,7 +94,7 @@ export function RequestBoardPage() {
                       <div className="cell-sub">{r.unit_name ?? r.location ?? "Ortak alan"} · {requestCategory(r.category)}</div>
                       <div className="row" style={{ gap: "var(--s-1)", marginTop: "var(--s-2)" }}>
                         {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
-                        {r.assigned_to && <Badge tone="info">{r.assigned_to}</Badge>}
+                        {r.department_name && <Badge tone="info">{r.department_name}</Badge>}{r.assigned_to && <Badge>{r.assigned_to}</Badge>}
                       </div>
                       <div className="row row--between" style={{ marginTop: "var(--s-2)" }}>
                         <span className="xs muted">{formatDateTime(r.created_at)}</span>

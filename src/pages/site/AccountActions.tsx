@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
-import { FileCheck2, History, Undo2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { FileCheck2, History, Mail, Undo2 } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts } from "../../api/types";
 import { ConfirmButton, Field, FormError, SubmitButton, fieldError } from "../../components/ui";
@@ -46,6 +46,7 @@ export function AccountActions({ accountId, balance }: { accountId: string; bala
         <button className="btn" type="button" aria-expanded={panel === "refund"} disabled={bal >= -0.005} title={bal >= -0.005 ? "İade için hesabın alacak bakiyesi olmalı" : undefined} onClick={() => toggle("refund")}>
           <Undo2 aria-hidden="true" /> İade
         </button>
+        {bal > 0.005 && <Link className="btn" to={`/s/${site.slug}/belge/ihtar/${accountId}`}><Mail aria-hidden="true" /> İhtar yazısı</Link>}
         {bal > 0.005 && <span className="small muted">Borç kapanınca borçsuzluk belgesi verilebilir.</span>}
       </div>
       {panel === "opening" && <OpeningForm accountId={accountId} onDone={() => setPanel(null)} />}
