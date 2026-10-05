@@ -25,6 +25,8 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [09](09-olay-kaydi.md) | Güvenlik olay kaydı | `GET/POST …/incidents`, `POST …/incidents/{id}/close` | Güvenlik → Olaylar | **Sahte servis** — issue açılacak |
 | [10](10-kayip-esya.md) | Kayıp eşya | `GET/POST …/lost-items`, `POST …/lost-items/{id}/return` | Güvenlik → Kayıp eşya | **Sahte servis** — issue açılacak |
 | [11](11-talep-departmanlari.md) | Talep departmanları | `…/departments`, `POST …/requests/{id}/department`, talep yanıtına alan | Talepler, pano, talep ayrıntısı | **Sahte servis** — issue açılacak |
+| [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Sahte servis** — issue açılacak |
+| [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Sahte servis** — issue açılacak |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

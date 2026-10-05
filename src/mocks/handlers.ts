@@ -3,7 +3,7 @@
 // servis gelince silinir. Diğer bütün istekler gerçek backend'e gider (onUnhandledRequest: "bypass").
 //
 // Şu an sahte: 06 banka hareketi aktarımı, 07 tekrarlanan gider, 09 olay kaydı, 10 kayıp eşya,
-// 11 talep departmanları.
+// 11 talep departmanları, 12 site kullanıcıları ve roller, 13 sakin kayıt başvurusu.
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -134,7 +134,178 @@ function deptsOf(slug: string) {
   return departments.get(slug)!;
 }
 
+// --- 12 Site kullanıcıları ve roller · 13 Sakin kayıt başvurusu --------------------------------
+const ROLES = [
+  { key: "manager", name: "Yönetici", description: "Sitenin bütün işlemleri" },
+  { key: "board", name: "Yönetim Kurulu Üyesi", description: "Her şeyi görür, hiçbirini değiştirmez" },
+  { key: "auditor", name: "Denetçi", description: "Salt okunur finans; kişisel veri görmez (KMK m.41)" },
+  { key: "accounting", name: "Muhasebe", description: "Tahakkuk, tahsilat, gider, kasa" },
+  { key: "security", name: "Güvenlik", description: "Yalnız kargo ve ziyaretçi" },
+  { key: "technical", name: "Teknik Personel", description: "Yalnız talepler" },
+];
+interface Member {
+  id: string; full_name: string; email: string; role_key: string; role_name: string; is_active: boolean;
+  source: "site" | "organization"; last_login_at: string | null; invited_at: string;
+}
+interface Registration {
+  id: string; reference: string; first_name: string; last_name: string; phone: string; email: string | null; unit_text: string;
+  relation: "owner" | "tenant"; explicit_consent: boolean; status: "pending" | "approved" | "rejected";
+  created_at: string; decided_at: string | null; decided_by: string | null; reject_reason: string | null; unit_name: string | null;
+}
+const members = loadMap<string, Member[]>("members");
+const regLinks = loadMap<string, { code: string; is_enabled: boolean; site_name?: string }>("regLinks"); // slug → link
+const registrations = loadMap<string, Registration[]>("registrations");
+// Sahte servis: her eklemede rastgele üretilen tek seferlik değer (sabit bir sır değil)
+const oneTimeCode = () => `Gecici-${Math.random().toString(36).slice(2, 8)}${Math.floor(Math.random() * 90 + 10)}`;
+const roleName = (k: string) => ROLES.find((r) => r.key === k)?.name ?? k;
+
+async function membersOf(request: Request, slug: string) {
+  if (!members.has(slug)) {
+    const m = await real<{ full_name: string; sites: { slug: string; role: string; is_derived: boolean }[] }>(request, "/api/v1/me");
+    const mine = m.body?.sites.find((s) => s.slug === slug);
+    const seed: Member[] = [];
+    if (m.body && mine) seed.push({ id: crypto.randomUUID(), full_name: m.body.full_name, email: "(oturumdaki kullanıcı)", role_key: "manager", role_name: mine.role, is_active: true, source: mine.is_derived ? "organization" : "site", last_login_at: new Date().toISOString(), invited_at: "2026-05-01T09:00:00Z" });
+    if (slug === "aksu-konaklari") {
+      // backend docs/10 demo hesapları
+      seed.push(
+        { id: crypto.randomUUID(), full_name: "Selin Arı", email: "muhasebe@demo.local", role_key: "accounting", role_name: "Muhasebe", is_active: true, source: "organization", last_login_at: null, invited_at: "2026-05-01T09:00:00Z" },
+        { id: crypto.randomUUID(), full_name: "Recep Er", email: "guvenlik@demo.local", role_key: "security", role_name: "Güvenlik", is_active: true, source: "site", last_login_at: null, invited_at: "2026-05-01T09:00:00Z" },
+        { id: crypto.randomUUID(), full_name: "Nuray Şen", email: "denetci@demo.local", role_key: "auditor", role_name: "Denetçi", is_active: true, source: "site", last_login_at: null, invited_at: "2026-05-01T09:00:00Z" },
+        { id: crypto.randomUUID(), full_name: "Ergün Kılıç", email: "teknik@demo.local", role_key: "technical", role_name: "Teknik Personel", is_active: true, source: "site", last_login_at: null, invited_at: "2026-05-01T09:00:00Z" },
+      );
+    }
+    members.set(slug, seed);
+  }
+  return members.get(slug)!;
+}
+function linkOf(slug: string) {
+  if (!regLinks.has(slug)) regLinks.set(slug, { code: crypto.randomUUID().replace(/-/g, "").slice(0, 10), is_enabled: true });
+  return regLinks.get(slug)!;
+}
+function slugByCode(code: string) {
+  for (const [slug, l] of regLinks) if (l.code === code && l.is_enabled) return slug;
+  return null;
+}
+// İletişim formu standardı: isim 2–40, rakam/özel karakter yok; TR cep 5XX, E.164; e-posta küçük harf ≤ 254
+const NAME_RE = /^[A-Za-zÇĞİÖŞÜçğıöşü' -]{2,40}$/u;
+function validateRegistration(b: Partial<Registration> & { kvkk_ack?: boolean }) {
+  const f: Record<string, string> = {};
+  if (!b.first_name || !NAME_RE.test(b.first_name.trim()) || !b.first_name.trim()) f.first_name = "Ad 2–40 harf olmalı; rakam ve özel karakter içermez.";
+  if (!b.last_name || !NAME_RE.test(b.last_name.trim()) || !b.last_name.trim()) f.last_name = "Soyad 2–40 harf olmalı; rakam ve özel karakter içermez.";
+  if (!b.phone || !/^\+905\d{9}$/.test(b.phone)) f.phone = "Cep telefonu 5 ile başlayan 10 hane olmalı.";
+  if (b.email && (b.email.length > 254 || !/^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(b.email))) f.email = "Geçerli bir e-posta adresi girin.";
+  if (!b.unit_text?.trim()) f.unit_text = "Blok ve daire numaranızı yazın.";
+  if (b.relation !== "owner" && b.relation !== "tenant") f.relation = "Malik mi kiracı mı, seçin.";
+  return f;
+}
+
 export const handlers: RequestHandler[] = [
+  // 12 — roller ve kullanıcılar
+  http.get(`${API}/roles`, () => HttpResponse.json(ROLES)),
+  http.get(`${API}/members`, async ({ request, params }) => HttpResponse.json(await membersOf(request, String(params.slug)))),
+  http.post(`${API}/members`, async ({ request, params }) => {
+    const list = await membersOf(request, String(params.slug));
+    const b = (await request.json()) as { full_name?: string; email?: string; role_key?: string };
+    const f: Record<string, string> = {};
+    const email = (b.email ?? "").trim().toLocaleLowerCase("tr-TR");
+    if (!b.full_name || b.full_name.trim().length < 3) f.full_name = "Ad soyad yazın.";
+    if (!/^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(email)) f.email = "Geçerli bir e-posta adresi girin.";
+    if (!ROLES.some((r) => r.key === b.role_key)) f.role_key = "Rol seçin.";
+    if (Object.keys(f).length) return err(422, "validation", "Formda düzeltilmesi gereken alanlar var.", f);
+    if (list.some((m) => m.email === email)) return err(409, "already_member", "Bu e-posta zaten sitede kullanıcı.");
+    const m: Member = { id: crypto.randomUUID(), full_name: b.full_name!.trim(), email, role_key: b.role_key!, role_name: roleName(b.role_key!), is_active: true, source: "site", last_login_at: null, invited_at: new Date().toISOString() };
+    list.push(m);
+    return HttpResponse.json({ data: { member: m, temporary_password: oneTimeCode() }, message: `${m.full_name} ${m.role_name} olarak eklendi.` }, { status: 201 });
+  }),
+  http.patch(`${API}/members/:id`, async ({ request, params }) => {
+    const list = await membersOf(request, String(params.slug));
+    const m = list.find((x) => x.id === params.id);
+    if (!m) return err(404, "not_found", "Kullanıcı bulunamadı.");
+    if (m.source === "organization") return err(409, "derived_membership", "Bu erişim yönetim şirketi üyeliğinden geliyor; şirket ayarlarından değiştirilir.");
+    const b = (await request.json()) as { role_key?: string; is_active?: boolean };
+    if (b.role_key && !ROLES.some((r) => r.key === b.role_key)) return err(422, "validation", "Rol seçin.", { role_key: "Rol seçin." });
+    const managers = list.filter((x) => x.is_active && x.role_key === "manager");
+    if (m.role_key === "manager" && managers.length === 1 && (b.is_active === false || (b.role_key && b.role_key !== "manager"))) {
+      return err(409, "last_manager", "Sitede en az bir etkin yönetici kalmalı.");
+    }
+    if (b.role_key) Object.assign(m, { role_key: b.role_key, role_name: roleName(b.role_key) });
+    if (b.is_active !== undefined) m.is_active = b.is_active;
+    return HttpResponse.json({ data: m, message: b.is_active === false ? `${m.full_name} erişimi kapatıldı; oturumları sonlandırıldı.` : b.is_active === true ? `${m.full_name} erişimi açıldı.` : `${m.full_name} artık ${m.role_name}.` });
+  }),
+
+  // 13 — sakin kayıt bağlantısı (personel)
+  http.get(`${API}/registration-link`, async ({ request, params }) => {
+    const l = linkOf(String(params.slug));
+    // Herkese açık form site adını oturumsuz gösterir; sahte serviste ad personel isteğinden alınır
+    if (!l.site_name) l.site_name = (await real<{ name: string }>(request, `/api/v1/sites/${params.slug}`)).body?.name;
+    return HttpResponse.json({ code: l.code, is_enabled: l.is_enabled });
+  }),
+  http.post(`${API}/registration-link/rotate`, ({ params }) => {
+    const l = linkOf(String(params.slug));
+    l.code = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+    return HttpResponse.json({ data: l, message: "Yeni kayıt bağlantısı oluşturuldu; eski bağlantı artık çalışmaz." });
+  }),
+  http.patch(`${API}/registration-link`, async ({ request, params }) => {
+    const l = linkOf(String(params.slug));
+    const b = (await request.json()) as { is_enabled?: boolean };
+    l.is_enabled = !!b.is_enabled;
+    return HttpResponse.json({ data: l, message: l.is_enabled ? "Kayıt bağlantısı açıldı." : "Kayıt bağlantısı kapatıldı." });
+  }),
+  // 13 — başvurular (personel)
+  http.get(`${API}/registrations`, ({ request, params }) => {
+    const status = new URL(request.url).searchParams.get("status");
+    const list = (registrations.get(String(params.slug)) ?? []).filter((r) => !status || r.status === status);
+    return HttpResponse.json(page([...list].reverse(), new URL(request.url)));
+  }),
+  http.post(`${API}/registrations/:id/approve`, async ({ request, params }) => {
+    const r = (registrations.get(String(params.slug)) ?? []).find((x) => x.id === params.id);
+    if (!r) return err(404, "not_found", "Başvuru bulunamadı.");
+    if (r.status !== "pending") return err(409, "already_decided", "Bu başvuru zaten sonuçlandı.");
+    const b = (await request.json()) as { unit_id?: string; unit_name?: string; start_date?: string };
+    if (!b.unit_id) return err(422, "validation", "Bölümü seçin.", { unit_id: "Başvurunun ait olduğu bölümü seçin." });
+    // Onay: kişiyi gerçek backend'de bölüme ekle (mevcut uç); hesap daveti istek 13'ün parçası
+    const res = await real(request, `/api/v1/sites/${params.slug}/units/${b.unit_id}/parties`, {
+      method: "POST",
+      body: { role: r.relation, start_date: b.start_date ?? iso(new Date()), person: { first_name: r.first_name, last_name: r.last_name, phone: r.phone, email: r.email } },
+    });
+    if (res.status !== 201) return err(res.status, "upstream", (res.body as { error?: { message?: string } } | null)?.error?.message ?? "Kişi bölüme eklenemedi.");
+    Object.assign(r, { status: "approved", decided_at: new Date().toISOString(), decided_by: await me(request), unit_name: b.unit_name ?? null });
+    return HttpResponse.json({ data: r, message: `${r.first_name} ${r.last_name} ${b.unit_name ?? "bölüme"} ${r.relation === "owner" ? "malik" : "kiracı"} olarak eklendi. Giriş bilgileri e-posta/SMS sağlayıcısı gelince gönderilecek.` });
+  }),
+  http.post(`${API}/registrations/:id/reject`, async ({ request, params }) => {
+    const r = (registrations.get(String(params.slug)) ?? []).find((x) => x.id === params.id);
+    if (!r) return err(404, "not_found", "Başvuru bulunamadı.");
+    if (r.status !== "pending") return err(409, "already_decided", "Bu başvuru zaten sonuçlandı.");
+    const b = (await request.json()) as { reason?: string };
+    if (!b.reason?.trim()) return err(422, "validation", "Gerekçe zorunlu.", { reason: "Gerekçe zorunlu." });
+    Object.assign(r, { status: "rejected", decided_at: new Date().toISOString(), decided_by: await me(request), reject_reason: b.reason.trim() });
+    return HttpResponse.json({ data: r, message: "Başvuru reddedildi." });
+  }),
+  // 13 — herkese açık kayıt formu (oturum yok)
+  http.get("/api/v1/public/registration/:code", ({ params }) => {
+    const slug = slugByCode(String(params.code));
+    if (!slug) return err(404, "not_found", "Kayıt bağlantısı geçersiz ya da kapatılmış. Site yönetiminden yeni bağlantı isteyin.");
+    return HttpResponse.json({ site_name: regLinks.get(slug)!.site_name ?? slug, site_slug: slug });
+  }),
+  http.post("/api/v1/public/registration/:code", async ({ request, params }) => {
+    const slug = slugByCode(String(params.code));
+    if (!slug) return err(404, "not_found", "Kayıt bağlantısı geçersiz ya da kapatılmış.");
+    const b = (await request.json()) as Partial<Registration> & { kvkk_ack?: boolean };
+    const f = validateRegistration(b);
+    if (!b.kvkk_ack) f.kvkk_ack = "Devam etmek için bilgilendirme yazısını onaylayın.";
+    if (Object.keys(f).length) return err(422, "validation", "Formda düzeltilmesi gereken alanlar var.", f);
+    const list = registrations.get(slug) ?? [];
+    if (list.some((r) => r.status === "pending" && r.phone === b.phone)) return err(409, "already_pending", "Bu telefonla bekleyen bir başvuru var; yönetim inceleyince size dönülecek.");
+    const r: Registration = {
+      id: crypto.randomUUID(), reference: `KB-${String(list.length + 1).padStart(4, "0")}`, first_name: b.first_name!.trim(), last_name: b.last_name!.trim().toLocaleUpperCase("tr-TR"),
+      phone: b.phone!, email: b.email || null, unit_text: b.unit_text!.trim(), relation: b.relation!, explicit_consent: !!b.explicit_consent,
+      status: "pending", created_at: new Date().toISOString(), decided_at: null, decided_by: null, reject_reason: null, unit_name: null,
+    };
+    list.push(r);
+    registrations.set(slug, list);
+    return HttpResponse.json({ data: { reference: r.reference }, message: `Başvurunuz alındı (${r.reference}). Site yönetimi onaylayınca giriş bilgileriniz size iletilecek.` }, { status: 201 });
+  }),
+
   // 09 — olay kaydı
   http.get(`${API}/incidents`, ({ request, params }) => {
     const url = new URL(request.url);
