@@ -1,4 +1,4 @@
-import { formatDate, formatMoney, formatMonth, parseMoneyInput, trUpper } from "./format";
+import { formatDate, formatIban, formatMoney, formatMonth, parseMoneyInput, trUpper } from "./format";
 
 describe("formatMoney", () => {
   it("metin tutarı tr-TR biçiminde gösterir", () => {
@@ -29,4 +29,8 @@ describe("tarih", () => {
 
 it("Türkçe büyük harf: i → İ", () => {
   expect(trUpper("işçi")).toBe("İŞÇİ");
+});
+
+it("IBAN dörtlü gruplanır", () => {
+  expect(formatIban("tr330006100519786457841326")).toBe("TR33 0006 1005 1978 6457 8413 26");
 });
