@@ -4,7 +4,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { homePath, useAuth } from "../../auth/AuthContext";
 import { FormError, SubmitButton, useDocumentTitle } from "../../components/ui";
 
-// Gösterim hesapları yalnız geliştirme ortamında listelenir (backend docs/10).
+// Gösterim hesapları geliştirmede ve demo sunucusu derlemesinde listelenir (backend docs/10;
+// sunucu: VITE_SHOW_DEMO_ACCOUNTS=true). Gerçek kurulumda gizli kalır.
+const SHOW_DEMO = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
 const DEMO_PASSWORD = "Demo1234!";
 const DEMO_ACCOUNTS = [
   { email: "platform@demo.local", name: "Deniz Aksoy", role: "Platform yöneticisi", desc: "Müşteri ekler, site açar, plan atar" },
@@ -117,7 +119,7 @@ export function LoginPage() {
         </form>
       </div>
 
-      {import.meta.env.DEV && (
+      {SHOW_DEMO && (
         <aside className="auth__demo" aria-label="Gösterim hesapları">
           <div className="section-title">Gösterim hesapları</div>
           <p className="small muted">
