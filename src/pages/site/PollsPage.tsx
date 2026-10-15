@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Plus, Trash2, Vote } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
 import { PollResults, type Poll } from "../../components/PollResults";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
@@ -16,13 +15,13 @@ export function PollsPage() {
   const [s, set] = useUrlState({ durum: "open", page: "1" });
   const q = useSiteGet<Page<Poll>>("/polls", { status: s.durum, page: s.page, page_size: 20 });
   const [adding, setAdding] = useState(false);
-  const manage = can(P.announcementsPublish);
+  const manage = can(P.pollsManage);
   return (
     <div className="stack">
       <PageHead
         title="Anketler"
         subtitle="Sakinlerin görüşünü alın. Her bağımsız bölüm bir oy verir."
-        actions={<><MockBadge request="15" />{manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Anket aç</button>}</>}
+        actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Anket aç</button>}
       />
       <Alert tone="info">Anket sonucu danışma niteliğindedir; genel kurul kararı yerine geçmez. Bağlayıcı karar için toplantı planlayın.</Alert>
       {adding && <NewPoll onDone={() => setAdding(false)} />}

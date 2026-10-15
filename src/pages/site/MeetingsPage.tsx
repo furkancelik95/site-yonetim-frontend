@@ -2,24 +2,15 @@ import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { CalendarDays, Plus, Printer, Trash2 } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Page } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
+import type { Page, Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { agendaResult, agendaResultTone, meetingKind, meetingStatus, meetingStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 14'teki şekiller. */
-interface AgendaItem {
-  id: string; order: number; title: string; decision: string | null; result: "accepted" | "rejected" | "postponed" | "info" | null;
-  votes_for: number | null; votes_against: number | null; votes_abstain: number | null;
-}
-interface Meeting {
-  id: string; number: number; kind: "general_ordinary" | "general_extraordinary" | "board"; title: string; scheduled_at: string; location: string;
-  status: "planned" | "held" | "cancelled"; agenda: AgendaItem[]; attendance_note: string | null; held_at: string | null;
-  cancel_reason: string | null; created_by: string; created_at: string;
-}
+type AgendaItem = Schemas["AgendaItemOut"];
+type Meeting = Schemas["MeetingOut"];
 
 const KINDS = ["general_ordinary", "general_extraordinary", "board"] as const;
 const RESULTS = ["accepted", "rejected", "postponed", "info"] as const;
@@ -31,13 +22,13 @@ export function MeetingsPage() {
   const [s, set] = useUrlState({ durum: "", page: "1" });
   const q = useSiteGet<Page<Meeting>>("/meetings", { status: s.durum || undefined, page: s.page, page_size: 30 });
   const [adding, setAdding] = useState(false);
-  const manage = can(P.announcementsPublish);
+  const manage = can(P.meetingsManage);
   return (
     <div className="stack">
       <PageHead
         title="Toplantılar"
         subtitle="Genel kurul ve yönetim kurulu toplantıları: gündem, kararlar, tutanak."
-        actions={<><MockBadge request="14" />{manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Toplantı planla</button>}</>}
+        actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Toplantı planla</button>}
       />
       {adding && <NewMeeting onDone={() => setAdding(false)} />}
 
@@ -133,7 +124,7 @@ export function MeetingDetailPage() {
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   const m = q.data;
-  const manage = can(P.announcementsPublish);
+  const manage = can(P.meetingsManage);
   return (
     <div className="stack">
       <div className="print-hide">
@@ -142,7 +133,6 @@ export function MeetingDetailPage() {
           subtitle={<>{meetingKind(m.kind)} · {formatDateTime(m.scheduled_at)} · {m.location}</>}
           actions={
             <>
-              <MockBadge request="14" />
               <Badge tone={meetingStatusTone(m.status)}>{meetingStatus(m.status)}</Badge>
               <Link className="btn" to={`/s/${site.slug}/toplantilar`}>Geri</Link>
               {m.kind !== "board" && <Link className="btn" to={`/s/${site.slug}/belge/hazirun`}>Hazirun listesi</Link>}

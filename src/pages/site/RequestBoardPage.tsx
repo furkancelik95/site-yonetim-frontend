@@ -8,9 +8,9 @@ import { formatDateTime } from "../../lib/format";
 import { priorityTone, requestCategory, requestPriority, requestStatus } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { useUrlState } from "../../lib/hooks";
-import { DepartmentFilter, type WithDepartment } from "./Departments";
+import { DepartmentFilter } from "./Departments";
 
-type Req = Schemas["RequestOut"] & WithDepartment;
+type Req = Schemas["RequestOut"];
 type Status = Req["status"];
 
 // Panoda aktif akış; kapanan/iptal edilenler listede görünür

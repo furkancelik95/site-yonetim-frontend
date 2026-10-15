@@ -368,7 +368,8 @@ a:hover { text-decoration: underline; }
 /* --------------------------------------------------------------------------
    8. Tablolar — yoğun finans verisi
    -------------------------------------------------------------------------- */
-.table-wrap { overflow-x: auto; }
+/* relative: içindeki görünmez (visually-hidden, absolute) metin kaydırma kabından taşıp sayfayı genişletmesin */
+.table-wrap { overflow-x: auto; position: relative; }
 
 table.data {
   width: 100%; border-collapse: collapse; font-size: 0.875rem;

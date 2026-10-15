@@ -3,28 +3,13 @@ import { Link } from "react-router";
 import { Pause, Pencil, Play, Plus, Repeat, Trash2 } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput } from "../../lib/format";
 import { P, useSite } from "../../site/SiteContext";
 
 type Category = Schemas["ExpenseCategoryOut"];
 
-/** Servis isteği 07'deki yanıt şekli. */
-interface Recurring {
-  id: string;
-  description: string;
-  expense_category_id: string;
-  amount: string;
-  vendor: string | null;
-  day_of_month: number;
-  is_active: boolean;
-  auto_pay: boolean;
-  cash_account_id: string | null;
-  next_run_on: string | null;
-  last_created_on: string | null;
-  created_at: string;
-}
+type Recurring = Schemas["RecurringOut"];
 
 /**
  * Tekrarlanan gider (Apsiyon "Tekrarlanan Evrak"): her ay aynı gelen gider (bakım sözleşmesi,
@@ -45,7 +30,6 @@ export function RecurringExpensesPage() {
         subtitle="Her ay aynı gelen gideri bir kez tanımlayın; seçtiğiniz günde gider defterine kendiliğinden yazılır."
         actions={
           <>
-            <MockBadge request="07" />
             <Link className="btn" to={`/s/${site.slug}/giderler`}>Gider defteri</Link>
             {manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Yeni tanım</button>}
           </>
@@ -109,6 +93,8 @@ function RecurringRow({ r, cat, manage, onEdit }: { r: Recurring; cat: string; m
 }
 
 function RecurringForm({ item, cats, onDone }: { item: Recurring | null; cats: Category[]; onDone: () => void }) {
+  // "Ödendi olarak işaretle" kasadan para çıkarır: backend ayrıca kasa yönetimi izni ister
+  const canPay = useSite().can(P.cashManage);
   const cash = useSiteGet<CashAccounts>("/cash-accounts");
   const accounts = cash.data?.items.filter((c) => c.is_active) ?? [];
   const [f, setF] = useState({
@@ -155,10 +141,12 @@ function RecurringForm({ item, cats, onDone }: { item: Recurring | null; cats: C
           <Field label="Kategori" error={fieldError(m.error, "expense_category_id")}>{(p) => <select {...p} className="field__input" value={category} onChange={up("expense_category_id")}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}</Field>
           <Field label="Firma / tedarikçi">{(p) => <input {...p} className="field__input" value={f.vendor} onChange={up("vendor")} />}</Field>
         </div>
+        {(canPay || f.auto_pay) && (
         <label className="check check--rich">
-          <input type="checkbox" checked={f.auto_pay} onChange={(e) => setF((x) => ({ ...x, auto_pay: e.target.checked }))} />
+          <input type="checkbox" checked={f.auto_pay} disabled={!canPay} onChange={(e) => setF((x) => ({ ...x, auto_pay: e.target.checked }))} />
           <span><span className="strong">Ödendi olarak işaretle</span><br /><span className="small muted">Otomatik ödeme talimatı olan giderler için. İşaretli değilse gider "ödenmedi" olarak oluşur, siz ödersiniz.</span></span>
         </label>
+        )}
         {f.auto_pay && (
           <Field label="Ödendiği hesap" error={fieldError(m.error, "cash_account_id")}>{(p) => <select {...p} className="field__input" value={acc} onChange={up("cash_account_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
         )}

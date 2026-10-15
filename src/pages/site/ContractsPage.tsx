@@ -1,19 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { FileSignature, Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
+import type { Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { contractCategory, contractPeriod } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 16'daki şekil. `days_left` ve `state` sunucuda hesaplanır. */
-interface Contract {
-  id: string; vendor: string; subject: string; category: string; start_date: string; end_date: string; amount: string | null;
-  period: "monthly" | "yearly" | "once"; notice_days: number; auto_renew: boolean; note: string | null; is_archived: boolean;
-  days_left: number; state: "active" | "expiring" | "expired" | "archived";
-}
+type Contract = Schemas["ContractOut"];
 
 const CATEGORIES = ["elevator", "cleaning", "security", "garden", "maintenance", "insurance", "pool", "other"];
 
@@ -30,14 +25,14 @@ export function ContractsPage() {
   const [s, set] = useUrlState({ arsiv: "" });
   const q = useSiteGet<Contract[]>("/contracts", { archived: s.arsiv ? "true" : undefined });
   const [editing, setEditing] = useState<Contract | "new" | null>(null);
-  const manage = can(P.expensesManage);
+  const manage = can(P.contractsManage);
   const warn = (q.data ?? []).filter((c) => c.state === "expiring" || c.state === "expired");
   return (
     <div className="stack">
       <PageHead
         title="Sözleşmeler"
         subtitle="Asansör, temizlik, güvenlik, sigorta gibi hizmet sözleşmeleri ve bitiş tarihleri."
-        actions={<><MockBadge request="16" />{manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Sözleşme ekle</button>}</>}
+        actions={manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Sözleşme ekle</button>}
       />
       {editing && <ContractForm c={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
       {!s.arsiv && warn.length > 0 && (

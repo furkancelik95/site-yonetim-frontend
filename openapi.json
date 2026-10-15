@@ -1137,6 +1137,422 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/incidents": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Olaylar (yeni üstte)",
+    "operationId": "list_incidents_api_v1_sites__slug__incidents_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/IncidentStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_IncidentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Olay kaydet",
+    "operationId": "create_incident_api_v1_sites__slug__incidents_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IncidentIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_IncidentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/incidents/{incident_id}/close": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Olayı kapat (not zorunlu)",
+    "operationId": "close_incident_api_v1_sites__slug__incidents__incident_id__close_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "incident_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Incident Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CloseIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_IncidentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/lost-items": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kayıp eşya (yeni üstte)",
+    "operationId": "list_lost_items_api_v1_sites__slug__lost_items_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/LostItemStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_LostItemOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kayıp eşya kaydet",
+    "operationId": "create_lost_item_api_v1_sites__slug__lost_items_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LostItemIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_LostItemOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/lost-items/{item_id}/return": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Teslim et ya da elden çıkar",
+    "operationId": "settle_lost_item_api_v1_sites__slug__lost_items__item_id__return_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SettleIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_LostItemOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/sites/{slug}/blocks": {
    "get": {
     "tags": [
@@ -2862,7 +3278,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/PreviewOut"
+         "$ref": "#/components/schemas/site_yonetim__api__v1__charges__PreviewOut"
         }
        }
       }
@@ -4038,6 +4454,149 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/bank-imports": {
+   "post": {
+    "tags": [
+     "banka aktarımı"
+    ],
+    "summary": "Banka ekstresini yükle — önizleme (hiçbir tahsilat yazılmaz)",
+    "operationId": "upload_api_v1_sites__slug__bank_imports_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_api_v1_sites__slug__bank_imports_post"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/site_yonetim__api__v1__bank_imports__PreviewOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/bank-imports/{import_id}/confirm": {
+   "post": {
+    "tags": [
+     "banka aktarımı"
+    ],
+    "summary": "Seçilen satırları tahsilat olarak işle",
+    "description": "Tek transaction; işlenemeyen satır `skipped`'a düşer. İkinci onay 409 `already_confirmed`.",
+    "operationId": "confirm_api_v1_sites__slug__bank_imports__import_id__confirm_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "import_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Import Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+       "title": "Idempotency-Key"
+      },
+      "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConfirmIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ConfirmOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/sites/{slug}/accounts/{account_id}/clearance-certificates": {
    "post": {
     "tags": [
@@ -4404,6 +4963,23 @@
       }
      },
      {
+      "name": "department_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Department Id"
+      }
+     },
+     {
       "name": "page",
       "in": "query",
       "required": false,
@@ -4747,6 +5323,246 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/requests/{request_id}/department": {
+   "post": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Talebi departmana yönlendir",
+    "operationId": "set_department_api_v1_sites__slug__requests__request_id__department_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DepartmentAssignIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/departments": {
+   "get": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Departmanlar",
+    "operationId": "list_departments_api_v1_sites__slug__departments_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/DepartmentOut"
+         },
+         "title": "Response List Departments Api V1 Sites  Slug  Departments Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Departman ekle",
+    "operationId": "create_department_api_v1_sites__slug__departments_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DepartmentIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_DepartmentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/departments/{department_id}": {
+   "patch": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Yeniden adlandır ya da pasifleştir",
+    "operationId": "update_department_api_v1_sites__slug__departments__department_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "department_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Department Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DepartmentPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_DepartmentOut_"
         }
        }
       }
@@ -5542,6 +6358,234 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Written_MovementOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/recurring-expenses": {
+   "get": {
+    "tags": [
+     "gider"
+    ],
+    "summary": "Tekrarlanan giderler",
+    "operationId": "list_recurring_api_v1_sites__slug__recurring_expenses_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/RecurringOut"
+         },
+         "title": "Response List Recurring Api V1 Sites  Slug  Recurring Expenses Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "gider"
+    ],
+    "summary": "Tekrarlanan gider tanımla",
+    "operationId": "create_recurring_api_v1_sites__slug__recurring_expenses_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RecurringIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RecurringOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/recurring-expenses/{item_id}": {
+   "patch": {
+    "tags": [
+     "gider"
+    ],
+    "summary": "Güncelle ya da durdur (`is_active`)",
+    "operationId": "update_recurring_api_v1_sites__slug__recurring_expenses__item_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RecurringPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RecurringOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "gider"
+    ],
+    "summary": "Tanımı kaldır (oluşmuş giderler yerinde kalır)",
+    "operationId": "remove_recurring_api_v1_sites__slug__recurring_expenses__item_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RecurringOut_"
         }
        }
       }
@@ -7007,6 +8051,124 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/resident/polls": {
+   "get": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Açık anketler ve son 30 günde kapananlar",
+    "operationId": "my_polls_api_v1_sites__slug__resident_polls_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ResidentPollOut"
+         },
+         "title": "Response My Polls Api V1 Sites  Slug  Resident Polls Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/polls/{poll_id}/vote": {
+   "post": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Bölüm adına oy ver (değiştirilemez)",
+    "operationId": "vote_api_v1_sites__slug__resident_polls__poll_id__vote_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "poll_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Poll Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VoteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VoteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/portfolio": {
    "get": {
     "tags": [
@@ -7203,6 +8365,2037 @@
      }
     }
    }
+  },
+  "/api/v1/sites/{slug}/roles": {
+   "get": {
+    "tags": [
+     "kullanıcılar"
+    ],
+    "summary": "Sabit roller (ad + kısa açıklama)",
+    "operationId": "list_roles_api_v1_sites__slug__roles_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/RoleOut"
+         },
+         "title": "Response List Roles Api V1 Sites  Slug  Roles Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/members": {
+   "get": {
+    "tags": [
+     "kullanıcılar"
+    ],
+    "summary": "Siteye erişen personel",
+    "operationId": "list_members_api_v1_sites__slug__members_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/MemberOut"
+         },
+         "title": "Response List Members Api V1 Sites  Slug  Members Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "kullanıcılar"
+    ],
+    "summary": "Kullanıcı ekle",
+    "operationId": "add_member_api_v1_sites__slug__members_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MemberIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_AddedOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/members/{member_id}": {
+   "patch": {
+    "tags": [
+     "kullanıcılar"
+    ],
+    "summary": "Rolü değiştir, erişimi kapat/aç",
+    "operationId": "update_member_api_v1_sites__slug__members__member_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "member_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Member Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MemberPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_MemberOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/registration-link": {
+   "get": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Kayıt bağlantısı (yoksa açılır)",
+    "operationId": "get_link_api_v1_sites__slug__registration_link_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LinkOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "patch": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Kayda kapat / aç",
+    "operationId": "update_link_api_v1_sites__slug__registration_link_patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LinkPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_LinkOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/registration-link/rotate": {
+   "post": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Yeni kod; eskisi hemen geçersiz",
+    "operationId": "rotate_link_api_v1_sites__slug__registration_link_rotate_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_LinkOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/registrations": {
+   "get": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Kayıt başvuruları (yeni üstte)",
+    "operationId": "list_registrations_api_v1_sites__slug__registrations_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "pending",
+          "approved",
+          "rejected"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_RegistrationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/registrations/{registration_id}/approve": {
+   "post": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Onayla: bölüme kişi ekle",
+    "operationId": "approve_api_v1_sites__slug__registrations__registration_id__approve_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "registration_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Registration Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApproveIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovedOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/registrations/{registration_id}/reject": {
+   "post": {
+    "tags": [
+     "kayıt başvuruları"
+    ],
+    "summary": "Gerekçeyle reddet",
+    "operationId": "reject_api_v1_sites__slug__registrations__registration_id__reject_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "registration_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Registration Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RejectIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RegistrationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/public/registration/{code}": {
+   "get": {
+    "tags": [
+     "herkese açık"
+    ],
+    "summary": "Kayıt formu: yalnız site adı",
+    "operationId": "public_site_api_v1_public_registration__code__get",
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PublicSiteOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "herkese açık"
+    ],
+    "summary": "Kayıt başvurusu",
+    "operationId": "public_apply_api_v1_public_registration__code__post",
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApplicationIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ReferenceOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/meetings": {
+   "get": {
+    "tags": [
+     "toplantı"
+    ],
+    "summary": "Toplantılar (tarihe göre yeniden eskiye)",
+    "operationId": "list_meetings_api_v1_sites__slug__meetings_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/MeetingStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_MeetingOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "toplantı"
+    ],
+    "summary": "Toplantı planla",
+    "operationId": "create_meeting_api_v1_sites__slug__meetings_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MeetingIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_MeetingOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/meetings/{meeting_id}": {
+   "get": {
+    "tags": [
+     "toplantı"
+    ],
+    "summary": "Toplantı ayrıntısı (gündem ve kararlarla)",
+    "operationId": "get_meeting_api_v1_sites__slug__meetings__meeting_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "meeting_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Meeting Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MeetingOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/meetings/{meeting_id}/decisions": {
+   "post": {
+    "tags": [
+     "toplantı"
+    ],
+    "summary": "Kararları kaydet (tek seferlik; kayıt kilitlenir)",
+    "operationId": "record_decisions_api_v1_sites__slug__meetings__meeting_id__decisions_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "meeting_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Meeting Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DecisionsIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_MeetingOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/meetings/{meeting_id}/cancel": {
+   "post": {
+    "tags": [
+     "toplantı"
+    ],
+    "summary": "Toplantıyı iptal et (gerekçe zorunlu)",
+    "operationId": "cancel_meeting_api_v1_sites__slug__meetings__meeting_id__cancel_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "meeting_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Meeting Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CancelIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_MeetingOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/polls": {
+   "get": {
+    "tags": [
+     "anket"
+    ],
+    "summary": "Anketler (yeni üstte)",
+    "operationId": "list_polls_api_v1_sites__slug__polls_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/PollStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_PollOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "anket"
+    ],
+    "summary": "Anket aç",
+    "operationId": "create_poll_api_v1_sites__slug__polls_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PollIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PollOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/polls/{poll_id}/close": {
+   "post": {
+    "tags": [
+     "anket"
+    ],
+    "summary": "Anketi erken kapat",
+    "operationId": "close_poll_api_v1_sites__slug__polls__poll_id__close_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "poll_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Poll Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PollOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/contracts": {
+   "get": {
+    "tags": [
+     "sözleşme"
+    ],
+    "summary": "Sözleşmeler (bitişe göre; dizi)",
+    "operationId": "list_contracts_api_v1_sites__slug__contracts_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "archived",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true → arşiv",
+       "default": false,
+       "title": "Archived"
+      },
+      "description": "true → arşiv"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ContractOut"
+         },
+         "title": "Response List Contracts Api V1 Sites  Slug  Contracts Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "sözleşme"
+    ],
+    "summary": "Sözleşme ekle",
+    "operationId": "create_contract_api_v1_sites__slug__contracts_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ContractIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ContractOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/contracts/{contract_id}": {
+   "patch": {
+    "tags": [
+     "sözleşme"
+    ],
+    "summary": "Sözleşmeyi düzenle ya da arşivle (kısmi)",
+    "operationId": "update_contract_api_v1_sites__slug__contracts__contract_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "contract_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Contract Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ContractPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ContractOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/assets": {
+   "get": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Demirbaşlar (koda göre; dizi, en çok 1000)",
+    "operationId": "list_assets_api_v1_sites__slug__assets_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/AssetStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/AssetOut"
+         },
+         "title": "Response List Assets Api V1 Sites  Slug  Assets Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Demirbaş ekle",
+    "operationId": "create_asset_api_v1_sites__slug__assets_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssetIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_AssetOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/assets/{asset_id}": {
+   "patch": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Demirbaşı düzenle (kısmi; kod değişmez)",
+    "operationId": "update_asset_api_v1_sites__slug__assets__asset_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "asset_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Asset Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssetPatch"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_AssetOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/stock-items": {
+   "get": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Stok malzemeleri (ada göre; dizi, en çok 1000)",
+    "operationId": "list_stock_items_api_v1_sites__slug__stock_items_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/StockItemOut"
+         },
+         "title": "Response List Stock Items Api V1 Sites  Slug  Stock Items Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Malzeme ekle",
+    "operationId": "create_stock_item_api_v1_sites__slug__stock_items_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StockItemIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_StockItemOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/stock-items/{item_id}/moves": {
+   "get": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Malzemenin hareketleri (yeniden eskiye)",
+    "operationId": "list_moves_api_v1_sites__slug__stock_items__item_id__moves_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100,
+       "minimum": 1,
+       "description": "son N hareket",
+       "default": 10,
+       "title": "Limit"
+      },
+      "description": "son N hareket"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/MoveOut"
+         },
+         "title": "Response List Moves Api V1 Sites  Slug  Stock Items  Item Id  Moves Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "demirbaş ve stok"
+    ],
+    "summary": "Giriş ya da çıkış (stok eksiye düşemez)",
+    "operationId": "create_move_api_v1_sites__slug__stock_items__item_id__moves_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MoveIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_MovedOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/staff": {
+   "get": {
+    "tags": [
+     "personel"
+    ],
+    "summary": "Personel (ada göre; dizi, en çok 1000)",
+    "operationId": "list_staff_api_v1_sites__slug__staff_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "active",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "true → çalışan, false → ayrılan, boş → hepsi",
+       "title": "Active"
+      },
+      "description": "true → çalışan, false → ayrılan, boş → hepsi"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/StaffOut"
+         },
+         "title": "Response List Staff Api V1 Sites  Slug  Staff Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "personel"
+    ],
+    "summary": "Personel ekle",
+    "operationId": "create_staff_api_v1_sites__slug__staff_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StaffIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_StaffOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/staff/{staff_id}": {
+   "patch": {
+    "tags": [
+     "personel"
+    ],
+    "summary": "Personeli düzenle; `end_date` ile ayrılış (kısmi)",
+    "operationId": "update_staff_api_v1_sites__slug__staff__staff_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "staff_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Staff Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StaffIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_StaffOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -7214,6 +10407,124 @@
      "occupant"
     ],
     "title": "AccountKind"
+   },
+   "AddedOut": {
+    "properties": {
+     "member": {
+      "$ref": "#/components/schemas/MemberOut"
+     },
+     "temporary_password": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temporary Password",
+      "description": "yalnız yeni kullanıcıda, yalnız bu yanıtta; kişiye elden iletilir (K5)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "member",
+     "temporary_password"
+    ],
+    "title": "AddedOut"
+   },
+   "AgendaItemOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "order": {
+      "type": "integer",
+      "title": "Order"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AgendaResult"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
+     "votes_for": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes For"
+     },
+     "votes_against": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes Against"
+     },
+     "votes_abstain": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes Abstain"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "order",
+     "title",
+     "result",
+     "decision",
+     "votes_for",
+     "votes_against",
+     "votes_abstain"
+    ],
+    "title": "AgendaItemOut"
+   },
+   "AgendaResult": {
+    "type": "string",
+    "enum": [
+     "accepted",
+     "rejected",
+     "postponed",
+     "info"
+    ],
+    "title": "AgendaResult"
    },
    "AllocationKind": {
     "type": "string",
@@ -7565,6 +10876,253 @@
     ],
     "title": "AnnouncementRow"
    },
+   "ApplicationIn": {
+    "properties": {
+     "first_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Name"
+     },
+     "last_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "email": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 320
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Email"
+     },
+     "unit_text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Text"
+     },
+     "relation": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relation"
+     },
+     "explicit_consent": {
+      "type": "boolean",
+      "title": "Explicit Consent",
+      "default": false
+     },
+     "kvkk_ack": {
+      "type": "boolean",
+      "title": "Kvkk Ack",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "ApplicationIn"
+   },
+   "ApproveIn": {
+    "properties": {
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id",
+     "start_date"
+    ],
+    "title": "ApproveIn"
+   },
+   "ApprovedOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "reference": {
+      "type": "string",
+      "title": "Reference",
+      "description": "`KB-0001`"
+     },
+     "first_name": {
+      "type": "string",
+      "title": "First Name"
+     },
+     "last_name": {
+      "type": "string",
+      "title": "Last Name"
+     },
+     "phone": {
+      "type": "string",
+      "title": "Phone"
+     },
+     "email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Email"
+     },
+     "unit_text": {
+      "type": "string",
+      "title": "Unit Text"
+     },
+     "relation": {
+      "$ref": "#/components/schemas/Relation"
+     },
+     "explicit_consent": {
+      "type": "boolean",
+      "title": "Explicit Consent"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "approved",
+       "rejected"
+      ],
+      "title": "Status"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By"
+     },
+     "reject_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reject Reason"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "temporary_password": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temporary Password",
+      "description": "yeni sakin giriş hesabının geçici parolası; yalnız bu yanıtta (K5'e dek elden)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "reference",
+     "first_name",
+     "last_name",
+     "phone",
+     "email",
+     "unit_text",
+     "relation",
+     "explicit_consent",
+     "status",
+     "created_at",
+     "decided_at",
+     "decided_by",
+     "reject_reason",
+     "unit_name",
+     "temporary_password"
+    ],
+    "title": "ApprovedOut"
+   },
    "AreaBasis": {
     "type": "string",
     "enum": [
@@ -7572,6 +11130,335 @@
      "net"
     ],
     "title": "AreaBasis"
+   },
+   "AssetIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "acquired_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acquired On"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status",
+      "default": "in_use"
+     },
+     "assignee": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Assignee"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "AssetIn"
+   },
+   "AssetOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "description": "DB-0001 — sunucu verir, değişmez"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "acquired_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acquired On"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     },
+     "status": {
+      "$ref": "#/components/schemas/AssetStatus"
+     },
+     "assignee": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Assignee"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "code",
+     "name",
+     "category",
+     "location",
+     "acquired_on",
+     "value",
+     "status",
+     "assignee",
+     "note"
+    ],
+    "title": "AssetOut"
+   },
+   "AssetPatch": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "acquired_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acquired On"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "assignee": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Assignee"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "AssetPatch"
+   },
+   "AssetStatus": {
+    "type": "string",
+    "enum": [
+     "in_use",
+     "broken",
+     "retired"
+    ],
+    "title": "AssetStatus"
    },
    "AssignIn": {
     "properties": {
@@ -7737,8 +11624,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100.0,
-        "minimum": 1.0
+        "maximum": 100,
+        "minimum": 1
        },
        {
         "type": "null"
@@ -7748,7 +11635,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0.0,
+      "minimum": 0,
       "title": "Sort Order",
       "default": 0
      }
@@ -7834,8 +11721,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100.0,
-        "minimum": 1.0
+        "maximum": 100,
+        "minimum": 1
        },
        {
         "type": "null"
@@ -7847,7 +11734,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 0.0
+        "minimum": 0
        },
        {
         "type": "null"
@@ -7976,6 +11863,34 @@
     ],
     "title": "Body_create_expense_api_v1_sites__slug__expenses_post"
    },
+   "Body_upload_api_v1_sites__slug__bank_imports_post": {
+    "properties": {
+     "file": {
+      "type": "string",
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "description": ".xlsx, .xls ya da .csv; en fazla 5 MB"
+     },
+     "cash_account_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cash Account Id",
+      "description": "paranın girdiği banka hesabı"
+     }
+    },
+    "type": "object",
+    "required": [
+     "file"
+    ],
+    "title": "Body_upload_api_v1_sites__slug__bank_imports_post"
+   },
    "Body_upload_units_api_v1_sites__slug__imports_units_post": {
     "properties": {
      "file": {
@@ -8061,7 +11976,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0.0,
+      "minimum": 0,
       "title": "Sort Order",
       "default": 0
      }
@@ -8239,8 +12154,8 @@
     "properties": {
      "fiscal_year": {
       "type": "integer",
-      "maximum": 2100.0,
-      "minimum": 2000.0,
+      "maximum": 2100,
+      "minimum": 2000,
       "title": "Fiscal Year"
      },
      "name": {
@@ -8440,6 +12355,24 @@
      "superseded"
     ],
     "title": "BudgetStatus"
+   },
+   "CancelIn": {
+    "properties": {
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "title": "CancelIn"
    },
    "CashAccountIn": {
     "properties": {
@@ -9135,6 +13068,24 @@
     ],
     "title": "ChargeTypeOut"
    },
+   "CloseIn": {
+    "properties": {
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "CloseIn"
+   },
    "CollectionOut": {
     "properties": {
      "period": {
@@ -9276,6 +13227,462 @@
      "percent"
     ],
     "title": "ComponentOut"
+   },
+   "ConfirmIn": {
+    "properties": {
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/SelectionIn"
+      },
+      "type": "array",
+      "maxItems": 5000,
+      "minItems": 1,
+      "title": "Rows"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rows"
+    ],
+    "title": "ConfirmIn"
+   },
+   "ConfirmOut": {
+    "properties": {
+     "created_payments": {
+      "type": "integer",
+      "title": "Created Payments"
+     },
+     "total_amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Total Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "skipped": {
+      "items": {
+       "$ref": "#/components/schemas/SkippedOut"
+      },
+      "type": "array",
+      "title": "Skipped"
+     }
+    },
+    "type": "object",
+    "required": [
+     "created_payments",
+     "total_amount",
+     "skipped"
+    ],
+    "title": "ConfirmOut"
+   },
+   "ContractCategory": {
+    "type": "string",
+    "enum": [
+     "elevator",
+     "cleaning",
+     "security",
+     "garden",
+     "maintenance",
+     "insurance",
+     "pool",
+     "other"
+    ],
+    "title": "ContractCategory"
+   },
+   "ContractIn": {
+    "properties": {
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     },
+     "subject": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 600
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subject"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "start_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "period": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Period"
+     },
+     "notice_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notice Days",
+      "default": 30
+     },
+     "auto_renew": {
+      "type": "boolean",
+      "title": "Auto Renew",
+      "default": false
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "ContractIn"
+   },
+   "ContractOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "vendor": {
+      "type": "string",
+      "title": "Vendor"
+     },
+     "subject": {
+      "type": "string",
+      "title": "Subject"
+     },
+     "category": {
+      "$ref": "#/components/schemas/ContractCategory"
+     },
+     "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+     },
+     "end_date": {
+      "type": "string",
+      "format": "date",
+      "title": "End Date"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "period": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ContractPeriod"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "notice_days": {
+      "type": "integer",
+      "title": "Notice Days"
+     },
+     "auto_renew": {
+      "type": "boolean",
+      "title": "Auto Renew"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "is_archived": {
+      "type": "boolean",
+      "title": "Is Archived"
+     },
+     "days_left": {
+      "type": "integer",
+      "title": "Days Left",
+      "description": "bugünden bitişe gün; geçmişse eksi"
+     },
+     "state": {
+      "$ref": "#/components/schemas/ContractState"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "vendor",
+     "subject",
+     "category",
+     "start_date",
+     "end_date",
+     "amount",
+     "period",
+     "notice_days",
+     "auto_renew",
+     "note",
+     "is_archived",
+     "days_left",
+     "state",
+     "created_at"
+    ],
+    "title": "ContractOut"
+   },
+   "ContractPatch": {
+    "properties": {
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     },
+     "subject": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 600
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subject"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "start_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "period": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Period"
+     },
+     "notice_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notice Days"
+     },
+     "auto_renew": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Renew"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "is_archived": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Archived",
+      "description": "true → arşive kaldır"
+     }
+    },
+    "type": "object",
+    "title": "ContractPatch"
+   },
+   "ContractPeriod": {
+    "type": "string",
+    "enum": [
+     "monthly",
+     "yearly",
+     "once"
+    ],
+    "title": "ContractPeriod"
+   },
+   "ContractState": {
+    "type": "string",
+    "enum": [
+     "active",
+     "expiring",
+     "expired",
+     "archived"
+    ],
+    "title": "ContractState"
    },
    "CustomerAdminOut": {
     "properties": {
@@ -9792,6 +14199,106 @@
     ],
     "title": "DebtorSummaryOut"
    },
+   "DecisionIn": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
+     "votes_for": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 1000000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes For"
+     },
+     "votes_against": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 1000000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes Against"
+     },
+     "votes_abstain": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 1000000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes Abstain"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id"
+    ],
+    "title": "DecisionIn"
+   },
+   "DecisionsIn": {
+    "properties": {
+     "attendance_note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attendance Note"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/DecisionIn"
+      },
+      "type": "array",
+      "maxItems": 60,
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "title": "DecisionsIn"
+   },
    "DeliverIn": {
     "properties": {
      "pickup_code": {
@@ -9815,6 +14322,105 @@
     ],
     "title": "DeliverIn"
    },
+   "DepartmentAssignIn": {
+    "properties": {
+     "department_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Id",
+      "description": "null: departmanı kaldır"
+     }
+    },
+    "type": "object",
+    "required": [
+     "department_id"
+    ],
+    "title": "DepartmentAssignIn"
+   },
+   "DepartmentIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 120
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     }
+    },
+    "type": "object",
+    "title": "DepartmentIn"
+   },
+   "DepartmentOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "request_count": {
+      "type": "integer",
+      "title": "Request Count",
+      "description": "bu departmana atanmış talepler"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "is_active",
+     "request_count"
+    ],
+    "title": "DepartmentOut"
+   },
+   "DepartmentPatch": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 120
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "is_active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "title": "DepartmentPatch"
+   },
    "Direction": {
     "type": "string",
     "enum": [
@@ -9822,6 +14428,14 @@
      "out"
     ],
     "title": "Direction"
+   },
+   "Employer": {
+    "type": "string",
+    "enum": [
+     "site",
+     "contractor"
+    ],
+    "title": "Employer"
    },
    "EntryOut": {
     "properties": {
@@ -10850,6 +15464,206 @@
     ],
     "title": "Importance"
    },
+   "IncidentIn": {
+    "properties": {
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "occurred_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Occurred At",
+      "description": "boşsa şimdi"
+     },
+     "unit_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Id"
+     }
+    },
+    "type": "object",
+    "title": "IncidentIn"
+   },
+   "IncidentKind": {
+    "type": "string",
+    "enum": [
+     "theft",
+     "damage",
+     "noise",
+     "fire",
+     "water_leak",
+     "suspicious",
+     "accident",
+     "other"
+    ],
+    "title": "IncidentKind"
+   },
+   "IncidentOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Occurred At"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/IncidentKind"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "unit_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "status": {
+      "$ref": "#/components/schemas/IncidentStatus"
+     },
+     "closed_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed Note"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "recorded_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recorded By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "occurred_at",
+     "kind",
+     "location",
+     "description",
+     "unit_id",
+     "unit_name",
+     "status",
+     "closed_note",
+     "closed_at",
+     "recorded_by",
+     "created_at"
+    ],
+    "title": "IncidentOut"
+   },
+   "IncidentStatus": {
+    "type": "string",
+    "enum": [
+     "open",
+     "closed"
+    ],
+    "title": "IncidentStatus"
+   },
    "IncomeExpenseOut": {
     "properties": {
      "year": {
@@ -11173,6 +15987,38 @@
     ],
     "title": "LineOut"
    },
+   "LinkOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "description": "herkese açık form: /kayit/{code}"
+     },
+     "is_enabled": {
+      "type": "boolean",
+      "title": "Is Enabled"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "is_enabled"
+    ],
+    "title": "LinkOut"
+   },
+   "LinkPatch": {
+    "properties": {
+     "is_enabled": {
+      "type": "boolean",
+      "title": "Is Enabled"
+     }
+    },
+    "type": "object",
+    "required": [
+     "is_enabled"
+    ],
+    "title": "LinkPatch"
+   },
    "LoginRequest": {
     "properties": {
      "email": {
@@ -11223,6 +16069,175 @@
     ],
     "title": "LookupOut"
    },
+   "LostItemIn": {
+    "properties": {
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "found_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Found By"
+     },
+     "found_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Found At",
+      "description": "boşsa şimdi"
+     }
+    },
+    "type": "object",
+    "title": "LostItemIn"
+   },
+   "LostItemOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "found_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Found At"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "found_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Found By"
+     },
+     "status": {
+      "$ref": "#/components/schemas/LostItemStatus"
+     },
+     "returned_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Returned To"
+     },
+     "returned_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Returned At"
+     },
+     "recorded_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recorded By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "found_at",
+     "description",
+     "location",
+     "found_by",
+     "status",
+     "returned_to",
+     "returned_at",
+     "recorded_by",
+     "created_at"
+    ],
+    "title": "LostItemOut"
+   },
+   "LostItemStatus": {
+    "type": "string",
+    "enum": [
+     "waiting",
+     "returned",
+     "disposed"
+    ],
+    "title": "LostItemStatus"
+   },
+   "MatchStatus": {
+    "type": "string",
+    "enum": [
+     "matched",
+     "suggested",
+     "unmatched",
+     "ignored",
+     "duplicate"
+    ],
+    "title": "MatchStatus"
+   },
    "MeResponse": {
     "properties": {
      "user_id": {
@@ -11270,6 +16285,315 @@
      "sites"
     ],
     "title": "MeResponse"
+   },
+   "MeetingIn": {
+    "properties": {
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "scheduled_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scheduled At"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "agenda": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 60,
+      "title": "Agenda"
+     }
+    },
+    "type": "object",
+    "title": "MeetingIn"
+   },
+   "MeetingKind": {
+    "type": "string",
+    "enum": [
+     "general_ordinary",
+     "general_extraordinary",
+     "board"
+    ],
+    "title": "MeetingKind"
+   },
+   "MeetingOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/MeetingKind"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Scheduled At"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "status": {
+      "$ref": "#/components/schemas/MeetingStatus"
+     },
+     "agenda": {
+      "items": {
+       "$ref": "#/components/schemas/AgendaItemOut"
+      },
+      "type": "array",
+      "title": "Agenda"
+     },
+     "attendance_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attendance Note"
+     },
+     "held_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Held At"
+     },
+     "cancel_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cancel Reason"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "kind",
+     "title",
+     "scheduled_at",
+     "location",
+     "status",
+     "agenda",
+     "attendance_note",
+     "held_at",
+     "cancel_reason",
+     "created_by",
+     "created_at"
+    ],
+    "title": "MeetingOut"
+   },
+   "MeetingStatus": {
+    "type": "string",
+    "enum": [
+     "planned",
+     "held",
+     "cancelled"
+    ],
+    "title": "MeetingStatus"
+   },
+   "MemberIn": {
+    "properties": {
+     "full_name": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Full Name"
+     },
+     "email": {
+      "type": "string",
+      "maxLength": 320,
+      "title": "Email"
+     },
+     "role_key": {
+      "type": "string",
+      "maxLength": 40,
+      "title": "Role Key"
+     }
+    },
+    "type": "object",
+    "required": [
+     "full_name",
+     "email",
+     "role_key"
+    ],
+    "title": "MemberIn"
+   },
+   "MemberOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "full_name": {
+      "type": "string",
+      "title": "Full Name"
+     },
+     "email": {
+      "type": "string",
+      "title": "Email"
+     },
+     "role_key": {
+      "type": "string",
+      "title": "Role Key"
+     },
+     "role_name": {
+      "type": "string",
+      "title": "Role Name"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "source": {
+      "type": "string",
+      "enum": [
+       "site",
+       "organization"
+      ],
+      "title": "Source",
+      "description": "organization: yönetim şirketinden gelir, bu ekrandan değiştirilemez"
+     },
+     "last_login_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Login At"
+     },
+     "invited_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Invited At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "full_name",
+     "email",
+     "role_key",
+     "role_name",
+     "is_active",
+     "source",
+     "last_login_at",
+     "invited_at"
+    ],
+    "title": "MemberOut"
+   },
+   "MemberPatch": {
+    "properties": {
+     "role_key": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role Key"
+     },
+     "is_active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "title": "MemberPatch"
    },
    "ModuleKey": {
     "type": "string",
@@ -11372,6 +16696,123 @@
      "difference"
     ],
     "title": "MonthOut"
+   },
+   "MoveIn": {
+    "properties": {
+     "direction": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 10
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Direction"
+     },
+     "quantity": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quantity"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "MoveIn"
+   },
+   "MoveOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Item Id"
+     },
+     "direction": {
+      "$ref": "#/components/schemas/StockDirection"
+     },
+     "quantity": {
+      "type": "string",
+      "title": "Quantity"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "moved_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Moved At"
+     },
+     "moved_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Moved By"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "item_id",
+     "direction",
+     "quantity",
+     "note",
+     "moved_at",
+     "moved_by"
+    ],
+    "title": "MoveOut"
+   },
+   "MovedOut": {
+    "properties": {
+     "item": {
+      "$ref": "#/components/schemas/StockItemOut"
+     },
+     "move": {
+      "$ref": "#/components/schemas/MoveOut"
+     }
+    },
+    "type": "object",
+    "required": [
+     "item",
+     "move"
+    ],
+    "title": "MovedOut"
    },
    "MovementIn": {
     "properties": {
@@ -11656,6 +17097,39 @@
     ],
     "title": "MyUnit"
    },
+   "MyVote": {
+    "properties": {
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "option_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Option Id",
+      "description": "bu bölüm adına verilen oy; yoksa null"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id",
+     "unit_name",
+     "option_id"
+    ],
+    "title": "MyVote"
+   },
    "NamedRef": {
     "properties": {
      "id": {
@@ -11786,6 +17260,38 @@
      "credit"
     ],
     "title": "OpeningDirection"
+   },
+   "OptionOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "votes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Votes",
+      "description": "sakinde oy vermeden ve anket açıkken null"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "label",
+     "votes"
+    ],
+    "title": "OptionOut"
    },
    "OverviewOut": {
     "properties": {
@@ -12286,6 +17792,99 @@
     ],
     "title": "Page[EntryOut]"
    },
+   "Page_IncidentOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/IncidentOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[IncidentOut]"
+   },
+   "Page_LostItemOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/LostItemOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[LostItemOut]"
+   },
+   "Page_MeetingOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/MeetingOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[MeetingOut]"
+   },
    "Page_MovementOut_": {
     "properties": {
      "items": {
@@ -12441,6 +18040,37 @@
     ],
     "title": "Page[PlanOut]"
    },
+   "Page_PollOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PollOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[PollOut]"
+   },
    "Page_PostedChargeOut_": {
     "properties": {
      "items": {
@@ -12471,6 +18101,37 @@
      "total"
     ],
     "title": "Page[PostedChargeOut]"
+   },
+   "Page_RegistrationOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/RegistrationOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[RegistrationOut]"
    },
    "Page_RequestOut_": {
     "properties": {
@@ -12661,8 +18322,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100.0,
-        "exclusiveMinimum": 0.0
+        "maximum": 100,
+        "exclusiveMinimum": 0
        },
        {
         "type": "string",
@@ -13398,6 +19059,169 @@
     ],
     "title": "PlanOut"
    },
+   "PollAudience": {
+    "type": "string",
+    "enum": [
+     "all",
+     "owners",
+     "tenants"
+    ],
+    "title": "PollAudience"
+   },
+   "PollIn": {
+    "properties": {
+     "question": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 600
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Question"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "options": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "title": "Options"
+     },
+     "audience": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Audience"
+     },
+     "ends_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ends On"
+     }
+    },
+    "type": "object",
+    "title": "PollIn"
+   },
+   "PollOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "options": {
+      "items": {
+       "$ref": "#/components/schemas/OptionOut"
+      },
+      "type": "array",
+      "title": "Options"
+     },
+     "audience": {
+      "$ref": "#/components/schemas/PollAudience"
+     },
+     "ends_on": {
+      "type": "string",
+      "format": "date",
+      "title": "Ends On"
+     },
+     "status": {
+      "$ref": "#/components/schemas/PollStatus"
+     },
+     "total_votes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Votes",
+      "description": "oy veren bölüm sayısı"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "question",
+     "description",
+     "options",
+     "audience",
+     "ends_on",
+     "status",
+     "total_votes",
+     "created_by",
+     "created_at"
+    ],
+    "title": "PollOut"
+   },
+   "PollStatus": {
+    "type": "string",
+    "enum": [
+     "open",
+     "closed"
+    ],
+    "title": "PollStatus"
+   },
    "PortfolioOut": {
     "properties": {
      "sites": {
@@ -13615,102 +19439,6 @@
     ],
     "title": "PostedChargeOut"
    },
-   "PreviewOut": {
-    "properties": {
-     "period": {
-      "type": "string",
-      "title": "Period",
-      "description": "`09/2026`"
-     },
-     "year": {
-      "type": "integer",
-      "title": "Year"
-     },
-     "month": {
-      "type": "integer",
-      "title": "Month"
-     },
-     "charge_date": {
-      "type": "string",
-      "format": "date",
-      "title": "Charge Date"
-     },
-     "due_date": {
-      "type": "string",
-      "format": "date",
-      "title": "Due Date"
-     },
-     "already_charged": {
-      "type": "boolean",
-      "title": "Already Charged",
-      "description": "bu dönemin geçerli koşusu var; kaydetmek 409 döner"
-     },
-     "budget_plan": {
-      "$ref": "#/components/schemas/site_yonetim__api__v1__charges__PlanRef"
-     },
-     "total_amount": {
-      "type": "string",
-      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
-      "title": "Total Amount",
-      "description": "Para: metin, 2 ondalık (TRY).",
-      "examples": [
-       "1234.56"
-      ]
-     },
-     "unit_count": {
-      "type": "integer",
-      "title": "Unit Count",
-      "description": "borç yazılan farklı bölüm sayısı"
-     },
-     "charge_count": {
-      "type": "integer",
-      "title": "Charge Count"
-     },
-     "warnings": {
-      "items": {
-       "$ref": "#/components/schemas/WarningOut"
-      },
-      "type": "array",
-      "title": "Warnings"
-     },
-     "item_totals": {
-      "items": {
-       "$ref": "#/components/schemas/ItemTotalOut"
-      },
-      "type": "array",
-      "title": "Item Totals"
-     },
-     "not_due_items": {
-      "items": {
-       "type": "string"
-      },
-      "type": "array",
-      "title": "Not Due Items",
-      "description": "takvim gereği bu dönem kesilmeyen kalemler"
-     },
-     "charges": {
-      "$ref": "#/components/schemas/Page_ChargeOut_"
-     }
-    },
-    "type": "object",
-    "required": [
-     "period",
-     "year",
-     "month",
-     "charge_date",
-     "due_date",
-     "already_charged",
-     "budget_plan",
-     "total_amount",
-     "unit_count",
-     "charge_count",
-     "warnings",
-     "item_totals",
-     "not_due_items",
-     "charges"
-    ],
-    "title": "PreviewOut"
-   },
    "PropertyKind": {
     "type": "string",
     "enum": [
@@ -13720,6 +19448,24 @@
      "shopping_center"
     ],
     "title": "PropertyKind"
+   },
+   "PublicSiteOut": {
+    "properties": {
+     "site_name": {
+      "type": "string",
+      "title": "Site Name"
+     },
+     "site_slug": {
+      "type": "string",
+      "title": "Site Slug"
+     }
+    },
+    "type": "object",
+    "required": [
+     "site_name",
+     "site_slug"
+    ],
+    "title": "PublicSiteOut"
    },
    "ReadOut": {
     "properties": {
@@ -13869,6 +19615,300 @@
     ],
     "title": "RecentEntry"
    },
+   "RecurringIn": {
+    "properties": {
+     "description": {
+      "type": "string",
+      "maxLength": 300,
+      "title": "Description"
+     },
+     "expense_category_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Expense Category Id"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     },
+     "day_of_month": {
+      "type": "integer",
+      "title": "Day Of Month",
+      "description": "1–28"
+     },
+     "auto_pay": {
+      "type": "boolean",
+      "title": "Auto Pay",
+      "default": false
+     },
+     "cash_account_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cash Account Id"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "description",
+     "expense_category_id",
+     "amount",
+     "day_of_month"
+    ],
+    "title": "RecurringIn"
+   },
+   "RecurringOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "expense_category_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Expense Category Id"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     },
+     "day_of_month": {
+      "type": "integer",
+      "title": "Day Of Month"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "auto_pay": {
+      "type": "boolean",
+      "title": "Auto Pay"
+     },
+     "cash_account_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cash Account Id"
+     },
+     "next_run_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Run On",
+      "description": "durdurulmuşsa null; İstanbul tarihi"
+     },
+     "last_created_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Created On"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "description",
+     "expense_category_id",
+     "amount",
+     "vendor",
+     "day_of_month",
+     "is_active",
+     "auto_pay",
+     "cash_account_id",
+     "next_run_on",
+     "last_created_on",
+     "created_at"
+    ],
+    "title": "RecurringOut"
+   },
+   "RecurringPatch": {
+    "properties": {
+     "description": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "expense_category_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expense Category Id"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     },
+     "day_of_month": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Day Of Month"
+     },
+     "auto_pay": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Pay"
+     },
+     "cash_account_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cash Account Id"
+     },
+     "is_active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "title": "RecurringPatch"
+   },
+   "ReferenceOut": {
+    "properties": {
+     "reference": {
+      "type": "string",
+      "title": "Reference"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reference"
+    ],
+    "title": "ReferenceOut"
+   },
    "RefundIn": {
     "properties": {
      "ledger_account_id": {
@@ -13965,6 +20005,154 @@
      "reason"
     ],
     "title": "RefundOut"
+   },
+   "RegistrationOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "reference": {
+      "type": "string",
+      "title": "Reference",
+      "description": "`KB-0001`"
+     },
+     "first_name": {
+      "type": "string",
+      "title": "First Name"
+     },
+     "last_name": {
+      "type": "string",
+      "title": "Last Name"
+     },
+     "phone": {
+      "type": "string",
+      "title": "Phone"
+     },
+     "email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Email"
+     },
+     "unit_text": {
+      "type": "string",
+      "title": "Unit Text"
+     },
+     "relation": {
+      "$ref": "#/components/schemas/Relation"
+     },
+     "explicit_consent": {
+      "type": "boolean",
+      "title": "Explicit Consent"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "approved",
+       "rejected"
+      ],
+      "title": "Status"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By"
+     },
+     "reject_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reject Reason"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "reference",
+     "first_name",
+     "last_name",
+     "phone",
+     "email",
+     "unit_text",
+     "relation",
+     "explicit_consent",
+     "status",
+     "created_at",
+     "decided_at",
+     "decided_by",
+     "reject_reason",
+     "unit_name"
+    ],
+    "title": "RegistrationOut"
+   },
+   "RejectIn": {
+    "properties": {
+     "reason": {
+      "type": "string",
+      "maxLength": 500,
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reason"
+    ],
+    "title": "RejectIn"
+   },
+   "Relation": {
+    "type": "string",
+    "enum": [
+     "owner",
+     "tenant"
+    ],
+    "title": "Relation"
    },
    "RequestCategory": {
     "type": "string",
@@ -14166,6 +20354,29 @@
       ],
       "title": "Assigned To"
      },
+     "department_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Id"
+     },
+     "department_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Name"
+     },
      "due_at": {
       "anyOf": [
        {
@@ -14242,6 +20453,8 @@
      "reported_by_person_id",
      "reporter_name",
      "assigned_to",
+     "department_id",
+     "department_name",
      "due_at",
      "resolved_at",
      "resolution",
@@ -14258,7 +20471,8 @@
      "status_changed",
      "assigned",
      "comment",
-     "resolved"
+     "resolved",
+     "department_changed"
     ],
     "title": "RequestEventKind"
    },
@@ -14373,6 +20587,29 @@
       ],
       "title": "Assigned To"
      },
+     "department_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Id"
+     },
+     "department_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Name"
+     },
      "due_at": {
       "anyOf": [
        {
@@ -14441,6 +20678,8 @@
      "reported_by_person_id",
      "reporter_name",
      "assigned_to",
+     "department_id",
+     "department_name",
      "due_at",
      "resolved_at",
      "resolution",
@@ -14503,6 +20742,193 @@
      "total"
     ],
     "title": "RequestsOut"
+   },
+   "ResidentPollOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "options": {
+      "items": {
+       "$ref": "#/components/schemas/OptionOut"
+      },
+      "type": "array",
+      "title": "Options"
+     },
+     "audience": {
+      "$ref": "#/components/schemas/PollAudience"
+     },
+     "ends_on": {
+      "type": "string",
+      "format": "date",
+      "title": "Ends On"
+     },
+     "status": {
+      "$ref": "#/components/schemas/PollStatus"
+     },
+     "total_votes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Votes",
+      "description": "oy veren bölüm sayısı"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "my_votes": {
+      "items": {
+       "$ref": "#/components/schemas/MyVote"
+      },
+      "type": "array",
+      "title": "My Votes",
+      "description": "oy verebileceğim bölümler"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "question",
+     "description",
+     "options",
+     "audience",
+     "ends_on",
+     "status",
+     "total_votes",
+     "created_by",
+     "created_at",
+     "my_votes"
+    ],
+    "title": "ResidentPollOut"
+   },
+   "RoleOut": {
+    "properties": {
+     "key": {
+      "type": "string",
+      "title": "Key"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     }
+    },
+    "type": "object",
+    "required": [
+     "key",
+     "name",
+     "description"
+    ],
+    "title": "RoleOut"
+   },
+   "RowOut": {
+    "properties": {
+     "row_number": {
+      "type": "integer",
+      "title": "Row Number"
+     },
+     "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "in",
+       "out"
+      ],
+      "title": "Direction"
+     },
+     "bank_reference": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bank Reference"
+     },
+     "status": {
+      "$ref": "#/components/schemas/MatchStatus",
+      "description": "matched (işaretli gelir) · suggested · unmatched · ignored (çıkış) · duplicate"
+     },
+     "suggestion": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SuggestionOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "row_number",
+     "date",
+     "description",
+     "amount",
+     "direction",
+     "bank_reference",
+     "status",
+     "suggestion"
+    ],
+    "title": "RowOut"
    },
    "ScheduleIn": {
     "properties": {
@@ -14606,6 +21032,50 @@
      "usage"
     ],
     "title": "ScopeKind"
+   },
+   "SelectionIn": {
+    "properties": {
+     "row_number": {
+      "type": "integer",
+      "minimum": 1,
+      "title": "Row Number"
+     },
+     "ledger_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Ledger Account Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "row_number",
+     "ledger_account_id"
+    ],
+    "title": "SelectionIn"
+   },
+   "SettleIn": {
+    "properties": {
+     "returned_to": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Returned To"
+     },
+     "disposed": {
+      "type": "boolean",
+      "title": "Disposed",
+      "description": "bağış/imha; `returned_to` gerekmez",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "SettleIn"
    },
    "SiteAccessOut": {
     "properties": {
@@ -15294,6 +21764,222 @@
     ],
     "title": "SiteUsageOut"
    },
+   "SkippedOut": {
+    "properties": {
+     "row_number": {
+      "type": "integer",
+      "title": "Row Number"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "row_number",
+     "code",
+     "message"
+    ],
+    "title": "SkippedOut"
+   },
+   "StaffIn": {
+    "properties": {
+     "full_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Full Name"
+     },
+     "position": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Position"
+     },
+     "employer": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Employer"
+     },
+     "contractor_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contractor Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "start_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date",
+      "description": "ayrılış"
+     },
+     "shift": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shift"
+     }
+    },
+    "type": "object",
+    "title": "StaffIn"
+   },
+   "StaffOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "full_name": {
+      "type": "string",
+      "title": "Full Name"
+     },
+     "position": {
+      "type": "string",
+      "title": "Position"
+     },
+     "employer": {
+      "$ref": "#/components/schemas/Employer"
+     },
+     "contractor_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contractor Name"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone",
+      "description": "E.164 (+905XXXXXXXXX)"
+     },
+     "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     },
+     "shift": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shift"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "description": "ayrılışı yok ya da bugün/ileride"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "full_name",
+     "position",
+     "employer",
+     "contractor_name",
+     "phone",
+     "start_date",
+     "end_date",
+     "shift",
+     "is_active"
+    ],
+    "title": "StaffOut"
+   },
    "StatusIn": {
     "properties": {
      "status": {
@@ -15318,6 +22004,183 @@
      "status"
     ],
     "title": "StatusIn"
+   },
+   "StockDirection": {
+    "type": "string",
+    "enum": [
+     "in",
+     "out"
+    ],
+    "title": "StockDirection"
+   },
+   "StockItemIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "unit_label": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Label"
+     },
+     "min_quantity": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Min Quantity",
+      "default": "0"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     }
+    },
+    "type": "object",
+    "title": "StockItemIn"
+   },
+   "StockItemOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "unit_label": {
+      "type": "string",
+      "title": "Unit Label"
+     },
+     "quantity": {
+      "type": "string",
+      "title": "Quantity",
+      "description": "mevcut — ondalık metin (\"4.5\")"
+     },
+     "min_quantity": {
+      "type": "string",
+      "title": "Min Quantity"
+     },
+     "is_low": {
+      "type": "boolean",
+      "title": "Is Low",
+      "description": "mevcut ≤ asgari → Azaldı"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "unit_label",
+     "quantity",
+     "min_quantity",
+     "is_low",
+     "location"
+    ],
+    "title": "StockItemOut"
+   },
+   "SuggestionOut": {
+    "properties": {
+     "ledger_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Ledger Account Id"
+     },
+     "reference_code": {
+      "type": "string",
+      "title": "Reference Code"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "person_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Person Name",
+      "description": "people.read izni yoksa null"
+     },
+     "balance": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Balance",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "high",
+       "medium"
+      ],
+      "title": "Confidence"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "ledger_account_id",
+     "reference_code",
+     "unit_name",
+     "person_name",
+     "balance",
+     "confidence",
+     "reason"
+    ],
+    "title": "SuggestionOut"
    },
    "TokenResponse": {
     "properties": {
@@ -15426,8 +22289,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100.0,
-        "minimum": -5.0
+        "maximum": 100,
+        "minimum": -5
        },
        {
         "type": "null"
@@ -15451,8 +22314,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000.0,
-        "exclusiveMinimum": 0.0
+        "maximum": 100000,
+        "exclusiveMinimum": 0
        },
        {
         "type": "string",
@@ -15468,8 +22331,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000.0,
-        "exclusiveMinimum": 0.0
+        "maximum": 100000,
+        "exclusiveMinimum": 0
        },
        {
         "type": "string",
@@ -15485,7 +22348,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1.0
+        "minimum": 1
        },
        {
         "type": "null"
@@ -15497,7 +22360,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1.0
+        "minimum": 1
        },
        {
         "type": "null"
@@ -15882,8 +22745,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100.0,
-        "minimum": -5.0
+        "maximum": 100,
+        "minimum": -5
        },
        {
         "type": "null"
@@ -15907,8 +22770,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000.0,
-        "exclusiveMinimum": 0.0
+        "maximum": 100000,
+        "exclusiveMinimum": 0
        },
        {
         "type": "string",
@@ -15924,8 +22787,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000.0,
-        "exclusiveMinimum": 0.0
+        "maximum": 100000,
+        "exclusiveMinimum": 0
        },
        {
         "type": "string",
@@ -15941,7 +22804,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1.0
+        "minimum": 1
        },
        {
         "type": "null"
@@ -15953,7 +22816,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1.0
+        "minimum": 1
        },
        {
         "type": "null"
@@ -16317,6 +23180,40 @@
     ],
     "title": "VisitorStatus"
    },
+   "VoteIn": {
+    "properties": {
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "option_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Option Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id",
+     "option_id"
+    ],
+    "title": "VoteIn"
+   },
+   "VoteOut": {
+    "properties": {
+     "option_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Option Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "option_id"
+    ],
+    "title": "VoteOut"
+   },
    "WarningKind": {
     "type": "string",
     "enum": [
@@ -16371,6 +23268,23 @@
     ],
     "title": "WarningOut"
    },
+   "Written_AddedOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/AddedOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[AddedOut]"
+   },
    "Written_AnnouncementOut_": {
     "properties": {
      "data": {
@@ -16387,6 +23301,40 @@
      "message"
     ],
     "title": "Written[AnnouncementOut]"
+   },
+   "Written_ApprovedOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ApprovedOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ApprovedOut]"
+   },
+   "Written_AssetOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/AssetOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[AssetOut]"
    },
    "Written_BlockOut_": {
     "properties": {
@@ -16473,6 +23421,40 @@
     ],
     "title": "Written[ChargeRunOut]"
    },
+   "Written_ConfirmOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ConfirmOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ConfirmOut]"
+   },
+   "Written_ContractOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ContractOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ContractOut]"
+   },
    "Written_CustomerOut_": {
     "properties": {
      "data": {
@@ -16489,6 +23471,23 @@
      "message"
     ],
     "title": "Written[CustomerOut]"
+   },
+   "Written_DepartmentOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/DepartmentOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[DepartmentOut]"
    },
    "Written_ExpenseOut_": {
     "properties": {
@@ -16524,6 +23523,91 @@
     ],
     "title": "Written[ImportResultOut]"
    },
+   "Written_IncidentOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/IncidentOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[IncidentOut]"
+   },
+   "Written_LinkOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/LinkOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[LinkOut]"
+   },
+   "Written_LostItemOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/LostItemOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[LostItemOut]"
+   },
+   "Written_MeetingOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/MeetingOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[MeetingOut]"
+   },
+   "Written_MemberOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/MemberOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[MemberOut]"
+   },
    "Written_ModuleOut_": {
     "properties": {
      "data": {
@@ -16540,6 +23624,23 @@
      "message"
     ],
     "title": "Written[ModuleOut]"
+   },
+   "Written_MovedOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/MovedOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[MovedOut]"
    },
    "Written_MovementOut_": {
     "properties": {
@@ -16660,6 +23761,57 @@
     ],
     "title": "Written[PersonOut]"
    },
+   "Written_PollOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PollOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PollOut]"
+   },
+   "Written_RecurringOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RecurringOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RecurringOut]"
+   },
+   "Written_ReferenceOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ReferenceOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ReferenceOut]"
+   },
    "Written_RefundOut_": {
     "properties": {
      "data": {
@@ -16676,6 +23828,23 @@
      "message"
     ],
     "title": "Written[RefundOut]"
+   },
+   "Written_RegistrationOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RegistrationOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RegistrationOut]"
    },
    "Written_RequestDetail_": {
     "properties": {
@@ -16728,6 +23897,40 @@
     ],
     "title": "Written[SiteOut]"
    },
+   "Written_StaffOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/StaffOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[StaffOut]"
+   },
+   "Written_StockItemOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/StockItemOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[StockItemOut]"
+   },
    "Written_TransferOut_": {
     "properties": {
      "data": {
@@ -16778,6 +23981,102 @@
      "message"
     ],
     "title": "Written[VisitorOut]"
+   },
+   "Written_VoteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/VoteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[VoteOut]"
+   },
+   "site_yonetim__api__v1__bank_imports__PreviewOut": {
+    "properties": {
+     "import_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Import Id"
+     },
+     "file_name": {
+      "type": "string",
+      "title": "File Name"
+     },
+     "cash_account_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Cash Account Id"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     },
+     "row_count": {
+      "type": "integer",
+      "title": "Row Count"
+     },
+     "matched_count": {
+      "type": "integer",
+      "title": "Matched Count"
+     },
+     "suggested_count": {
+      "type": "integer",
+      "title": "Suggested Count"
+     },
+     "unmatched_count": {
+      "type": "integer",
+      "title": "Unmatched Count"
+     },
+     "ignored_count": {
+      "type": "integer",
+      "title": "Ignored Count"
+     },
+     "duplicate_count": {
+      "type": "integer",
+      "title": "Duplicate Count"
+     },
+     "total_in": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Total In",
+      "description": "giriş hareketlerinin toplamı",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/RowOut"
+      },
+      "type": "array",
+      "title": "Rows"
+     }
+    },
+    "type": "object",
+    "required": [
+     "import_id",
+     "file_name",
+     "cash_account_id",
+     "expires_at",
+     "row_count",
+     "matched_count",
+     "suggested_count",
+     "unmatched_count",
+     "ignored_count",
+     "duplicate_count",
+     "total_in",
+     "rows"
+    ],
+    "title": "PreviewOut"
    },
    "site_yonetim__api__v1__cash__StatementOut": {
     "properties": {
@@ -16859,6 +24158,102 @@
      "name"
     ],
     "title": "PlanRef"
+   },
+   "site_yonetim__api__v1__charges__PreviewOut": {
+    "properties": {
+     "period": {
+      "type": "string",
+      "title": "Period",
+      "description": "`09/2026`"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "month": {
+      "type": "integer",
+      "title": "Month"
+     },
+     "charge_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Charge Date"
+     },
+     "due_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Due Date"
+     },
+     "already_charged": {
+      "type": "boolean",
+      "title": "Already Charged",
+      "description": "bu dönemin geçerli koşusu var; kaydetmek 409 döner"
+     },
+     "budget_plan": {
+      "$ref": "#/components/schemas/site_yonetim__api__v1__charges__PlanRef"
+     },
+     "total_amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Total Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "unit_count": {
+      "type": "integer",
+      "title": "Unit Count",
+      "description": "borç yazılan farklı bölüm sayısı"
+     },
+     "charge_count": {
+      "type": "integer",
+      "title": "Charge Count"
+     },
+     "warnings": {
+      "items": {
+       "$ref": "#/components/schemas/WarningOut"
+      },
+      "type": "array",
+      "title": "Warnings"
+     },
+     "item_totals": {
+      "items": {
+       "$ref": "#/components/schemas/ItemTotalOut"
+      },
+      "type": "array",
+      "title": "Item Totals"
+     },
+     "not_due_items": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Not Due Items",
+      "description": "takvim gereği bu dönem kesilmeyen kalemler"
+     },
+     "charges": {
+      "$ref": "#/components/schemas/Page_ChargeOut_"
+     }
+    },
+    "type": "object",
+    "required": [
+     "period",
+     "year",
+     "month",
+     "charge_date",
+     "due_date",
+     "already_charged",
+     "budget_plan",
+     "total_amount",
+     "unit_count",
+     "charge_count",
+     "warnings",
+     "item_totals",
+     "not_due_items",
+     "charges"
+    ],
+    "title": "PreviewOut"
    },
    "site_yonetim__api__v1__charges__ReverseIn": {
     "properties": {

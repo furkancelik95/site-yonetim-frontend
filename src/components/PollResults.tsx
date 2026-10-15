@@ -1,10 +1,9 @@
 // Anket sonuç çubukları — yönetim ve sakin ekranı ortak (sakin paketi yönetim kodunu indirmesin).
 
-/** Servis isteği 15'teki şekiller. Sakin yanıtında sonuç oy vermeden önce null gelir. */
-export interface Poll {
-  id: string; question: string; description: string | null; options: { id: string; label: string; votes: number | null }[];
-  audience: "all" | "owners" | "tenants"; ends_on: string; status: "open" | "closed"; total_votes: number | null; created_by: string; created_at: string;
-}
+import type { Schemas } from "../api/types";
+
+/** Servis isteği 15. Sakin yanıtında sonuç oy vermeden önce null gelir. */
+export type Poll = Schemas["PollOut"];
 
 /** Sonuç çubukları: değer çubuğun üstünde yazılı, renk tek başına anlam taşımaz; en çok oy alan kalın. */
 export function PollResults({ p, mine }: { p: Poll; mine?: string | null }) {

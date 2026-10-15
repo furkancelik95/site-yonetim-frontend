@@ -26,6 +26,14 @@ export const P = {
   modulesManage: "modules.manage",
   membersManage: "members.manage",
   auditRead: "audit.read",
+  securityIncidents: "security.incidents",
+  meetingsRead: "meetings.read",
+  meetingsManage: "meetings.manage",
+  pollsManage: "polls.manage",
+  contractsManage: "contracts.manage",
+  inventoryRead: "inventory.read",
+  inventoryManage: "inventory.manage",
+  staffManage: "staff.manage",
 } as const;
 
 export const M = {
@@ -37,6 +45,9 @@ export const M = {
   documents: "documents",
   reservations: "reservations",
   valet: "valet",
+  generalAssembly: "general-assembly",
+  surveys: "surveys",
+  staff: "staff",
 } as const;
 
 export type SiteDetail = Schemas["SiteResponse"];

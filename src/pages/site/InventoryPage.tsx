@@ -1,20 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { Boxes, Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
+import type { Schemas } from "../../api/types";
 import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { assetStatus, assetStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 17'deki şekiller. Miktarlar ondalık metin (en çok 3 hane). */
-interface Asset {
-  id: string; code: string; name: string; category: string; location: string; acquired_on: string | null; value: string | null;
-  status: "in_use" | "broken" | "retired"; assignee: string | null; note: string | null;
-}
-interface StockItem { id: string; name: string; unit_label: string; quantity: string; min_quantity: string; location: string | null }
-interface StockMove { id: string; item_id: string; direction: "in" | "out"; quantity: string; note: string | null; moved_at: string; moved_by: string }
+type Asset = Schemas["AssetOut"];
+type StockItem = Schemas["StockItemOut"];
+type StockMove = Schemas["MoveOut"];
 
 const UNITS = ["adet", "paket", "koli", "litre", "kg", "metre"];
 const qty = (v: string) => Number(v).toLocaleString("tr-TR", { maximumFractionDigits: 3 });
@@ -29,7 +25,7 @@ export function InventoryPage() {
   const [s, set] = useUrlState({ sekme: "demirbas" });
   return (
     <div className="stack">
-      <PageHead title="Demirbaş ve stok" subtitle="Sitenin malları ve sarf malzemesi: nerede, kimde, ne kadar kaldı." actions={<MockBadge request="17" />} />
+      <PageHead title="Demirbaş ve stok" subtitle="Sitenin malları ve sarf malzemesi: nerede, kimde, ne kadar kaldı." />
       <div className="row" role="tablist" aria-label="Demirbaş ve stok" style={{ gap: "var(--s-2)" }}>
         {[["demirbas", "Demirbaş"], ["stok", "Stok"]].map(([k, l]) => (
           <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>
@@ -45,7 +41,7 @@ function Assets() {
   const [status, setStatus] = useState("");
   const q = useSiteGet<Asset[]>("/assets", { status: status || undefined });
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
-  const manage = can(P.expensesManage);
+  const manage = can(P.inventoryManage);
   return (
     <>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
@@ -132,8 +128,8 @@ function Stock() {
   const q = useSiteGet<StockItem[]>("/stock-items");
   const [adding, setAdding] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const manage = can(P.expensesManage);
-  const low = (q.data ?? []).filter((s) => Number(s.quantity) <= Number(s.min_quantity));
+  const manage = can(P.inventoryManage);
+  const low = (q.data ?? []).filter((s) => s.is_low);
   return (
     <>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
@@ -152,7 +148,7 @@ function Stock() {
                 <thead><tr><th scope="col">Malzeme</th><th scope="col" className="right">Mevcut</th><th scope="col" className="right">Asgari</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
                 <tbody>
                   {q.data.map((s) => {
-                    const isLow = Number(s.quantity) <= Number(s.min_quantity);
+                    const isLow = s.is_low;
                     return [
                       <tr key={s.id}>
                         <td><div className="cell-main">{s.name}</div>{s.location && <div className="cell-sub">{s.location}</div>}</td>
