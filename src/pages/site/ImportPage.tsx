@@ -9,6 +9,7 @@ import { ExcelButton } from "../../components/ExcelButton";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, formatDecimal, formatMoney, parseMoneyInput } from "../../lib/format";
+import { downloadCsv } from "../../lib/csv";
 import { useUrlState } from "../../lib/hooks";
 import { importStatus, importType, unitUsage } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
@@ -28,12 +29,6 @@ const CSV = {
   "opening-balances": { file: "acilis-bakiyesi-sablonu.csv", header: ["Referans", "Tutar", "Tarih"], sample: ["REFERANS-KODU", "1250,00", "2026-10-01"], hint: "Sütunlar: Referans (cari hesabın referans kodu), Tutar (borç artı, alacak eksi), Tarih. Toplam, eski sistemdeki toplamla tutmadan aktarılamaz." },
 } as const;
 
-function downloadCsv(name: string, rows: readonly (readonly string[])[]) {
-  const url = URL.createObjectURL(new Blob(["﻿" + rows.map((r) => r.join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
-}
 
 /** İçeri aktarım (YAP-06): bölümler (gerçek uç), araçlar ve açılış bakiyeleri (istek 25); geçmiş ve geri alma. */
 export function ImportPage() {

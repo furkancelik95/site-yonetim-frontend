@@ -41,3 +41,8 @@ export { VehiclesPage } from "./VehiclesPage";
 export { QrPosterPage } from "./QrPosterPage";
 export { CustomFieldsPage } from "./CustomFieldsPage";
 export { SetupPage } from "./SetupPage";
+export { FiscalPeriodsPage } from "./FiscalPeriodsPage";
+export { PaymentPlansPage } from "./PaymentPlansPage";
+export { AdHocChargesPage } from "./AdHocChargesPage";
+export { AccountingExportPage } from "./AccountingExportPage";
+export { FinanceSettingsPage } from "./FinanceSettingsPage";

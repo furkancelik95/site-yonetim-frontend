@@ -78,6 +78,12 @@ const siteScreens: [string, string][] = [
   ["kayit-afisi", "QrPosterPage"],
   ["ayarlar/ozel-alanlar", "CustomFieldsPage"],
   ["kurulum", "SetupPage"],
+  // Finans paketi (servis istekleri 27–34)
+  ["donem-kapanisi", "FiscalPeriodsPage"],
+  ["odeme-planlari", "PaymentPlansPage"],
+  ["ek-ucretler", "AdHocChargesPage"],
+  ["muhasebe-aktarimi", "AccountingExportPage"],
+  ["ayarlar/finans", "FinanceSettingsPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");

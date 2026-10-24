@@ -8,6 +8,7 @@ import { useUrlState } from "../../lib/hooks";
 import { accountKind, allocationKind, ledgerSource, paymentMethod } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { AccountActions } from "./AccountActions";
+import { CollectionPanel } from "../../components/CollectionPanel";
 
 export function LedgerPage() {
   const { accountId = "" } = useParams();
@@ -40,6 +41,7 @@ export function LedgerPage() {
 
       {can(P.paymentRecord) && !a.is_closed && <PaymentForm accountId={a.id} balance={a.balance} />}
       {!a.is_closed && <AccountActions accountId={a.id} balance={a.balance} />}
+      <CollectionPanel accountId={a.id} balance={a.balance} />
 
       {last_charge && last_charge.lines.length > 0 && (
         <details className="card">

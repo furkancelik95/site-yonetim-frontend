@@ -9,6 +9,7 @@ import { PollResults } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
+import { installmentStatus, installmentTone, planStatus, planStatusTone } from "../../lib/labels";
 import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { M, useSite } from "../../site/SiteContext";
 import { NotificationsPage } from "../NotificationsPage";
@@ -244,7 +245,33 @@ export function ResidentStatementPage() {
           </div>
         </>
       )}
+      <ResidentPlans />
     </>
+  );
+}
+
+/** Ödeme planım (FIN-15): sakin yalnız kendi hesabının planını ve taksitlerini görür (servis isteği 30). */
+function ResidentPlans() {
+  const q = useSiteGet<{ id: string; unit_name: string; total: string; installment_count: number; status: string; installments: { no: number; due_date: string; amount: string; paid: string; status: string }[] }[]>("/resident/payment-plans");
+  if (!q.data || q.data.length === 0) return null;
+  return (
+    <div>
+      <div className="section-title">Ödeme planım</div>
+      <div className="stack" style={{ gap: "var(--s-2)" }}>
+        {q.data.map((p) => (
+          <div key={p.id} className="card"><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+            <div className="row row--between"><span className="strong">{p.unit_name} · {p.installment_count} taksit</span><Badge tone={planStatusTone(p.status)}>{planStatus(p.status)}</Badge></div>
+            <div className="small muted">Toplam {formatMoney(p.total)}{p.status === "broken" && " · geciken taksit var, lütfen site yönetimiyle görüşün"}</div>
+            {p.installments.map((i) => (
+              <div key={i.no} className="kv">
+                <span className="kv__k">{i.no}. taksit · {formatDate(i.due_date)}</span>
+                <span className="kv__v"><Money value={i.amount} /> <Badge tone={installmentTone(i.status)}>{installmentStatus(i.status)}</Badge></span>
+              </div>
+            ))}
+          </div></div>
+        ))}
+      </div>
+    </div>
   );
 }
 
