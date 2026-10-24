@@ -45,6 +45,8 @@ function listOf<T>(m: Map<string, T[]>, slug: string): T[] {
 }
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const today = () => iso(new Date());
+/** ISO zaman damgasının YEREL günü (UTC'de .slice(0, 10) gece yarısından sonra bir önceki günü verir). */
+const dayOf = (ts: string) => iso(new Date(ts));
 const monthStart = () => today().slice(0, 7) + "-01";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const PHONE_RE = /^\+905\d{9}$/;
@@ -977,9 +979,9 @@ async function vouchersFor(request: Request, slug: string, period: string) {
     const m = map.get("expense")!;
     out.push({ key: `expense:${e.id}`, source: "expense", source_id: e.id, date: e.paid_on!, description: e.description, debit_account: m.debit_account, credit_account: m.credit_account, amount: e.amount });
   }
-  for (const c of listOf(adHocCharges, slug).filter((x) => x.status === "posted" && x.created_at.slice(0, 10) >= from && x.created_at.slice(0, 10) <= to)) {
+  for (const c of listOf(adHocCharges, slug).filter((x) => x.status === "posted" && dayOf(x.created_at) >= from && dayOf(x.created_at) <= to)) {
     const m = map.get("ad_hoc_charge")!;
-    out.push({ key: `ad_hoc:${c.id}`, source: "ad_hoc_charge", source_id: c.id, date: c.created_at.slice(0, 10), description: `${c.unit_name} ${c.description}`, debit_account: m.debit_account, credit_account: m.credit_account, amount: c.amount });
+    out.push({ key: `ad_hoc:${c.id}`, source: "ad_hoc_charge", source_id: c.id, date: dayOf(c.created_at), description: `${c.unit_name} ${c.description}`, debit_account: m.debit_account, credit_account: m.credit_account, amount: c.amount });
   }
   const exported = new Set(listOf(exportBatches, slug).flatMap((b) => b.vouchers.map((v) => v.key)));
   const pending = out.filter((v) => !exported.has(v.key)).sort((a, b) => a.date.localeCompare(b.date));
@@ -1703,4 +1705,406 @@ const ik: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...ik];
+// ============================================================================================
+// GÜVENLİK VE DEVRİYE PAKETİ (Yazılım Dokümanı GUV-01..09, OTP-02) — servis istekleri 40–46
+// Park yeri ve tahsis (OTP-01) K30'a, mal kabul (GUV-07) pilot sonrasına bırakıldı.
+// ============================================================================================
+interface Gate { id: string; name: string; kind: "vehicle" | "pedestrian" | "service"; block_ids: string[]; always_open: boolean; is_active: boolean }
+interface SecSettings { unannounced_method: "info" | "approval"; approval_timeout_seconds: number; gate_methods: Record<string, "info" | "approval">; parcel_method: "code" | "qr" | "both"; visitor_fields: { plate: boolean; phone: boolean; id_seen: boolean }; retention_months: number; parcel_long_wait_days: number; guest_parking_capacity: number }
+interface VisitorInvite { id: string; unit_id: string; unit_name: string; visitor_name: string; type: "once" | "range" | "recurring"; date_from: string; date_to: string; weekdays: number[]; time_from: string | null; time_to: string | null; plate: string | null; note: string | null; code: string; status: "active" | "used" | "cancelled"; created_by: string; created_at: string; used_at: string | null }
+interface VisitRequest { id: string; unit_id: string; unit_name: string; full_name: string; kind: string; plate: string | null; gate_id: string | null; status: "awaiting" | "allowed" | "denied"; decided_by: string | null; decision_source: "resident" | "guard" | null; reason: string | null; created_by: string; created_at: string; expires_at: string; visitor_id: string | null }
+interface GateLog { id: string; plate: string; plate_display: string; result: "registered" | "guest" | "unknown"; detail: string | null; gate_id: string | null; direction: "in" | "out"; by: string; at: string }
+interface Violation { id: string; plate: string; plate_display: string; location: string; note: string | null; result: "registered" | "guest" | "unknown"; unit_name: string | null; notified: "resident" | "management"; by: string; at: string }
+interface ParcelDelegate { id: string; unit_id: string; unit_name: string; name: string; created_by: string; created_at: string; is_active: boolean }
+interface LogEntry { id: string; kind: "note" | "event" | "handover"; text: string; gate_id: string | null; by: string; at: string; addenda: { text: string; by: string; at: string }[]; acknowledged_by: string | null; acknowledged_at: string | null }
+interface PatrolPoint { id: string; name: string; location: string | null; area: string | null; tag: "qr" | "nfc" | "both"; code: string; is_active: boolean }
+interface PatrolPlan { id: string; name: string; point_ids: string[]; ordered: boolean; start_times: string[]; allowed_minutes: number; assignee: string | null; is_active: boolean }
+interface PatrolRun { id: string; plan_id: string; plan_name: string; slot: string | null; started_by: string; started_at: string; finished_at: string | null; scans: { point_id: string; at: string; note: string | null; out_of_order: boolean }[] }
+const gates = loadMap<string, Gate[]>("gates");
+const secSettings = loadMap<string, SecSettings>("secSettings");
+const visitorInvites = loadMap<string, VisitorInvite[]>("visitorInvites");
+const visitRequests = loadMap<string, VisitRequest[]>("visitRequests");
+const gateLogs = loadMap<string, GateLog[]>("gateLogs");
+const violations = loadMap<string, Violation[]>("violations");
+const parcelDelegates = loadMap<string, ParcelDelegate[]>("parcelDelegates");
+const shiftLog = loadMap<string, LogEntry[]>("shiftLog");
+const patrolPoints = loadMap<string, PatrolPoint[]>("patrolPoints");
+const patrolPlans = loadMap<string, PatrolPlan[]>("patrolPlans");
+const patrolRuns = loadMap<string, PatrolRun[]>("patrolRuns");
+const secOf = (slug: string) => { if (!secSettings.has(slug)) secSettings.set(slug, { unannounced_method: "info", approval_timeout_seconds: 90, gate_methods: {}, parcel_method: "both", visitor_fields: { plate: true, phone: false, id_seen: false }, retention_months: 6, parcel_long_wait_days: 5, guest_parking_capacity: 10 }); return secSettings.get(slug)!; };
+const randCode = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
+const nowHm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const weekday = (d: string) => (new Date(d + "T00:00:00").getDay() + 6) % 7; // 0 = pazartesi
+function inviteValidNow(i: VisitorInvite, date = today(), time = nowHm()) {
+  if (i.status !== "active") return false;
+  if (date < i.date_from || date > i.date_to) return false;
+  if (i.type === "recurring" && !i.weekdays.includes(weekday(date))) return false;
+  if (i.time_from && i.time_to && (time < i.time_from || time > i.time_to)) return false;
+  return true;
+}
+function requestOut(r: VisitRequest) { const timed = r.status === "awaiting" && r.expires_at < new Date().toISOString(); return { ...r, timed_out: timed, seconds_left: r.status === "awaiting" ? Math.max(0, Math.round((new Date(r.expires_at).getTime() - Date.now()) / 1000)) : 0 }; }
+function plateLookup(slug: string, raw: string) {
+  const plate = normPlate(raw);
+  const v = listOf(vehicles, slug).find((x) => x.plate === plate && x.status === "active" && (x.kind === "permanent" || (x.valid_until ?? "") >= today()));
+  if (v) return { plate, plate_display: displayPlate(plate), result: "registered" as const, unit_name: v.unit_name, owner_name: v.owner_name, valid_until: v.valid_until, detail: `${v.unit_name}${v.owner_name ? ` · ${v.owner_name}` : ""}${v.kind === "guest" ? " · misafir aracı" : ""}` };
+  // Tek kullanımlık davetle bugün giren misafirin plakası gün boyu misafir sayılır (çıkışta da tanınsın)
+  const inv = listOf(visitorInvites, slug).find((i) => i.plate === plate && (inviteValidNow(i, today(), "12:00") || (i.status === "used" && !!i.used_at && dayOf(i.used_at) === today())));
+  if (inv) return { plate, plate_display: displayPlate(plate), result: "guest" as const, unit_name: inv.unit_name, owner_name: null, valid_until: inv.date_to, detail: `${inv.unit_name} misafiri (${inv.visitor_name}) · ${new Date(inv.date_to).toLocaleDateString("tr-TR")} tarihine kadar` };
+  return { plate, plate_display: PLATE_RE.test(plate) ? displayPlate(plate) : plate, result: "unknown" as const, unit_name: null, owner_name: null, valid_until: null, detail: null };
+}
+async function createRealVisitor(request: Request, slug: string, b: { unit_id: string; full_name: string; kind?: string; plate?: string | null }) {
+  return real<{ data?: { id: string }; error?: { message?: string; fields?: Record<string, string> } }>(request, `/api/v1/sites/${slug}/visitors`, { method: "POST", body: { unit_id: b.unit_id, full_name: b.full_name, kind: b.kind ?? "guest", plate_number: b.plate ? displayPlate(b.plate) : null, enter_now: true, note: null } });
+}
+function patrolReport(slug: string, run: PatrolRun) {
+  const plan = listOf(patrolPlans, slug).find((p) => p.id === run.plan_id);
+  const pts = new Map(listOf(patrolPoints, slug).map((p) => [p.id, p]));
+  const scanned = new Set(run.scans.map((s) => s.point_id));
+  const missed = (plan?.point_ids ?? []).filter((id) => !scanned.has(id)).map((id) => pts.get(id)?.name ?? "?");
+  const end = run.finished_at ?? new Date().toISOString();
+  const minutes = Math.round((new Date(end).getTime() - new Date(run.started_at).getTime()) / 60000);
+  const lateStart = run.slot ? Math.max(0, Math.round((new Date(run.started_at).getTime() - new Date(`${dayOf(run.started_at)}T${run.slot}:00`).getTime()) / 60000)) : 0;
+  return { missed, out_of_order: run.scans.filter((s) => s.out_of_order).map((s) => pts.get(s.point_id)?.name ?? "?"), duration_minutes: minutes, overtime: plan ? minutes > plan.allowed_minutes : false, late_start_minutes: lateStart, total_points: plan?.point_ids.length ?? 0, scanned_points: scanned.size, ok: missed.length === 0 && !run.scans.some((s) => s.out_of_order) && !(plan && minutes > plan.allowed_minutes) };
+}
+
+const guvenlik: RequestHandler[] = [
+  // 40 — Kapılar ve güvenlik ayarları
+  http.get(`${API}/gates`, ({ params }) => HttpResponse.json(listOf(gates, String(params.slug)))),
+  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/gates` : `${API}/gates/:id`, async ({ request, params }) => {
+    const list = listOf(gates, String(params.slug));
+    const cur = verb === "patch" ? list.find((g) => g.id === params.id) : undefined;
+    if (verb === "patch" && !cur) return err(404, "not_found", "Kapı bulunamadı.");
+    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<Gate>) };
+    const f: Record<string, string> = {};
+    if (!b.name?.trim()) f.name = "Kapı adını yazın."; else if (list.some((g) => g.id !== cur?.id && g.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla kapı var.";
+    if (!["vehicle", "pedestrian", "service"].includes(b.kind ?? "")) f.kind = "Kapı tipini seçin.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const g: Gate = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), kind: b.kind!, block_ids: b.block_ids ?? [], always_open: !!b.always_open, is_active: b.is_active ?? true };
+    if (cur) Object.assign(cur, g); else list.push(g);
+    return HttpResponse.json({ data: g, message: verb === "post" ? `${g.name} eklendi.` : `${g.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
+  })),
+  http.get(`${API}/settings/security`, ({ params }) => HttpResponse.json(secOf(String(params.slug)))),
+  http.put(`${API}/settings/security`, async ({ request, params }) => {
+    const s = secOf(String(params.slug));
+    const b = { ...s, ...((await request.json()) as Partial<SecSettings>) };
+    const f: Record<string, string> = {};
+    if (!["info", "approval"].includes(b.unannounced_method)) f.unannounced_method = "Yöntem seçin.";
+    if (!(Number.isInteger(b.approval_timeout_seconds) && b.approval_timeout_seconds >= 30 && b.approval_timeout_seconds <= 600)) f.approval_timeout_seconds = "30–600 saniye.";
+    if (!["code", "qr", "both"].includes(b.parcel_method)) f.parcel_method = "Teslim yöntemi seçin.";
+    if (!(Number.isInteger(b.retention_months) && b.retention_months >= 1)) f.retention_months = "En az 1 ay.";
+    else if (b.retention_months > 24) return err(422, "retention_limit", "Saklama süresi en fazla 2 yıl (24 ay) olabilir.", { retention_months: "En fazla 24 ay." });
+    if (!(Number.isInteger(b.parcel_long_wait_days) && b.parcel_long_wait_days >= 1 && b.parcel_long_wait_days <= 60)) f.parcel_long_wait_days = "1–60 gün.";
+    if (!(Number.isInteger(b.guest_parking_capacity) && b.guest_parking_capacity >= 0 && b.guest_parking_capacity <= 500)) f.guest_parking_capacity = "0–500.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    Object.assign(s, b);
+    return HttpResponse.json({ data: s, message: "Güvenlik ayarları kaydedildi; kapı ekranları hemen güncellenir." });
+  }),
+
+  // 41 — Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş
+  http.get(`${API}/resident/visitor-invites`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
+    const ids = new Set(mine.units.map((u) => u.unit_id));
+    return HttpResponse.json([...listOf(visitorInvites, String(params.slug))].filter((i) => ids.has(i.unit_id)).reverse().map((i) => ({ ...i, valid_now: inviteValidNow(i), expired: i.status === "active" && i.date_to < today() })));
+  }),
+  http.post(`${API}/resident/visitor-invites`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const mine = await myUnits(request, slug);
+    const b = (await request.json()) as Partial<VisitorInvite>;
+    const unit = mine.units.find((u) => u.unit_id === b.unit_id) ?? mine.units[0];
+    if (!unit) return err(404, "not_found", "Bölümünüz bulunamadı.");
+    const f: Record<string, string> = {};
+    const name = (b.visitor_name ?? "").trim().replace(/\s+/g, " ");
+    if (!NAME_RE.test(name) || name.length < 3) f.visitor_name = "Ziyaretçinin adını yazın (yalnız harf).";
+    if (!["once", "range", "recurring"].includes(b.type ?? "")) f.type = "Davet tipini seçin.";
+    if (!b.date_from || !DATE_RE.test(b.date_from) || b.date_from < today()) f.date_from = "Tarih bugünden önce olamaz.";
+    const to = b.type === "once" ? b.date_from : b.date_to;
+    if (b.type !== "once" && (!to || !DATE_RE.test(to) || (b.date_from && to < b.date_from))) f.date_to = "Bitiş tarihini girin.";
+    if (b.type === "recurring" && !(b.weekdays?.length)) f.weekdays = "En az bir gün seçin.";
+    if ((b.time_from && !TIME_RE.test(b.time_from)) || (b.time_to && !TIME_RE.test(b.time_to)) || (b.time_from && b.time_to && b.time_to <= b.time_from)) f.time_to = "Saat aralığını kontrol edin.";
+    const plate = b.plate ? normPlate(b.plate) : null;
+    if (plate && !PLATE_RE.test(plate)) f.plate = "Plakayı 34 ABC 123 biçiminde yazın.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    if (plate) {
+      const cap = secOf(slug).guest_parking_capacity;
+      const active = listOf(visitorInvites, slug).filter((i) => i.plate && i.status === "active" && i.date_from <= b.date_from! && i.date_to >= b.date_from!).length;
+      if (active >= cap) return err(409, "guest_parking_full", `Misafir parkı bu tarihte dolu (${cap}). Plakasız davet oluşturabilirsiniz.`);
+    }
+    let code = randCode(6); while (listOf(visitorInvites, slug).some((i) => i.code === code && i.status === "active")) code = randCode(6);
+    const inv: VisitorInvite = { id: crypto.randomUUID(), unit_id: unit.unit_id, unit_name: unit.unit_name, visitor_name: name, type: b.type!, date_from: b.date_from!, date_to: to!, weekdays: b.type === "recurring" ? b.weekdays! : [], time_from: b.time_from || null, time_to: b.time_to || null, plate, note: b.note?.trim() || null, code, status: "active", created_by: (await me(request)).name, created_at: new Date().toISOString(), used_at: null };
+    listOf(visitorInvites, slug).push(inv);
+    return HttpResponse.json({ data: inv, message: `Davet oluşturuldu. Kod: ${code} — ziyaretçinizle paylaşın; kapıda kodu ya da QR'ı gösterir.` }, { status: 201 });
+  }),
+  http.post(`${API}/resident/visitor-invites/:id/cancel`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    const i = listOf(visitorInvites, String(params.slug)).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
+    if (!i) return err(404, "not_found", "Davet bulunamadı.");
+    if (i.status !== "active") return err(409, "invalid_status", "Bu davet artık geçerli değil.");
+    i.status = "cancelled";
+    return HttpResponse.json({ data: i, message: "Davet iptal edildi." });
+  }),
+  http.get(`${API}/visitor-invites/expected`, ({ params }) => HttpResponse.json(listOf(visitorInvites, String(params.slug)).filter((i) => inviteValidNow(i, today(), "12:00") || (i.status === "active" && i.date_from <= today() && i.date_to >= today() && (i.type !== "recurring" || i.weekdays.includes(weekday(today()))))).map((i) => ({ id: i.id, unit_name: i.unit_name, visitor_name: i.visitor_name, type: i.type, time_from: i.time_from, time_to: i.time_to, plate: i.plate ? displayPlate(i.plate) : null })))),
+  http.post(`${API}/visitor-invites/check-in`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const b = (await request.json()) as { code?: string };
+    const code = (b.code ?? "").replace(/\D/g, "");
+    if (code.length !== 6) return err(422, "validation", VALIDATION, { code: "6 haneli davet kodunu girin." });
+    const i = listOf(visitorInvites, slug).find((x) => x.code === code && x.status !== "cancelled");
+    if (!i) return err(404, "invite_not_found", "Bu kodla davet yok. Habersiz ziyaretçi olarak kaydedin.");
+    if (!inviteValidNow(i)) return err(409, "invite_not_valid", i.status === "used" ? "Bu tek kullanımlık davet kullanılmış." : "Davet şu an geçerli değil (tarih/gün/saat dışında). Habersiz ziyaretçi olarak kaydedin.");
+    const r = await createRealVisitor(request, slug, { unit_id: i.unit_id, full_name: i.visitor_name, plate: i.plate });
+    if (r.status >= 300) return HttpResponse.json(r.body, { status: r.status });
+    if (i.type === "once") Object.assign(i, { status: "used", used_at: new Date().toISOString() });
+    return HttpResponse.json({ data: { visitor_id: r.body?.data?.id, unit_name: i.unit_name, visitor_name: i.visitor_name }, message: `${i.visitor_name} (${i.unit_name}) içeri alındı.` }, { status: 201 });
+  }),
+
+  // 42 — Habersiz ziyaretçi: bilgi bildirimi ya da sakin onayı
+  http.post(`${API}/visit-requests`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const b = (await request.json()) as { unit_id?: string; unit_name?: string; full_name?: string; kind?: string; plate?: string; gate_id?: string | null };
+    const f: Record<string, string> = {};
+    if (!b.unit_id) f.unit_id = "Ziyaret edilen bölümü seçin.";
+    if ((b.full_name ?? "").trim().length < 2) f.full_name = "Ad soyad yazın.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const s = secOf(slug);
+    const method = (b.gate_id && s.gate_methods[b.gate_id]) || s.unannounced_method;
+    const unitName = b.unit_name?.trim() || "Bölüm";
+    if (method === "info") {
+      const r = await createRealVisitor(request, slug, { unit_id: b.unit_id!, full_name: b.full_name!.trim(), kind: b.kind, plate: b.plate ? normPlate(b.plate) : null });
+      if (r.status >= 300) return HttpResponse.json(r.body, { status: r.status });
+      return HttpResponse.json({ data: { method, status: "allowed", visitor_id: r.body?.data?.id }, message: `${b.full_name} içeri alındı; ${unitName} sakinlerine bilgi bildirimi (gönderim K5 ile).` }, { status: 201 });
+    }
+    const req: VisitRequest = { id: crypto.randomUUID(), unit_id: b.unit_id!, unit_name: unitName, full_name: b.full_name!.trim(), kind: b.kind ?? "guest", plate: b.plate ? normPlate(b.plate) : null, gate_id: b.gate_id ?? null, status: "awaiting", decided_by: null, decision_source: null, reason: null, created_by: (await me(request)).name, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + s.approval_timeout_seconds * 1000).toISOString(), visitor_id: null };
+    listOf(visitRequests, slug).push(req);
+    return HttpResponse.json({ data: { ...requestOut(req), method }, message: `${unitName} sakinlerinden onay istendi; ${s.approval_timeout_seconds} sn içinde yanıt yoksa siz karar verirsiniz.` }, { status: 201 });
+  }),
+  http.get(`${API}/visit-requests`, ({ request, params }) => {
+    const st = new URL(request.url).searchParams.get("status");
+    return HttpResponse.json([...listOf(visitRequests, String(params.slug))].filter((r) => !st || r.status === st).filter((r) => dayOf(r.created_at) === today() || r.status === "awaiting").reverse().map(requestOut));
+  }),
+  http.post(`${API}/visit-requests/:id/decide`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const r = listOf(visitRequests, slug).find((x) => x.id === params.id);
+    if (!r) return err(404, "not_found", "Talep bulunamadı.");
+    if (r.status !== "awaiting") return err(409, "already_decided", "Bu talep karara bağlanmış.");
+    if (!requestOut(r).timed_out) return err(409, "awaiting_resident", "Sakin yanıtı bekleniyor; süre dolunca karar verebilirsiniz.");
+    const b = (await request.json()) as { decision?: string; reason?: string };
+    if (!["allow", "deny"].includes(b.decision ?? "")) return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
+    if ((b.reason ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { reason: "Kararınızın gerekçesini yazın (ör. diafonla ulaşıldı, sakin onayladı)." });
+    if (b.decision === "allow") { const v = await createRealVisitor(request, slug, { unit_id: r.unit_id, full_name: r.full_name, kind: r.kind, plate: r.plate }); if (v.status >= 300) return HttpResponse.json(v.body, { status: v.status }); r.visitor_id = v.body?.data?.id ?? null; }
+    Object.assign(r, { status: b.decision === "allow" ? "allowed" : "denied", decided_by: (await me(request)).name, decision_source: "guard", reason: b.reason!.trim() });
+    return HttpResponse.json({ data: requestOut(r), message: b.decision === "allow" ? `${r.full_name} içeri alındı (görevli kararı).` : `${r.full_name} girişi reddedildi; sakine bilgi.` });
+  }),
+  http.get(`${API}/resident/visit-approvals`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
+    const ids = new Set(mine.units.map((u) => u.unit_id));
+    return HttpResponse.json(listOf(visitRequests, String(params.slug)).filter((r) => ids.has(r.unit_id) && dayOf(r.created_at) === today()).reverse().map(requestOut));
+  }),
+  http.post(`${API}/resident/visit-approvals/:id`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const mine = await myUnits(request, slug);
+    const r = listOf(visitRequests, slug).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
+    if (!r) return err(404, "not_found", "Talep bulunamadı.");
+    if (r.status !== "awaiting") return err(409, "already_decided", "Bu ziyaretçi için karar verilmiş.");
+    if (requestOut(r).timed_out) return err(409, "timed_out", "Süre doldu; görevli sizinle diafon/telefonla iletişime geçecek.");
+    const b = (await request.json()) as { decision?: string };
+    if (!["allow", "deny"].includes(b.decision ?? "")) return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
+    if (b.decision === "allow") { const v = await createRealVisitor(request, slug, { unit_id: r.unit_id, full_name: r.full_name, kind: r.kind, plate: r.plate }); r.visitor_id = v.body?.data?.id ?? null; }
+    Object.assign(r, { status: b.decision === "allow" ? "allowed" : "denied", decided_by: (await me(request)).name, decision_source: "resident" });
+    return HttpResponse.json({ data: requestOut(r), message: b.decision === "allow" ? "Onayladınız; ziyaretçi içeri alındı." : "Reddettiniz; görevli bilgilendirildi." });
+  }),
+
+  // 43 — Plaka sorgu, giriş kaydı, otopark ihlali
+  http.get(`${API}/plates/lookup`, ({ request, params }) => {
+    const q = new URL(request.url).searchParams.get("plate") ?? "";
+    if (normPlate(q).length < 4) return err(422, "validation", VALIDATION, { plate: "Plakayı yazın." });
+    return HttpResponse.json(plateLookup(String(params.slug), q));
+  }),
+  http.get(`${API}/gate-logs`, ({ request, params }) => {
+    const date = new URL(request.url).searchParams.get("date") ?? today();
+    return HttpResponse.json([...listOf(gateLogs, String(params.slug))].filter((l) => dayOf(l.at) === date).reverse());
+  }),
+  http.post(`${API}/gate-logs`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const b = (await request.json()) as { plate?: string; direction?: "in" | "out"; gate_id?: string | null };
+    const lk = plateLookup(slug, b.plate ?? "");
+    if (lk.plate.length < 4) return err(422, "validation", VALIDATION, { plate: "Plakayı yazın." });
+    const l: GateLog = { id: crypto.randomUUID(), plate: lk.plate, plate_display: lk.plate_display, result: lk.result, detail: lk.detail, gate_id: b.gate_id ?? null, direction: b.direction === "out" ? "out" : "in", by: (await me(request)).name, at: new Date().toISOString() };
+    listOf(gateLogs, slug).push(l);
+    return HttpResponse.json({ data: l, message: `${l.plate_display} ${l.direction === "in" ? "girişi" : "çıkışı"} kaydedildi.` }, { status: 201 });
+  }),
+  http.get(`${API}/parking-violations`, ({ params }) => HttpResponse.json([...listOf(violations, String(params.slug))].reverse())),
+  http.post(`${API}/parking-violations`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const b = (await request.json()) as { plate?: string; location?: string; note?: string };
+    const lk = plateLookup(slug, b.plate ?? "");
+    const f: Record<string, string> = {};
+    if (!PLATE_RE.test(lk.plate)) f.plate = "Plakayı 34 ABC 123 biçiminde yazın.";
+    if ((b.location ?? "").trim().length < 2) f.location = "Yeri yazın (ör. B blok önü, engelli park yeri).";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    if (lk.result !== "unknown" && !(b.note ?? "").trim()) return err(409, "plate_authorized", `${lk.plate_display} yetkili (${lk.detail}). Yine de ihlal kaydedilecekse nedenini yazın (ör. yanlış yere park).`);
+    const v: Violation = { id: crypto.randomUUID(), plate: lk.plate, plate_display: lk.plate_display, location: b.location!.trim(), note: b.note?.trim() || null, result: lk.result, unit_name: lk.unit_name, notified: lk.unit_name ? "resident" : "management", by: (await me(request)).name, at: new Date().toISOString() };
+    listOf(violations, slug).push(v);
+    return HttpResponse.json({ data: v, message: v.notified === "resident" ? `İhlal kaydedildi; ${v.unit_name} sakinine bildirim (gönderim K5 ile).` : "İhlal kaydedildi; plaka kayıtlı değil, yönetime bildirildi." }, { status: 201 });
+  }),
+
+  // 44 — Kargo: uzun bekleyenler, teslim yetkilisi
+  http.get(`${API}/packages/long-waiting`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const days = secOf(slug).parcel_long_wait_days;
+    const list = await allPages<{ id: string; unit_id: string; unit_name: string; carrier: string | null; received_at: string; status: string }>(request, `/api/v1/sites/${slug}/packages?status=waiting`);
+    const limit = Date.now() - days * 864e5;
+    return HttpResponse.json({ days, items: list.filter((p) => new Date(p.received_at).getTime() < limit).map((p) => ({ ...p, waiting_days: Math.floor((Date.now() - new Date(p.received_at).getTime()) / 864e5), delegates: listOf(parcelDelegates, slug).filter((d) => d.unit_id === p.unit_id && d.is_active).map((d) => d.name) })) });
+  }),
+  http.get(`${API}/units/:id/parcel-delegates`, ({ params }) => HttpResponse.json(listOf(parcelDelegates, String(params.slug)).filter((d) => d.unit_id === params.id && d.is_active).map((d) => ({ id: d.id, name: d.name })))),
+  http.get(`${API}/resident/parcel-delegates`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
+    const ids = new Set(mine.units.map((u) => u.unit_id));
+    return HttpResponse.json(listOf(parcelDelegates, String(params.slug)).filter((d) => ids.has(d.unit_id) && d.is_active));
+  }),
+  http.post(`${API}/resident/parcel-delegates`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const mine = await myUnits(request, slug);
+    const b = (await request.json()) as { name?: string; unit_id?: string };
+    const unit = mine.units.find((u) => u.unit_id === b.unit_id) ?? mine.units[0];
+    if (!unit) return err(404, "not_found", "Bölümünüz bulunamadı.");
+    const name = (b.name ?? "").trim().replace(/\s+/g, " ");
+    if (!NAME_RE.test(name) || name.length < 3) return err(422, "validation", VALIDATION, { name: "Yetkili kişinin adını yazın." });
+    const list = listOf(parcelDelegates, slug);
+    if (list.filter((d) => d.unit_id === unit.unit_id && d.is_active).length >= 3) return err(409, "delegate_limit", "En fazla 3 teslim yetkilisi tanımlanabilir.");
+    const d: ParcelDelegate = { id: crypto.randomUUID(), unit_id: unit.unit_id, unit_name: unit.unit_name, name, created_by: (await me(request)).name, created_at: new Date().toISOString(), is_active: true };
+    list.push(d);
+    return HttpResponse.json({ data: d, message: `${name} kargolarınızı teslim alabilir; kapıda sizin teslim kodunuzu söyler.` }, { status: 201 });
+  }),
+  http.post(`${API}/resident/parcel-delegates/:id/remove`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    const d = listOf(parcelDelegates, String(params.slug)).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
+    if (!d) return err(404, "not_found", "Yetkili bulunamadı.");
+    d.is_active = false;
+    return HttpResponse.json({ data: d, message: `${d.name} yetkisi kaldırıldı.` });
+  }),
+
+  // 45 — Nöbet defteri ve vardiya devri
+  http.get(`${API}/shift-log`, ({ request, params }) => {
+    const date = new URL(request.url).searchParams.get("date");
+    return HttpResponse.json([...listOf(shiftLog, String(params.slug))].filter((e) => !date || dayOf(e.at) === date).reverse());
+  }),
+  http.post(`${API}/shift-log`, async ({ request, params }) => {
+    const b = (await request.json()) as { kind?: string; text?: string; gate_id?: string | null };
+    if (!["note", "event", "handover"].includes(b.kind ?? "")) return err(422, "validation", VALIDATION, { kind: "Kayıt türünü seçin." });
+    if ((b.text ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { text: "En az 5 karakter yazın." });
+    const e: LogEntry = { id: crypto.randomUUID(), kind: b.kind as LogEntry["kind"], text: b.text!.trim(), gate_id: b.gate_id ?? null, by: (await me(request)).name, at: new Date().toISOString(), addenda: [], acknowledged_by: null, acknowledged_at: null };
+    listOf(shiftLog, String(params.slug)).push(e);
+    return HttpResponse.json({ data: e, message: e.kind === "handover" ? "Devir notu yazıldı; sonraki görevli okuyup onaylayacak." : "Nöbet defterine yazıldı. Kayıt değiştirilemez; düzeltme ek notla yapılır." }, { status: 201 });
+  }),
+  http.post(`${API}/shift-log/:id/addenda`, async ({ request, params }) => {
+    const e = listOf(shiftLog, String(params.slug)).find((x) => x.id === params.id);
+    if (!e) return err(404, "not_found", "Kayıt bulunamadı.");
+    const b = (await request.json()) as { text?: string };
+    if ((b.text ?? "").trim().length < 3) return err(422, "validation", VALIDATION, { text: "Ek notu yazın." });
+    e.addenda.push({ text: b.text!.trim(), by: (await me(request)).name, at: new Date().toISOString() });
+    return HttpResponse.json({ data: e, message: "Ek not eklendi." });
+  }),
+  http.post(`${API}/shift-log/:id/acknowledge`, async ({ request, params }) => {
+    const e = listOf(shiftLog, String(params.slug)).find((x) => x.id === params.id);
+    if (!e || e.kind !== "handover") return err(404, "not_found", "Devir notu bulunamadı.");
+    if (e.acknowledged_by) return err(409, "already_acknowledged", "Devir zaten onaylanmış.");
+    const who = (await me(request)).name;
+    if (who === e.by) return err(409, "same_person", "Devri yazan kişi kendi devrini onaylayamaz; sonraki vardiya görevlisi onaylar.");
+    Object.assign(e, { acknowledged_by: who, acknowledged_at: new Date().toISOString() });
+    return HttpResponse.json({ data: e, message: "Devir okundu olarak onaylandı." });
+  }),
+
+  // 46 — Devriye
+  http.get(`${API}/patrol-points`, ({ params }) => HttpResponse.json(listOf(patrolPoints, String(params.slug)))),
+  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/patrol-points` : `${API}/patrol-points/:id`, async ({ request, params }) => {
+    const list = listOf(patrolPoints, String(params.slug));
+    const cur = verb === "patch" ? list.find((p) => p.id === params.id) : undefined;
+    if (verb === "patch" && !cur) return err(404, "not_found", "Nokta bulunamadı.");
+    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<PatrolPoint>) };
+    const f: Record<string, string> = {};
+    if (!b.name?.trim()) f.name = "Nokta adını yazın."; else if (list.some((p) => p.id !== cur?.id && p.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla nokta var.";
+    if (!["qr", "nfc", "both"].includes(b.tag ?? "")) f.tag = "Etiket tipini seçin.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    let code = cur?.code ?? randCode(6); while (!cur && list.some((p) => p.code === code)) code = randCode(6);
+    const p: PatrolPoint = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), location: b.location?.trim() || null, area: b.area?.trim() || null, tag: b.tag!, code, is_active: b.is_active ?? true };
+    if (cur) Object.assign(cur, p); else list.push(p);
+    return HttpResponse.json({ data: p, message: verb === "post" ? `${p.name} eklendi; etiket kodu ${p.code}.` : `${p.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
+  })),
+  http.get(`${API}/patrol-plans`, ({ params }) => HttpResponse.json(listOf(patrolPlans, String(params.slug)))),
+  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/patrol-plans` : `${API}/patrol-plans/:id`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const list = listOf(patrolPlans, slug);
+    const cur = verb === "patch" ? list.find((p) => p.id === params.id) : undefined;
+    if (verb === "patch" && !cur) return err(404, "not_found", "Tur planı bulunamadı.");
+    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<PatrolPlan>) };
+    const pts = new Set(listOf(patrolPoints, slug).filter((p) => p.is_active).map((p) => p.id));
+    const f: Record<string, string> = {};
+    if (!b.name?.trim()) f.name = "Tur adını yazın.";
+    if (!b.point_ids?.length || b.point_ids.some((id) => !pts.has(id))) f.point_ids = "En az bir etkin nokta seçin.";
+    if (!b.start_times?.length || b.start_times.some((t) => !TIME_RE.test(t))) f.start_times = "Başlangıç saatlerini SS:DD biçiminde girin.";
+    if (!(Number.isInteger(b.allowed_minutes) && b.allowed_minutes! >= 5 && b.allowed_minutes! <= 240)) f.allowed_minutes = "5–240 dakika.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const p: PatrolPlan = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), point_ids: b.point_ids!, ordered: !!b.ordered, start_times: [...new Set(b.start_times!)].sort(), allowed_minutes: b.allowed_minutes!, assignee: b.assignee?.trim() || null, is_active: b.is_active ?? true };
+    if (cur) Object.assign(cur, p); else list.push(p);
+    return HttpResponse.json({ data: p, message: verb === "post" ? `${p.name} turu eklendi.` : `${p.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
+  })),
+  http.get(`${API}/patrol-schedule`, ({ request, params }) => {
+    const slug = String(params.slug);
+    const date = new URL(request.url).searchParams.get("date") ?? today();
+    const now = new Date();
+    const runs = listOf(patrolRuns, slug).filter((r) => dayOf(r.started_at) === date);
+    const slots = listOf(patrolPlans, slug).filter((p) => p.is_active).flatMap((p) => p.start_times.map((t) => {
+      const run = runs.find((r) => r.plan_id === p.id && r.slot === t);
+      const startAt = new Date(`${date}T${t}:00`);
+      const status = run ? (run.finished_at ? (patrolReport(slug, run).ok ? "done" : "done_with_deviation") : (now.getTime() - new Date(run.started_at).getTime() > p.allowed_minutes * 60000 ? "overdue" : "running")) : now < startAt ? "upcoming" : now.getTime() - startAt.getTime() > 15 * 60000 ? "not_started" : "due";
+      return { plan_id: p.id, plan_name: p.name, slot: t, status, run_id: run?.id ?? null, report: run ? patrolReport(slug, run) : null };
+    })).sort((a, b) => a.slot.localeCompare(b.slot));
+    return HttpResponse.json(slots);
+  }),
+  http.get(`${API}/patrol-runs`, ({ request, params }) => {
+    const slug = String(params.slug);
+    const date = new URL(request.url).searchParams.get("date");
+    return HttpResponse.json([...listOf(patrolRuns, slug)].filter((r) => !date || dayOf(r.started_at) === date).reverse().map((r) => ({ ...r, report: patrolReport(slug, r) })));
+  }),
+  http.post(`${API}/patrol-runs`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const b = (await request.json()) as { plan_id?: string; slot?: string | null };
+    const plan = listOf(patrolPlans, slug).find((p) => p.id === b.plan_id && p.is_active);
+    if (!plan) return err(422, "validation", VALIDATION, { plan_id: "Tur seçin." });
+    const runs = listOf(patrolRuns, slug);
+    if (runs.some((r) => r.plan_id === plan.id && !r.finished_at)) return err(409, "run_open", "Bu turun bitmemiş bir yürütmesi var.");
+    const slot = b.slot ?? plan.start_times.filter((t) => t <= nowHm()).at(-1) ?? null;
+    const r: PatrolRun = { id: crypto.randomUUID(), plan_id: plan.id, plan_name: plan.name, slot, started_by: (await me(request)).name, started_at: new Date().toISOString(), finished_at: null, scans: [] };
+    runs.push(r);
+    return HttpResponse.json({ data: { ...r, report: patrolReport(slug, r) }, message: `${plan.name} başladı. Her noktada etiketi okutun ya da kodunu girin.` }, { status: 201 });
+  }),
+  http.post(`${API}/patrol-runs/:id/scans`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const r = listOf(patrolRuns, slug).find((x) => x.id === params.id);
+    if (!r) return err(404, "not_found", "Tur bulunamadı.");
+    if (r.finished_at) return err(409, "run_finished", "Tur bitmiş.");
+    const b = (await request.json()) as { code?: string; note?: string };
+    const plan = listOf(patrolPlans, slug).find((p) => p.id === r.plan_id)!;
+    const point = listOf(patrolPoints, slug).find((p) => p.code === (b.code ?? "").replace(/\D/g, ""));
+    if (!point) return err(422, "validation", VALIDATION, { code: "Bu kodla nokta yok." });
+    if (!plan.point_ids.includes(point.id)) return err(409, "not_in_plan", `${point.name} bu turda yok.`);
+    if (r.scans.some((s) => s.point_id === point.id)) return err(409, "already_scanned", `${point.name} zaten okutuldu.`);
+    const expected = plan.point_ids.find((id) => !r.scans.some((s) => s.point_id === id));
+    const out = plan.ordered && expected !== point.id;
+    r.scans.push({ point_id: point.id, at: new Date().toISOString(), note: b.note?.trim() || null, out_of_order: out });
+    return HttpResponse.json({ data: { ...r, report: patrolReport(slug, r) }, message: `${point.name} okutuldu${out ? " — sıra dışı" : ""}. (${r.scans.length}/${plan.point_ids.length})` });
+  }),
+  http.post(`${API}/patrol-runs/:id/finish`, async ({ params }) => {
+    const slug = String(params.slug);
+    const r = listOf(patrolRuns, slug).find((x) => x.id === params.id);
+    if (!r) return err(404, "not_found", "Tur bulunamadı.");
+    if (r.finished_at) return err(409, "run_finished", "Tur zaten bitmiş.");
+    r.finished_at = new Date().toISOString();
+    const rep = patrolReport(slug, r);
+    return HttpResponse.json({ data: { ...r, report: rep }, message: rep.ok ? "Tur sorunsuz tamamlandı." : `Tur bitti — sapma: ${[rep.missed.length && `${rep.missed.length} nokta okutulmadı`, rep.out_of_order.length && `${rep.out_of_order.length} sıra dışı`, rep.overtime && "süre aşıldı"].filter(Boolean).join(", ")}. Yöneticiye özet gider.` });
+  }),
+];
+
+export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...ik, ...guvenlik];

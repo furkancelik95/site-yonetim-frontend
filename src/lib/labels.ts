@@ -226,3 +226,18 @@ export const leaveStatus = label({ pending: "Onay bekliyor", approved: "Onayland
 export const leaveStatusTone = (v: string): Tone => (v === "approved" ? "ok" : v === "pending" ? "warn" : v === "rejected" ? "danger" : "muted");
 export const timesheetStatus = label({ worked: "Çalıştı", absent: "Gelmedi", leave: "İzinli" });
 export const conflictKind = label({ overlap: "Çakışan vardiya", leave: "İzin günü", rest: "Dinlenme < 11 saat" });
+
+// Güvenlik ve devriye paketi (servis istekleri 40–46)
+export const gateKind = label({ vehicle: "Araç", pedestrian: "Yaya", service: "Servis" });
+export const unannouncedMethod = label({ info: "Bilgi bildirimi", approval: "Sakin onayı" });
+export const parcelMethod = label({ code: "4 haneli kod", qr: "QR", both: "Kod ya da QR" });
+export const inviteType = label({ once: "Tek kullanımlık", range: "Tarih aralıklı", recurring: "Süreli kalıcı" });
+export const inviteStatus = label({ active: "Geçerli", used: "Kullanıldı", cancelled: "İptal" });
+export const visitRequestStatus = label({ awaiting: "Onay bekliyor", allowed: "İçeri alındı", denied: "Reddedildi" });
+export const plateResult = label({ registered: "Kayıtlı", guest: "Misafir", unknown: "Kayıtsız" });
+export const plateResultTone = (v: string): Tone => (v === "registered" ? "ok" : v === "guest" ? "info" : "danger");
+export const logKind = label({ note: "Not", event: "Olay", handover: "Vardiya devri" });
+export const tagType = label({ qr: "QR", nfc: "NFC", both: "QR + NFC" });
+export const patrolSlotStatus = label({ upcoming: "Sırada", due: "Başlamalı", running: "Sürüyor", overdue: "Süre aşıldı", done: "Tamamlandı", done_with_deviation: "Sapmalı tamamlandı", not_started: "Başlamadı" });
+export const patrolSlotTone = (v: string): Tone => (v === "done" ? "ok" : v === "running" || v === "upcoming" ? "info" : v === "due" || v === "done_with_deviation" ? "warn" : "danger");
+export const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
