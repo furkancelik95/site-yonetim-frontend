@@ -46,3 +46,6 @@ export { PaymentPlansPage } from "./PaymentPlansPage";
 export { AdHocChargesPage } from "./AdHocChargesPage";
 export { AccountingExportPage } from "./AccountingExportPage";
 export { FinanceSettingsPage } from "./FinanceSettingsPage";
+export { ShiftPlanPage } from "./ShiftPlanPage";
+export { LeavePage } from "./LeavePage";
+export { TimesheetPage } from "./TimesheetPage";

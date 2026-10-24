@@ -6,7 +6,9 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  CalendarClock,
   CalendarDays,
+  CalendarOff,
   CalendarRange,
   Car,
   ClipboardCheck,
@@ -33,6 +35,7 @@ import {
   SlidersHorizontal,
   Smartphone,
   TextCursorInput,
+  Timer,
   UserPlus,
   Users,
   Vote,
@@ -137,6 +140,9 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
+          {staff && <Item to={`${base}/vardiya`} icon={<CalendarClock aria-hidden="true" />} label="Vardiya Planı" />}
+          {staff && <Item to={`${base}/izinler`} icon={<CalendarOff aria-hidden="true" />} label="İzinler" />}
+          {staff && <Item to={`${base}/puantaj`} icon={<Timer aria-hidden="true" />} label="Puantaj" />}
           {can(P.modulesManage) && <Item to={`${base}/ayarlar/ozel-alanlar`} icon={<TextCursorInput aria-hidden="true" />} label="Özel Alanlar" />}
           {can(P.modulesManage) && <Item to={`${base}/kurulum`} icon={<Rocket aria-hidden="true" />} label="Kurulum" />}
       </Group>

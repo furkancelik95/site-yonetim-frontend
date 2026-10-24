@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–34 sahte serviste** (19–26: 24.10.2026, 27–34 Finans paketi: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–39 sahte serviste** (19–26 yapı: 24.10.2026, 27–34 finans ve 35–39 insan kaynakları: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -50,6 +50,11 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [32](32-muhasebe-aktarimi.md) | Muhasebe aktarımı: hesap kodu eşlemesi, fiş dosyası, kilit | `…/accounting/mappings`, `…/accounting/exports(/preview)` | `/muhasebe-aktarimi` | Sahte servis — biçim K7 |
 | [33](33-finans-parametreleri.md) | Finans parametreleri (versiyonlu) | `…/finance-parameters`, `…/finance-parameters/versions` | `/ayarlar/finans` | Sahte servis — K1/K23/K24/K25 salt bilgi |
 | [34](34-tahakkuk-fark-raporu.md) | Tahakkuk fark raporu | `GET …/charge-runs/preview/diff` | `/tahakkuk` | Sahte servis |
+| [35](35-personel-karti-sicil.md) | Personel kartına bordro sicil no; ayrılışta açık işler | `payroll_no` alanı, `GET …/staff/{id}/open-items` | `/personel` | Sahte servis — kart–kullanıcı eşleşmesi K29 |
+| [36](36-vardiya-plani.md) | Vardiya şablonları ve haftalık plan (çakışma, kopyala, yayınla) | `…/shift-templates`, `…/shift-plans(/assignments, /copy-week, /publish)` | `/vardiya` | Sahte servis — Vardiyam K29 |
+| [37](37-izinler.md) | İzin kaydı ve onayı | `…/leave-requests`, `…/leave-balances` | `/izinler` | Sahte servis — kendi talebi K29 |
+| [38](38-puantaj.md) | Günlük puantaj ve istisna düzeltme | `…/timesheets`, `…/timesheets/finalize` | `/puantaj` | Sahte servis — QR/konum K29 |
+| [39](39-puantaj-aktarimi.md) | Puantaj aktarımı (dosya) | `…/timesheet-exports(/preview)` | `/puantaj?sekme=aktarim` | Sahte servis |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

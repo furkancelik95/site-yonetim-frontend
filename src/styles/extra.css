@@ -166,6 +166,21 @@ span.num, td.num, .nowrap { white-space: nowrap; }
   position: sticky; top: var(--s-2); z-index: 5; display: flex; gap: var(--s-3); align-items: center; flex-wrap: wrap;
   background: var(--bg-raised); border: 1px solid var(--accent); border-radius: var(--r-md); padding: var(--s-2) var(--s-3); box-shadow: var(--shadow-sm);
 }
+/* Vardiya planı ızgarası */
+.shift-grid th, .shift-grid td { vertical-align: top; }
+.shift-grid thead th:not(:first-child) { min-width: 7.5rem; }
+.shift-cell { min-width: 7.5rem; }
+.shift-cell--leave { background: var(--bg-sunken); }
+.shift-chip {
+  display: inline-flex; align-items: center; gap: 2px; margin: 0 0 4px; padding: 2px 4px 2px 8px; border-radius: var(--r-sm);
+  background: var(--accent-soft); color: var(--accent); font-size: .75rem; font-weight: 600; white-space: nowrap;
+}
+.shift-chip--conflict { background: var(--danger-bg, #fef2f2); color: var(--danger-solid, #b91c1c); outline: 1px solid currentColor; }
+.shift-chip__x { border: 0; background: none; color: inherit; padding: 0; width: 24px; height: 24px; display: inline-grid; place-items: center; cursor: pointer; border-radius: var(--r-sm); }
+.shift-chip__x:hover { background: rgba(0, 0, 0, .06); }
+.shift-chip__x .lucide { width: 14px; height: 14px; }
+.shift-add { min-height: 32px; padding: 0 6px; }
+
 /* QR kayıt afişi — yazdırılır; yalnız afiş çıkar */
 .poster-sheets { display: grid; gap: var(--s-4); }
 .poster-labels { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--s-3); }

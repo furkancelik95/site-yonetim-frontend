@@ -219,3 +219,10 @@ export const adHocStatus = label({ posted: "Cariye yazıldı", waiting_next_run:
 export const voucherSource = label({ charge: "Tahakkuk", ad_hoc_charge: "Dönem dışı ücret", payment_cash: "Tahsilat — nakit", payment_bank_transfer: "Tahsilat — havale", payment_credit_card: "Tahsilat — kart", payment_other: "Tahsilat — diğer", expense: "Gider ödemesi" });
 export const diffFlag = label({ increase: "Arttı", decrease: "Azaldı", new: "Yeni hesap", missing: "Bu dönem yok" });
 export const diffFlagTone = (v: string): Tone => (v === "increase" ? "warn" : v === "decrease" ? "info" : v === "new" ? "info" : "danger");
+
+// İnsan kaynakları paketi (servis istekleri 35–39)
+export const leaveType = label({ annual: "Yıllık izin", excuse: "Mazeret izni", sick: "Raporlu", unpaid: "Ücretsiz izin" });
+export const leaveStatus = label({ pending: "Onay bekliyor", approved: "Onaylandı", rejected: "Reddedildi", cancelled: "İptal" });
+export const leaveStatusTone = (v: string): Tone => (v === "approved" ? "ok" : v === "pending" ? "warn" : v === "rejected" ? "danger" : "muted");
+export const timesheetStatus = label({ worked: "Çalıştı", absent: "Gelmedi", leave: "İzinli" });
+export const conflictKind = label({ overlap: "Çakışan vardiya", leave: "İzin günü", rest: "Dinlenme < 11 saat" });
