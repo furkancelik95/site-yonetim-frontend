@@ -856,3 +856,34 @@ tbody tr:nth-last-child(-n+2) .inline-form__body { top: auto; bottom: calc(100% 
   .page { padding: 0; max-width: none; }
   .card { border: 1px solid #ccc; box-shadow: none; }
 }
+
+/* Bildirim zili (PLT-05): sayı rakamla yazılır, renk tek başına anlam taşımaz */
+.center { text-align: center; }
+.bell { position: relative; }
+.bell__count {
+  position: absolute; top: 2px; right: 0;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-full);
+  background: var(--danger-solid); color: #fff;
+  font-size: 0.6875rem; font-weight: 700; line-height: 18px; text-align: center;
+  font-variant-numeric: tabular-nums; pointer-events: none;
+}
+.notif-list { list-style: none; margin: 0; padding: 0; }
+.notif { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3) var(--s-4); border-top: 1px solid var(--line); }
+.notif:first-child { border-top: 0; }
+.notif__main { flex: 1; min-width: 0; display: grid; gap: var(--s-1); }
+/* Okunmamış: sol çizgi + kalın başlık + ekran okuyucu metni ("Okunmamış:") */
+.notif--unread { box-shadow: inset 3px 0 0 var(--brand-600); background: var(--brand-50); }
+
+/* Onay adımları (ONY-02): durum rozetle yazılır, sol çizgi yalnız destekleyici */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.steps__item { display: grid; gap: var(--s-1); padding: var(--s-3); border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--r-md); }
+.steps__item--approved { border-left-color: var(--ok-solid); }
+.steps__item--rejected { border-left-color: var(--danger-solid); }
+.steps__item--open { border-left-color: var(--warn-solid); }
+.steps__people { list-style: none; margin: var(--s-1) 0 0; padding: 0; display: grid; gap: var(--s-2); font-size: 0.875rem; }
+.steps__people li { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: center; justify-content: space-between; }
+.steps__people li > div { flex-basis: 100%; }
+.card__meta { font-size: 0.8125rem; color: var(--fg-muted); }
+.userbox__link { min-width: 0; flex: 1; display: block; color: inherit; text-decoration: none; border-radius: var(--r-sm); }
+.userbox__link:hover .userbox__name { text-decoration: underline; }
+.userbox__link:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }

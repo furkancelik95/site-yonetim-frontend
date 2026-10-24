@@ -183,7 +183,7 @@ export function BankImportPage() {
                           <td className="right num">{r.direction === "out" ? "−" : ""}{formatMoney(r.amount)}</td>
                           <td>
                             <Badge tone={st.tone}>{st.label}</Badge>
-                            {r.suggestion && <div className="cell-sub">{r.suggestion.reason}</div>}
+                            {r.suggestion ? <div className="cell-sub">{r.suggestion.reason}</div> : r.reason && <div className="cell-sub">{r.reason}</div>}
                           </td>
                           <td>
                             {importable ? (

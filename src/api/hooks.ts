@@ -7,13 +7,38 @@ import type { Written } from "./types";
 type Query = Record<string, string | number | boolean | null | undefined>;
 
 /** Sitenin altındaki bir kaynağı okur: useSiteGet<T>("/debtors", { page }) → /sites/{slug}/debtors */
-export function useSiteGet<T>(path: string, query?: Query, opts?: { enabled?: boolean }) {
+export function useSiteGet<T>(path: string, query?: Query, opts?: { enabled?: boolean; refetchInterval?: number }) {
   const { site } = useSite();
   return useQuery({
     queryKey: ["site", site.slug, path, query ?? {}],
     queryFn: ({ signal }) => get<T>(`/sites/${site.slug}${path}`, query, signal),
     placeholderData: keepPreviousData,
     enabled: opts?.enabled,
+    refetchInterval: opts?.refetchInterval,
+  });
+}
+
+/** Kişinin kendi hesabına ait kaynak (site dışı): useMeGet<T>("/sessions") → /me/sessions */
+export function useMeGet<T>(path: string, query?: Query) {
+  return useQuery({
+    queryKey: ["me", path, query ?? {}],
+    queryFn: ({ signal }) => get<T>(`/me${path}`, query, signal),
+  });
+}
+
+/** Kişinin kendi hesabına yazan işlem; başarıda mesaj gösterilir ve hesap önbelleği tazelenir. */
+export function useMeMutation<TBody, TOut>(method: "POST" | "PUT" | "DELETE", path: string | ((vars: TBody) => string)) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  return useMutation({
+    mutationFn: (vars: TBody) => {
+      const p = typeof path === "function" ? path(vars) : path;
+      return api<Written<TOut> | undefined>(method, `/me${p}`, { body: method === "DELETE" ? undefined : vars });
+    },
+    onSuccess: (res) => {
+      if (res?.message) toast(res.message);
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 }
 

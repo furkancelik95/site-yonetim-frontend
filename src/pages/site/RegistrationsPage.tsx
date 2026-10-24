@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ApiError } from "../../api/client";
 import { Copy, Inbox, RefreshCw } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
@@ -93,9 +94,13 @@ export function RegistrationsPage() {
 function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [reason, setReason] = useState("");
+  // Malik başvurusunda hisse (boş = %100); bölümde başka malik varsa toplam %100'ü aşamaz (409)
+  const [share, setShare] = useState("");
   // Geçici parola yalnız sayfa üstündeki kartta tutulur; satırın mutasyon önbelleğinde kalmaz
-  const approve = useSiteMutation<{ unit_id: string; start_date: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => { if (d) onApproved(d); approve.reset(); } });
+  const approve = useSiteMutation<{ unit_id: string; start_date: string; share_percent?: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => { if (d) onApproved(d); approve.reset(); } });
   const reject = useSiteMutation<{ reason: string }, Registration>("POST", `/registrations/${r.id}/reject`);
+  // Hisse dolu (409) gelince hisse alanı açılır; daha düşük oranla yeniden denenebilir
+  const sharesFull = approve.error instanceof ApiError && approve.error.code === "owner_shares_exceed";
   return (
     <tr>
       <td>
@@ -109,8 +114,15 @@ function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: A
         {r.status === "pending" ? (
           <div className="stack" style={{ gap: "var(--s-2)" }}>
             <UnitPicker label="Bölüm" value={unit} onChange={setUnit} />
+            {r.relation === "owner" && (sharesFull || share) && (
+              <div className="field" style={{ maxWidth: "12rem" }}>
+                <label className="field__label" htmlFor={`share-${r.id}`}>Hisse oranı (%)</label>
+                <input id={`share-${r.id}`} className="field__input" inputMode="decimal" placeholder="100" value={share} onChange={(e) => setShare(e.target.value.replace(/[^\d.,]/g, "").slice(0, 6))} aria-describedby={`share-${r.id}-hint`} />
+                <span className="field__hint" id={`share-${r.id}-hint`}>Bölümde başka malik varsa hisseler toplamı %100'ü aşamaz.</span>
+              </div>
+            )}
             <div className="row" style={{ gap: "var(--s-2)" }}>
-              <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso() })}>Onayla</button>
+              <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso(), ...(r.relation === "owner" && share.trim() ? { share_percent: share.trim().replace(",", ".") } : {}) })}>Onayla</button>
               <ConfirmButton className="btn btn--ghost btn--sm" danger title="Başvuruyu reddet" confirmLabel="Reddet"
                 body={<div className="field"><label className="field__label" htmlFor={`rej-${r.id}`}>Gerekçe *</label><input id={`rej-${r.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ör. Bu bölümde kayıtlı değil" /></div>}
                 onConfirm={() => { if (!reason.trim()) throw new Error("Gerekçe zorunlu."); return reject.mutateAsync({ reason: reason.trim() }); }}>

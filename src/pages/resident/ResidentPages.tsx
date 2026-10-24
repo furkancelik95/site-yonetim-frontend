@@ -11,6 +11,8 @@ import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Page
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
 import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { M, useSite } from "../../site/SiteContext";
+import { NotificationsPage } from "../NotificationsPage";
+import { ProfilePage } from "../ProfilePage";
 
 type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
@@ -406,3 +408,7 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
     </div>
   );
 }
+
+/** Sakinin bildirimleri ve profili: personel ekranıyla aynı bileşen, kayda bağlantı yok. */
+export const ResidentNotificationsPage = () => <NotificationsPage staff={false} />;
+export const ResidentProfilePage = () => <ProfilePage />;

@@ -5,16 +5,17 @@ import type { Page, Schemas } from "../../api/types";
 import { Badge, Empty, ErrorState, Loading, PageHead, Pager } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { auditAction } from "../../lib/labels";
+import { actorType, auditAction } from "../../lib/labels";
 
 type Audit = Schemas["AuditOut"];
 
-const ACTIONS = ["create", "update", "delete", "import", "download"];
+const ACTIONS = ["create", "update", "delete", "import", "download", "export"];
+const ACTORS = ["user", "system", "delegate"];
 
 /** Denetim kaydı: değiştirilemez, silinemez (backend docs/09 §6). */
 export function AuditPage() {
-  const [s, set] = useUrlState({ action: "", entity: "", from: "", to: "", page: "1" });
-  const r = useSiteGet<Page<Audit>>("/audit", { action: s.action, entity: s.entity, from: s.from, to: s.to, page: s.page, page_size: 50 });
+  const [s, set] = useUrlState({ action: "", actor: "", entity: "", from: "", to: "", page: "1" });
+  const r = useSiteGet<Page<Audit>>("/audit", { action: s.action, actor_type: s.actor || undefined, entity: s.entity, from: s.from, to: s.to, page: s.page, page_size: 50 });
   const [open, setOpen] = useState<string | null>(null);
 
   return (
@@ -26,6 +27,13 @@ export function AuditPage() {
           <select id="a-act" className="field__input" value={s.action} onChange={(e) => set({ action: e.target.value })}>
             <option value="">Tümü</option>
             {ACTIONS.map((a) => <option key={a} value={a}>{auditAction(a)}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor="a-actor">Yapan</label>
+          <select id="a-actor" className="field__input" value={s.actor} onChange={(e) => set({ actor: e.target.value, page: "1" })}>
+            <option value="">Tümü</option>
+            {ACTORS.map((a) => <option key={a} value={a}>{actorType(a)}</option>)}
           </select>
         </div>
         <div className="field">
@@ -50,11 +58,11 @@ export function AuditPage() {
                     <Fragment key={a.id}>
                       <tr>
                         <td className="small nowrap">{formatDateTime(a.at)}</td>
-                        <td className="small">{a.actor_name ?? "Sistem"}{a.ip && <div className="cell-sub mono">{a.ip}</div>}</td>
+                        <td className="small">{a.actor_name ?? "Sistem"}{a.actor_type !== "user" && <> <Badge tone={a.actor_type === "delegate" ? "warn" : "muted"}>{actorType(a.actor_type)}</Badge></>}{a.ip && <div className="cell-sub mono">{a.ip}</div>}</td>
                         <td><Badge tone={a.action === "delete" ? "danger" : a.action === "create" ? "ok" : "muted"}>{auditAction(a.action)}</Badge></td>
                         <td className="small"><span className="mono">{a.entity}</span>{a.entity_id && <div className="cell-sub mono">{a.entity_id.slice(0, 8)}…</div>}</td>
                         <td className="right">
-                          {(a.before || a.after) && (
+                          {(a.before || a.after || a.reason || a.request_id) && (
                             <button className="btn btn--ghost btn--sm" type="button" aria-expanded={open === a.id} onClick={() => setOpen(open === a.id ? null : a.id)}>Ayrıntı</button>
                           )}
                         </td>
@@ -62,6 +70,13 @@ export function AuditPage() {
                       {open === a.id && (
                         <tr>
                           <td colSpan={5} style={{ background: "var(--bg-inset)" }}>
+                            {(a.reason || a.request_id || a.user_agent) && (
+                              <div className="small" style={{ marginBottom: "var(--s-2)" }}>
+                                {a.reason && <div><span className="strong">Gerekçe:</span> {a.reason}</div>}
+                                {a.request_id && <div className="muted">İstek kimliği: <span className="mono">{a.request_id}</span></div>}
+                                {a.user_agent && <div className="muted">Tarayıcı: {a.user_agent}</div>}
+                              </div>
+                            )}
                             <div className="grid grid--2">
                               <div><div className="section-title">Önce</div><pre className="mono xs" style={{ whiteSpace: "pre-wrap", margin: 0 }}>{a.before ? JSON.stringify(a.before, null, 2) : "—"}</pre></div>
                               <div><div className="section-title">Sonra</div><pre className="mono xs" style={{ whiteSpace: "pre-wrap", margin: 0 }}>{a.after ? JSON.stringify(a.after, null, 2) : "—"}</pre></div>

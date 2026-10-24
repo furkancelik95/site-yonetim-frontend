@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { Link, NavLink, Outlet, useLocation, useParams } from "react-router";
 import { ArrowLeft, Home, Inbox, Megaphone, Wallet, Wrench } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { NotificationBell } from "../components/NotificationBell";
 import { ErrorState, Loading } from "../components/ui";
 import { makeSiteCtx, SiteContext } from "../site/SiteContext";
 import { useSiteQuery } from "./guards";
@@ -36,6 +37,8 @@ export function ResidentLayout() {
             </div>
             <div className="row" style={{ flexWrap: "nowrap", gap: "var(--s-1)" }}>
               {isStaff && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}
+              <NotificationBell to={`${base}/bildirimler`} />
+              <Link className="btn btn--ghost btn--sm" to={`${base}/profil`}>Profil</Link>
               <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>Çıkış</button>
             </div>
           </div>

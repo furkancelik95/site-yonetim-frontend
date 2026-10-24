@@ -3,6 +3,7 @@ import { createBrowserRouter, Outlet } from "react-router";
 import { ToastProvider } from "./components/toast";
 import { Loading, NotFound } from "./components/ui";
 import { PlatformLayout, RequireAuth, RootIndex, SiteLayout } from "./layouts/guards";
+import { AppShell } from "./layouts/AppShell";
 import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -65,10 +66,15 @@ const siteScreens: [string, string][] = [
   ["sozlesmeler", "ContractsPage"],
   ["demirbas", "InventoryPage"],
   ["personel", "StaffPage"],
+  ["bildirimler", "SiteNotificationsPage"],
+  ["onaylar", "ApprovalsPage"],
+  ["onaylar/:requestId", "ApprovalDetailPage"],
+  ["onay-kurallari", "ApprovalRulesPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
 const Portfolio = page(() => import("./pages/PortfolioPage"), "PortfolioPage");
+const Profile = page(() => import("./pages/ProfilePage"), "ProfilePage");
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +93,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <RootIndex portfolio={<L c={Portfolio} />} /> },
           { path: "/parola-degistir", element: <ChangePasswordPage /> },
+          { path: "/profil", element: <AppShell title="Profil"><L c={Profile} /></AppShell> },
           { path: "/yetkisiz", element: <NoAccessPage /> },
           {
             path: "/s/:slug",
@@ -115,6 +122,8 @@ export const router = createBrowserRouter([
               { path: "duyurular", element: <L c={page(resident, "ResidentAnnouncementsPage")} /> },
               { path: "taleplerim", element: <L c={page(resident, "ResidentRequestsPage")} /> },
               { path: "giderler", element: <L c={page(resident, "ResidentExpensesPage")} /> },
+              { path: "bildirimler", element: <L c={page(resident, "ResidentNotificationsPage")} /> },
+              { path: "profil", element: <L c={page(resident, "ResidentProfilePage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },

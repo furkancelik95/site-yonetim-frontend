@@ -118,7 +118,8 @@ export const moduleName = label({
   portfolio: "Portföy",
 });
 
-export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme" });
+export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme", export: "Dışa aktarma" });
+export const actorType = label({ user: "Kullanıcı", system: "Sistem", delegate: "Vekâleten" });
 
 export const warningKind = label({
   no_active_party: "Ödeyecek kişi yok",
@@ -164,3 +165,23 @@ export const contractPeriod = label({ monthly: "Aylık", yearly: "Yıllık", onc
 export const assetStatus = label({ in_use: "Kullanımda", broken: "Arızalı", retired: "Kullanım dışı" });
 export const assetStatusTone = (v: string): Tone => (v === "in_use" ? "ok" : v === "broken" ? "warn" : "muted");
 export const staffEmployer = label({ site: "Site kadrosu", contractor: "Taşeron firma" });
+
+// Bildirim, onay mekanizması (ONY-01..03), yetki devri
+export const notificationCategory = label({
+  urgent: "Acil", financial: "Finans", security: "Güvenlik", operations: "Operasyon", governance: "Yönetim", announcement: "Duyuru",
+});
+export const notificationChannel = label({ push: "Mobil bildirim", sms: "SMS", email: "E-posta" });
+export const approvalStatus = label({
+  pending: "Onay bekliyor", revision_requested: "Düzeltme istendi", approved: "Onaylandı", executed: "Uygulandı",
+  execution_failed: "Onaylandı – uygulanamadı", rejected: "Reddedildi", withdrawn: "Geri çekildi", module_disabled: "Modül kapalı",
+});
+export const approvalStatusTone = (v: string): Tone =>
+  v === "executed" || v === "approved" ? "ok" : v === "rejected" || v === "execution_failed" ? "danger" : v === "pending" || v === "revision_requested" ? "warn" : "muted";
+export const stepMode = label({ sequential: "Sıralı (adım adım)", parallel: "Paralel (aynı anda)" });
+export const rejectBehavior = label({ single_rejects: "Tek ret reddeder", counts: "Ret oylardan biri sayılır" });
+export const quorumKind = label({ any: "Herhangi biri", all: "Hepsi", majority: "Çoğunluk", count: "Belirli sayıda" });
+export const dayBasis = label({ calendar: "Takvim günü", business: "İş günü" });
+export const decisionLabel = label({ approve: "Onayladı", reject: "Reddetti", revision: "Düzeltme istedi" });
+export const decisionTone = (v: string): Tone => (v === "approve" ? "ok" : v === "reject" ? "danger" : "warn");
+export const delegationState = label({ scheduled: "Başlamadı", active: "Etkin", ended: "Bitti" });
+export const delegationStateTone = (v: string): Tone => (v === "active" ? "ok" : v === "scheduled" ? "info" : "muted");

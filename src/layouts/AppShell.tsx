@@ -7,6 +7,7 @@ import {
   Boxes,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   FileSignature,
   FileSpreadsheet,
@@ -15,6 +16,7 @@ import {
   Inbox,
   Landmark,
   LayoutDashboard,
+  ListChecks,
   Megaphone,
   Menu,
   Receipt,
@@ -28,6 +30,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
+import { NotificationBell } from "../components/NotificationBell";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
 
@@ -73,7 +76,6 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
   const meetings = shows(M.generalAssembly, P.meetingsRead);
   const surveys = shows(M.surveys, P.announcementsRead);
   const staff = shows(M.staff, P.peopleRead);
-  const mgmt = meetings || surveys || staff || can(P.expensesRead) || can(P.inventoryRead);
   return (
     <>
       <Group label={site.name}>
@@ -104,15 +106,16 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
         </Group>
       )}
-      {mgmt && (
-        <Group label="Yönetim">
+      {/* Onaylar her personele açık (onaycı olmak rol atamasından gelir); bu grup hep görünür */}
+      <Group label="Yönetim">
+          <Item to={`${base}/onaylar`} icon={<ClipboardCheck aria-hidden="true" />} label="Onaylar" />
+          {can(P.approvalRulesRead) && <Item to={`${base}/onay-kurallari`} icon={<ListChecks aria-hidden="true" />} label="Onay Kuralları" />}
           {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
-        </Group>
-      )}
+      </Group>
     </>
   );
 }
@@ -204,12 +207,12 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             <span className="userbox__avatar" aria-hidden="true">
               {initials(me.full_name)}
             </span>
-            <span style={{ minWidth: 0, flex: 1 }}>
-              <span className="userbox__name" title={me.full_name}>
-                {me.full_name}
-              </span>
+            {/* Ad alanı profile gider (oturumlar, güvenlik olayları, bildirim tercihleri) */}
+            <Link to="/profil" className="userbox__link" title={`${me.full_name} — profil`}>
+              <span className="userbox__name">{me.full_name}</span>
               <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
-            </span>
+              <span className="visually-hidden">Profil</span>
+            </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>
               Çıkış
             </button>
@@ -234,6 +237,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             <span className="topbar__title">{title ?? siteCtx?.site.name ?? (platform ? "Platform" : "SiteYönetimi")}</span>
             <div className="topbar__spacer" />
             {platform && <span className="badge badge--info">Platform</span>}
+            {siteCtx && <NotificationBell to={`/s/${siteCtx.site.slug}/bildirimler`} />}
           </header>
           <main id="main" className="page" tabIndex={-1}>
             {children}
