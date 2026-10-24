@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { ChevronRight, Copy, FileText, Package, Receipt, Wrench } from "lucide-react";
+import { Car, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -115,6 +115,17 @@ export function ResidentHomePage() {
           ) : (
             <p className="small muted mb-0">Ödeme bilgisi için site yönetimiyle görüşün.</p>
           )}
+        </div>
+      </div>
+
+      {/* Hane üyeleri ve araçlar (YAP-04/05): sakin kendisi yönetir */}
+      <div className="card">
+        <div className="card__body">
+          <div className="section-title">Hanem</div>
+          <div className="row" style={{ gap: "var(--s-2)" }}>
+            <Link className="btn" to={`${base}/hane`}><Users aria-hidden="true" /> Hane üyeleri</Link>
+            <Link className="btn" to={`${base}/araclar`}><Car aria-hidden="true" /> Araçlarım</Link>
+          </div>
         </div>
       </div>
 
@@ -412,3 +423,4 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
 /** Sakinin bildirimleri ve profili: personel ekranıyla aynı bileşen, kayda bağlantı yok. */
 export const ResidentNotificationsPage = () => <NotificationsPage staff={false} />;
 export const ResidentProfilePage = () => <ProfilePage />;
+export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";

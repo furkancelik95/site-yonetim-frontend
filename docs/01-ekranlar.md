@@ -52,6 +52,16 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/duyurular` | **Duyurular** — liste + yayınla (hedef kitle, kanal, önem, sabitle) | `announcements.read` / `.publish` | `announcements` | R |
 | `/s/{slug}/guvenlik` | **Güvenlik** — kargo geldi, ziyaretçi geldi; bekleyen kargolar, bugünkü ziyaretçiler; daire araması yalnız bölüm + oturan adı | `security.*` + modül | `packages`, `visitors` | R |
 | `/s/{slug}/moduller` | **Modüller** — aç/kapa, planda olmayan kilitli | `modules.manage` | `modules` | R |
+| `/s/{slug}/yapi` | **Yapı tanımları** — yapı özeti KPI; bloklar, bölüm tipleri, ortak alanlar (YAP-02) | `units.manage` | `blocks`, `unit-types`, `common-areas`, `structure/summary` (istek 19) | R (sahte servis) |
+| `/s/{slug}/daireler/{id}` | **Bölüm 360°** — bakiye/hisse/araç/hane KPI, uyarılar, sekmeler: Kişiler (maskeli iletişim, hane), Finans, Talepler, Araçlar, Güvenlik, Özel alanlar, Geçmiş; düzenle (kimlik + yürürlük tarihli ölçü/pay), satış/veraset (YAP-03) | `units.read` / `.manage` | `units/{id}`, `units/{id}/overview`, istek 19–22, 24 | R (sahte servis) |
+| `/s/{slug}/kisiler` | **Kişiler** — arama, düzenleme, mükerrer birleştirme, özel alanlar (YAP-04) | `people.read` / `.manage` | `people`, `people/duplicates`, `people/merge` (istek 21) | R (sahte servis) |
+| `/s/{slug}/araclar` | **Araçlar** — plaka listesi, ekle/onayla/pasif, ayarlar (YAP-05) | `units.read` / `.manage` | `vehicles`, `settings/vehicles` (istek 22) | R (sahte servis) |
+| `/s/{slug}/kayit-basvurulari` | **Sakin kaydı** — Başvurular (istek 13), Davetler, Kayıt yöntemleri (YAP-07/08) | `people.manage` | `registrations`, `invitations`, `settings/registration` (istek 23) | R (sahte servis) |
+| `/s/{slug}/kayit-afisi` | **QR kayıt afişi** — tesis/blok/bölüm, A4/A5/etiket, yazdır; `?blok=`/`?bolum=` önseçim | `people.manage` | `registration-link`, `blocks`, `units` | R |
+| `/davet/{token}` | **Davetle kayıt** (oturumsuz) — telefon doğrula, bilgilendirme, geçici parola | — | `public/invitations/{token}` (istek 23) | R (sahte servis) |
+| `/s/{slug}/ayarlar/ozel-alanlar` | **Özel alanlar** — bölüm/kişi alan tanımları, KVKK kategorisi, rol görünürlüğü, arşiv (YAP-10) | `modules.manage` | `custom-fields` (istek 24) | R (sahte servis) |
+| `/s/{slug}/iceri-aktar` | **İçeri aktarım** — sekmeler: bölümler (xlsx), araçlar ve açılış bakiyeleri (csv, mutabakat); aktarım geçmişi + geri alma (YAP-06) | `units.manage` | `imports/units`, istek 25 | R (sahte servis) |
+| `/s/{slug}/kurulum` | **Kurulum ve canlıya geçiş** — adımlar, finans modu (Mod P), kontrol listesi, canlıya al (YAP-01) | `modules.manage` | `setup` (istek 26) | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
@@ -67,6 +77,8 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/duyurular` | Duyurular | R |
 | `/sakin/{slug}/talepler` | Talepler + yeni talep | R |
 | `/sakin/{slug}/giderler` | **Sitenin gider dökümü + fatura görüntüsü** — şeffaflık vaadinin karşılığı | **Y** |
+| `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
+| `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`
 

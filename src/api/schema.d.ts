@@ -3014,6 +3014,8 @@ export interface components {
              * @description tüm sürümlerin kararları
              */
             history: components["schemas"]["DecisionOut"][];
+            /** @description yalnız approval_rule_change: talebin önerdiği değişiklik (son sürüm); yeniden gönderme formu bununla dolar */
+            rule_change?: components["schemas"]["RuleChangeOut"] | null;
         };
         /**
          * ApprovalStatus
@@ -6664,6 +6666,52 @@ export interface components {
          * @enum {string}
          */
         PropertyKind: "residential" | "mixed" | "office" | "shopping_center";
+        /**
+         * ProposedRuleOut
+         * @description Kural değişikliği talebinin önerdiği kural — `RuleIn` biçiminde, forma olduğu gibi dolar.
+         */
+        ProposedRuleOut: {
+            action_type: components["schemas"]["ActionType"];
+            /** Steps */
+            steps: components["schemas"]["StepIn"][];
+            /** @default sequential */
+            mode: components["schemas"]["StepMode"];
+            /** @default single_rejects */
+            reject_behavior: components["schemas"]["RejectBehavior"];
+            /**
+             * Amount Min
+             * @description hariç (tutar > alt)
+             */
+            amount_min?: string | null;
+            /**
+             * Amount Max
+             * @description dahil (tutar ≤ üst)
+             */
+            amount_max?: string | null;
+            /**
+             * Source
+             * @description ör. "emergency"
+             */
+            source?: string | null;
+            /** Remind After Days */
+            remind_after_days: number;
+            /** Escalate After Days */
+            escalate_after_days: number;
+            /** @default calendar */
+            day_basis: components["schemas"]["DayBasis"];
+            /** @description boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20) */
+            escalation_role?: components["schemas"]["SiteRole"] | null;
+            /**
+             * Effective From
+             * Format: date
+             */
+            effective_from: string;
+            /**
+             * Basis Note
+             * @description dayanak, ör. YK kararı
+             */
+            basis_note?: string | null;
+        };
         /** PublicSiteOut */
         PublicSiteOut: {
             /** Site Name */
@@ -7354,6 +7402,21 @@ export interface components {
              * @description yalnız unmatched satırda: neden eşleşmediği (ör. birden çok referans kodu)
              */
             reason: string | null;
+        };
+        /** RuleChangeOut */
+        RuleChangeOut: {
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "create" | "update" | "archive";
+            /**
+             * Rule Id
+             * @description güncellenen/arşivlenen kural; yeni kuralda null
+             */
+            rule_id: string | null;
+            /** @description önerilen kural; arşivlemede null */
+            rule: components["schemas"]["ProposedRuleOut"] | null;
         };
         /** RuleIn */
         RuleIn: {

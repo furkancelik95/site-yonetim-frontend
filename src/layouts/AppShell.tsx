@@ -7,7 +7,9 @@ import {
   Boxes,
   Building2,
   CalendarDays,
+  Car,
   ClipboardCheck,
+  Contact,
   ClipboardList,
   FileSignature,
   FileSpreadsheet,
@@ -15,14 +17,17 @@ import {
   IdCard,
   Inbox,
   Landmark,
+  Layers,
   LayoutDashboard,
   ListChecks,
   Megaphone,
   Menu,
   Receipt,
+  Rocket,
   ShieldCheck,
   SlidersHorizontal,
   Smartphone,
+  TextCursorInput,
   UserPlus,
   Users,
   Vote,
@@ -81,6 +86,9 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
       <Group label={site.name}>
         {can(P.financeRead) && <Item to={base} end icon={<LayoutDashboard aria-hidden="true" />} label="Bugün" />}
         {can(P.unitsRead) && <Item to={`${base}/daireler`} icon={<Building2 aria-hidden="true" />} label="Daireler" />}
+        {can(P.unitsManage) && <Item to={`${base}/yapi`} icon={<Layers aria-hidden="true" />} label="Yapı" />}
+        {can(P.peopleRead) && <Item to={`${base}/kisiler`} icon={<Contact aria-hidden="true" />} label="Kişiler" />}
+        {can(P.unitsRead) && <Item to={`${base}/araclar`} icon={<Car aria-hidden="true" />} label="Araçlar" />}
         {can(P.financeRead) && <Item to={`${base}/borclular`} icon={<AlertTriangle aria-hidden="true" />} label="Borçlular" />}
         {can(P.paymentRecord) && <Item to={`${base}/tahsilat`} icon={<Wallet aria-hidden="true" />} label="Tahsilat" />}
         {can(P.paymentRecord) && can(P.cashManage) && <Item to={`${base}/banka-aktarim`} icon={<ArrowDownToLine aria-hidden="true" />} label="Banka Aktarımı" />}
@@ -100,7 +108,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {shows(M.announcements, P.announcementsRead) && (
             <Item to={`${base}/duyurular`} icon={<Megaphone aria-hidden="true" />} label="Duyurular" />
           )}
-          {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Kayıt Başvuruları" />}
+          {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
@@ -115,6 +123,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
+          {can(P.modulesManage) && <Item to={`${base}/ayarlar/ozel-alanlar`} icon={<TextCursorInput aria-hidden="true" />} label="Özel Alanlar" />}
+          {can(P.modulesManage) && <Item to={`${base}/kurulum`} icon={<Rocket aria-hidden="true" />} label="Kurulum" />}
       </Group>
     </>
   );

@@ -125,9 +125,10 @@ type StepDraft = { roles: SiteRole[]; quorum: Quorum; count: string };
  * (POST /approvals/{id}/resubmit; backend düzeltilmiş kuralı zorunlu ister). Form, değişikliğin
  * hedefi olan işlem tipinin mevcut kuralıyla dolu gelir.
  */
-export function RuleForm({ rule, types, onDone, resubmitId, actionType }: { rule: Rule | null; types: ActionTypeOut[]; onDone: () => void; resubmitId?: string; actionType?: string }) {
+export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType }: { rule: Rule | null; initial?: RuleIn; types: ActionTypeOut[]; onDone: () => void; resubmitId?: string; actionType?: string }) {
   const toast = useToast();
-  const v = rule?.current;
+  // Formu dolduran kaynak: talebin önerdiği kural (yeniden gönderme) ya da yürürlükteki sürüm (yeni sürüm)
+  const v: Pick<RuleIn, "mode" | "reject_behavior" | "amount_min" | "amount_max" | "remind_after_days" | "escalate_after_days" | "day_basis" | "escalation_role" | "basis_note" | "steps"> | undefined = initial ?? rule?.current;
   const [f, setF] = useState({
     action_type: rule?.action_type ?? actionType ?? types[0]?.key ?? "",
     mode: v?.mode ?? "sequential",

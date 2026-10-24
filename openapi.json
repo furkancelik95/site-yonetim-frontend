@@ -12844,6 +12844,17 @@
       "type": "array",
       "title": "History",
       "description": "tüm sürümlerin kararları"
+     },
+     "rule_change": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RuleChangeOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "yalnız approval_rule_change: talebin önerdiği değişiklik (son sürüm); yeniden gönderme formu bununla dolar"
      }
     },
     "type": "object",
@@ -22131,6 +22142,132 @@
     ],
     "title": "PropertyKind"
    },
+   "ProposedRuleOut": {
+    "properties": {
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/StepIn"
+      },
+      "type": "array",
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Steps"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/StepMode",
+      "default": "sequential"
+     },
+     "reject_behavior": {
+      "$ref": "#/components/schemas/RejectBehavior",
+      "default": "single_rejects"
+     },
+     "amount_min": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Min",
+      "description": "hariç (tutar > alt)"
+     },
+     "amount_max": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Max",
+      "description": "dahil (tutar ≤ üst)"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source",
+      "description": "ör. \"emergency\""
+     },
+     "remind_after_days": {
+      "type": "integer",
+      "maximum": 30,
+      "minimum": 1,
+      "title": "Remind After Days"
+     },
+     "escalate_after_days": {
+      "type": "integer",
+      "maximum": 365,
+      "minimum": 2,
+      "title": "Escalate After Days"
+     },
+     "day_basis": {
+      "$ref": "#/components/schemas/DayBasis",
+      "default": "calendar"
+     },
+     "escalation_role": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SiteRole"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20)"
+     },
+     "effective_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Effective From"
+     },
+     "basis_note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Basis Note",
+      "description": "dayanak, ör. YK kararı"
+     }
+    },
+    "type": "object",
+    "required": [
+     "action_type",
+     "steps",
+     "remind_after_days",
+     "escalate_after_days",
+     "effective_from"
+    ],
+    "title": "ProposedRuleOut",
+    "description": "Kural değişikliği talebinin önerdiği kural — `RuleIn` biçiminde, forma olduğu gibi dolar."
+   },
    "PublicSiteOut": {
     "properties": {
      "site_name": {
@@ -23982,6 +24119,50 @@
      "reason"
     ],
     "title": "RowOut"
+   },
+   "RuleChangeOut": {
+    "properties": {
+     "op": {
+      "type": "string",
+      "enum": [
+       "create",
+       "update",
+       "archive"
+      ],
+      "title": "Op"
+     },
+     "rule_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rule Id",
+      "description": "güncellenen/arşivlenen kural; yeni kuralda null"
+     },
+     "rule": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ProposedRuleOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "önerilen kural; arşivlemede null"
+     }
+    },
+    "type": "object",
+    "required": [
+     "op",
+     "rule_id",
+     "rule"
+    ],
+    "title": "RuleChangeOut"
    },
    "RuleIn": {
     "properties": {

@@ -1,41 +1,58 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import { ApiError } from "../../api/client";
-import { Copy, Inbox, RefreshCw } from "lucide-react";
+import { Copy, Inbox, Mail, QrCode, RefreshCw } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { OneTimePassword } from "../../components/OneTimePassword";
 import { useToast } from "../../components/toast";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Loading, PageHead, Pager } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { partyRole } from "../../lib/labels";
+import { formatPhone, isTrMobile, phoneDigits, phoneMask, toE164 } from "../../lib/input";
+import { invitationStatus, invitationStatusTone, partyRole } from "../../lib/labels";
+import { useSite } from "../../site/SiteContext";
 
-type Link = Schemas["LinkOut"];
+type RegLink = Schemas["LinkOut"];
 type Registration = Schemas["RegistrationOut"];
 type Approved = Schemas["ApprovedOut"];
+/** Servis isteği 23'teki şekiller. */
+interface RegSettings { invite_enabled: boolean; qr_enabled: boolean; code_enabled: boolean; owner_can_approve_tenant: boolean; owner_document_required: boolean; invite_valid_days: number; kvkk_published: boolean }
+interface Invitation { id: string; full_name: string; phone: string; unit_id: string; unit_name: string; relation: "owner" | "tenant"; status: "sent" | "opened" | "completed" | "expired" | "cancelled"; link: string; sent_by: string; sent_at: string; expires_at: string; completed_at: string | null }
 
-const formatPhone = (e164: string) => e164.replace(/^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/, "+90 $1 $2 $3 $4");
+const TABS = [["basvurular", "Başvurular"], ["davetler", "Davetler"], ["ayarlar", "Kayıt yöntemleri"]] as const;
 
 /**
- * Sakin kayıt başvuruları (Apsiyon "Onay Bekleyen Kişiler"): sakin site bağlantısından kendini kaydeder,
- * yönetim bölümünü seçip onaylar; kişi bölüme malik/kiracı olarak eklenir.
+ * Sakin kaydı (YAP-07/08): üç yöntem — davet (yönetim davet eder, kişi telefonunu doğrular), QR afiş ve
+ * site kodu bağlantısı (kişi başvurur, yönetim bölümünü seçip onaylar). Yöntemler ayarlardan açılıp kapanır.
  */
 export function RegistrationsPage() {
+  const { site } = useSite();
+  const [s, set] = useUrlState({ sekme: "basvurular", durum: "pending", page: "1" });
+  return (
+    <div className="stack">
+      <PageHead title="Sakin kaydı" subtitle="Davet, QR afiş ya da site bağlantısıyla kayıt; başvurular burada onaylanır." actions={<Link className="btn" to={`/s/${site.slug}/kayit-afisi`}><QrCode aria-hidden="true" /> QR afiş</Link>} />
+      <div className="row" role="tablist" aria-label="Sakin kaydı" style={{ gap: "var(--s-2)" }}>
+        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k })}>{l}</button>)}
+      </div>
+      {s.sekme === "davetler" ? <Invitations /> : s.sekme === "ayarlar" ? <RegSettingsCard /> : <Applications durum={s.durum} page={s.page} set={set} />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Başvurular (gerçek uç, istek 13)
+function Applications({ durum, page, set }: { durum: string; page: string; set: (p: Partial<{ durum: string; page: string }>) => void }) {
   const toast = useToast();
-  const link = useSiteGet<Link>("/registration-link");
-  const rotate = useSiteMutation<Record<string, never>, Link>("POST", "/registration-link/rotate");
-  const toggle = useSiteMutation<{ is_enabled: boolean }, Link>("PATCH", "/registration-link");
-  const [s, set] = useUrlState({ durum: "pending", page: "1" });
-  const q = useSiteGet<Page<Registration>>("/registrations", { status: s.durum, page: s.page, page_size: 30 });
+  const link = useSiteGet<RegLink>("/registration-link");
+  const rotate = useSiteMutation<Record<string, never>, RegLink>("POST", "/registration-link/rotate");
+  const toggle = useSiteMutation<{ is_enabled: boolean }, RegLink>("PATCH", "/registration-link");
+  const q = useSiteGet<Page<Registration>>("/registrations", { status: durum, page, page_size: 30 });
   const url = link.data ? `${window.location.origin}/kayit/${link.data.code}` : "";
   // Onaylanan başvuru listeden çıkar; yeni hesabın geçici parolası burada bir kez gösterilir
   const [issued, setIssued] = useState<Approved | null>(null);
-
   return (
-    <div className="stack">
-      <PageHead title="Kayıt başvuruları" subtitle="Sakinler site bağlantısından kendini kaydeder; siz bölümünü seçip onaylarsınız." />
-
+    <>
       {issued?.temporary_password && (
         <div className="card">
           <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
@@ -45,7 +62,6 @@ export function RegistrationsPage() {
           <div className="card__foot"><button className="btn" type="button" onClick={() => setIssued(null)}>Tamam</button></div>
         </div>
       )}
-
       <div className="card">
         <div className="card__head"><span className="card__title">Kayıt bağlantısı</span>{link.data && <span className="ml-auto">{link.data.is_enabled ? <Badge tone="ok">Açık</Badge> : <Badge>Kapalı</Badge>}</span>}</div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
@@ -55,43 +71,52 @@ export function RegistrationsPage() {
                 <code className="mono small" style={{ wordBreak: "break-all" }}>{url}</code>
                 <button className="btn btn--sm" type="button" onClick={() => navigator.clipboard?.writeText(url).then(() => toast("Bağlantı kopyalandı."))}><Copy aria-hidden="true" /> Kopyala</button>
               </div>
-              <p className="small muted mb-0">Bağlantıyı duyuru panosuna, WhatsApp grubuna ya da asansöre asılacak QR koda koyun. Kötüye kullanılırsa yenileyin; eski bağlantı çalışmaz.</p>
+              <p className="small muted mb-0">Bağlantıyı duyuru panosuna, WhatsApp grubuna koyun ya da QR afiş basın. Kötüye kullanılırsa yenileyin; eski bağlantı ve basılı afişler çalışmaz.</p>
               <div className="row" style={{ gap: "var(--s-2)" }}>
-                <ConfirmButton className="btn btn--sm" title="Bağlantıyı yenile" confirmLabel="Yenile" body="Yeni bağlantı üretilir; dağıtılmış eski bağlantı artık çalışmaz." onConfirm={() => rotate.mutateAsync({})}><RefreshCw aria-hidden="true" /> Yenile</ConfirmButton>
+                <ConfirmButton className="btn btn--sm" title="Bağlantıyı yenile" confirmLabel="Yenile" body="Yeni bağlantı üretilir; dağıtılmış eski bağlantı ve basılı QR afişler artık çalışmaz." onConfirm={() => rotate.mutateAsync({})}><RefreshCw aria-hidden="true" /> Yenile</ConfirmButton>
                 <button className="btn btn--ghost btn--sm" type="button" disabled={toggle.isPending} onClick={() => toggle.mutate({ is_enabled: !link.data!.is_enabled })}>{link.data.is_enabled ? "Kayda kapat" : "Kayda aç"}</button>
               </div>
             </>
           )}
         </div>
       </div>
-
       <div className="row" role="tablist" aria-label="Başvuru durumu" style={{ gap: "var(--s-2)" }}>
         {[["pending", "Bekleyen"], ["approved", "Onaylanan"], ["rejected", "Reddedilen"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k! })}>{l}</button>
+          <button key={k} type="button" role="tab" aria-selected={durum === k} className={`btn btn--sm${durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
         ))}
       </div>
-
       <div className="card">
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? (
-            <Empty title={s.durum === "pending" ? "Bekleyen başvuru yok" : "Kayıt yok"} icon={<Inbox aria-hidden="true" />}>Kayıt bağlantısını sakinlerle paylaştığınızda başvurular burada görünür.</Empty>
+            <Empty title={durum === "pending" ? "Bekleyen başvuru yok" : "Kayıt yok"} icon={<Inbox aria-hidden="true" />}>Kayıt bağlantısını ya da QR afişi sakinlerle paylaştığınızda başvurular burada görünür.</Empty>
+          ) : durum === "pending" ? (
+            // Bekleyenler kart olarak: bölüm seçici ve onay düğmeleri telefonda da sığar (tablo taşıyordu)
+            <div className="stack" style={{ gap: "var(--s-3)", padding: "var(--s-3)" }}>{q.data.items.map((r) => <PendingCard key={r.id} r={r} onApproved={(d) => d.temporary_password && setIssued(d)} />)}</div>
           ) : (
-            <div className="table-wrap" style={{ overflow: "visible" }}>
+            <div className="table-wrap">
               <table className="data">
                 <caption className="visually-hidden">Sakin kayıt başvuruları</caption>
-                <thead><tr><th scope="col">Başvuran</th><th scope="col">Yazdığı bölüm</th><th scope="col">İletişim</th><th scope="col">Tarih</th><th scope="col" style={{ minWidth: "16rem" }}>{s.durum === "pending" ? "Onay" : "Sonuç"}</th></tr></thead>
-                <tbody>{q.data.items.map((r) => <RegistrationRow key={r.id} r={r} onApproved={(d) => d.temporary_password && setIssued(d)} />)}</tbody>
+                <thead><tr><th scope="col">Başvuran</th><th scope="col">Yazdığı bölüm</th><th scope="col">İletişim</th><th scope="col">Tarih</th><th scope="col">Sonuç</th></tr></thead>
+                <tbody>{q.data.items.map((r) => (
+                  <tr key={r.id}>
+                    <td><div className="cell-main">{r.first_name} {r.last_name}</div><div className="cell-sub">{partyRole(r.relation)} · <span className="mono">{r.reference}</span></div></td>
+                    <td className="small">{r.unit_text}</td>
+                    <td className="small">{formatPhone(r.phone)}{r.email && <div className="cell-sub">{r.email}</div>}</td>
+                    <td className="small nowrap">{formatDateTime(r.created_at)}</td>
+                    <td className="small">{r.status === "approved" ? <><Badge tone="ok">Onaylandı</Badge> {r.unit_name} · {r.decided_by}</> : <><Badge tone="danger">Reddedildi</Badge> {r.reject_reason}</>}</td>
+                  </tr>
+                ))}</tbody>
               </table>
             </div>
           )}
         </div>
         {q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
       </div>
-    </div>
+    </>
   );
 }
 
-function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
+function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [reason, setReason] = useState("");
   // Malik başvurusunda hisse (boş = %100); bölümde başka malik varsa toplam %100'ü aşamaz (409)
@@ -102,41 +127,142 @@ function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: A
   // Hisse dolu (409) gelince hisse alanı açılır; daha düşük oranla yeniden denenebilir
   const sharesFull = approve.error instanceof ApiError && approve.error.code === "owner_shares_exceed";
   return (
-    <tr>
-      <td>
-        <div className="cell-main">{r.first_name} {r.last_name}</div>
-        <div className="cell-sub">{partyRole(r.relation)} · <span className="mono">{r.reference}</span>{r.explicit_consent ? " · açık rıza verdi" : ""}</div>
-      </td>
-      <td className="small">{r.unit_text}</td>
-      <td className="small">{formatPhone(r.phone)}{r.email && <div className="cell-sub">{r.email}</div>}</td>
-      <td className="small nowrap">{formatDateTime(r.created_at)}</td>
-      <td>
-        {r.status === "pending" ? (
-          <div className="stack" style={{ gap: "var(--s-2)" }}>
-            <UnitPicker label="Bölüm" value={unit} onChange={setUnit} />
-            {r.relation === "owner" && (sharesFull || share) && (
-              <div className="field" style={{ maxWidth: "12rem" }}>
-                <label className="field__label" htmlFor={`share-${r.id}`}>Hisse oranı (%)</label>
-                <input id={`share-${r.id}`} className="field__input" inputMode="decimal" placeholder="100" value={share} onChange={(e) => setShare(e.target.value.replace(/[^\d.,]/g, "").slice(0, 6))} aria-describedby={`share-${r.id}-hint`} />
-                <span className="field__hint" id={`share-${r.id}-hint`}>Bölümde başka malik varsa hisseler toplamı %100'ü aşamaz.</span>
-              </div>
-            )}
-            <div className="row" style={{ gap: "var(--s-2)" }}>
-              <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso(), ...(r.relation === "owner" && share.trim() ? { share_percent: share.trim().replace(",", ".") } : {}) })}>Onayla</button>
-              <ConfirmButton className="btn btn--ghost btn--sm" danger title="Başvuruyu reddet" confirmLabel="Reddet"
-                body={<div className="field"><label className="field__label" htmlFor={`rej-${r.id}`}>Gerekçe *</label><input id={`rej-${r.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ör. Bu bölümde kayıtlı değil" /></div>}
-                onConfirm={() => { if (!reason.trim()) throw new Error("Gerekçe zorunlu."); return reject.mutateAsync({ reason: reason.trim() }); }}>
-                Reddet
-              </ConfirmButton>
-            </div>
-            {approve.error && <span className="field__error" role="alert">{(approve.error as Error).message}</span>}
+    <article className="stack" aria-label={`${r.first_name} ${r.last_name} başvurusu`} style={{ gap: "var(--s-3)", border: "1px solid var(--line)", borderRadius: "var(--r-md)", padding: "var(--s-3)" }}>
+      <div className="row row--between" style={{ gap: "var(--s-2)" }}>
+        <div><div className="cell-main">{r.first_name} {r.last_name}</div><div className="cell-sub">{partyRole(r.relation)} · <span className="mono">{r.reference}</span>{r.explicit_consent ? " · açık rıza verdi" : ""}</div></div>
+        <span className="small muted nowrap">{formatDateTime(r.created_at)}</span>
+      </div>
+      <div className="grid grid--kpi">
+        <div className="kv" style={{ margin: 0 }}><span className="kv__k">Yazdığı bölüm</span><span className="kv__v">{r.unit_text}</span></div>
+        <div className="kv" style={{ margin: 0 }}><span className="kv__k">Telefon</span><span className="kv__v">{formatPhone(r.phone)}</span></div>
+        {r.email && <div className="kv" style={{ margin: 0 }}><span className="kv__k">E-posta</span><span className="kv__v" style={{ wordBreak: "break-all" }}>{r.email}</span></div>}
+      </div>
+      <div className="grid grid--kpi" style={{ alignItems: "end" }}>
+        <UnitPicker label="Bölüm" value={unit} onChange={setUnit} />
+        {r.relation === "owner" && (sharesFull || share) && (
+          <div className="field">
+            <label className="field__label" htmlFor={`share-${r.id}`}>Hisse oranı (%)</label>
+            <input id={`share-${r.id}`} className="field__input" inputMode="decimal" placeholder="100" value={share} onChange={(e) => setShare(e.target.value.replace(/[^\d.,]/g, "").slice(0, 6))} aria-describedby={`share-${r.id}-hint`} />
+            <span className="field__hint" id={`share-${r.id}-hint`}>Bölümde başka malik varsa hisseler toplamı %100'ü aşamaz.</span>
           </div>
-        ) : r.status === "approved" ? (
-          <span className="small"><Badge tone="ok">Onaylandı</Badge> {r.unit_name} · {r.decided_by}</span>
-        ) : (
-          <span className="small"><Badge tone="danger">Reddedildi</Badge> {r.reject_reason}</span>
         )}
+      </div>
+      <div className="row" style={{ gap: "var(--s-2)" }}>
+        <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso(), ...(r.relation === "owner" && share.trim() ? { share_percent: share.trim().replace(",", ".") } : {}) })}>Onayla</button>
+        <ConfirmButton className="btn btn--ghost btn--sm" danger title="Başvuruyu reddet" confirmLabel="Reddet"
+          body={<div className="field"><label className="field__label" htmlFor={`rej-${r.id}`}>Gerekçe *</label><input id={`rej-${r.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ör. Bu bölümde kayıtlı değil" /></div>}
+          onConfirm={() => { if (!reason.trim()) throw new Error("Gerekçe zorunlu."); return reject.mutateAsync({ reason: reason.trim() }); }}>
+          Reddet
+        </ConfirmButton>
+      </div>
+      {approve.error && <span className="field__error" role="alert">{(approve.error as Error).message}</span>}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------- Davetler (istek 23)
+function Invitations() {
+  const toast = useToast();
+  const [st, setSt] = useState("");
+  const q = useSiteGet<Invitation[]>("/invitations", { status: st || undefined });
+  const [adding, setAdding] = useState(false);
+  return (
+    <>
+      <div className="row row--between" style={{ gap: "var(--s-2)" }}>
+        <p className="small muted mb-0">Yönetim kişiyi bölümüyle davet eder; kişi bağlantıdan telefonunu doğrular, hesabı hemen açılır — onay beklemez. SMS gönderimi henüz yok (K5): bağlantıyı siz iletirsiniz.</p>
+        <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Mail aria-hidden="true" /> Davet oluştur</button>
+      </div>
+      {adding && <InviteForm onDone={() => setAdding(false)} />}
+      <div className="filters"><div className="field"><label className="field__label" htmlFor="inv-st">Durum</label><select id="inv-st" className="field__input" value={st} onChange={(e) => setSt(e.target.value)}><option value="">Tümü</option>{["sent", "opened", "completed", "expired", "cancelled"].map((k) => <option key={k} value={k}>{invitationStatus(k)}</option>)}</select></div></div>
+      <div className="card"><div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Davet yok" icon={<Mail aria-hidden="true" />}>Davet oluşturup bağlantıyı kişiye iletin.</Empty> : (
+          <div className="table-wrap"><table className="data">
+            <caption className="visually-hidden">Davetler</caption>
+            <thead><tr><th scope="col">Kişi</th><th scope="col">Bölüm</th><th scope="col">Durum</th><th scope="col">Gönderen</th><th scope="col">Geçerlilik</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
+            <tbody>{q.data.map((i) => <InviteRow key={i.id} i={i} onCopy={() => navigator.clipboard?.writeText(i.link).then(() => toast("Davet bağlantısı kopyalandı."))} />)}</tbody>
+          </table></div>
+        )}
+      </div></div>
+    </>
+  );
+}
+
+function InviteRow({ i, onCopy }: { i: Invitation; onCopy: () => void }) {
+  const resend = useSiteMutation<Record<string, never>, Invitation>("POST", `/invitations/${i.id}/resend`);
+  const cancel = useSiteMutation<Record<string, never>, Invitation>("POST", `/invitations/${i.id}/cancel`);
+  const open = i.status === "sent" || i.status === "opened";
+  return (
+    <tr style={i.status === "cancelled" || i.status === "expired" ? { opacity: 0.6 } : undefined}>
+      <td><div className="cell-main">{i.full_name}</div><div className="cell-sub">{formatPhone(i.phone)}</div></td>
+      <td className="small">{i.unit_name}<div className="cell-sub">{partyRole(i.relation)}</div></td>
+      <td><Badge tone={invitationStatusTone(i.status)}>{invitationStatus(i.status)}</Badge>{i.completed_at && <div className="cell-sub">{formatDateTime(i.completed_at)}</div>}</td>
+      <td className="small">{i.sent_by}<div className="cell-sub">{formatDateTime(i.sent_at)}</div></td>
+      <td className="small nowrap">{formatDateTime(i.expires_at)}</td>
+      <td className="right nowrap">
+        {open && <button className="btn btn--ghost btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Bağlantı</button>}{" "}
+        {i.status !== "completed" && i.status !== "cancelled" && <ConfirmButton className="btn btn--ghost btn--sm" title="Daveti yeniden gönder" confirmLabel="Yeniden gönder" body="Yeni bağlantı üretilir; eskisi geçersiz olur." onConfirm={() => resend.mutateAsync({})}><RefreshCw aria-hidden="true" /> Yenile</ConfirmButton>}{" "}
+        {open && <ConfirmButton className="btn btn--ghost btn--sm" danger title="Daveti iptal et" confirmLabel="İptal et" body="Bağlantı çalışmaz; kişi kaydolamaz." onConfirm={() => cancel.mutateAsync({})}>İptal</ConfirmButton>}
       </td>
     </tr>
+  );
+}
+
+function InviteForm({ onDone }: { onDone: () => void }) {
+  const [unit, setUnit] = useState<PickedUnit | null>(null);
+  const [f, setF] = useState({ full_name: "", phone: "", relation: "owner" });
+  const [phoneErr, setPhoneErr] = useState<string>();
+  const m = useSiteMutation<Record<string, unknown>, Invitation>("POST", "/invitations", { onSuccess: onDone });
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!isTrMobile(f.phone)) return setPhoneErr("Cep telefonu 5 ile başlayan 10 hane olmalı.");
+    m.mutate({ full_name: f.full_name.trim(), phone: toE164(f.phone), unit_id: unit?.id, relation: f.relation });
+  }
+  return (
+    <form className="card" onSubmit={submit} noValidate>
+      <div className="card__head"><span className="card__title">Davet oluştur</span></div>
+      <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+        <FormError error={m.error} />
+        <div className="grid grid--kpi">
+          <Field label="Ad soyad" required error={fieldError(m.error, "full_name")}>{(p) => <input {...p} className="field__input" autoComplete="off" maxLength={60} value={f.full_name} onChange={(e) => setF((x) => ({ ...x, full_name: e.target.value }))} />}</Field>
+          <Field label="Cep telefonu" required hint="Kişi bu numarayı doğrulayarak kaydolur" error={phoneErr ?? fieldError(m.error, "phone")}>{(p) => <input {...p} className="field__input" type="tel" inputMode="tel" placeholder="5XX XXX XX XX" value={phoneMask(phoneDigits(f.phone))} onChange={(e) => { setF((x) => ({ ...x, phone: e.target.value })); setPhoneErr(undefined); }} />}</Field>
+          <UnitPicker label="Bölüm" value={unit} onChange={setUnit} error={fieldError(m.error, "unit_id")} />
+          <Field label="İlişki" required error={fieldError(m.error, "relation")}>{(p) => <select {...p} className="field__input" value={f.relation} onChange={(e) => setF((x) => ({ ...x, relation: e.target.value }))}><option value="owner">Malik</option><option value="tenant">Kiracı</option></select>}</Field>
+        </div>
+      </div>
+      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.full_name.trim() || !f.phone || !unit}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------- Kayıt yöntemleri (istek 23)
+const SWITCHES: [keyof RegSettings, string, string][] = [
+  ["invite_enabled", "Davetle kayıt", "Yönetim davet eder; kişi telefonunu doğrular, onay beklemez."],
+  ["qr_enabled", "QR afişle kayıt", "Afişteki kodu okutan kişi başvurur; yönetim onaylar."],
+  ["code_enabled", "Site bağlantısıyla kayıt", "Paylaşılan bağlantıdan başvuru; yönetim onaylar."],
+  ["owner_can_approve_tenant", "Malik kendi kiracısını onaylayabilir", "Kiracı başvurusunu malik de onaylar (ortak kararı bekleyen davranış; varsayılan kapalı)."],
+  ["owner_document_required", "Malik başvurusunda belge zorunlu", "Tapu ya da yetki belgesi istenir; belge yükleme bir sonraki sürümde."],
+  ["kvkk_published", "KVKK aydınlatma metni yayında", "Hukuk onayı (K8) alınınca işaretlenir; canlıya geçiş kontrol listesinde zorunlu."],
+];
+
+function RegSettingsCard() {
+  const q = useSiteGet<RegSettings>("/settings/registration");
+  const m = useSiteMutation<RegSettings, RegSettings>("PUT", "/settings/registration");
+  if (q.isPending) return <Loading />;
+  if (q.isError) return <ErrorState error={q.error} />;
+  const s = q.data;
+  return (
+    <div className="card">
+      <div className="card__head"><span className="card__title">Kayıt yöntemleri</span><span className="card__meta ml-auto">değişiklik anında geçerli</span></div>
+      <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+        <FormError error={m.error} />
+        {SWITCHES.map(([k, label, desc]) => (
+          <label key={k} className="check check--rich">
+            <input type="checkbox" checked={Boolean(s[k])} disabled={m.isPending} onChange={(e) => m.mutate({ ...s, [k]: e.target.checked })} />
+            <span><span className="strong">{label}</span><br /><span className="small muted">{desc}</span></span>
+          </label>
+        ))}
+        <Field label="Davet geçerlilik süresi (gün)" hint="1–30; süresi dolan davet yeniden gönderilir" error={fieldError(m.error, "invite_valid_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" style={{ width: "6rem" }} defaultValue={s.invite_valid_days} onBlur={(e) => { const n = Number(e.target.value); if (n >= 1 && n <= 30 && n !== s.invite_valid_days) m.mutate({ ...s, invite_valid_days: n }); }} />}</Field>
+      </div>
+    </div>
   );
 }

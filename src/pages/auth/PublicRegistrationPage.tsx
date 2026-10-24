@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useParams, useSearchParams } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, get } from "../../api/client";
 import type { Written } from "../../api/types";
@@ -22,13 +22,26 @@ const digits = (v: string) => v.replace(/\D/g, "").replace(/^90/, "").replace(/^
 const maskPhone = (d: string) => [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean).join(" ");
 const capitalize = (s: string) => s.trim().split(/\s+/).map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1).toLocaleLowerCase("tr-TR")).join(" ");
 
-/** Herkese açık sakin kayıt formu (/kayit/:code). Oturum gerekmez; başvuru yönetim onayına düşer. Servis isteği 13. */
+/** Gerçek yanıt + servis isteği 23 ekleri: blok/bölüm listesi (yalnız ad, kişi yok) ve belge zorunluluğu. */
+interface PublicSite { site_name: string; site_slug: string; blocks?: { id: string; name: string; units: { id: string; name: string }[] }[]; document_required?: boolean }
+
+/** Herkese açık sakin kayıt formu (/kayit/:code). Oturum gerekmez; başvuru yönetim onayına düşer. Servis isteği 13 + 23. */
 export function PublicRegistrationPage() {
   useDocumentTitle("Sakin kaydı");
   const { code = "" } = useParams();
-  const site = useQuery({ queryKey: ["public-registration", code], queryFn: () => get<{ site_name: string; site_slug: string }>(`/public/registration/${code}`), retry: false });
-  const [f, setF] = useState({ first_name: "", last_name: "", phone: "", email: "", unit_text: "", relation: "owner", explicit_consent: false, kvkk_ack: false });
+  const [params] = useSearchParams();
+  const site = useQuery({ queryKey: ["public-registration", code], queryFn: () => get<PublicSite>(`/public/registration/${code}`), retry: false });
+  const [f, setF] = useState({ first_name: "", last_name: "", phone: "", email: "", unit_text: "", block_id: "", unit_id: "", relation: "owner", explicit_consent: false, kvkk_ack: false });
   const [errs, setErrs] = useState<Record<string, string | undefined>>({});
+  // Blok/bölüm listesi geldiyse açılır liste; QR afişinden gelen ?blok= / ?bolum= önseçili
+  const blocks = site.data?.blocks?.length ? site.data.blocks : null;
+  useEffect(() => {
+    if (!blocks) return;
+    const bolum = params.get("bolum"), blok = params.get("blok");
+    const b = blocks.find((x) => x.id === blok || x.units.some((u) => u.id === bolum));
+    if (b) setF((x) => ({ ...x, block_id: b.id, unit_id: b.units.find((u) => u.id === bolum)?.id ?? "" }));
+  }, [blocks]);
+  const selectedUnit = blocks?.find((b) => b.id === f.block_id)?.units.find((u) => u.id === f.unit_id);
   const m = useMutation({ mutationFn: (body: Record<string, unknown>) => api<Written<{ reference: string }>>("POST", `/public/registration/${code}`, { body }) });
 
   const validators: Record<string, () => string | undefined> = {
@@ -40,7 +53,7 @@ export function PublicRegistrationPage() {
       if (!e) return undefined;
       return e.length <= 254 && EMAIL_RE.test(e) ? undefined : "Geçerli bir e-posta adresi girin (Türkçe karakter ve boşluk olmadan).";
     },
-    unit_text: () => (f.unit_text.trim() ? undefined : "Blok ve daire numaranızı yazın."),
+    unit_text: () => (blocks ? (selectedUnit ? undefined : "Blok ve bölümünüzü seçin.") : f.unit_text.trim() ? undefined : "Blok ve daire numaranızı yazın."),
     kvkk_ack: () => (f.kvkk_ack ? undefined : "Devam etmek için bilgilendirme yazısını onaylayın."),
   };
   const blur = (k: string) => () => setErrs((x) => ({ ...x, [k]: validators[k]!() }));
@@ -59,7 +72,7 @@ export function PublicRegistrationPage() {
       last_name: trUpper(f.last_name.trim()),
       phone: `+90${digits(f.phone)}`,
       email: f.email.trim().toLocaleLowerCase("tr-TR") || null,
-      unit_text: f.unit_text.trim(),
+      unit_text: selectedUnit?.name ?? f.unit_text.trim(),
       relation: f.relation,
       explicit_consent: f.explicit_consent,
       kvkk_ack: f.kvkk_ack,
@@ -101,9 +114,17 @@ export function PublicRegistrationPage() {
               </Field>
               <Field label="E-posta" hint="İsteğe bağlı; giriş bilgileri buraya da gönderilebilir." error={err("email")}>{(p) => <input {...p} data-field="email" className="field__input" type="email" inputMode="email" autoComplete="email" maxLength={254} value={f.email} onChange={(e) => setF((x) => ({ ...x, email: e.target.value }))} onBlur={blur("email")} />}</Field>
               <div className="grid grid--2">
-                <Field label="Blok / daire" required error={err("unit_text")}>{(p) => <input {...p} data-field="unit_text" className="field__input" placeholder="ör. A blok 4" maxLength={60} value={f.unit_text} onChange={(e) => setF((x) => ({ ...x, unit_text: e.target.value }))} onBlur={blur("unit_text")} />}</Field>
+                {blocks ? (
+                  <>
+                    <Field label="Blok" required error={err("unit_text")}>{(p) => <select {...p} data-field="unit_text" className="field__input" value={f.block_id} onChange={(e) => setF((x) => ({ ...x, block_id: e.target.value, unit_id: "" }))}><option value="">Seçin</option>{blocks.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>}</Field>
+                    <Field label="Bölüm" required>{(p) => <select {...p} className="field__input" value={f.unit_id} disabled={!f.block_id} onChange={(e) => { setF((x) => ({ ...x, unit_id: e.target.value })); setErrs((x) => ({ ...x, unit_text: undefined })); }} onBlur={blur("unit_text")}><option value="">Seçin</option>{blocks.find((b) => b.id === f.block_id)?.units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>}</Field>
+                  </>
+                ) : (
+                  <Field label="Blok / daire" required error={err("unit_text")}>{(p) => <input {...p} data-field="unit_text" className="field__input" placeholder="ör. A blok 4" maxLength={60} value={f.unit_text} onChange={(e) => setF((x) => ({ ...x, unit_text: e.target.value }))} onBlur={blur("unit_text")} />}</Field>
+                )}
                 <Field label="Daireyle ilişkiniz" required error={err("relation")}>{(p) => <select {...p} className="field__input" value={f.relation} onChange={(e) => setF((x) => ({ ...x, relation: e.target.value }))}><option value="owner">Malik (ev sahibi)</option><option value="tenant">Kiracı</option></select>}</Field>
               </div>
+              {site.data?.document_required && f.relation === "owner" && <p className="small muted mb-0">Malik başvurusunda site yönetimi onay sırasında tapu ya da yetki belgesi isteyecektir.</p>}
 
               <p className="small mb-0">
                 Kişisel verilerinizin işlenmesine ilişkin <Link to="/aydinlatma" target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.
