@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { Car, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
+import { Car, Hammer, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -127,6 +127,7 @@ export function ResidentHomePage() {
             <Link className="btn" to={`${base}/hane`}><Users aria-hidden="true" /> Hane üyeleri</Link>
             <Link className="btn" to={`${base}/araclar`}><Car aria-hidden="true" /> Araçlarım</Link>
             <Link className="btn" to={`${base}/ziyaretci`}><UserRoundCheck aria-hidden="true" /> Ziyaretçiler</Link>
+            <Link className="btn" to={`${base}/tadilat`}><Hammer aria-hidden="true" /> Tadilat ve taşınma</Link>
           </div>
         </div>
       </div>
@@ -296,12 +297,17 @@ export function ResidentRequestsPage() {
   useDocumentTitle("Taleplerim");
   const [page, setPage] = useState(1);
   const q = useSiteGet<Page<Req>>("/resident/requests", { page, page_size: 20 });
-  const [f, setF] = useState({ title: "", description: "", category: "other" });
-  const m = useSiteMutation<Record<string, unknown>, Schemas["RequestDetail"]>("POST", "/resident/requests", { onSuccess: () => setF({ title: "", description: "", category: "other" }) });
+  const extras = useSiteGet<Record<string, ReqExtras>>("/resident/requests/extras");
+  const home = useSiteGet<Home>("/resident/home");
+  const units = home.data?.units ?? [];
+  // Yer: bölüm içi (bölüm seçilir) ya da ortak alan (konum yazılır) — HIZ-01
+  const [f, setF] = useState({ title: "", description: "", category: "other", place: "unit", unit_id: "", location: "" });
+  const m = useSiteMutation<Record<string, unknown>, Schemas["RequestDetail"]>("POST", "/resident/requests", { onSuccess: () => setF((x) => ({ ...x, title: "", description: "", location: "" })) });
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, priority: "normal" });
+    const unitId = f.place === "unit" ? f.unit_id || units[0]?.unit_id || null : null;
+    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, priority: "normal", unit_id: unitId, location: f.location.trim() || null });
   }
 
   if (q.isError) return <StaffNotice error={q.error} />;
@@ -313,6 +319,8 @@ export function ResidentRequestsPage() {
           <FormError error={m.error} />
           <Field label="Konu" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={(e) => setF((x) => ({ ...x, title: e.target.value }))} placeholder="ör. Banyoda su sızıntısı" />}</Field>
           <Field label="Kategori">{(p) => <select {...p} className="field__input" value={f.category} onChange={(e) => setF((x) => ({ ...x, category: e.target.value }))}>{CATEGORIES.map((c) => <option key={c} value={c}>{requestCategory(c)}</option>)}</select>}</Field>
+          <Field label="Yer" error={fieldError(m.error, "unit_id")}>{(p) => <select {...p} className="field__input" value={f.place === "unit" ? f.unit_id || units[0]?.unit_id || "unit" : "common"} onChange={(e) => setF((x) => (e.target.value === "common" ? { ...x, place: "common" } : { ...x, place: "unit", unit_id: e.target.value }))}>{units.map((u) => <option key={u.unit_id} value={u.unit_id}>Bölümüm ({u.unit_name})</option>)}<option value="common">Ortak alan</option></select>}</Field>
+          <Field label={f.place === "common" ? "Konum" : "Bölüm içinde nerede?"} hint={f.place === "common" ? "ör. B blok asansör, otopark girişi" : "İsteğe bağlı; ör. mutfak, banyo"} error={fieldError(m.error, "location")}>{(p) => <input {...p} className="field__input" maxLength={120} value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} />}</Field>
           <Field label="Açıklama">{(p) => <textarea {...p} className="field__input" rows={3} value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
           <SubmitButton busy={m.isPending} disabled={!f.title.trim()}>Talebi gönder</SubmitButton>
         </div>
@@ -328,6 +336,7 @@ export function ResidentRequestsPage() {
                   <div className="r-item__title">#{r.number} {r.title}</div>
                   <div className="r-item__meta">{requestCategory(r.category)} · {formatDateTime(r.created_at)}</div>
                   {r.resolution && <div className="r-item__body">Çözüm: {r.resolution}</div>}
+                  <RequestExtrasBlock id={r.id} status={r.status} ex={extras.data?.[r.id]} />
                 </div>
                 <div className="stack" style={{ gap: 4, alignItems: "flex-end" }}>
                   <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
@@ -453,3 +462,5 @@ export const ResidentNotificationsPage = () => <NotificationsPage staff={false} 
 export const ResidentProfilePage = () => <ProfilePage />;
 export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
+export { ResidentPermitsPage } from "./ResidentServicePages";
+import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";

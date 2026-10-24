@@ -7,6 +7,8 @@ import { formatDateTime } from "../../lib/format";
 import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentAssign } from "./Departments";
+import { ExtrasCard, InternalNotes, MergeCard, SlaCard } from "./RequestExtras";
+import { fillTemplate } from "../../lib/labels";
 
 type Detail = Schemas["RequestDetail"];
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
@@ -39,6 +41,7 @@ export function RequestDetailPage() {
             <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
             <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ?? "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
+            <SlaCard id={r.id} />
             {r.resolution && <div className="kv"><span className="kv__k">Çözüm</span><span className="kv__v">{r.resolution}</span></div>}
             {r.description && <p className="mt-4 mb-0" style={{ whiteSpace: "pre-wrap" }}>{r.description}</p>}
           </div>
@@ -49,6 +52,10 @@ export function RequestDetailPage() {
           {can(P.requestsAssign) && <AssignForm r={r} />}
         </div>
       </div>
+
+      <MergeCard r={r} />
+      <ExtrasCard r={r} />
+      {can(P.requestsAssign) && <InternalNotes id={r.id} />}
 
       <div className="card">
         <div className="card__head"><span className="card__title">Geçmiş</span></div>
@@ -65,7 +72,7 @@ export function RequestDetailPage() {
               </li>
             ))}
           </ul>
-          <CommentForm id={r.id} />
+          <CommentForm r={r} />
         </div>
       </div>
     </div>
@@ -117,13 +124,17 @@ function AssignForm({ r }: { r: Detail }) {
   );
 }
 
-function CommentForm({ id }: { id: string }) {
+function CommentForm({ r }: { r: Detail }) {
+  const id = r.id;
   const [body, setBody] = useState("");
   const m = useSiteMutation<{ body: string }, Detail>("POST", `/requests/${id}/comments`, { onSuccess: () => setBody("") });
+  const tpl = useSiteGet<{ id: string; title: string; category: string | null; body: string; is_active: boolean }[]>("/reply-templates");
+  const usable = (tpl.data ?? []).filter((t) => t.is_active && (!t.category || t.category === r.category));
   return (
     <form className="stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ body: body.trim() }); }}>
       <FormError error={m.error} />
-      <Field label="Yorum ekle" error={fieldError(m.error, "body")}>{(p) => <textarea {...p} className="field__input" rows={2} value={body} onChange={(e) => setBody(e.target.value)} />}</Field>
+      {usable.length > 0 && <div className="field" style={{ maxWidth: "20rem" }}><label className="field__label" htmlFor={`tpl-${id}`}>Hazır yanıt</label><select id={`tpl-${id}`} className="field__input" value="" onChange={(e) => { const t = usable.find((x) => x.id === e.target.value); if (t) setBody(fillTemplate(t.body, { number: r.number, reporter_name: r.reporter_name, title: r.title })); }}><option value="">Şablon seç…</option>{usable.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}</select></div>}
+      <Field label="Sakine yanıt (yorum)" hint="Yorumu sakin de görür; yalnız personelin göreceği notu İç notlar kartına yazın." error={fieldError(m.error, "body")}>{(p) => <textarea {...p} className="field__input" rows={2} value={body} onChange={(e) => setBody(e.target.value)} />}</Field>
       <div><SubmitButton busy={m.isPending} className="btn" disabled={!body.trim()}>Yorum ekle</SubmitButton></div>
     </form>
   );

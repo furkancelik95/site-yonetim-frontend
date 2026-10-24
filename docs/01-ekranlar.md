@@ -80,6 +80,10 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/guvenlik?sekme=devriye` | **Devriye (görevli)** — tur başlat, nokta kodu okut, bitir (GUV-09) | `security.incidents` | istek 46 | R (sahte servis) |
 | `/s/{slug}/ayarlar/guvenlik` | **Güvenlik ayarları** — kapılar, habersiz ziyaretçi yöntemi ve kapı istisnası, kargo teslimi, saklama, misafir parkı (GUV-08) | `modules.manage` | istek 40 | R (sahte servis) |
 | `/s/{slug}/devriye` | **Devriye (yönetim)** — takvim ve sapma raporu, kontrol noktaları + QR etiket, tur planları (GUV-09) | `modules.manage` | istek 46 | R (sahte servis) |
+| `/s/{slug}/talepler` (+ ayrıntı) | **Talepler** — SLA rozeti; ayrıntıda SLA, birleştirme önerisi/ana olay, iç notlar, hazır yanıt, sakin puanı, ücretli hizmet teklifi (HIZ-01..04) | `requests.read` / `.assign` | istek 47–51 | R (sahte servis) |
+| `/s/{slug}/talepler/ayarlar` | **Talep ayarları** — kategori × öncelik SLA, çalışma takvimi, hazır yanıtlar, hizmet tarifesi (HIZ-03/04) | `requests.assign` | istek 47, 48, 51 | R (sahte servis) |
+| `/s/{slug}/talepler/ana-olaylar` | **Ana olaylar** — bağlı talepler, çözülünce hepsi kapanır (HIZ-02) | `requests.assign` | istek 49 | R (sahte servis) |
+| `/s/{slug}/tadilat-tasinma` | **Tadilat ve taşınma** — kurallar, onay/ret, kontrol listesiyle tamamlama, depozito (HIZ-05) | `requests.assign` | istek 52 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
@@ -98,6 +102,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
 | `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
+| `/sakin/{slug}/tadilat` | **Tadilat ve taşınma** — kurallar, başvuru, durum (HIZ-05) | R (sahte servis, istek 52) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

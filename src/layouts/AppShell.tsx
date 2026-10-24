@@ -16,6 +16,7 @@ import {
   DoorOpen,
   ClipboardList,
   FileOutput,
+  Hammer,
   FileSignature,
   FileSpreadsheet,
   History,
@@ -124,6 +125,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
             <Item to={`${base}/guvenlik`} icon={<ShieldCheck aria-hidden="true" />} label="Güvenlik" />
           )}
           {shows(M.requests, P.requestsRead) && <Item to={`${base}/talepler`} icon={<Wrench aria-hidden="true" />} label="Talepler" />}
+          {shows(M.requests, P.requestsAssign) && <Item to={`${base}/tadilat-tasinma`} icon={<Hammer aria-hidden="true" />} label="Tadilat ve Taşınma" />}
           {shows(M.announcements, P.announcementsRead) && (
             <Item to={`${base}/duyurular`} icon={<Megaphone aria-hidden="true" />} label="Duyurular" />
           )}

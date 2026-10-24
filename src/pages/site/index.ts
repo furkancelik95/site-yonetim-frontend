@@ -51,3 +51,4 @@ export { LeavePage } from "./LeavePage";
 export { TimesheetPage } from "./TimesheetPage";
 export { SecuritySettingsPage } from "./SecuritySettingsPage";
 export { PatrolAdminPage } from "./PatrolAdminPage";
+export { OutagesPage, PermitsPage, RequestSettingsPage } from "./ServicePages";
