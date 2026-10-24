@@ -84,6 +84,10 @@ const siteScreens: [string, string][] = [
   ["ek-ucretler", "AdHocChargesPage"],
   ["muhasebe-aktarimi", "AccountingExportPage"],
   ["ayarlar/finans", "FinanceSettingsPage"],
+  // İnsan kaynakları paketi (servis istekleri 35–39)
+  ["vardiya", "ShiftPlanPage"],
+  ["izinler", "LeavePage"],
+  ["puantaj", "TimesheetPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");

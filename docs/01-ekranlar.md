@@ -71,6 +71,10 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/ayarlar/finans` | **Finans ayarları** — hatırlatma kademeleri, kıst, eşikler; yürürlük dönemli sürüm; karar bekleyenler (FIN-16) | `finance.charge.post` | istek 33 | R (sahte servis) |
 | `/s/{slug}/kasa/{id}` | **Kasa ekstresi → Gün sonu sayımı** (yalnız kasa hesabı) (FIN-11) | `finance.cash.manage` | istek 28 | R (sahte servis) |
 | `/s/{slug}/tahakkuk` | **Tahakkuk → Fark raporu** — önceki döneme göre eşik üstü değişen hesaplar (FIN-05) | `finance.read` | istek 34 | R (sahte servis) |
+| `/s/{slug}/personel` | **Personel** — bordro sicil no; ayrılışta ileri vardiya / bekleyen izin uyarısı (IK-01) | `staff.manage` | `staff`, istek 35 | R (sahte servis) |
+| `/s/{slug}/vardiya` | **Vardiya planı** — şablonlar; personel × gün ızgarası, çakışma (çakışan vardiya, izin, 11 saat dinlenme), kopyala, yayınla (IK-02) | `staff.manage` | istek 36 | R (sahte servis) |
+| `/s/{slug}/izinler` | **İzinler** — kaydet, onayla/reddet/iptal, yıllık kullanım (IK-03) | `staff.manage` | istek 37 | R (sahte servis) |
+| `/s/{slug}/puantaj` | **Puantaj** — günlük (plandan; istisna düzelt; kesinleştir) ve aylık aktarım (sicil no ile dosya, kilit) (IK-04/05) | `staff.manage` | istek 38, 39 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
