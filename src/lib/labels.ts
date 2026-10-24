@@ -270,3 +270,10 @@ export const readingTone = (v: string): Tone => (v === "ok" || v === "approved" 
 export const taskFrequency = label({ daily: "Her gün", weekdays: "Haftanın günleri", monthly: "Aylık" });
 export const taskStatus = label({ upcoming: "Sırada", due: "Şimdi", late: "Gecikti", done: "Tamamlandı", failed: "Tamamlanamadı" });
 export const taskTone = (v: string): Tone => (v === "done" ? "ok" : v === "late" || v === "failed" ? "danger" : v === "due" ? "warn" : "muted");
+
+// Rezervasyon paketi (servis istekleri 59-61)
+export const resStatus = label({ pending: "Onay bekliyor", approved: "Onaylı", rejected: "Reddedildi", cancelled: "İptal", checked_in: "Geldi", no_show: "Gelmedi", completed: "Tamamlandı" });
+export const resTone = (v: string): Tone => (v === "approved" || v === "checked_in" || v === "completed" ? "ok" : v === "pending" ? "warn" : v === "no_show" || v === "rejected" ? "danger" : "muted");
+export const feeType = label({ free: "Ücretsiz", fixed: "Sabit (rezervasyon başı)", hourly: "Saat başı", per_guest: "Misafir başı" });
+export const verifyMethod = label({ none: "Yok", qr: "QR", code: "6 haneli kod", staff: "Görevli listeden onaylar" });
+export const resChannel = label({ resident: "Sakin yapar", staff: "Yönetim sakin adına açar", both: "İkisi de" });

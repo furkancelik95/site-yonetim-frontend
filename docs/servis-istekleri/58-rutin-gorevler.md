@@ -10,7 +10,7 @@ zorunlu, aktif), **Rapor** (son 7 gün görev bazında beklenen / tamamlanan / o
 
 ## Uç nokta
 - `GET …/task-templates` · `POST` · `PATCH …/{id}` — `{ name, description, frequency: "daily|weekdays|monthly", weekdays: [0..6] (0 = pazartesi), month_day, time_from, time_to, location, assignee, photo_required, is_active }`
-- `GET …/tasks?date=YYYY-MM-DD` → `[{ template, done, status: "pending|late|done|failed" }]`
+- `GET …/tasks?date=YYYY-MM-DD` → `[{ template, done, status: "upcoming|due|late|done|failed" }]` (due: bugün saat aralığı içinde)
 - `POST …/tasks/{templateId}/complete` — `{ date, status: "done|failed", reason, note, photo }`
 - `GET …/tasks/report` → `{ from, to, rows: [{ template_id, name, expected, done, rate }], rate }`
 
