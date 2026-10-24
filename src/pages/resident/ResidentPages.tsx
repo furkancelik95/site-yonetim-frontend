@@ -5,7 +5,7 @@ import { ChevronRight, Copy, FileText, Package, Receipt, Wrench } from "lucide-r
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
-import { PollResults, type Poll } from "../../components/PollResults";
+import { PollResults } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
@@ -351,7 +351,7 @@ export function ResidentExpensesPage() {
 }
 
 /** Servis isteği 15: sakinin oy verdiği bölümler ve oyu. Sonuç oy verdikten ya da anket kapanınca görünür. */
-type ResidentPoll = Poll & { my_votes: { unit_id: string; unit_name: string; option_id: string | null }[] };
+type ResidentPoll = Schemas["ResidentPollOut"];
 
 function ResidentPolls() {
   const q = useSiteGet<ResidentPoll[]>("/resident/polls");

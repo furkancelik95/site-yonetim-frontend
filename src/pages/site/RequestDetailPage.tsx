@@ -6,9 +6,9 @@ import { Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, f
 import { formatDateTime } from "../../lib/format";
 import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
-import { DepartmentAssign, type WithDepartment } from "./Departments";
+import { DepartmentAssign } from "./Departments";
 
-type Detail = Schemas["RequestDetail"] & WithDepartment;
+type Detail = Schemas["RequestDetail"];
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
 const NEEDS_RESOLUTION = new Set(["resolved", "closed"]);
 

@@ -9,9 +9,9 @@ import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { CATEGORIES, PRIORITIES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
-import { DepartmentFilter, DepartmentManager, type WithDepartment } from "./Departments";
+import { DepartmentFilter, DepartmentManager } from "./Departments";
 
-type Req = Schemas["RequestOut"] & WithDepartment;
+type Req = Schemas["RequestOut"];
 
 const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
 

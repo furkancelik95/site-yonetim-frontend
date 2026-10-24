@@ -1,17 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Copy, UserPlus, Users } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
-import { useToast } from "../../components/toast";
+import type { Schemas } from "../../api/types";
+import { OneTimePassword } from "../../components/OneTimePassword";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 
-/** Servis isteği 12'deki şekiller. */
-interface Role { key: string; name: string; description: string }
-interface Member {
-  id: string; full_name: string; email: string; role_key: string; role_name: string; is_active: boolean;
-  source: "site" | "organization"; last_login_at: string | null; invited_at: string;
-}
+type Role = Schemas["RoleOut"];
+type Member = Schemas["MemberOut"];
+type Added = Schemas["AddedOut"];
 
 /**
  * Site kullanıcıları ve rolleri (Apsiyon "Yetkililer" / "Yetki Grupları"). Yeni personeli rolüyle
@@ -28,7 +25,7 @@ export function MembersPage() {
       <PageHead
         title="Kullanıcılar"
         subtitle="Siteye erişen personel ve rolleri. Sakinler burada değil, daire sayfasından ve kayıt başvurularından yönetilir."
-        actions={<><MockBadge request="12" /><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><UserPlus aria-hidden="true" /> Kullanıcı ekle</button></>}
+        actions={<button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><UserPlus aria-hidden="true" /> Kullanıcı ekle</button>}
       />
       {adding && <AddMember roles={roles.data ?? []} onDone={() => setAdding(false)} />}
 
@@ -94,24 +91,20 @@ function MemberRow({ m, roles }: { m: Member; roles: Role[] }) {
 }
 
 function AddMember({ roles, onDone }: { roles: Role[]; onDone: () => void }) {
-  const toast = useToast();
   const [f, setF] = useState({ full_name: "", email: "", role_key: "accounting" });
-  const [created, setCreated] = useState<{ member: Member; temporary_password: string } | null>(null);
-  const m = useSiteMutation<Record<string, string>, { member: Member; temporary_password: string }>("POST", "/members", { onSuccess: (d) => d && setCreated(d) });
+  const [created, setCreated] = useState<Added | null>(null);
+  const m = useSiteMutation<Record<string, string>, Added>("POST", "/members", { onSuccess: (d) => d && setCreated(d) });
 
   if (created) {
     return (
       <div className="card">
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <Alert tone="ok" title={`${created.member.full_name} eklendi`}>Rol: {created.member.role_name}</Alert>
-          <div className="kv"><span className="kv__k">E-posta</span><span className="kv__v mono">{created.member.email}</span></div>
-          <div className="kv">
-            <span className="kv__k">Geçici parola</span>
-            <span className="kv__v"><span className="mono strong">{created.temporary_password}</span>{" "}
-              <button className="btn btn--ghost btn--sm" type="button" onClick={() => navigator.clipboard?.writeText(created.temporary_password).then(() => toast("Parola kopyalandı."))}><Copy aria-hidden="true" /> Kopyala</button>
-            </span>
-          </div>
-          <Alert tone="warn" title="Bu parola bir daha gösterilmez">Kişiye güvenli bir kanaldan iletin; ilk girişte kendi parolasını belirlemesi istenir.</Alert>
+          {created.temporary_password ? (
+            <OneTimePassword email={created.member.email} password={created.temporary_password} />
+          ) : (
+            <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut parolasıyla girer.</p>
+          )}
         </div>
         <div className="card__foot"><button className="btn" type="button" onClick={onDone}>Tamam</button></div>
       </div>

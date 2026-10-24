@@ -4,9 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet } from "lucide-react";
 import { api } from "../../api/client";
 import { useSiteGet } from "../../api/hooks";
-import type { CashAccounts, Written } from "../../api/types";
+import type { CashAccounts, Schemas, Written } from "../../api/types";
 import { AccountPicker, type PickedAccount } from "../../components/AccountPicker";
-import { MockBadge } from "../../components/MockBadge";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, FormError, Kpi, PageHead, SubmitButton } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
@@ -14,30 +13,9 @@ import { useSite } from "../../site/SiteContext";
 import Decimal from "decimal.js";
 
 /** Servis isteği 06'daki yanıt şekli — servis gelince üretilmiş tipe geçilir. */
-interface BankRow {
-  row_number: number;
-  date: string;
-  description: string;
-  amount: string;
-  direction: "in" | "out";
-  bank_reference: string | null;
-  status: "matched" | "suggested" | "unmatched" | "ignored" | "duplicate";
-  suggestion: { ledger_account_id: string; reference_code: string; unit_name: string; person_name: string | null; balance: string; confidence: "high" | "medium"; reason: string } | null;
-}
-interface Preview {
-  import_id: string;
-  file_name: string;
-  cash_account_id: string;
-  expires_at: string;
-  row_count: number;
-  matched_count: number;
-  suggested_count: number;
-  unmatched_count: number;
-  ignored_count: number;
-  total_in: string;
-  rows: BankRow[];
-}
-interface ConfirmResult { created_payments: number; total_amount: string; skipped: string[] }
+type BankRow = Schemas["RowOut"];
+type Preview = Schemas["site_yonetim__api__v1__bank_imports__PreviewOut"];
+type ConfirmResult = Schemas["ConfirmOut"];
 
 const STATUS: Record<BankRow["status"], { label: string; tone: "ok" | "info" | "warn" | "muted" | "danger" }> = {
   matched: { label: "Eşleşti", tone: "ok" },
@@ -121,13 +99,12 @@ export function BankImportPage() {
       <PageHead
         title="Banka hareketi aktarımı"
         subtitle="Bankadan indirdiğiniz ekstreyi yükleyin; gelen havaleler hesaplarla eşleştirilir, onayladıklarınız tahsilat olarak işlenir."
-        actions={<MockBadge request="06" />}
       />
 
       {result && (
         <Alert tone="ok" title="Aktarım tamamlandı">
           {result.created_payments} tahsilat işlendi, toplam {formatMoney(result.total_amount)}.
-          {result.skipped.length > 0 && <> Atlanan: {result.skipped.join(", ")}.</>} <Link to={`/s/${site.slug}/tahsilat`}>Tahsilatlara git</Link>
+          {result.skipped.length > 0 && <> Atlanan: {result.skipped.map((x) => `${x.row_number}. satır (${x.message})`).join(", ")}.</>} <Link to={`/s/${site.slug}/tahsilat`}>Tahsilatlara git</Link>
         </Alert>
       )}
 

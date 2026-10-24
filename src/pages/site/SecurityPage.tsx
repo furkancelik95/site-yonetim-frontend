@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { LogIn, LogOut, Package, SearchCheck, Siren, UserRound } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso, trUpper } from "../../lib/format";
@@ -12,6 +11,8 @@ import { M, P, useSite } from "../../site/SiteContext";
 
 type Pkg = Schemas["PackageOut"];
 type Visitor = Schemas["VisitorOut"];
+type Incident = Schemas["IncidentOut"];
+type LostItem = Schemas["LostItemOut"];
 
 /**
  * Güvenlik görevlisi ekranı. Daire araması kısıtlıdır: yalnız bölüm ve oturan adı görünür,
@@ -21,25 +22,27 @@ export function SecurityPage() {
   const { shows } = useSite();
   const pk = shows(M.packages, P.packages);
   const vs = shows(M.visitors, P.visitors);
-  const [s, set] = useUrlState({ sekme: "kapi" });
+  const inc = shows(M.visitors, P.securityIncidents);
+  const [s, set] = useUrlState({ sekme: "" });
   const tabs = [
-    { key: "kapi", label: "Kargo ve ziyaretçi" },
-    { key: "olay", label: "Olaylar" },
-    { key: "kayip", label: "Kayıp eşya" },
+    ...(pk || vs ? [{ key: "kapi", label: "Kargo ve ziyaretçi" }] : []),
+    ...(inc ? [{ key: "olay", label: "Olaylar" }, { key: "kayip", label: "Kayıp eşya" }] : []),
   ];
+  // Adresteki sekme bu kullanıcıya kapalıysa ilk açık sekme gösterilir
+  const tab = tabs.find((t) => t.key === s.sekme)?.key ?? tabs[0]?.key;
   return (
     <div className="stack">
       <PageHead title="Güvenlik" subtitle="Kargo, ziyaretçi, olay ve kayıp eşya kaydı" />
       <div className="row" role="tablist" aria-label="Güvenlik bölümleri" style={{ gap: "var(--s-2)" }}>
         {tabs.map((t) => (
-          <button key={t.key} type="button" role="tab" aria-selected={s.sekme === t.key} className={`btn btn--sm${s.sekme === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key })}>
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={`btn btn--sm${tab === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key })}>
             {t.label}
           </button>
         ))}
       </div>
-      {s.sekme === "olay" ? (
+      {tab === "olay" ? (
         <IncidentsCard />
-      ) : s.sekme === "kayip" ? (
+      ) : tab === "kayip" ? (
         <LostItemsCard />
       ) : (
         <div className="grid grid--2">
@@ -53,16 +56,6 @@ export function SecurityPage() {
 
 const INCIDENT_KINDS = ["theft", "damage", "noise", "fire", "water_leak", "suspicious", "accident", "other"];
 
-/** Servis isteği 09'daki yanıt şekli. */
-interface Incident {
-  id: string; number: number; occurred_at: string; kind: string; location: string; description: string;
-  unit_id: string | null; unit_name: string | null; status: "open" | "closed"; closed_note: string | null; closed_at: string | null; recorded_by: string;
-}
-/** Servis isteği 10'daki yanıt şekli. */
-interface LostItem {
-  id: string; number: number; found_at: string; description: string; location: string; found_by: string | null;
-  status: "waiting" | "returned" | "disposed"; returned_to: string | null; returned_at: string | null; recorded_by: string;
-}
 
 function IncidentsCard() {
   const [status, setStatus] = useState("open");
@@ -72,8 +65,8 @@ function IncidentsCard() {
   const add = useSiteMutation<Record<string, unknown>, Incident>("POST", "/incidents", { onSuccess: () => { setUnit(null); setF({ kind: "other", location: "", description: "" }); } });
   return (
     <div className="grid grid--2">
-      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ ...f, unit_id: unit?.id ?? null, unit_name: unit?.name ?? null }); }}>
-        <div className="card__head"><span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span><span className="card__title">Olay kaydet</span><span className="ml-auto"><MockBadge request="09" /></span></div>
+      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ ...f, unit_id: unit?.id ?? null }); }}>
+        <div className="card__head"><span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span><span className="card__title">Olay kaydet</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={add.error} />
           <div className="grid grid--2">
@@ -139,7 +132,7 @@ function LostItemsCard() {
   return (
     <div className="grid grid--2">
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate(f); }}>
-        <div className="card__head"><span className="card__icon card__icon--info"><SearchCheck aria-hidden="true" /></span><span className="card__title">Bulunan eşya kaydet</span><span className="ml-auto"><MockBadge request="10" /></span></div>
+        <div className="card__head"><span className="card__icon card__icon--info"><SearchCheck aria-hidden="true" /></span><span className="card__title">Bulunan eşya kaydet</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={add.error} />
           <Field label="Eşya" required error={fieldError(add.error, "description")}>{(p) => <input {...p} className="field__input" value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} placeholder="ör. Siyah sırt çantası" />}</Field>

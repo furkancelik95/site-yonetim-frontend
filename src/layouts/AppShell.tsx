@@ -62,14 +62,18 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
   const ops =
     shows(M.packages, P.packages) ||
     shows(M.visitors, P.visitors) ||
+    shows(M.visitors, P.securityIncidents) ||
     shows(M.requests, P.requestsRead) ||
     shows(M.announcements, P.announcementsRead) ||
     can(P.modulesManage) ||
     can(P.membersManage) ||
     can(P.peopleManage) ||
     can(P.auditRead);
-  // Servis istekleri 14–18 için yeni izin adı yok; mevcut izinlerle gösteriliyor (istek dosyalarında önerilen izinler var)
-  const mgmt = can(P.announcementsRead) || can(P.expensesRead) || can(P.peopleRead);
+  // Toplantı, anket ve personel ayrı modüller (general-assembly, surveys, staff); kapalıysa menüde yok
+  const meetings = shows(M.generalAssembly, P.meetingsRead);
+  const surveys = shows(M.surveys, P.announcementsRead);
+  const staff = shows(M.staff, P.peopleRead);
+  const mgmt = meetings || surveys || staff || can(P.expensesRead) || can(P.inventoryRead);
   return (
     <>
       <Group label={site.name}>
@@ -77,7 +81,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.unitsRead) && <Item to={`${base}/daireler`} icon={<Building2 aria-hidden="true" />} label="Daireler" />}
         {can(P.financeRead) && <Item to={`${base}/borclular`} icon={<AlertTriangle aria-hidden="true" />} label="Borçlular" />}
         {can(P.paymentRecord) && <Item to={`${base}/tahsilat`} icon={<Wallet aria-hidden="true" />} label="Tahsilat" />}
-        {can(P.paymentRecord) && <Item to={`${base}/banka-aktarim`} icon={<ArrowDownToLine aria-hidden="true" />} label="Banka Aktarımı" />}
+        {can(P.paymentRecord) && can(P.cashManage) && <Item to={`${base}/banka-aktarim`} icon={<ArrowDownToLine aria-hidden="true" />} label="Banka Aktarımı" />}
         {can(P.financeRead) && <Item to={`${base}/tahakkuk`} icon={<ClipboardList aria-hidden="true" />} label="Tahakkuk" />}
         {can(P.financeRead) && <Item to={`${base}/isletme-projesi`} icon={<Receipt aria-hidden="true" />} label="İşletme Projesi" />}
         {can(P.expensesRead) && <Item to={`${base}/giderler`} icon={<Inbox aria-hidden="true" />} label="Giderler" />}
@@ -87,7 +91,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
       </Group>
       {ops && (
         <Group label="Operasyon">
-          {(shows(M.packages, P.packages) || shows(M.visitors, P.visitors)) && (
+          {(shows(M.packages, P.packages) || shows(M.visitors, P.visitors) || shows(M.visitors, P.securityIncidents)) && (
             <Item to={`${base}/guvenlik`} icon={<ShieldCheck aria-hidden="true" />} label="Güvenlik" />
           )}
           {shows(M.requests, P.requestsRead) && <Item to={`${base}/talepler`} icon={<Wrench aria-hidden="true" />} label="Talepler" />}
@@ -102,11 +106,11 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
       )}
       {mgmt && (
         <Group label="Yönetim">
-          {can(P.announcementsRead) && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
-          {can(P.announcementsRead) && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
+          {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
+          {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
-          {can(P.expensesRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
-          {can(P.peopleRead) && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
+          {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
         </Group>
       )}
     </>

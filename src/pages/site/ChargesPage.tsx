@@ -10,7 +10,7 @@ import { accountKind, runStatus, runTone, warningKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { ChargeSchedule } from "./ChargeSchedule";
 
-type Preview = Schemas["PreviewOut"];
+type Preview = Schemas["site_yonetim__api__v1__charges__PreviewOut"];
 type Run = Schemas["ChargeRunOut"];
 
 export function ChargesPage() {

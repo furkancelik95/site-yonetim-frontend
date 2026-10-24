@@ -1,18 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { IdCard, Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
+import type { Schemas } from "../../api/types";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { staffEmployer } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 18'deki şekil. Bordro, maaş, T.C. kimlik no burada TUTULMAZ (KVKK — yalnız iş için gerekeni). */
-interface StaffMember {
-  id: string; full_name: string; position: string; employer: "site" | "contractor"; contractor_name: string | null; phone: string | null;
-  start_date: string; end_date: string | null; shift: string | null;
-}
+/** Servis isteği 18. Bordro, maaş, T.C. kimlik no burada TUTULMAZ (KVKK — yalnız iş için gerekeni). */
+type StaffMember = Schemas["StaffOut"];
 
 const digits = (v: string) => v.replace(/\D/g, "").replace(/^90/, "").replace(/^0/, "").slice(0, 10);
 const maskPhone = (d: string) => [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean).join(" ");
@@ -24,13 +21,13 @@ export function StaffPage() {
   const [s, set] = useUrlState({ durum: "aktif" });
   const q = useSiteGet<StaffMember[]>("/staff", { active: s.durum === "aktif" ? "true" : "false" });
   const [editing, setEditing] = useState<StaffMember | "new" | null>(null);
-  const manage = can(P.peopleManage);
+  const manage = can(P.staffManage);
   return (
     <div className="stack">
       <PageHead
         title="Personel"
         subtitle="Sitede çalışanlar ve görevleri. Sisteme giriş yetkisi ayrıdır: Kullanıcılar ekranından verilir."
-        actions={<><MockBadge request="18" />{manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Personel ekle</button>}</>}
+        actions={manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Personel ekle</button>}
       />
       {editing && <StaffForm m={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
       <div className="row" role="tablist" aria-label="Personel durumu" style={{ gap: "var(--s-2)" }}>

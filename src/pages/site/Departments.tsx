@@ -1,13 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Pencil } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { MockBadge } from "../../components/MockBadge";
+import type { Schemas } from "../../api/types";
 import { Badge, FormError, SubmitButton, fieldError } from "../../components/ui";
 
-/** Servis isteği 11'deki şekil. */
-export interface Department { id: string; name: string; is_active: boolean; request_count: number }
-/** Talep yanıtına eklenecek alanlar (istek 11). */
-export interface WithDepartment { department_id?: string | null; department_name?: string | null }
+export type Department = Schemas["DepartmentOut"];
 
 export const useDepartments = () => useSiteGet<Department[]>("/departments");
 
@@ -37,7 +34,6 @@ export function DepartmentAssign({ requestId, current, canAssign }: { requestId:
         <option value="">Yok</option>
         {d.data?.filter((x) => x.is_active || x.id === current).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
       </select>
-      <MockBadge request="11" />
     </span>
   );
 }
@@ -53,7 +49,7 @@ export function DepartmentManager({ onClose }: { onClose: () => void }) {
   }
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Departmanlar</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><MockBadge request="11" /><button className="btn btn--ghost btn--sm" type="button" onClick={onClose}>Kapat</button></span></div>
+      <div className="card__head"><span className="card__title">Departmanlar</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><button className="btn btn--ghost btn--sm" type="button" onClick={onClose}>Kapat</button></span></div>
       <div className="card__body card__body--flush">
         <div className="table-wrap">
           <table className="data">

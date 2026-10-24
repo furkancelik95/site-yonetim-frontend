@@ -1,22 +1,18 @@
 import { useState } from "react";
 import { Copy, Inbox, RefreshCw } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Page } from "../../api/types";
-import { MockBadge } from "../../components/MockBadge";
+import type { Page, Schemas } from "../../api/types";
+import { OneTimePassword } from "../../components/OneTimePassword";
 import { useToast } from "../../components/toast";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Badge, ConfirmButton, Empty, ErrorState, Loading, PageHead, Pager } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Loading, PageHead, Pager } from "../../components/ui";
 import { formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { partyRole } from "../../lib/labels";
 
-/** Servis isteği 13'teki şekiller. */
-interface Link { code: string; is_enabled: boolean }
-export interface Registration {
-  id: string; reference: string; first_name: string; last_name: string; phone: string; email: string | null; unit_text: string;
-  relation: "owner" | "tenant"; explicit_consent: boolean; status: "pending" | "approved" | "rejected";
-  created_at: string; decided_at: string | null; decided_by: string | null; reject_reason: string | null; unit_name: string | null;
-}
+type Link = Schemas["LinkOut"];
+type Registration = Schemas["RegistrationOut"];
+type Approved = Schemas["ApprovedOut"];
 
 const formatPhone = (e164: string) => e164.replace(/^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/, "+90 $1 $2 $3 $4");
 
@@ -32,10 +28,22 @@ export function RegistrationsPage() {
   const [s, set] = useUrlState({ durum: "pending", page: "1" });
   const q = useSiteGet<Page<Registration>>("/registrations", { status: s.durum, page: s.page, page_size: 30 });
   const url = link.data ? `${window.location.origin}/kayit/${link.data.code}` : "";
+  // Onaylanan başvuru listeden çıkar; yeni hesabın geçici parolası burada bir kez gösterilir
+  const [issued, setIssued] = useState<Approved | null>(null);
 
   return (
     <div className="stack">
-      <PageHead title="Kayıt başvuruları" subtitle="Sakinler site bağlantısından kendini kaydeder; siz bölümünü seçip onaylarsınız." actions={<MockBadge request="13" />} />
+      <PageHead title="Kayıt başvuruları" subtitle="Sakinler site bağlantısından kendini kaydeder; siz bölümünü seçip onaylarsınız." />
+
+      {issued?.temporary_password && (
+        <div className="card">
+          <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+            <Alert tone="ok" title={`${issued.first_name} ${issued.last_name} için giriş hesabı açıldı`}>{issued.unit_name} · {partyRole(issued.relation)}</Alert>
+            <OneTimePassword email={issued.email} password={issued.temporary_password} />
+          </div>
+          <div className="card__foot"><button className="btn" type="button" onClick={() => setIssued(null)}>Tamam</button></div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card__head"><span className="card__title">Kayıt bağlantısı</span>{link.data && <span className="ml-auto">{link.data.is_enabled ? <Badge tone="ok">Açık</Badge> : <Badge>Kapalı</Badge>}</span>}</div>
@@ -71,7 +79,7 @@ export function RegistrationsPage() {
               <table className="data">
                 <caption className="visually-hidden">Sakin kayıt başvuruları</caption>
                 <thead><tr><th scope="col">Başvuran</th><th scope="col">Yazdığı bölüm</th><th scope="col">İletişim</th><th scope="col">Tarih</th><th scope="col" style={{ minWidth: "16rem" }}>{s.durum === "pending" ? "Onay" : "Sonuç"}</th></tr></thead>
-                <tbody>{q.data.items.map((r) => <RegistrationRow key={r.id} r={r} />)}</tbody>
+                <tbody>{q.data.items.map((r) => <RegistrationRow key={r.id} r={r} onApproved={(d) => d.temporary_password && setIssued(d)} />)}</tbody>
               </table>
             </div>
           )}
@@ -82,10 +90,10 @@ export function RegistrationsPage() {
   );
 }
 
-function RegistrationRow({ r }: { r: Registration }) {
+function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [reason, setReason] = useState("");
-  const approve = useSiteMutation<{ unit_id: string; unit_name: string; start_date: string }, Registration>("POST", `/registrations/${r.id}/approve`);
+  const approve = useSiteMutation<{ unit_id: string; start_date: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => d && onApproved(d) });
   const reject = useSiteMutation<{ reason: string }, Registration>("POST", `/registrations/${r.id}/reject`);
   return (
     <tr>
@@ -101,7 +109,7 @@ function RegistrationRow({ r }: { r: Registration }) {
           <div className="stack" style={{ gap: "var(--s-2)" }}>
             <UnitPicker label="Bölüm" value={unit} onChange={setUnit} />
             <div className="row" style={{ gap: "var(--s-2)" }}>
-              <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, unit_name: unit.name, start_date: todayIso() })}>Onayla</button>
+              <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso() })}>Onayla</button>
               <ConfirmButton className="btn btn--ghost btn--sm" danger title="Başvuruyu reddet" confirmLabel="Reddet"
                 body={<div className="field"><label className="field__label" htmlFor={`rej-${r.id}`}>Gerekçe *</label><input id={`rej-${r.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ör. Bu bölümde kayıtlı değil" /></div>}
                 onConfirm={() => { if (!reason.trim()) throw new Error("Gerekçe zorunlu."); return reject.mutateAsync({ reason: reason.trim() }); }}>
