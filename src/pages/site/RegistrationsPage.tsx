@@ -93,7 +93,8 @@ export function RegistrationsPage() {
 function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [reason, setReason] = useState("");
-  const approve = useSiteMutation<{ unit_id: string; start_date: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => d && onApproved(d) });
+  // Geçici parola yalnız sayfa üstündeki kartta tutulur; satırın mutasyon önbelleğinde kalmaz
+  const approve = useSiteMutation<{ unit_id: string; start_date: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => { if (d) onApproved(d); approve.reset(); } });
   const reject = useSiteMutation<{ reason: string }, Registration>("POST", `/registrations/${r.id}/reject`);
   return (
     <tr>

@@ -106,7 +106,7 @@ function AddMember({ roles, onDone }: { roles: Role[]; onDone: () => void }) {
             <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut parolasıyla girer.</p>
           )}
         </div>
-        <div className="card__foot"><button className="btn" type="button" onClick={onDone}>Tamam</button></div>
+        <div className="card__foot"><button className="btn" type="button" onClick={() => { m.reset(); setCreated(null); onDone(); }}>Tamam</button></div>
       </div>
     );
   }

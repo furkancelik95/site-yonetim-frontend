@@ -4,11 +4,11 @@ Frontend'in ekranını yaptığı ama backend'de henüz olmayan uçlar. Her dosy
 *Servis isteği* şablonuyla aynı biçimde; issue açarken içeriği olduğu gibi yapıştırılabilir.
 
 Servis gelene kadar ekran bu sözleşmeyle **sahte servisle (MSW, `src/mocks/handlers.ts`)** çalışır;
-ekranda sarı "Sahte servis · NN" rozeti görünür. Servis gelince:
+sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. Servis gelince:
 
 1. `openapi.json` güncellenir, `npm run api:types`
 2. İlgili handler `src/mocks/handlers.ts`'den silinir
-3. Ekrandaki `MockBadge` kaldırılır, elle yazılmış tip üretilmiş tiple değiştirilir
+3. Ekranda elle yazılmış tip üretilmiş tiple değiştirilir
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi).
 

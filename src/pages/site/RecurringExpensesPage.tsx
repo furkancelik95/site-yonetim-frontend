@@ -148,7 +148,7 @@ function RecurringForm({ item, cats, onDone }: { item: Recurring | null; cats: C
         </label>
         )}
         {f.auto_pay && (
-          <Field label="Ödendiği hesap" error={fieldError(m.error, "cash_account_id")}>{(p) => <select {...p} className="field__input" value={acc} onChange={up("cash_account_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
+          <Field label="Ödendiği hesap" error={fieldError(m.error, "cash_account_id")}>{(p) => <select {...p} className="field__input" value={acc} disabled={!canPay} onChange={up("cash_account_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
         )}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}>

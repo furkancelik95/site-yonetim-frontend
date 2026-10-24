@@ -10,7 +10,7 @@ import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
 import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
-import { useSite } from "../../site/SiteContext";
+import { M, useSite } from "../../site/SiteContext";
 
 type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
@@ -354,7 +354,8 @@ export function ResidentExpensesPage() {
 type ResidentPoll = Schemas["ResidentPollOut"];
 
 function ResidentPolls() {
-  const q = useSiteGet<ResidentPoll[]>("/resident/polls");
+  // Anket modülü kapalı sitede uç 404 döner; hiç sorulmaz
+  const q = useSiteGet<ResidentPoll[]>("/resident/polls", undefined, { enabled: useSite().shows(M.surveys) });
   if (!q.data || q.data.length === 0) return null;
   return (
     <section className="stack" style={{ gap: "var(--s-3)" }} aria-label="Anketler">
