@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–52 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–58 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -68,6 +68,12 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [50](50-kapanis-onayi-puan.md) | Sakin kapanış onayı ve puan; talepte yer seçimi | `…/resident/requests/{id}/confirm`, `…/resident/requests/extras` | sakin Taleplerim | Sahte servis |
 | [51](51-ucretli-hizmet.md) | Ücretli hizmet: tarife, teklif, sakin onayı | `…/service-tariffs`, `…/requests/{id}/quotes`, `…/resident/quotes/{id}/decision`, `…/quotes/{id}/complete` | talep ayrıntısı, sakin Taleplerim | Sahte servis |
 | [52](52-tadilat-tasinma.md) | Tadilat ve taşınma izinleri | `…/settings/permits`, `…/permits`, `…/resident/permits` | `/tadilat-tasinma`, sakin `/tadilat` | Sahte servis |
+| [53](53-anahtar-emanet.md) | Anahtar, kart ve emanet anahtar | `…/keys`, `…/key-loans`, `…/deposited-keys`, `…/resident/deposited-keys` | `/anahtarlar`, sakin `/emanet` | Sahte servis |
+| [54](54-stok-sayimi.md) | Stok sayımı | `…/stock-counts` | `/demirbas?sekme=sayim` | Sahte servis — K21 |
+| [55](55-denetim-listeleri.md) | Denetim (kontrol) listeleri | `…/checklist-templates`, `…/inspections` | `/denetimler` | Sahte servis |
+| [56](56-sigorta-hasar.md) | Sigorta poliçeleri ve hasar dosyaları | `…/insurance-policies`, `…/insurance-claims` | `/sigorta` | Sahte servis |
+| [57](57-sayac-okuma.md) | Sayaçlar ve okuma | `…/meters`, `…/meter-readings`, `…/resident/meter-readings` | `/sayaclar`, sakin `/emanet` | Sahte servis — K23 |
+| [58](58-rutin-gorevler.md) | Görevli rutin görevleri | `…/task-templates`, `…/tasks`, `…/tasks/report` | `/gorevler` | Sahte servis — K29 |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

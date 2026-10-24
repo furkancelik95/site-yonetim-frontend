@@ -84,6 +84,11 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/talepler/ayarlar` | **Talep ayarları** — kategori × öncelik SLA, çalışma takvimi, hazır yanıtlar, hizmet tarifesi (HIZ-03/04) | `requests.assign` | istek 47, 48, 51 | R (sahte servis) |
 | `/s/{slug}/talepler/ana-olaylar` | **Ana olaylar** — bağlı talepler, çözülünce hepsi kapanır (HIZ-02) | `requests.assign` | istek 49 | R (sahte servis) |
 | `/s/{slug}/tadilat-tasinma` | **Tadilat ve taşınma** — kurallar, onay/ret, kontrol listesiyle tamamlama, depozito (HIZ-05) | `requests.assign` | istek 52 | R (sahte servis) |
+| `/s/{slug}/anahtarlar` | **Anahtar ve emanet** — anahtar/kart/kumanda teslim-iade, gecikenler; sakin emanet anahtarı yetkili kişiye (OPS-01) | `requests.assign` / `visitors` | istek 53 | R (sahte servis) |
+| `/s/{slug}/denetimler` | **Denetim listeleri** — şablon, denetim, skor, olumsuz maddeden talep (OPS-03) | `requests.assign` | istek 55 | R (sahte servis) |
+| `/s/{slug}/sigorta` | **Sigorta ve hasar** — poliçe, bitiş uyarısı, hasar dosyası, tazminat (OPS-04) | `expenses.read` | istek 56 | R (sahte servis) |
+| `/s/{slug}/sayaclar` | **Sayaçlar** — sayaç kaydı, dönem okuması, fotoğraf, anormal tüketim onayı (OPS-05) | `units.manage` | istek 57 | R (sahte servis) |
+| `/s/{slug}/gorevler` | **Rutin görevler** — günlük görev listesi, fotoğraflı tamamlama, şablonlar, 7 günlük rapor (OPS-06) | `requests.read` | istek 58 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
@@ -103,6 +108,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
 | `/sakin/{slug}/tadilat` | **Tadilat ve taşınma** — kurallar, başvuru, durum (HIZ-05) | R (sahte servis, istek 52) |
+| `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

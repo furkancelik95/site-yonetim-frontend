@@ -4,7 +4,7 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Badge, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatMoney, todayIso } from "../../lib/format";
-import { permitStatus, permitTone, permitType, quoteStatus } from "../../lib/labels";
+import { meterKind, permitStatus, permitTone, permitType, quoteStatus } from "../../lib/labels";
 
 /** Servis isteği 49, 50, 51'deki şekiller (sakin tarafı). */
 interface Quote { id: string; lines: { description: string; qty: number; unit_price: string; total: string }[]; total: string; status: string; actual_total: string | null; billed_total: string | null }
@@ -113,5 +113,50 @@ function PermitForm({ onDone }: { onDone: () => void }) {
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Gönder</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
+  );
+}
+
+interface ResDepKey { id: string; authorized: { name: string }[]; valid_until: string; status: string; handed_to: string | null; handed_at: string | null }
+interface ResMeter { meter: { id: string; kind: string; serial: string; unit_label: string }; readings: { id: string; period: string; value: string | null; consumption: string | null; status: string; photo: string | null; reason: string | null }[] }
+const DEP_TEXT: Record<string, string> = { requested: "teslim bekleniyor", held: "emanette", returned: "size iade edildi", expired: "süresi doldu" };
+
+/** Emanet ve sayaçlar (OPS-01/05, sakin): anahtar bırakma + yetkili kişiler; sayaç okumaları ve tüketim. */
+export function ResidentKeysMetersPage() {
+  useDocumentTitle("Emanet ve sayaçlar");
+  const keys = useSiteGet<ResDepKey[]>("/resident/deposited-keys");
+  const mtr = useSiteGet<ResMeter[]>("/resident/meter-readings");
+  const [names, setNames] = useState("");
+  const [until, setUntil] = useState(todayIso());
+  const add = useSiteMutation<Record<string, unknown>, unknown>("POST", "/resident/deposited-keys", { onSuccess: () => setNames("") });
+  return (
+    <>
+      <div className="section-title">Emanet anahtar</div>
+      <p className="small muted">Anahtarınızı yönetime bırakın; yalnız yazdığınız kişilere kimlik kontrolüyle verilir.</p>
+      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ authorized: names.split(",").map((n) => ({ name: n.trim() })).filter((a) => a.name), valid_until: until }); }}>
+        <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+          <FormError error={add.error} />
+          <Field label="Kimlere verilebilir" hint="Virgülle ayırın" error={fieldError(add.error, "authorized")}>{(p) => <input {...p} className="field__input" maxLength={200} value={names} onChange={(e) => setNames(e.target.value)} placeholder="ör. Ayşe Yılmaz, Mehmet Kaya" />}</Field>
+          <Field label="Geçerlilik" error={fieldError(add.error, "valid_until")}>{(p) => <input {...p} className="field__input" type="date" min={todayIso()} value={until} onChange={(e) => setUntil(e.target.value)} />}</Field>
+          <SubmitButton busy={add.isPending} disabled={!names.trim()}>Emanet kaydı oluştur</SubmitButton>
+        </div>
+      </form>
+      {(keys.data ?? []).map((k) => (
+        <div key={k.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
+          <div className="r-item__title">Emanet anahtar · {k.status === "handed" ? `${k.handed_to} kişisine verildi` : DEP_TEXT[k.status] ?? k.status}</div>
+          <div className="r-item__meta">Yetkili: {k.authorized.map((a) => a.name).join(", ")} · {formatDate(k.valid_until)} tarihine kadar</div>
+        </div></div>
+      ))}
+      <div className="section-title">Sayaçlarım</div>
+      {mtr.isPending ? <Loading /> : !mtr.data || mtr.data.length === 0 ? <Empty title="Bölümünüze bağlı sayaç yok" /> : mtr.data.map((m) => (
+        <div key={m.meter.id} className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
+          <div className="strong">{meterKind(m.meter.kind)} <span className="small muted mono">{m.meter.serial}</span></div>
+          {m.readings.length === 0 ? <p className="small muted mb-0">Henüz okuma yok.</p> : m.readings.map((r) => (
+            <div key={r.id} className="kv"><span className="kv__k">{r.period}{r.status === "unreadable" && ` · okunamadı${r.reason ? ` (${r.reason})` : ""}`}</span>
+              <span className="kv__v">{r.value ? `${Number(r.value).toLocaleString("tr-TR")} ${m.meter.unit_label}` : "—"}{r.consumption && <span className="xs muted"> · tüketim {Number(r.consumption).toLocaleString("tr-TR")}</span>}{r.photo && <img src={r.photo} alt={`${r.period} sayaç fotoğrafı`} style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle" }} />}</span></div>
+          ))}
+          <p className="xs muted mb-0">Okumaya itirazınız varsa Taleplerim ekranından talep açın.</p>
+        </div></div>
+      ))}
+    </>
   );
 }

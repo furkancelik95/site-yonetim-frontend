@@ -5,6 +5,7 @@ import type { Schemas } from "../../api/types";
 import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
+import { StockCount } from "./OpsPages";
 import { assetStatus, assetStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
@@ -27,11 +28,11 @@ export function InventoryPage() {
     <div className="stack">
       <PageHead title="Demirbaş ve stok" subtitle="Sitenin malları ve sarf malzemesi: nerede, kimde, ne kadar kaldı." />
       <div className="row" role="tablist" aria-label="Demirbaş ve stok" style={{ gap: "var(--s-2)" }}>
-        {[["demirbas", "Demirbaş"], ["stok", "Stok"]].map(([k, l]) => (
+        {[["demirbas", "Demirbaş"], ["stok", "Stok"], ["sayim", "Sayım"]].map(([k, l]) => (
           <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>
         ))}
       </div>
-      {s.sekme === "stok" ? <Stock /> : <Assets />}
+      {s.sekme === "stok" ? <Stock /> : s.sekme === "sayim" ? <StockCount /> : <Assets />}
     </div>
   );
 }

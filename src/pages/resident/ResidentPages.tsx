@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { Car, Hammer, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
+import { Car, Hammer, KeyRound, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -128,6 +128,7 @@ export function ResidentHomePage() {
             <Link className="btn" to={`${base}/araclar`}><Car aria-hidden="true" /> Araçlarım</Link>
             <Link className="btn" to={`${base}/ziyaretci`}><UserRoundCheck aria-hidden="true" /> Ziyaretçiler</Link>
             <Link className="btn" to={`${base}/tadilat`}><Hammer aria-hidden="true" /> Tadilat ve taşınma</Link>
+            <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
           </div>
         </div>
       </div>
@@ -462,5 +463,5 @@ export const ResidentNotificationsPage = () => <NotificationsPage staff={false} 
 export const ResidentProfilePage = () => <ProfilePage />;
 export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
-export { ResidentPermitsPage } from "./ResidentServicePages";
+export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";
