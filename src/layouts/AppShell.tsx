@@ -7,10 +7,12 @@ import {
   Boxes,
   Building2,
   CalendarDays,
+  CalendarRange,
   Car,
   ClipboardCheck,
   Contact,
   ClipboardList,
+  FileOutput,
   FileSignature,
   FileSpreadsheet,
   History,
@@ -20,10 +22,13 @@ import {
   Layers,
   LayoutDashboard,
   ListChecks,
+  Lock,
   Megaphone,
   Menu,
   Receipt,
+  ReceiptText,
   Rocket,
+  Settings2,
   ShieldCheck,
   SlidersHorizontal,
   Smartphone,
@@ -99,6 +104,15 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.reportsRead) && <Item to={`${base}/raporlar`} icon={<BarChart3 aria-hidden="true" />} label="Raporlar" />}
         {can(P.unitsManage) && <Item to={`${base}/iceri-aktar`} icon={<FileSpreadsheet aria-hidden="true" />} label="İçeri Aktar" />}
       </Group>
+      {can(P.financeRead) && (
+        <Group label="Finans yönetimi">
+          <Item to={`${base}/odeme-planlari`} icon={<CalendarRange aria-hidden="true" />} label="Ödeme Planları" />
+          <Item to={`${base}/ek-ucretler`} icon={<ReceiptText aria-hidden="true" />} label="Dönem Dışı Ücretler" />
+          <Item to={`${base}/donem-kapanisi`} icon={<Lock aria-hidden="true" />} label="Dönem Kapanışı" />
+          <Item to={`${base}/muhasebe-aktarimi`} icon={<FileOutput aria-hidden="true" />} label="Muhasebe Aktarımı" />
+          {can(P.chargePost) && <Item to={`${base}/ayarlar/finans`} icon={<Settings2 aria-hidden="true" />} label="Finans Ayarları" />}
+        </Group>
+      )}
       {ops && (
         <Group label="Operasyon">
           {(shows(M.packages, P.packages) || shows(M.visitors, P.visitors) || shows(M.visitors, P.securityIncidents)) && (

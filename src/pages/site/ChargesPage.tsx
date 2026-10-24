@@ -6,7 +6,7 @@ import type { Page, Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Kpi, Loading, Money, PageHead, Pager } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, formatMoneyShort } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { accountKind, runStatus, runTone, warningKind } from "../../lib/labels";
+import { accountKind, diffFlag, diffFlagTone, runStatus, runTone, warningKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { ChargeSchedule } from "./ChargeSchedule";
 
@@ -104,6 +104,8 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
         </div>
       </div>
 
+      {!p.already_charged && p.charge_count > 0 && <DiffCard chargeDate={s.charge_date || p.charge_date} dueDate={s.due_date || p.due_date} />}
+
       {p.item_totals.length > 0 && (
         <div className="card">
           <div className="card__head"><span className="card__title">Kalem toplamları</span><span className="card__meta ml-auto">dağıtılan tutar kalem tutarına eşit olmalı</span></div>
@@ -180,6 +182,51 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
         </div>
       )}
     </>
+  );
+}
+
+/** Servis isteği 34'teki şekil. */
+interface Diff {
+  period: string; base_period: string | null; threshold: number; compared: number; counts: Record<"increase" | "decrease" | "new" | "missing", number>;
+  rows: { account_id: string; unit_name: string; person_name: string | null; account_kind: string; previous: string | null; current: string | null; change_percent: number | null; flag: "increase" | "decrease" | "new" | "missing" }[];
+}
+
+/** Fark raporu (FIN-05): önceki kesinleşmiş döneme göre eşik üstü değişen, yeni ve bu dönem olmayan hesaplar. */
+function DiffCard({ chargeDate, dueDate }: { chargeDate: string; dueDate: string }) {
+  const { site } = useSite();
+  const q = useSiteGet<Diff>("/charge-runs/preview/diff", { charge_date: chargeDate, due_date: dueDate });
+  if (q.isPending) return <div className="card"><div className="card__body"><Loading label="Önceki dönemle karşılaştırılıyor…" /></div></div>;
+  if (q.isError || !q.data.base_period) return null;
+  const d = q.data;
+  const total = d.rows.length;
+  return (
+    <details className="card" open={total > 0 && total <= 15}>
+      <summary className="card__head" style={{ cursor: "pointer" }}>
+        <span className="card__title">Fark raporu</span>
+        <span className="card__meta ml-auto">{d.base_period} ile · eşik %{d.threshold} · {total ? `${total} hesap işaretli` : "eşik üstü değişim yok"}</span>
+      </summary>
+      {total > 0 && (
+        <div className="card__body card__body--flush">
+          <div className="card__body row" style={{ gap: "var(--s-2)" }}>
+            {(["increase", "decrease", "new", "missing"] as const).filter((k) => d.counts[k]).map((k) => <Badge key={k} tone={diffFlagTone(k)}>{diffFlag(k)}: {d.counts[k]}</Badge>)}
+          </div>
+          <div className="table-wrap"><table className="data">
+            <caption className="visually-hidden">Önceki döneme göre değişen hesaplar</caption>
+            <thead><tr><th scope="col">Bölüm / hesap</th><th scope="col" className="right">{d.base_period}</th><th scope="col" className="right">{d.period}</th><th scope="col" className="right">Değişim</th><th scope="col">İşaret</th></tr></thead>
+            <tbody>{d.rows.map((r) => (
+              <tr key={r.account_id}>
+                <td><Link className="cell-main" to={`/s/${site.slug}/cari/${r.account_id}`}>{r.unit_name}</Link><div className="cell-sub">{accountKind(r.account_kind)} · {r.person_name ?? "—"}</div></td>
+                <td className="right">{r.previous ? <Money value={r.previous} /> : <span className="subtle">—</span>}</td>
+                <td className="right">{r.current ? <Money value={r.current} /> : <span className="subtle">—</span>}</td>
+                <td className="right num">{r.change_percent != null ? `${r.change_percent > 0 ? "+" : ""}%${r.change_percent.toLocaleString("tr-TR")}` : "—"}</td>
+                <td><Badge tone={diffFlagTone(r.flag)}>{diffFlag(r.flag)}</Badge></td>
+              </tr>
+            ))}</tbody>
+          </table></div>
+        </div>
+      )}
+      <div className="card__foot small muted">Eşik Finans ayarlarından değişir. Sorumlusu belirsiz bölüm kontrolü finans sorumlusu kararına (K22) bağlı.</div>
+    </details>
   );
 }
 

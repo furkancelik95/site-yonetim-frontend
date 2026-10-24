@@ -838,7 +838,8 @@ tbody tr:nth-last-child(-n+2) .inline-form__body { top: auto; bottom: calc(100% 
   body { font-size: 15px; }
   .page { padding: var(--s-3); }
   .topbar { padding: 0 var(--s-3); }
-  .grid--kpi { grid-template-columns: repeat(2, 1fr); }
+  /* minmax(0, …): uzun ipucu metni olan form alanı sütunu genişletip sayfayı taşırmasın */
+  .grid--kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi__value { font-size: 1.375rem; }
   table.data th, table.data td { padding: var(--s-2) var(--s-3); }
 }

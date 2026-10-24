@@ -62,6 +62,15 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/ayarlar/ozel-alanlar` | **Özel alanlar** — bölüm/kişi alan tanımları, KVKK kategorisi, rol görünürlüğü, arşiv (YAP-10) | `modules.manage` | `custom-fields` (istek 24) | R (sahte servis) |
 | `/s/{slug}/iceri-aktar` | **İçeri aktarım** — sekmeler: bölümler (xlsx), araçlar ve açılış bakiyeleri (csv, mutabakat); aktarım geçmişi + geri alma (YAP-06) | `units.manage` | `imports/units`, istek 25 | R (sahte servis) |
 | `/s/{slug}/kurulum` | **Kurulum ve canlıya geçiş** — adımlar, finans modu (Mod P), kontrol listesi, canlıya al (YAP-01) | `modules.manage` | `setup` (istek 26) | R (sahte servis) |
+| `/s/{slug}/borclular` | **Borçlular** — yaşlandırma (blok × 0–30/31–60/61–90/90+), takip sütunu (plan, ihtarname), toplu hatırlatma (FIN-12) | `finance.read` | `debtors`, istek 29 | R (sahte servis) |
+| `/s/{slug}/cari/{id}` | **Cari hesap → Borç takibi** — hatırlatma/arama/not, ihtarname gönderim ve tebliğ, ödeme planı, zaman çizelgesi | `finance.read` / `finance.payment.record` | istek 29, 30 | R (sahte servis) |
+| `/s/{slug}/odeme-planlari` | **Ödeme planları** — durum sayıları, liste, taksitler, iptal (FIN-12) | `finance.read` | istek 30 | R (sahte servis) |
+| `/s/{slug}/ek-ucretler` | **Dönem dışı ücretler** — elle ücret, kaynak bazında yansıma, iptal (FIN-06) | `finance.charge.post` | istek 31 | R (sahte servis) |
+| `/s/{slug}/donem-kapanisi` | **Dönem kapanışı** — kontrol listesi, gerekçeli istisna, kapanışta, kilit (iki kişi), süreli açma (FIN-13) | `finance.read` / `finance.charge.post` | istek 27 | R (sahte servis) |
+| `/s/{slug}/muhasebe-aktarimi` | **Muhasebe aktarımı** — fiş önizleme, dosya üret ve kilitle, hesap kodu eşlemesi, geçmiş (FIN-14) | `finance.charge.post` | istek 32 | R (sahte servis) |
+| `/s/{slug}/ayarlar/finans` | **Finans ayarları** — hatırlatma kademeleri, kıst, eşikler; yürürlük dönemli sürüm; karar bekleyenler (FIN-16) | `finance.charge.post` | istek 33 | R (sahte servis) |
+| `/s/{slug}/kasa/{id}` | **Kasa ekstresi → Gün sonu sayımı** (yalnız kasa hesabı) (FIN-11) | `finance.cash.manage` | istek 28 | R (sahte servis) |
+| `/s/{slug}/tahakkuk` | **Tahakkuk → Fark raporu** — önceki döneme göre eşik üstü değişen hesaplar (FIN-05) | `finance.read` | istek 34 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
@@ -78,6 +87,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/talepler` | Talepler + yeni talep | R |
 | `/sakin/{slug}/giderler` | **Sitenin gider dökümü + fatura görüntüsü** — şeffaflık vaadinin karşılığı | **Y** |
 | `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
+| `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

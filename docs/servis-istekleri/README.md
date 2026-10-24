@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–26 sahte serviste** (24.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–34 sahte serviste** (19–26: 24.10.2026, 27–34 Finans paketi: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -42,6 +42,14 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [24](24-ozel-alanlar.md) | Özel alanlar (bölüm/kişi) | `…/custom-fields`, `…/units|people/{id}/custom-values` | `/ayarlar/ozel-alanlar`, bölüm kartı, kişi formu | Sahte servis |
 | [25](25-aktarim-gecmisi.md) | Aktarım geçmişi, araç ve açılış bakiyesi aktarımı (mutabakat), geri alma | `GET …/imports`, `POST …/imports/vehicles|opening-balances`, `…/imports/{id}/confirm|rollback` | `/iceri-aktar` | Sahte servis — yalnız .csv okur |
 | [26](26-kurulum-canliya-gecis.md) | Kurulum durumu ve canlıya geçiş kontrol listesi | `GET …/setup`, `POST …/setup/go-live` | `/kurulum` | Sahte servis — Mod K A-01 |
+| [27](27-donem-kapanisi.md) | Dönem kapanışı: kontrol listesi, kapanışta, kilit (iki kişi), süreli açma | `…/fiscal-periods`, `…/close-checklist`, `start-close`, `lock`, `reopen`, `unlock-requests` | `/donem-kapanisi` | Sahte servis — kilidin yazmaları engellemesi backend'de |
+| [28](28-kasa-gun-sonu.md) | Kasa gün sonu sayımı | `GET …/cash-accounts/{id}/days`, `POST …/days/close` | `/kasa/{id}` | Sahte servis |
+| [29](29-borc-takibi.md) | Borç takibi: yaşlandırma, hatırlatma/arama kaydı, ihtarname gönderim ve tebliğ | `…/receivables/aging`, `…/collection-status`, `…/collection-timeline`, `…/collection-actions`, `…/demand-letters` | `/borclular`, `/cari/{id}` | Sahte servis — gönderim K5 |
+| [30](30-odeme-plani.md) | Ödeme planı (sakin dahil) | `…/payment-plans`, `…/accounts/{id}/payment-plans`, `…/resident/payment-plans` | `/odeme-planlari`, `/cari/{id}`, sakin Borcum | Sahte servis — deftere taksit yazımı backend'de |
+| [31](31-donem-disi-ucretler.md) | Dönem dışı ücretler | `…/settings/ad-hoc-charges`, `…/ad-hoc-charges` | `/ek-ucretler` | Sahte servis — cariye yazmıyor |
+| [32](32-muhasebe-aktarimi.md) | Muhasebe aktarımı: hesap kodu eşlemesi, fiş dosyası, kilit | `…/accounting/mappings`, `…/accounting/exports(/preview)` | `/muhasebe-aktarimi` | Sahte servis — biçim K7 |
+| [33](33-finans-parametreleri.md) | Finans parametreleri (versiyonlu) | `…/finance-parameters`, `…/finance-parameters/versions` | `/ayarlar/finans` | Sahte servis — K1/K23/K24/K25 salt bilgi |
+| [34](34-tahakkuk-fark-raporu.md) | Tahakkuk fark raporu | `GET …/charge-runs/preview/diff` | `/tahakkuk` | Sahte servis |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

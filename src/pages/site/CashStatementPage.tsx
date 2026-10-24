@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashStatement, Schemas } from "../../api/types";
+import { CashDayCard } from "../../components/CashDayCard";
 import { ExcelButton } from "../../components/ExcelButton";
 import { Badge, ConfirmButton, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
@@ -40,6 +41,7 @@ export function CashStatementPage() {
       />
 
       {adding && <MovementForm accountId={a.id} onDone={() => setAdding(false)} />}
+      {a.kind === "cash" && <CashDayCard accountId={a.id} canManage={can(P.cashManage)} />}
 
       <div className="filters">
         <div className="field"><label className="field__label" htmlFor="cs-from">Başlangıç</label><input id="cs-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} /></div>
