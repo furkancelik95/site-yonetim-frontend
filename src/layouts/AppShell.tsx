@@ -7,6 +7,7 @@ import {
   Boxes,
   Building2,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   FileSignature,
   FileSpreadsheet,
@@ -15,6 +16,7 @@ import {
   Inbox,
   Landmark,
   LayoutDashboard,
+  ListChecks,
   Megaphone,
   Menu,
   Receipt,
@@ -74,7 +76,6 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
   const meetings = shows(M.generalAssembly, P.meetingsRead);
   const surveys = shows(M.surveys, P.announcementsRead);
   const staff = shows(M.staff, P.peopleRead);
-  const mgmt = meetings || surveys || staff || can(P.expensesRead) || can(P.inventoryRead);
   return (
     <>
       <Group label={site.name}>
@@ -105,15 +106,16 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
         </Group>
       )}
-      {mgmt && (
-        <Group label="Yönetim">
+      {/* Onaylar her personele açık (onaycı olmak rol atamasından gelir); bu grup hep görünür */}
+      <Group label="Yönetim">
+          <Item to={`${base}/onaylar`} icon={<ClipboardCheck aria-hidden="true" />} label="Onaylar" />
+          {can(P.approvalRulesRead) && <Item to={`${base}/onay-kurallari`} icon={<ListChecks aria-hidden="true" />} label="Onay Kuralları" />}
           {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
-        </Group>
-      )}
+      </Group>
     </>
   );
 }

@@ -67,6 +67,9 @@ const siteScreens: [string, string][] = [
   ["demirbas", "InventoryPage"],
   ["personel", "StaffPage"],
   ["bildirimler", "SiteNotificationsPage"],
+  ["onaylar", "ApprovalsPage"],
+  ["onaylar/:requestId", "ApprovalDetailPage"],
+  ["onay-kurallari", "ApprovalRulesPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");

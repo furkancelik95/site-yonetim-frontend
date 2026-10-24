@@ -33,3 +33,5 @@ export { BulkPaymentPage } from "./BulkPaymentPage";
 export { RecurringExpensesPage } from "./RecurringExpensesPage";
 export { AttendanceListPage, DunningLetterPage } from "./LetterPages";
 export { SiteNotificationsPage } from "./SiteNotificationsPage";
+export { ApprovalDetailPage, ApprovalsPage } from "./ApprovalsPage";
+export { ApprovalRulesPage } from "./ApprovalRulesPage";
