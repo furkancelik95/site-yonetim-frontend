@@ -1,8 +1,8 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet } from "lucide-react";
-import { api } from "../../api/client";
+import { api, newIdempotencyKey } from "../../api/client";
 import { useSiteGet } from "../../api/hooks";
 import type { CashAccounts, Schemas, Written } from "../../api/types";
 import { AccountPicker, type PickedAccount } from "../../components/AccountPicker";
@@ -68,9 +68,19 @@ export function BankImportPage() {
   });
   const p = upload.data;
 
+  // Aynı önizleme ve aynı seçim yeniden gönderilirse aynı anahtar gider (çift tahsilat olmaz);
+  // seçim değişirse yeni anahtar — backend aynı anahtarla farklı gövdeyi reddeder.
+  const confirmKeys = useRef(new Map<string, string>());
+  const keyFor = (body: string) => {
+    if (!confirmKeys.current.has(body)) confirmKeys.current.set(body, newIdempotencyKey());
+    return confirmKeys.current.get(body)!;
+  };
   const confirm = useMutation({
     mutationFn: (rows: { row_number: number; ledger_account_id: string }[]) =>
-      api<Written<ConfirmResult>>("POST", `/sites/${site.slug}/bank-imports/${p!.import_id}/confirm`, { body: { rows } }),
+      api<Written<ConfirmResult>>("POST", `/sites/${site.slug}/bank-imports/${p!.import_id}/confirm`, {
+        body: { rows },
+        idempotencyKey: keyFor(`${p!.import_id}:${JSON.stringify(rows)}`),
+      }),
     onSuccess: (res) => {
       toast(res.message);
       setResult(res.data);

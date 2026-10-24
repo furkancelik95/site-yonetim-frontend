@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # CI'daki action SHA'larını günceller (ci.yml etiket değil SHA kullanır)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
