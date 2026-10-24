@@ -52,3 +52,4 @@ export { TimesheetPage } from "./TimesheetPage";
 export { SecuritySettingsPage } from "./SecuritySettingsPage";
 export { PatrolAdminPage } from "./PatrolAdminPage";
 export { OutagesPage, PermitsPage, RequestSettingsPage } from "./ServicePages";
+export { InspectionsPage, InsurancePage, KeysPage, MetersPage, TasksPage } from "./OpsPages";

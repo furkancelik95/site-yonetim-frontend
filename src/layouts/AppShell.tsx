@@ -16,16 +16,19 @@ import {
   DoorOpen,
   ClipboardList,
   FileOutput,
+  Gauge,
   Hammer,
   FileSignature,
   FileSpreadsheet,
   History,
   IdCard,
   Inbox,
+  KeyRound,
   Landmark,
   Layers,
   LayoutDashboard,
   ListChecks,
+  ListTodo,
   Lock,
   Megaphone,
   Menu,
@@ -38,6 +41,7 @@ import {
   SlidersHorizontal,
   Smartphone,
   TextCursorInput,
+  Umbrella,
   Timer,
   UserPlus,
   Users,
@@ -126,6 +130,10 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           )}
           {shows(M.requests, P.requestsRead) && <Item to={`${base}/talepler`} icon={<Wrench aria-hidden="true" />} label="Talepler" />}
           {shows(M.requests, P.requestsAssign) && <Item to={`${base}/tadilat-tasinma`} icon={<Hammer aria-hidden="true" />} label="Tadilat ve Taşınma" />}
+          {(can(P.requestsAssign) || shows(M.visitors, P.visitors)) && <Item to={`${base}/anahtarlar`} icon={<KeyRound aria-hidden="true" />} label="Anahtar ve Emanet" />}
+          {can(P.requestsRead) && <Item to={`${base}/gorevler`} icon={<ListTodo aria-hidden="true" />} label="Rutin Görevler" />}
+          {can(P.requestsAssign) && <Item to={`${base}/denetimler`} icon={<ClipboardCheck aria-hidden="true" />} label="Denetim Listeleri" />}
+          {can(P.unitsManage) && <Item to={`${base}/sayaclar`} icon={<Gauge aria-hidden="true" />} label="Sayaçlar" />}
           {shows(M.announcements, P.announcementsRead) && (
             <Item to={`${base}/duyurular`} icon={<Megaphone aria-hidden="true" />} label="Duyurular" />
           )}
@@ -145,6 +153,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {can(P.expensesRead) && <Item to={`${base}/sigorta`} icon={<Umbrella aria-hidden="true" />} label="Sigorta ve Hasar" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
           {staff && <Item to={`${base}/vardiya`} icon={<CalendarClock aria-hidden="true" />} label="Vardiya Planı" />}
           {staff && <Item to={`${base}/izinler`} icon={<CalendarOff aria-hidden="true" />} label="İzinler" />}

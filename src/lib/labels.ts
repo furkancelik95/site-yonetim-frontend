@@ -255,3 +255,18 @@ export const WEEKDAYS_LONG = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "
 /** Hazır yanıt değişkenleri: {{sakin.ad}}, {{talep.no}}, {{talep.konu}} */
 export const fillTemplate = (body: string, r: { number?: number; reporter_name?: string | null; title?: string }) =>
   body.replace(/\{\{\s*sakin\.ad\s*\}\}/g, r.reporter_name ?? "Sayın sakin").replace(/\{\{\s*talep\.no\s*\}\}/g, `#${r.number ?? ""}`).replace(/\{\{\s*talep\.konu\s*\}\}/g, r.title ?? "");
+
+// Operasyon paketi (servis istekleri 53–58)
+export const keyKind = label({ key: "Anahtar", card: "Kart", remote: "Kumanda" });
+export const depositStatus = label({ requested: "Teslim bekleniyor", held: "Emanette", handed: "Verildi", returned: "Sahibine iade", expired: "Süresi doldu" });
+export const depositTone = (v: string): Tone => (v === "held" ? "info" : v === "handed" ? "ok" : v === "expired" ? "danger" : "muted");
+export const itemType = label({ yesno: "Evet / Hayır", number: "Sayı", score: "Puan (1–5)" });
+export const policyKind = label({ building: "Bina (deprem/yangın)", liability: "Üçüncü şahıs sorumluluk", elevator: "Asansör", personnel: "Personel kaza", glass: "Cam kırılması", other: "Diğer" });
+export const claimStatus = label({ open: "Açık", submitted: "Sigortacıya iletildi", paid: "Tazminat ödendi", rejected: "Reddedildi" });
+export const claimTone = (v: string): Tone => (v === "paid" ? "ok" : v === "rejected" ? "danger" : v === "submitted" ? "info" : "warn");
+export const meterKind = label({ cold_water: "Soğuk su", hot_water: "Sıcak su", heat: "Isı pay ölçer", electric: "Elektrik", gas: "Doğalgaz", common: "Ortak alan sayacı" });
+export const readingStatus = label({ ok: "Okundu", anomaly: "Anormal — onay bekliyor", approved: "Onaylandı", unreadable: "Okunamadı", reread: "Yeniden okunacak" });
+export const readingTone = (v: string): Tone => (v === "ok" || v === "approved" ? "ok" : v === "anomaly" ? "warn" : "danger");
+export const taskFrequency = label({ daily: "Her gün", weekdays: "Haftanın günleri", monthly: "Aylık" });
+export const taskStatus = label({ upcoming: "Sırada", due: "Şimdi", late: "Gecikti", done: "Tamamlandı", failed: "Tamamlanamadı" });
+export const taskTone = (v: string): Tone => (v === "done" ? "ok" : v === "late" || v === "failed" ? "danger" : v === "due" ? "warn" : "muted");
