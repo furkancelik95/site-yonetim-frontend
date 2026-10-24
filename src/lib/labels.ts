@@ -185,3 +185,18 @@ export const decisionLabel = label({ approve: "Onayladı", reject: "Reddetti", r
 export const decisionTone = (v: string): Tone => (v === "approve" ? "ok" : v === "reject" ? "danger" : "warn");
 export const delegationState = label({ scheduled: "Başlamadı", active: "Etkin", ended: "Bitti" });
 export const delegationStateTone = (v: string): Tone => (v === "active" ? "ok" : v === "scheduled" ? "info" : "muted");
+
+// Yapı, kişiler ve kayıt paketi (servis istekleri 19–26)
+export const commonAreaKind = label({ pool: "Havuz", hall: "Salon / toplantı odası", gym: "Spor salonu", garden: "Bahçe", playground: "Çocuk parkı", parking: "Otopark", technical: "Teknik oda", roof: "Çatı / teras", other: "Diğer" });
+export const vehicleKind = label({ permanent: "Kalıcı", guest: "Misafir" });
+export const vehicleStatus = label({ active: "Etkin", pending: "Onay bekliyor", inactive: "Pasif" });
+export const vehicleStatusTone = (v: string): Tone => (v === "active" ? "ok" : v === "pending" ? "warn" : "muted");
+export const invitationStatus = label({ sent: "Gönderildi", opened: "Açıldı", completed: "Tamamlandı", expired: "Süresi doldu", cancelled: "İptal" });
+export const invitationStatusTone = (v: string): Tone => (v === "completed" ? "ok" : v === "sent" || v === "opened" ? "info" : "muted");
+export const householdStatus = label({ invited: "Davet bekliyor", active: "Etkin", ended: "Bitti" });
+export const householdPermission = label({ visitors: "Ziyaretçi davet etme", packages: "Kargo bildirimi ve teslim", reservations: "Rezervasyon", requests: "Talep açma" });
+export const customFieldType = label({ text: "Metin", number: "Sayı", date: "Tarih", bool: "Evet / Hayır", select: "Seçim listesi" });
+export const kvkkCategory = label({ identity: "Kimlik", contact: "İletişim", finance: "Finans", location_plate: "Konum / plaka", other: "Diğer" });
+export const importType = label({ units: "Bölümler ve kişiler", vehicles: "Araçlar", opening_balances: "Açılış bakiyeleri" });
+export const importStatus = label({ previewed: "Önizlendi", imported: "Aktarıldı", rolled_back: "Geri alındı" });
+export const unitAttr = label({ gross_area: "Brüt m²", net_area: "Net m²", land_share_numerator: "Arsa payı (pay)", land_share_denominator: "Arsa payı (payda)", unit_type_id: "Bölüm tipi" });

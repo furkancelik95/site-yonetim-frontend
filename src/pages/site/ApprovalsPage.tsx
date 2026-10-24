@@ -251,13 +251,11 @@ export function ApprovalDetailPage() {
 /** Kural değişikliği talebi: düzeltilmiş kural formla gönderilir (backend `rule` zorunlu ister). */
 function ResubmitRule({ r, onDone }: { r: Request; onDone: () => void }) {
   const types = useSiteGet<Schemas["ActionTypeOut"][]>("/approval-action-types");
-  const rules = useSiteGet<Schemas["RuleOut"][]>("/approval-rules");
-  const target = typeof r.summary?.action_type === "string" ? r.summary.action_type : undefined;
-  if (types.isPending || rules.isPending) return <Loading />;
-  if (types.isError || rules.isError) return <ErrorState error={types.error ?? rules.error} />;
-  // Form, değişikliğin hedefi olan işlem tipinin yürürlükteki kuralıyla dolu gelir; yeni kural önerisiyse boş
-  const current = rules.data.find((x) => x.action_type === target) ?? null;
-  return <RuleForm rule={current} types={types.data} actionType={target} resubmitId={r.id} onDone={onDone} />;
+  if (types.isPending) return <Loading />;
+  if (types.isError) return <ErrorState error={types.error} />;
+  // Form, talebin önerdiği kuralın son sürümüyle dolu gelir (backend #65: rule_change.rule); yoksa boş
+  const proposed = r.rule_change?.rule ?? undefined;
+  return <RuleForm rule={null} initial={proposed} types={types.data} actionType={proposed?.action_type} resubmitId={r.id} onDone={onDone} />;
 }
 
 function Actions({ r, onFixRule }: { r: Request; onFixRule: () => void }) {
