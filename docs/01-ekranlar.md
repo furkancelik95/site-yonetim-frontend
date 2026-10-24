@@ -91,6 +91,10 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/gorevler` | **Rutin görevler** — günlük görev listesi, fotoğraflı tamamlama, şablonlar, 7 günlük rapor (OPS-06) | `requests.read` | istek 58 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | **Rezervasyon** — günlük liste, kodla giriş doğrulama, onay, sakin adına rezervasyon, bekleme listesi, kullanım raporu (REZ-02/03) | `requests.assign` / `security.visitors` | istek 60, 61 | R (sahte servis) |
 | `/s/{slug}/rezervasyon/alanlar` | **Rezervasyon alanları ve kuralları** — saat, kapasite, ücret, kanal, onay, doğrulama, bekleme listesi, no-show (REZ-01) | `modules.manage` | istek 59 | R (sahte servis) |
+| `/s/{slug}/satin-alma` | **Satın alma** — talepler, siparişler, tedarikçi faturaları, ödenecekler, ayarlar (SAT-01..05) | `expenses.read` | istek 63–67 | R (sahte servis) |
+| `/s/{slug}/satin-alma/{id}` | **Satın alma talebi** — bütçe, teklif karşılaştırma, tedarikçi linki, istisna, onay, sipariş (SAT-01..03) | `expenses.read` | istek 64 | R (sahte servis) |
+| `/s/{slug}/satin-alma/siparis/{id}` | **Sipariş** — sipariş formu, mal/hizmet kabul, fatura üçlü eşleşme (SAT-03..05) | `expenses.read` | istek 65, 66 | R (sahte servis) |
+| `/s/{slug}/tedarikciler` | **Tedarikçiler** — tedarikçi kartı, maskeli IBAN, puan (SAT-06) | `expenses.read` | istek 62 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
@@ -110,6 +114,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
 | `/sakin/{slug}/tadilat` | **Tadilat ve taşınma** — kurallar, başvuru, durum (HIZ-05) | R (sahte servis, istek 52) |
 | `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
+| `/teklif/{token}` | **Tedarikçi teklif formu** — oturumsuz, tek kullanımlık link (SAT-02) | R (sahte servis, istek 64) |
 | `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 

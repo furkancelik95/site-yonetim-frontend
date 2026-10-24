@@ -38,10 +38,12 @@ import {
   Rocket,
   Route,
   Settings2,
+  ShoppingCart,
   ShieldCheck,
   SlidersHorizontal,
   Smartphone,
   TextCursorInput,
+  Truck,
   Umbrella,
   Timer,
   UserPlus,
@@ -111,6 +113,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.financeRead) && <Item to={`${base}/tahakkuk`} icon={<ClipboardList aria-hidden="true" />} label="Tahakkuk" />}
         {can(P.financeRead) && <Item to={`${base}/isletme-projesi`} icon={<Receipt aria-hidden="true" />} label="İşletme Projesi" />}
         {can(P.expensesRead) && <Item to={`${base}/giderler`} icon={<Inbox aria-hidden="true" />} label="Giderler" />}
+        {can(P.expensesRead) && <Item to={`${base}/satin-alma`} icon={<ShoppingCart aria-hidden="true" />} label="Satın Alma" />}
+        {can(P.expensesRead) && <Item to={`${base}/tedarikciler`} icon={<Truck aria-hidden="true" />} label="Tedarikçiler" />}
         {can(P.cashRead) && <Item to={`${base}/kasa`} icon={<Landmark aria-hidden="true" />} label="Kasa ve Banka" />}
         {can(P.reportsRead) && <Item to={`${base}/raporlar`} icon={<BarChart3 aria-hidden="true" />} label="Raporlar" />}
         {can(P.unitsManage) && <Item to={`${base}/iceri-aktar`} icon={<FileSpreadsheet aria-hidden="true" />} label="İçeri Aktar" />}
