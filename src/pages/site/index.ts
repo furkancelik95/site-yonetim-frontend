@@ -49,3 +49,5 @@ export { FinanceSettingsPage } from "./FinanceSettingsPage";
 export { ShiftPlanPage } from "./ShiftPlanPage";
 export { LeavePage } from "./LeavePage";
 export { TimesheetPage } from "./TimesheetPage";
+export { SecuritySettingsPage } from "./SecuritySettingsPage";
+export { PatrolAdminPage } from "./PatrolAdminPage";

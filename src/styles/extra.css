@@ -208,3 +208,10 @@ span.num, td.num, .nowrap { white-space: nowrap; }
   .poster--a4, .poster--a5 { break-after: page; max-width: none; min-height: 90vh; align-content: center; }
   .poster-labels { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* Devriye noktaları listesi (görevli) */
+.patrol-points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.patrol-points li { display: flex; gap: var(--s-2); align-items: center; font-size: .9375rem; }
+.patrol-points li.is-done { color: var(--fg-muted); }
+.patrol-points li .lucide { width: 18px; height: 18px; color: var(--ok-solid); }
+.patrol-points__dot { width: 18px; height: 18px; border-radius: 999px; border: 2px solid var(--line-strong); flex: none; }

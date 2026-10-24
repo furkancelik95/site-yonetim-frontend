@@ -75,6 +75,11 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/vardiya` | **Vardiya planı** — şablonlar; personel × gün ızgarası, çakışma (çakışan vardiya, izin, 11 saat dinlenme), kopyala, yayınla (IK-02) | `staff.manage` | istek 36 | R (sahte servis) |
 | `/s/{slug}/izinler` | **İzinler** — kaydet, onayla/reddet/iptal, yıllık kullanım (IK-03) | `staff.manage` | istek 37 | R (sahte servis) |
 | `/s/{slug}/puantaj` | **Puantaj** — günlük (plandan; istisna düzelt; kesinleştir) ve aylık aktarım (sicil no ile dosya, kilit) (IK-04/05) | `staff.manage` | istek 38, 39 | R (sahte servis) |
+| `/s/{slug}/guvenlik?sekme=masa` | **Kapı ekranı** — davet koduyla giriş, habersiz ziyaretçi (bilgi / sakin onayı, zaman aşımında gerekçeli karar), plaka sorgu + giriş/çıkış + ihlal, uzun bekleyen kargolar (GUV-01/03/04/05) | `security.visitors` | istek 41–44 | R (sahte servis) |
+| `/s/{slug}/guvenlik?sekme=nobet` | **Nöbet defteri** — not/olay/devir, ek not, devralma onayı (GUV-06) | `security.incidents` | istek 45 | R (sahte servis) |
+| `/s/{slug}/guvenlik?sekme=devriye` | **Devriye (görevli)** — tur başlat, nokta kodu okut, bitir (GUV-09) | `security.incidents` | istek 46 | R (sahte servis) |
+| `/s/{slug}/ayarlar/guvenlik` | **Güvenlik ayarları** — kapılar, habersiz ziyaretçi yöntemi ve kapı istisnası, kargo teslimi, saklama, misafir parkı (GUV-08) | `modules.manage` | istek 40 | R (sahte servis) |
+| `/s/{slug}/devriye` | **Devriye (yönetim)** — takvim ve sapma raporu, kontrol noktaları + QR etiket, tur planları (GUV-09) | `modules.manage` | istek 46 | R (sahte servis) |
 | `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
@@ -92,6 +97,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/giderler` | **Sitenin gider dökümü + fatura görüntüsü** — şeffaflık vaadinin karşılığı | **Y** |
 | `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
 | `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
+| `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

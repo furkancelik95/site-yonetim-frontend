@@ -13,6 +13,7 @@ import {
   Car,
   ClipboardCheck,
   Contact,
+  DoorOpen,
   ClipboardList,
   FileOutput,
   FileSignature,
@@ -30,6 +31,7 @@ import {
   Receipt,
   ReceiptText,
   Rocket,
+  Route,
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
@@ -128,6 +130,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
+          {can(P.modulesManage) && shows(M.visitors, P.visitors) && <Item to={`${base}/ayarlar/guvenlik`} icon={<DoorOpen aria-hidden="true" />} label="Güvenlik Ayarları" />}
+          {shows(M.visitors, P.securityIncidents) && can(P.modulesManage) && <Item to={`${base}/devriye`} icon={<Route aria-hidden="true" />} label="Devriye" />}
           {can(P.auditRead) && <Item to={`${base}/denetim`} icon={<History aria-hidden="true" />} label="Denetim Kaydı" />}
         </Group>
       )}

@@ -8,6 +8,7 @@ import { formatDateTime, todayIso, trUpper } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { incidentKind, packageStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
 import { M, P, useSite } from "../../site/SiteContext";
+import { GateDesk, PatrolRunner, ShiftLogCard } from "./SecurityDesk";
 
 type Pkg = Schemas["PackageOut"];
 type Visitor = Schemas["VisitorOut"];
@@ -25,14 +26,15 @@ export function SecurityPage() {
   const inc = shows(M.visitors, P.securityIncidents);
   const [s, set] = useUrlState({ sekme: "" });
   const tabs = [
+    ...(vs ? [{ key: "masa", label: "Kapı ekranı" }] : []),
     ...(pk || vs ? [{ key: "kapi", label: "Kargo ve ziyaretçi" }] : []),
-    ...(inc ? [{ key: "olay", label: "Olaylar" }, { key: "kayip", label: "Kayıp eşya" }] : []),
+    ...(inc ? [{ key: "olay", label: "Olaylar" }, { key: "kayip", label: "Kayıp eşya" }, { key: "nobet", label: "Nöbet defteri" }, { key: "devriye", label: "Devriye" }] : []),
   ];
   // Adresteki sekme bu kullanıcıya kapalıysa ilk açık sekme gösterilir
   const tab = tabs.find((t) => t.key === s.sekme)?.key ?? tabs[0]?.key;
   return (
     <div className="stack">
-      <PageHead title="Güvenlik" subtitle="Kargo, ziyaretçi, olay ve kayıp eşya kaydı" />
+      <PageHead title="Güvenlik" subtitle="Kapı, kargo, ziyaretçi, olay, nöbet defteri ve devriye" />
       <div className="row" role="tablist" aria-label="Güvenlik bölümleri" style={{ gap: "var(--s-2)" }}>
         {tabs.map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={`btn btn--sm${tab === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key })}>
@@ -40,7 +42,13 @@ export function SecurityPage() {
           </button>
         ))}
       </div>
-      {tab === "olay" ? (
+      {tab === "masa" ? (
+        <GateDesk />
+      ) : tab === "nobet" ? (
+        <ShiftLogCard />
+      ) : tab === "devriye" ? (
+        <PatrolRunner />
+      ) : tab === "olay" ? (
         <IncidentsCard />
       ) : tab === "kayip" ? (
         <LostItemsCard />
@@ -249,6 +257,7 @@ function DeliverButton({ p }: { p: Pkg }) {
   const [code, setCode] = useState("");
   const [to, setTo] = useState("");
   const m = useSiteMutation<{ pickup_code: string; delivered_to: string }, Pkg>("POST", `/packages/${p.id}/deliver`);
+  const dg = useSiteGet<{ id: string; name: string }[]>(`/units/${p.unit_id}/parcel-delegates`);
   return (
     <ConfirmButton
       className="btn btn--sm"
@@ -263,6 +272,7 @@ function DeliverButton({ p }: { p: Pkg }) {
           <div className="field">
             <label className="field__label" htmlFor={`to-${p.id}`}>Teslim alan</label>
             <input id={`to-${p.id}`} className="field__input" value={to} onChange={(e) => setTo(e.target.value)} />
+            {dg.data && dg.data.length > 0 && <span className="field__hint">Teslim yetkilisi: {dg.data.map((d) => d.name).join(", ")} (sakinin kodunu söyler)</span>}
           </div>
         </div>
       }
