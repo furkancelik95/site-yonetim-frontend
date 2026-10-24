@@ -117,7 +117,7 @@ function RegistrationRow({ r, onApproved }: { r: Registration; onApproved: (d: A
             {r.relation === "owner" && (sharesFull || share) && (
               <div className="field" style={{ maxWidth: "12rem" }}>
                 <label className="field__label" htmlFor={`share-${r.id}`}>Hisse oranı (%)</label>
-                <input id={`share-${r.id}`} className="field__input" inputMode="decimal" placeholder="100" value={share} onChange={(e) => setShare(e.target.value.replace(/[^d.,]/g, "").slice(0, 6))} aria-describedby={`share-${r.id}-hint`} />
+                <input id={`share-${r.id}`} className="field__input" inputMode="decimal" placeholder="100" value={share} onChange={(e) => setShare(e.target.value.replace(/[^\d.,]/g, "").slice(0, 6))} aria-describedby={`share-${r.id}-hint`} />
                 <span className="field__hint" id={`share-${r.id}-hint`}>Bölümde başka malik varsa hisseler toplamı %100'ü aşamaz.</span>
               </div>
             )}

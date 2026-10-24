@@ -120,11 +120,16 @@ function RuleCard({ r, manage, connected, onEdit }: { r: Rule; manage: boolean; 
 
 type StepDraft = { roles: SiteRole[]; quorum: Quorum; count: string };
 
-function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTypeOut[]; onDone: () => void }) {
+/**
+ * Kural formu. `resubmitId` verilirse kural değişikliği talebi düzeltilip yeniden gönderilir
+ * (POST /approvals/{id}/resubmit; backend düzeltilmiş kuralı zorunlu ister). Form, değişikliğin
+ * hedefi olan işlem tipinin mevcut kuralıyla dolu gelir.
+ */
+export function RuleForm({ rule, types, onDone, resubmitId, actionType }: { rule: Rule | null; types: ActionTypeOut[]; onDone: () => void; resubmitId?: string; actionType?: string }) {
   const toast = useToast();
   const v = rule?.current;
   const [f, setF] = useState({
-    action_type: rule?.action_type ?? types[0]?.key ?? "",
+    action_type: rule?.action_type ?? actionType ?? types[0]?.key ?? "",
     mode: v?.mode ?? "sequential",
     reject_behavior: v?.reject_behavior ?? "single_rejects",
     amount_min: v?.amount_min ? formatMoney(v.amount_min, false) : "",
@@ -145,6 +150,8 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
       if (d?.warnings.length) setWarnings(d.warnings); else onDone();
     },
   });
+  const resub = useSiteMutation<{ rule: RuleIn; title: null; amount: null }, unknown>("POST", `/approvals/${resubmitId}/resubmit`, { onSuccess: onDone });
+  const act = resubmitId ? resub : m;
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   const upd = (i: number, p: Partial<StepDraft>) => setSteps((x) => x.map((s, j) => (j === i ? { ...s, ...p } : s)));
 
@@ -154,7 +161,7 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
     const max = f.amount_max.trim() ? parseMoneyInput(f.amount_max) : null;
     if ((f.amount_min.trim() && !min) || (f.amount_max.trim() && !max)) { setMoneyErr("Tutarı 12.500,00 biçiminde girin."); return; }
     setMoneyErr(undefined);
-    m.mutate({
+    const body: RuleIn = {
       action_type: f.action_type as RuleIn["action_type"],
       steps: steps.map((s) => ({ roles: s.roles, quorum: s.quorum, count: s.quorum === "count" ? Number(s.count || 0) : null })),
       mode: f.mode as RuleIn["mode"],
@@ -166,23 +173,24 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
       escalation_role: (f.escalation_role || null) as RuleIn["escalation_role"],
       effective_from: f.effective_from,
       basis_note: f.basis_note.trim() || null,
-    });
+    };
+    if (resubmitId) resub.mutate({ rule: body, title: null, amount: null }); else m.mutate(body);
   }
   const digits = (val: string) => val.replace(/\D/g, "").slice(0, 2);
 
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">{rule ? `${rule.action_label} — yeni sürüm` : "Kural ekle"}</span></div>
+      <div className="card__head"><span className="card__title">{resubmitId ? "Kuralı düzeltip yeniden gönder" : rule ? `${rule.action_label} — yeni sürüm` : "Kural ekle"}</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
-        <FormError error={m.error} />
+        <FormError error={act.error} />
         {warnings.length > 0 && <Alert tone="warn" title="Kaydedildi, uyarılar var">{warnings.map((w) => <div key={w}>{w}</div>)}<button className="btn btn--sm mt-2" type="button" onClick={onDone}>Tamam</button></Alert>}
         <div className="grid grid--kpi">
-          <Field label="İşlem" required error={fieldError(m.error, "action_type")}>
-            {(p) => <select {...p} className="field__input" disabled={!!rule} value={f.action_type} onChange={set("action_type")}>{types.map((t) => <option key={t.key} value={t.key}>{t.label}{t.connected ? "" : " (henüz bağlı değil)"}</option>)}</select>}
+          <Field label="İşlem" required error={fieldError(act.error, "action_type")}>
+            {(p) => <select {...p} className="field__input" disabled={!!rule || !!resubmitId} value={f.action_type} onChange={set("action_type")}>{types.map((t) => <option key={t.key} value={t.key}>{t.label}{t.connected ? "" : " (henüz bağlı değil)"}</option>)}</select>}
           </Field>
-          <Field label="Tutar alt sınırı (₺, hariç)" hint="Boş: alt sınır yok" error={moneyErr ?? fieldError(m.error, "amount_min")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.amount_min} onChange={set("amount_min")} />}</Field>
-          <Field label="Tutar üst sınırı (₺, dahil)" hint="Boş: üst sınır yok" error={fieldError(m.error, "amount_max")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.amount_max} onChange={set("amount_max")} />}</Field>
-          <Field label="Yürürlük tarihi" required error={fieldError(m.error, "effective_from")}>{(p) => <input {...p} className="field__input" type="date" min={todayIso()} value={f.effective_from} onChange={set("effective_from")} />}</Field>
+          <Field label="Tutar alt sınırı (₺, hariç)" hint="Boş: alt sınır yok" error={moneyErr ?? fieldError(act.error, "amount_min")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.amount_min} onChange={set("amount_min")} />}</Field>
+          <Field label="Tutar üst sınırı (₺, dahil)" hint="Boş: üst sınır yok" error={fieldError(act.error, "amount_max")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.amount_max} onChange={set("amount_max")} />}</Field>
+          <Field label="Yürürlük tarihi" required error={fieldError(act.error, "effective_from")}>{(p) => <input {...p} className="field__input" type="date" min={todayIso()} value={f.effective_from} onChange={set("effective_from")} />}</Field>
         </div>
 
         <fieldset className="stack" style={{ gap: "var(--s-3)", border: 0, padding: 0, margin: 0 }}>
@@ -214,7 +222,7 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
                   </div>
                 )}
               </div>
-              {fieldError(m.error, `steps.${i}`) && <span className="field__error" role="alert">{fieldError(m.error, `steps.${i}`)}</span>}
+              {fieldError(act.error, `steps.${i}`) && <span className="field__error" role="alert">{fieldError(act.error, `steps.${i}`)}</span>}
             </div>
           ))}
           <div><button className="btn btn--sm" type="button" disabled={steps.length >= 5} onClick={() => setSteps((x) => [...x, { roles: ["Yönetim Kurulu Üyesi"], quorum: "majority", count: "" }])}><Plus aria-hidden="true" /> Adım ekle</button></div>
@@ -223,8 +231,8 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
         <div className="grid grid--kpi">
           <Field label="Adımlar">{(p) => <select {...p} className="field__input" value={f.mode} onChange={set("mode")}>{["sequential", "parallel"].map((k) => <option key={k} value={k}>{stepMode(k)}</option>)}</select>}</Field>
           <Field label="Ret">{(p) => <select {...p} className="field__input" value={f.reject_behavior} onChange={set("reject_behavior")}>{["single_rejects", "counts"].map((k) => <option key={k} value={k}>{rejectBehavior(k)}</option>)}</select>}</Field>
-          <Field label="Hatırlatma (gün)" hint="1–30" error={fieldError(m.error, "remind_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.remind_after_days} onChange={(e) => setF((x) => ({ ...x, remind_after_days: digits(e.target.value) }))} />}</Field>
-          <Field label="Üst role iletme (gün)" hint="Hatırlatmadan sonra" error={fieldError(m.error, "escalate_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.escalate_after_days} onChange={(e) => setF((x) => ({ ...x, escalate_after_days: digits(e.target.value) }))} />}</Field>
+          <Field label="Hatırlatma (gün)" hint="1–30" error={fieldError(act.error, "remind_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.remind_after_days} onChange={(e) => setF((x) => ({ ...x, remind_after_days: digits(e.target.value) }))} />}</Field>
+          <Field label="Üst role iletme (gün)" hint="Hatırlatmadan sonra" error={fieldError(act.error, "escalate_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.escalate_after_days} onChange={(e) => setF((x) => ({ ...x, escalate_after_days: digits(e.target.value) }))} />}</Field>
           <Field label="Gün hesabı">{(p) => <select {...p} className="field__input" value={f.day_basis} onChange={set("day_basis")}>{["business", "calendar"].map((k) => <option key={k} value={k}>{dayBasis(k)}</option>)}</select>}</Field>
           <Field label="İletilecek rol" hint="Boş: yalnız hatırlatma gider">{(p) => <select {...p} className="field__input" value={f.escalation_role} onChange={set("escalation_role")}><option value="">Yok</option>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>}</Field>
         </div>
@@ -232,7 +240,7 @@ function RuleForm({ rule, types, onDone }: { rule: Rule | null; types: ActionTyp
         <p className="small muted mb-0">Otomatik onay ya da ret yoktur: süresi geçen talep hatırlatılır, seçildiyse üst role iletilir. Talep eden, onaycı listesinden kendiliğinden çıkar.</p>
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}>
-        <SubmitButton busy={m.isPending} disabled={steps.some((s) => s.roles.length === 0)}>{rule ? "Yeni sürümü kaydet" : "Kaydet"}</SubmitButton>
+        <SubmitButton busy={act.isPending} disabled={steps.some((s) => s.roles.length === 0)}>{resubmitId ? "Yeniden gönder" : rule ? "Yeni sürümü kaydet" : "Kaydet"}</SubmitButton>
         <button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button>
       </div>
     </form>

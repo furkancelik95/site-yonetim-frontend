@@ -6,6 +6,7 @@ import type { Page, Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, formatMoney, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
+import { RuleForm } from "./ApprovalRulesPage";
 import { approvalStatus, approvalStatusTone, decisionLabel, decisionTone, delegationState, delegationStateTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
@@ -174,6 +175,7 @@ export function ApprovalDetailPage() {
   const { requestId = "" } = useParams();
   const { site } = useSite();
   const q = useSiteGet<Request>(`/approvals/${requestId}`);
+  const [fixing, setFixing] = useState(false);
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const r = q.data;
@@ -223,7 +225,7 @@ export function ApprovalDetailPage() {
         </div>
 
         <div className="stack">
-          <Actions r={r} />
+          <Actions r={r} onFixRule={() => setFixing(true)} />
           <div className="card">
             <div className="card__head"><span className="card__title">Geçmiş</span></div>
             <div className="card__body">
@@ -241,12 +243,27 @@ export function ApprovalDetailPage() {
           </div>
         </div>
       </div>
+      {fixing && r.can_resubmit && <ResubmitRule r={r} onDone={() => setFixing(false)} />}
     </div>
   );
 }
 
-function Actions({ r }: { r: Request }) {
+/** Kural değişikliği talebi: düzeltilmiş kural formla gönderilir (backend `rule` zorunlu ister). */
+function ResubmitRule({ r, onDone }: { r: Request; onDone: () => void }) {
+  const types = useSiteGet<Schemas["ActionTypeOut"][]>("/approval-action-types");
+  const rules = useSiteGet<Schemas["RuleOut"][]>("/approval-rules");
+  const target = typeof r.summary?.action_type === "string" ? r.summary.action_type : undefined;
+  if (types.isPending || rules.isPending) return <Loading />;
+  if (types.isError || rules.isError) return <ErrorState error={types.error ?? rules.error} />;
+  // Form, değişikliğin hedefi olan işlem tipinin yürürlükteki kuralıyla dolu gelir; yeni kural önerisiyse boş
+  const current = rules.data.find((x) => x.action_type === target) ?? null;
+  return <RuleForm rule={current} types={types.data} actionType={target} resubmitId={r.id} onDone={onDone} />;
+}
+
+function Actions({ r, onFixRule }: { r: Request; onFixRule: () => void }) {
   const base = `/approvals/${r.id}`;
+  // Kural değişikliğinde yeniden gönderim düzeltilmiş kuralı ister; form ayrı açılır
+  const isRuleChange = r.action_type === "approval_rule_change";
   const [comment, setComment] = useState("");
   const approve = useSiteMutation<{ comment: string | null }, Request>("POST", `${base}/approve`);
   const reject = useSiteMutation<{ comment: string }, Request>("POST", `${base}/reject`);
@@ -281,7 +298,11 @@ function Actions({ r }: { r: Request }) {
         )}
         {(r.can_withdraw || r.can_resubmit) && (
           <div className="row" style={{ gap: "var(--s-2)" }}>
-            {r.can_resubmit && <ConfirmButton className="btn btn--primary" title="Yeniden gönder" confirmLabel="Gönder" body="Talep yeni sürüm olarak gönderilir; onay zinciri baştan başlar." onConfirm={() => resubmit.mutateAsync({ title: null })}>Yeniden gönder</ConfirmButton>}
+            {r.can_resubmit && (isRuleChange ? (
+              <button className="btn btn--primary" type="button" onClick={onFixRule}>Kuralı düzelt ve yeniden gönder</button>
+            ) : (
+              <ConfirmButton className="btn btn--primary" title="Yeniden gönder" confirmLabel="Gönder" body="Talep yeni sürüm olarak gönderilir; onay zinciri baştan başlar." onConfirm={() => resubmit.mutateAsync({ title: null })}>Yeniden gönder</ConfirmButton>
+            ))}
             {r.can_withdraw && <ConfirmButton className="btn btn--ghost" danger title="Talebi geri çek" confirmLabel="Geri çek" body="Talep kapanır; işlem uygulanmaz." onConfirm={() => withdraw.mutateAsync({})}>Geri çek</ConfirmButton>}
           </div>
         )}
