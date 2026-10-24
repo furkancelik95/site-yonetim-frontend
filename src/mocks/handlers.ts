@@ -1268,7 +1268,7 @@ const finans: RequestHandler[] = [
     if (b.due_date && (!DATE_RE.test(b.due_date) || b.due_date < today())) f.due_date = "Vade bugünden önce olamaz.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const accs = await real<Paged<{ id: string; kind: string; reference_code: string; unit_name: string; person_name: string | null; is_closed: boolean }>>(request, `/api/v1/sites/${slug}/accounts?unit_id=${b.unit_id}&page_size=50`);
-    const acc = accs.body?.items.find((a) => a.kind === b.account_kind && !a.is_closed);
+    const acc = accs.body?.items?.find((a) => a.kind === b.account_kind && !a.is_closed);
     if (!acc) return err(422, "no_account", `Bu bölümde açık ${b.account_kind === "owner" ? "malik" : "oturan"} hesabı yok.`, { account_kind: "Hesap yok" });
     const set = adHocOf(slug).sources[b.source!];
     const c: AdHocCharge = { id: crypto.randomUUID(), unit_id: b.unit_id!, unit_name: acc.unit_name, account_id: acc.id, account_kind: acc.kind, reference_code: acc.reference_code, person_name: acc.person_name, source: b.source!, description: b.description!.trim(), amount: tl(cents(b.amount)), due_date: b.due_date || addDays(today(), set.due_days), mode: set.mode, status: set.mode === "immediate" ? "posted" : "waiting_next_run", created_by: (await me(request)).name, created_at: new Date().toISOString(), cancel_reason: null };
@@ -2107,4 +2107,372 @@ const guvenlik: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...ik, ...guvenlik];
+// ============================================================================================
+// HİZMETLER PAKETİ (Yazılım Dokümanı HIZ-01..05) — servis istekleri 47–52
+// Varlık kartı, yasal muayene ve periyodik bakım (HIZ-06/07) K28'e bağlı: bu pakette yok.
+// ============================================================================================
+const REQ_CATS = ["plumbing", "electrical", "elevator", "heating", "cleaning", "security", "garden", "common_area", "other"] as const;
+const PRIOS = ["low", "normal", "high", "urgent"] as const;
+interface DayHours { closed: boolean; open: string; close: string }
+interface ReqSettings { categories: Record<string, { hour_type: "24x7" | "business"; resolve_hours: Record<string, number> }>; calendar: DayHours[]; auto_close_days: number; merge_window_hours: number; low_rating_threshold: number }
+interface ReplyTemplate { id: string; title: string; category: string | null; body: string; is_active: boolean }
+interface InternalNote { id: string; request_id: string; body: string; by: string; at: string }
+interface Outage { id: string; title: string; category: string; location: string | null; public_description: string; status: "open" | "resolved"; request_ids: string[]; created_by: string; created_at: string; resolved_at: string | null; resolution: string | null }
+interface Rating { request_id: string; solved: boolean; score: number | null; comment: string | null; by: string; at: string }
+interface Tariff { id: string; name: string; unit: string; price: string; is_active: boolean }
+interface Quote { id: string; account: { id: string; kind: string; reference_code: string; person_name: string | null } | null; request_id: string; request_number: number; request_title: string; unit_id: string; unit_name: string; lines: { description: string; qty: number; unit_price: string; total: string }[]; total: string; note: string | null; status: "pending" | "accepted" | "rejected" | "extra_pending" | "billed"; actual_total: string | null; billed_total: string | null; created_by: string; created_at: string; decided_at: string | null }
+interface Permit { id: string; unit_id: string; unit_name: string; type: "renovation" | "move_in" | "move_out"; date_from: string; date_to: string; contractor: string | null; description: string; status: "pending" | "approved" | "rejected" | "completed"; reject_reason: string | null; checklist: { item: string; ok: boolean }[]; deposit: string | null; deposit_charge_id: string | null; created_by: string; created_at: string; decided_by: string | null; completed_by: string | null; completed_at: string | null }
+interface PermitSettings { weekday_hours: string; saturday_hours: string; sunday_allowed: boolean; deposit_amount: string; checklist: string[] }
+interface ReqRow { id: string; number: number; title: string; category: string; priority: string; status: string; unit_id: string | null; unit_name: string | null; location: string | null; reporter_name: string | null; created_at: string; resolved_at: string | null; assigned_to: string | null }
+const reqSettings = loadMap<string, ReqSettings>("reqSettings");
+const replyTemplates = loadMap<string, ReplyTemplate[]>("replyTemplates");
+const internalNotes = loadMap<string, InternalNote[]>("internalNotes");
+const outages = loadMap<string, Outage[]>("outages");
+const ratings = loadMap<string, Rating[]>("ratings");
+const tariffs = loadMap<string, Tariff[]>("tariffs");
+const quotes = loadMap<string, Quote[]>("quotes");
+const permits = loadMap<string, Permit[]>("permits");
+const permitSettings = loadMap<string, PermitSettings>("permitSettings");
+const DEFAULT_HOURS: Record<string, number> = { urgent: 4, high: 24, normal: 72, low: 168 };
+const reqSetOf = (slug: string) => {
+  if (!reqSettings.has(slug)) reqSettings.set(slug, {
+    categories: Object.fromEntries(REQ_CATS.map((c) => [c, { hour_type: c === "elevator" || c === "plumbing" || c === "security" ? "24x7" : "business", resolve_hours: { ...DEFAULT_HOURS } }])) as ReqSettings["categories"],
+    calendar: Array.from({ length: 7 }, (_, i) => ({ closed: i === 6, open: i === 5 ? "10:00" : "09:00", close: i === 5 ? "14:00" : "18:00" })),
+    auto_close_days: 3, merge_window_hours: 24, low_rating_threshold: 2,
+  });
+  return reqSettings.get(slug)!;
+};
+const permitSetOf = (slug: string) => { if (!permitSettings.has(slug)) permitSettings.set(slug, { weekday_hours: "09:00-18:00", saturday_hours: "10:00-16:00", sunday_allowed: false, deposit_amount: "0.00", checklist: ["Ortak alanlar temiz bırakıldı", "Asansör ve koridorda hasar yok", "Moloz site dışına çıkarıldı", "Tesisat ve elektrik kapakları kapalı"] }); return permitSettings.get(slug)!; };
+const at = (d: Date, hm: string) => { const x = new Date(d); x.setHours(Number(hm.slice(0, 2)), Number(hm.slice(3, 5)), 0, 0); return x; };
+const nextDay = (d: Date) => { const x = new Date(d); x.setDate(x.getDate() + 1); x.setHours(0, 0, 0, 0); return x; };
+/** Çalışma takviminde `minutes` dakika ilerler; takvim dışında sayaç durur. */
+function addBusiness(start: Date, minutes: number, cal: DayHours[]) {
+  let t = new Date(start), rest = minutes;
+  for (let i = 0; i < 800 && rest > 0; i++) {
+    const d = cal[(t.getDay() + 6) % 7]!;
+    if (d.closed) { t = nextDay(t); continue; }
+    const o = at(t, d.open), c = at(t, d.close);
+    if (t < o) t = o;
+    if (t >= c) { t = nextDay(t); continue; }
+    const avail = (c.getTime() - t.getTime()) / 60000;
+    if (rest <= avail) return new Date(t.getTime() + rest * 60000);
+    rest -= avail; t = nextDay(t);
+  }
+  return t;
+}
+function businessBetween(a: Date, b: Date, cal: DayHours[]) {
+  let t = new Date(a), n = 0;
+  for (let i = 0; i < 800 && t < b; i++) {
+    const d = cal[(t.getDay() + 6) % 7]!;
+    if (!d.closed) { const o = at(t, d.open), c = at(t, d.close); const s = t > o ? t : o, e = b < c ? b : c; if (e > s) n += (e.getTime() - s.getTime()) / 60000; }
+    t = nextDay(t);
+  }
+  return n;
+}
+function slaOf(slug: string, r: ReqRow) {
+  const s = reqSetOf(slug); const c = s.categories[r.category] ?? s.categories.other!;
+  const hours = c.resolve_hours[r.priority] ?? 72; const start = new Date(r.created_at);
+  const due = c.hour_type === "24x7" ? new Date(start.getTime() + hours * 3600e3) : addBusiness(start, hours * 60, s.calendar);
+  const done = ["resolved", "closed", "cancelled"].includes(r.status);
+  const now = done && r.resolved_at ? new Date(r.resolved_at) : new Date();
+  const used = c.hour_type === "24x7" ? (now.getTime() - start.getTime()) / 60000 : businessBetween(start, now, s.calendar);
+  const total = hours * 60;
+  const d = s.calendar[(new Date().getDay() + 6) % 7]!;
+  const paused = !done && c.hour_type === "business" && (d.closed || new Date() < at(new Date(), d.open) || new Date() >= at(new Date(), d.close));
+  const state = done ? (now <= due ? "met" : "missed") : used >= total ? "breached" : used >= total * 0.8 ? "warning" : "ok";
+  return { due_at: due.toISOString(), hour_type: c.hour_type, target_hours: hours, used_minutes: Math.round(used), remaining_minutes: Math.max(0, Math.round(total - used)), state, paused };
+}
+async function extrasFor(slug: string, ids: string[]) {
+  const out: Record<string, { outage: { title: string; public_description: string; status: string } | null; rating: Rating | null; quote: Quote | null; auto_close_on: string | null }> = {};
+  for (const id of ids) {
+    const o = listOf(outages, slug).find((x) => x.request_ids.includes(id));
+    const q = [...listOf(quotes, slug)].reverse().find((x) => x.request_id === id) ?? null;
+    out[id] = { outage: o ? { title: o.title, public_description: o.public_description, status: o.status } : null, rating: listOf(ratings, slug).find((x) => x.request_id === id) ?? null, quote: q, auto_close_on: null };
+  }
+  return out;
+}
+
+const hizmet: RequestHandler[] = [
+  // 47 — Kategori SLA ve çalışma takvimi
+  http.get(`${API}/settings/requests`, ({ params }) => HttpResponse.json(reqSetOf(String(params.slug)))),
+  http.put(`${API}/settings/requests`, async ({ request, params }) => {
+    const s = reqSetOf(String(params.slug));
+    const b = { ...s, ...((await request.json()) as Partial<ReqSettings>) };
+    const f: Record<string, string> = {};
+    for (const [k, v] of Object.entries(b.categories)) for (const p of PRIOS) { const h = v.resolve_hours[p]; if (!(Number.isFinite(h) && h! >= 1 && h! <= 2160)) f[`categories.${k}.${p}`] = "1–2160 saat."; }
+    if (b.calendar.length !== 7 || b.calendar.some((d) => !d.closed && (!TIME_RE.test(d.open) || !TIME_RE.test(d.close) || d.close <= d.open))) f.calendar = "Açık günlerde açılış kapanıştan önce olmalı (SS:DD).";
+    if (b.calendar.every((d) => d.closed)) f.calendar = "En az bir çalışma günü olmalı.";
+    if (!(Number.isInteger(b.auto_close_days) && b.auto_close_days >= 1 && b.auto_close_days <= 30)) f.auto_close_days = "1–30 gün.";
+    if (!(Number.isInteger(b.merge_window_hours) && b.merge_window_hours >= 1 && b.merge_window_hours <= 168)) f.merge_window_hours = "1–168 saat.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    Object.assign(s, b);
+    return HttpResponse.json({ data: s, message: "Talep ayarları kaydedildi; yeni talepler bu kurallarla açılır, açık talepler açıldıkları kuralla devam eder." });
+  }),
+  http.get(`${API}/requests/sla`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const rows = await allPages<ReqRow>(request, `/api/v1/sites/${slug}/requests`);
+    return HttpResponse.json(Object.fromEntries(rows.map((r) => [r.id, slaOf(slug, r)])));
+  }),
+
+  // 48 — Hazır yanıtlar ve iç not
+  http.get(`${API}/reply-templates`, ({ params }) => { const l = listOf(replyTemplates, String(params.slug)); if (l.length === 0) l.push({ id: crypto.randomUUID(), title: "Talep alındı", category: null, body: "Merhaba {{sakin.ad}}, {{talep.no}} numaralı talebiniz ekibimize iletildi. En kısa sürede dönüş yapacağız.", is_active: true }, { id: crypto.randomUUID(), title: "Arıza giderildi", category: null, body: "Merhaba {{sakin.ad}}, {{talep.no}} numaralı talebinizdeki arıza giderildi. Sorun devam ederse lütfen bildirin.", is_active: true }); return HttpResponse.json(l); }),
+  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/reply-templates` : `${API}/reply-templates/:id`, async ({ request, params }) => {
+    const list = listOf(replyTemplates, String(params.slug));
+    const cur = verb === "patch" ? list.find((t) => t.id === params.id) : undefined;
+    if (verb === "patch" && !cur) return err(404, "not_found", "Şablon bulunamadı.");
+    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<ReplyTemplate>) };
+    const f: Record<string, string> = {};
+    if (!b.title?.trim()) f.title = "Başlık yazın.";
+    if ((b.body ?? "").trim().length < 10) f.body = "Metin en az 10 karakter.";
+    if (b.category && !REQ_CATS.includes(b.category as never)) f.category = "Kategori geçersiz.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const t: ReplyTemplate = { id: cur?.id ?? crypto.randomUUID(), title: b.title!.trim(), category: b.category || null, body: b.body!.trim(), is_active: b.is_active ?? true };
+    if (cur) Object.assign(cur, t); else list.push(t);
+    return HttpResponse.json({ data: t, message: verb === "post" ? "Şablon eklendi." : "Şablon güncellendi." }, { status: verb === "post" ? 201 : 200 });
+  })),
+  http.get(`${API}/requests/:id/internal-notes`, ({ params }) => HttpResponse.json(listOf(internalNotes, String(params.slug)).filter((n) => n.request_id === params.id))),
+  http.post(`${API}/requests/:id/internal-notes`, async ({ request, params }) => {
+    const b = (await request.json()) as { body?: string };
+    if ((b.body ?? "").trim().length < 2) return err(422, "validation", VALIDATION, { body: "Not yazın." });
+    const n: InternalNote = { id: crypto.randomUUID(), request_id: String(params.id), body: b.body!.trim(), by: (await me(request)).name, at: new Date().toISOString() };
+    listOf(internalNotes, String(params.slug)).push(n);
+    return HttpResponse.json({ data: n, message: "İç not eklendi; sakin görmez." }, { status: 201 });
+  }),
+
+  // 49 — Ana olay ve birleştirme önerisi
+  http.get(`${API}/outages`, ({ params }) => HttpResponse.json([...listOf(outages, String(params.slug))].reverse())),
+  http.post(`${API}/outages`, async ({ request, params }) => {
+    const b = (await request.json()) as { title?: string; category?: string; location?: string; public_description?: string; request_ids?: string[] };
+    const f: Record<string, string> = {};
+    if ((b.title ?? "").trim().length < 3) f.title = "Başlık yazın.";
+    if (!REQ_CATS.includes(b.category as never)) f.category = "Kategori seçin.";
+    if ((b.public_description ?? "").trim().length < 10) f.public_description = "Sakinlerin göreceği açıklamayı yazın.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const o: Outage = { id: crypto.randomUUID(), title: b.title!.trim(), category: b.category!, location: b.location?.trim() || null, public_description: b.public_description!.trim(), status: "open", request_ids: [...new Set(b.request_ids ?? [])], created_by: (await me(request)).name, created_at: new Date().toISOString(), resolved_at: null, resolution: null };
+    listOf(outages, String(params.slug)).push(o);
+    return HttpResponse.json({ data: o, message: `Ana olay oluşturuldu${o.request_ids.length ? `; ${o.request_ids.length} talep bağlandı` : ""}.` }, { status: 201 });
+  }),
+  http.post(`${API}/outages/:id/links`, async ({ request, params }) => {
+    const o = listOf(outages, String(params.slug)).find((x) => x.id === params.id);
+    if (!o) return err(404, "not_found", "Ana olay bulunamadı.");
+    if (o.status !== "open") return err(409, "outage_resolved", "Çözülmüş ana olaya talep bağlanamaz.");
+    const b = (await request.json()) as { request_id?: string };
+    if (!b.request_id) return err(422, "validation", VALIDATION, { request_id: "Talep seçin." });
+    if (listOf(outages, String(params.slug)).some((x) => x.request_ids.includes(b.request_id!))) return err(409, "already_linked", "Talep zaten bir ana olaya bağlı.");
+    o.request_ids.push(b.request_id);
+    return HttpResponse.json({ data: o, message: "Talep ana olaya bağlandı; sakin ana olayın genel açıklamasını görür." });
+  }),
+  http.post(`${API}/outages/:id/unlink`, async ({ request, params }) => {
+    const o = listOf(outages, String(params.slug)).find((x) => x.id === params.id);
+    if (!o) return err(404, "not_found", "Ana olay bulunamadı.");
+    const b = (await request.json()) as { request_id?: string };
+    o.request_ids = o.request_ids.filter((x) => x !== b.request_id);
+    return HttpResponse.json({ data: o, message: "Bağlantı kaldırıldı." });
+  }),
+  http.post(`${API}/outages/:id/resolve`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const o = listOf(outages, slug).find((x) => x.id === params.id);
+    if (!o) return err(404, "not_found", "Ana olay bulunamadı.");
+    if (o.status !== "open") return err(409, "outage_resolved", "Ana olay zaten çözüldü.");
+    const b = (await request.json()) as { resolution?: string };
+    if ((b.resolution ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { resolution: "Çözüm açıklaması yazın; bağlı tüm sakinlere gider." });
+    let closed = 0; const failed: string[] = [];
+    for (const id of o.request_ids) {
+      const r = await real<{ error?: { message?: string } }>(request, `/api/v1/sites/${slug}/requests/${id}/status`, { method: "POST", body: { status: "resolved", resolution: b.resolution!.trim() } });
+      if (r.status < 300) closed++; else failed.push(r.body?.error?.message ?? String(r.status));
+    }
+    Object.assign(o, { status: "resolved", resolved_at: new Date().toISOString(), resolution: b.resolution!.trim() });
+    return HttpResponse.json({ data: o, message: `Ana olay çözüldü; ${closed} bağlı talep "çözüldü" oldu ve sakinlere bildirildi.${failed.length ? ` ${failed.length} talep güncellenemedi.` : ""}` });
+  }),
+  http.get(`${API}/requests/:id/merge-suggestions`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const s = reqSetOf(slug);
+    const r = await real<ReqRow>(request, `/api/v1/sites/${slug}/requests/${params.id}`);
+    if (!r.body) return HttpResponse.json(r.body, { status: r.status });
+    const me0 = r.body;
+    const linked = listOf(outages, slug).find((o) => o.request_ids.includes(me0.id)) ?? null;
+    const all = await allPages<ReqRow>(request, `/api/v1/sites/${slug}/requests`);
+    const since = new Date(new Date(me0.created_at).getTime() - s.merge_window_hours * 3600e3).toISOString();
+    const block = (x: ReqRow) => x.unit_name?.split("-")[0] ?? null;
+    const same = all.filter((x) => x.id !== me0.id && x.category === me0.category && x.created_at >= since && !["closed", "cancelled"].includes(x.status) && ((me0.location && x.location === me0.location) || (!me0.unit_id && !x.unit_id) || (block(me0) && block(x) === block(me0))));
+    const openOutages = listOf(outages, slug).filter((o) => o.status === "open" && o.category === me0.category && !o.request_ids.includes(me0.id));
+    return HttpResponse.json({ linked_outage: linked, similar: same.map((x) => ({ id: x.id, number: x.number, title: x.title, unit_name: x.unit_name, location: x.location, created_at: x.created_at })), open_outages: openOutages.map((o) => ({ id: o.id, title: o.title, request_count: o.request_ids.length })), window_hours: s.merge_window_hours });
+  }),
+
+  // 50 — Kapanış onayı ve memnuniyet
+  http.get(`${API}/requests/:id/extras`, async ({ params }) => HttpResponse.json((await extrasFor(String(params.slug), [String(params.id)]))[String(params.id)])),
+  http.get(`${API}/resident/requests/extras`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const r = await real<Paged<ReqRow>>(request, `/api/v1/sites/${slug}/resident/requests?page_size=100`);
+    if (!r.body) return HttpResponse.json(r.body, { status: r.status });
+    const ex = await extrasFor(slug, r.body.items.map((x) => x.id));
+    const s = reqSetOf(slug);
+    for (const x of r.body.items) if (x.status === "resolved" && x.resolved_at && !ex[x.id]!.rating) ex[x.id]!.auto_close_on = iso(new Date(new Date(x.resolved_at).getTime() + s.auto_close_days * 864e5));
+    return HttpResponse.json(ex);
+  }),
+  http.post(`${API}/resident/requests/:id/confirm`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const r = await real<Paged<ReqRow>>(request, `/api/v1/sites/${slug}/resident/requests?page_size=100`);
+    const req0 = r.body?.items?.find((x) => x.id === params.id);
+    if (!req0) return err(404, "not_found", "Talep bulunamadı.");
+    if (req0.status !== "resolved") return err(409, "not_resolved", "Yalnız çözüldü durumundaki talep onaylanır.");
+    const b = (await request.json()) as { solved?: boolean; score?: number; comment?: string };
+    if (b.solved && !(Number.isInteger(b.score) && b.score! >= 1 && b.score! <= 5)) return err(422, "validation", VALIDATION, { score: "1–5 arası puan verin." });
+    if (!b.solved && (b.comment ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { comment: "Sorunun neden devam ettiğini yazın." });
+    const list = listOf(ratings, slug).filter((x) => x.request_id !== params.id);
+    const rt: Rating = { request_id: String(params.id), solved: !!b.solved, score: b.solved ? b.score! : null, comment: b.comment?.trim() || null, by: (await me(request)).name, at: new Date().toISOString() };
+    list.push(rt); ratings.set(slug, list);
+    const low = rt.score != null && rt.score <= reqSetOf(slug).low_rating_threshold;
+    return HttpResponse.json({ data: rt, message: rt.solved ? `Teşekkürler; talep kapatılacak.${low ? " Düşük puanınız yönetime iletildi." : ""}` : "Talebiniz yeniden açılması için yönetime iletildi." });
+  }),
+
+  // 51 — Ücretli hizmet
+  http.get(`${API}/service-tariffs`, ({ params }) => HttpResponse.json(listOf(tariffs, String(params.slug)))),
+  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/service-tariffs` : `${API}/service-tariffs/:id`, async ({ request, params }) => {
+    const list = listOf(tariffs, String(params.slug));
+    const cur = verb === "patch" ? list.find((t) => t.id === params.id) : undefined;
+    if (verb === "patch" && !cur) return err(404, "not_found", "Tarife kalemi bulunamadı.");
+    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<Tariff>) };
+    const f: Record<string, string> = {};
+    if (!b.name?.trim()) f.name = "Kalem adını yazın.";
+    if (!b.unit?.trim()) f.unit = "Birim yazın (saat, adet, iş).";
+    if (!(cents(b.price) > 0)) f.price = "Birim fiyat sıfırdan büyük olmalı.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const t: Tariff = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), unit: b.unit!.trim(), price: tl(cents(b.price)), is_active: b.is_active ?? true };
+    if (cur) Object.assign(cur, t); else list.push(t);
+    return HttpResponse.json({ data: t, message: verb === "post" ? "Tarife kalemi eklendi." : "Tarife güncellendi (onay kuralına bağlanması K21)." }, { status: verb === "post" ? 201 : 200 });
+  })),
+  http.post(`${API}/requests/:id/quotes`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const r = await real<ReqRow>(request, `/api/v1/sites/${slug}/requests/${params.id}`);
+    if (!r.body) return HttpResponse.json(r.body, { status: r.status });
+    if (!r.body.unit_id) return err(409, "not_unit_request", "Ücretli hizmet yalnız bölüm içi taleplerde verilir.");
+    const qs = listOf(quotes, slug);
+    if (qs.some((q) => q.request_id === params.id && ["pending", "accepted", "extra_pending"].includes(q.status))) return err(409, "quote_open", "Bu talepte açık bir teklif var.");
+    const b = (await request.json()) as { lines?: { description?: string; qty?: number; unit_price?: string }[]; note?: string };
+    const lines = (b.lines ?? []).filter((l) => (l.description ?? "").trim());
+    if (lines.length === 0) return err(422, "validation", VALIDATION, { lines: "En az bir kalem girin." });
+    if (lines.some((l) => !(Number(l.qty) > 0) || !(cents(l.unit_price) > 0))) return err(422, "validation", VALIDATION, { lines: "Miktar ve birim fiyat sıfırdan büyük olmalı." });
+    const ls = lines.map((l) => ({ description: l.description!.trim(), qty: Number(l.qty), unit_price: tl(cents(l.unit_price)), total: tl(Math.round(Number(l.qty) * cents(l.unit_price))) }));
+    // Ücret hangi cariye yazılacak: oturan hesabı (yoksa açık herhangi biri). Sakin kararı verdiğinde hesap listesine erişemez.
+    const accs = await real<Paged<{ id: string; kind: string; reference_code: string; person_name: string | null; is_closed: boolean }>>(request, `/api/v1/sites/${slug}/accounts?unit_id=${r.body.unit_id}&page_size=50`);
+    const acc = accs.body?.items?.find((a) => a.kind === "occupant" && !a.is_closed) ?? accs.body?.items?.find((a) => !a.is_closed) ?? null;
+    const q: Quote = { id: crypto.randomUUID(), account: acc ? { id: acc.id, kind: acc.kind, reference_code: acc.reference_code, person_name: acc.person_name } : null, request_id: String(params.id), request_number: r.body.number, request_title: r.body.title, unit_id: r.body.unit_id, unit_name: r.body.unit_name ?? "", lines: ls, total: tl(ls.reduce((s, l) => s + cents(l.total), 0)), note: b.note?.trim() || null, status: "pending", actual_total: null, billed_total: null, created_by: (await me(request)).name, created_at: new Date().toISOString(), decided_at: null };
+    qs.push(q);
+    return HttpResponse.json({ data: q, message: `Teklif (${Number(q.total).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺) sakine iletildi; onaylamadan iş ücretli yapılmaz.` }, { status: 201 });
+  }),
+  http.post(`${API}/resident/quotes/:id/decision`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const mine = await myUnits(request, slug);
+    const q = listOf(quotes, slug).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
+    if (!q) return err(404, "not_found", "Teklif bulunamadı.");
+    const b = (await request.json()) as { decision?: string };
+    if (!["accept", "reject"].includes(b.decision ?? "")) return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
+    if (q.status === "pending") {
+      Object.assign(q, { status: b.decision === "accept" ? "accepted" : "rejected", decided_at: new Date().toISOString() });
+      return HttpResponse.json({ data: q, message: b.decision === "accept" ? "Teklifi onayladınız; iş planlanacak." : "Teklifi reddettiniz; iş ücretli yapılmayacak." });
+    }
+    if (q.status === "extra_pending") {
+      const billed = b.decision === "accept" ? q.actual_total! : q.total;
+      Object.assign(q, { status: "billed", billed_total: billed });
+      const ch = await billQuote(request, slug, q);
+      return HttpResponse.json({ data: q, message: `${b.decision === "accept" ? "Ek tutarı onayladınız" : "Ek tutarı reddettiniz; teklif tutarı geçerli"}. ${Number(billed).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ cariye yansıyacak.${ch ? "" : ""}` });
+    }
+    return err(409, "invalid_status", "Bu teklif için karar beklenmiyor.");
+  }),
+  http.post(`${API}/quotes/:id/complete`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const q = listOf(quotes, slug).find((x) => x.id === params.id);
+    if (!q) return err(404, "not_found", "Teklif bulunamadı.");
+    if (q.status !== "accepted") return err(409, "invalid_status", "Yalnız sakinin onayladığı teklif tamamlanır.");
+    const b = (await request.json()) as { actual_total?: string };
+    if (!(cents(b.actual_total) > 0)) return err(422, "validation", VALIDATION, { actual_total: "Gerçekleşen tutarı girin." });
+    q.actual_total = tl(cents(b.actual_total));
+    if (cents(q.actual_total) > cents(q.total)) { q.status = "extra_pending"; return HttpResponse.json({ data: q, message: "Gerçekleşen tutar teklifi aşıyor; ek tutar için sakin onayı istendi." }); }
+    Object.assign(q, { status: "billed", billed_total: q.actual_total });
+    await billQuote(request, slug, q);
+    return HttpResponse.json({ data: q, message: `İş tamamlandı; ${Number(q.billed_total).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ dönem dışı ücret olarak cariye yansıyacak.` });
+  }),
+
+  // 52 — Tadilat ve taşınma izinleri
+  http.get(`${API}/settings/permits`, ({ params }) => HttpResponse.json(permitSetOf(String(params.slug)))),
+  http.put(`${API}/settings/permits`, async ({ request, params }) => {
+    const s = permitSetOf(String(params.slug));
+    const b = { ...s, ...((await request.json()) as Partial<PermitSettings>) };
+    const f: Record<string, string> = {};
+    const RANGE = /^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/;
+    if (!RANGE.test(b.weekday_hours)) f.weekday_hours = "SS:DD-SS:DD biçiminde.";
+    if (b.saturday_hours && !RANGE.test(b.saturday_hours)) f.saturday_hours = "SS:DD-SS:DD ya da boş (yasak).";
+    if (cents(b.deposit_amount) < 0) f.deposit_amount = "Depozito negatif olamaz.";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    Object.assign(s, { ...b, deposit_amount: tl(cents(b.deposit_amount)), checklist: (b.checklist ?? []).map((x) => x.trim()).filter(Boolean) });
+    return HttpResponse.json({ data: s, message: "Tadilat kuralları kaydedildi." });
+  }),
+  http.get(`${API}/permits`, ({ request, params }) => { const st = new URL(request.url).searchParams.get("status"); return HttpResponse.json([...listOf(permits, String(params.slug))].filter((p) => !st || p.status === st).reverse()); }),
+  http.get(`${API}/resident/permits`, async ({ request, params }) => {
+    const mine = await myUnits(request, String(params.slug));
+    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
+    const ids = new Set(mine.units.map((u) => u.unit_id));
+    return HttpResponse.json({ rules: permitSetOf(String(params.slug)), items: [...listOf(permits, String(params.slug))].filter((p) => ids.has(p.unit_id)).reverse() });
+  }),
+  http.post(`${API}/resident/permits`, async ({ request, params }) => {
+    const slug = String(params.slug);
+    const mine = await myUnits(request, slug);
+    const b = (await request.json()) as Partial<Permit>;
+    const unit = mine.units.find((u) => u.unit_id === b.unit_id) ?? mine.units[0];
+    if (!unit) return err(404, "not_found", "Bölümünüz bulunamadı.");
+    const f: Record<string, string> = {};
+    if (!["renovation", "move_in", "move_out"].includes(b.type ?? "")) f.type = "Başvuru türünü seçin.";
+    if (!b.date_from || !DATE_RE.test(b.date_from) || b.date_from < today()) f.date_from = "Tarih bugünden önce olamaz.";
+    const to = b.type === "renovation" ? b.date_to : b.date_from;
+    if (b.type === "renovation" && (!to || !DATE_RE.test(to) || to < (b.date_from ?? ""))) f.date_to = "Bitiş tarihini girin.";
+    if ((b.description ?? "").trim().length < 5) f.description = b.type === "renovation" ? "Yapılacak işi kısaca yazın." : "Kısa açıklama yazın (ör. nakliye firması, saat).";
+    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
+    const p: Permit = { id: crypto.randomUUID(), unit_id: unit.unit_id, unit_name: unit.unit_name, type: b.type!, date_from: b.date_from!, date_to: to!, contractor: b.contractor?.trim() || null, description: b.description!.trim(), status: "pending", reject_reason: null, checklist: [], deposit: null, deposit_charge_id: null, created_by: (await me(request)).name, created_at: new Date().toISOString(), decided_by: null, completed_by: null, completed_at: null };
+    listOf(permits, slug).push(p);
+    return HttpResponse.json({ data: p, message: b.type === "renovation" ? "Tadilat başvurunuz yönetime iletildi; onaylanınca çalışma saatleri size bildirilir." : "Taşınma bildiriminiz alındı; asansör ve yükleme alanı için rezervasyon önerilir." }, { status: 201 });
+  }),
+  http.post(`${API}/permits/:id/:action`, async ({ request, params }) => {
+    const slug = String(params.slug); const action = String(params.action);
+    if (!["approve", "reject", "complete"].includes(action)) return;
+    const p = listOf(permits, slug).find((x) => x.id === params.id);
+    if (!p) return err(404, "not_found", "Başvuru bulunamadı.");
+    const b = (await request.json().catch(() => ({}))) as { reason?: string; checklist?: { item: string; ok: boolean }[]; refund_deposit?: boolean };
+    const who = (await me(request)).name;
+    if (action === "reject") {
+      if (p.status !== "pending") return err(409, "invalid_status", "Yalnız bekleyen başvuru reddedilir.");
+      if ((b.reason ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { reason: "Ret gerekçesi yazın." });
+      Object.assign(p, { status: "rejected", reject_reason: b.reason!.trim(), decided_by: who });
+      return HttpResponse.json({ data: p, message: "Başvuru reddedildi; sakine gerekçe bildirildi." });
+    }
+    if (action === "approve") {
+      if (p.status !== "pending") return err(409, "invalid_status", "Yalnız bekleyen başvuru onaylanır.");
+      const dep = permitSetOf(slug).deposit_amount;
+      p.status = "approved"; p.decided_by = who;
+      if (p.type === "renovation" && cents(dep) > 0) {
+        const accs = await real<Paged<{ id: string; kind: string; reference_code: string; unit_name: string; person_name: string | null; is_closed: boolean }>>(request, `/api/v1/sites/${slug}/accounts?unit_id=${p.unit_id}&page_size=50`);
+        const acc = accs.body?.items?.find((a) => a.kind === "owner" && !a.is_closed);
+        if (acc) { const c: AdHocCharge = { id: crypto.randomUUID(), unit_id: p.unit_id, unit_name: p.unit_name, account_id: acc.id, account_kind: "owner", reference_code: acc.reference_code, person_name: acc.person_name, source: "renovation", description: `Tadilat depozitosu (${new Date(p.date_from).toLocaleDateString("tr-TR")})`, amount: dep, due_date: p.date_from, mode: "immediate", status: "posted", created_by: who, created_at: new Date().toISOString(), cancel_reason: null }; listOf(adHocCharges, slug).push(c); Object.assign(p, { deposit: dep, deposit_charge_id: c.id }); }
+      }
+      return HttpResponse.json({ data: p, message: `Başvuru onaylandı; ${p.type === "renovation" ? "çalışma saatleri sakine, komşu bölümlere ve güvenliğe bildirildi" : "giriş/çıkış günü güvenliğe ve görevliye bildirildi"}${p.deposit ? `; ${Number(p.deposit).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ depozito tahakkuk etti` : ""}.` });
+    }
+    if (p.status !== "approved") return err(409, "invalid_status", "Yalnız onaylı başvuru tamamlanır.");
+    const items = b.checklist ?? [];
+    if (p.type !== "move_in" && (items.length === 0 || items.some((i) => typeof i.ok !== "boolean"))) return err(422, "validation", VALIDATION, { checklist: "Kontrol listesini doldurun." });
+    Object.assign(p, { status: "completed", checklist: items, completed_by: who, completed_at: new Date().toISOString() });
+    let msg = "Tamamlandı.";
+    if (p.deposit_charge_id && b.refund_deposit) { const c = listOf(adHocCharges, slug).find((x) => x.id === p.deposit_charge_id); if (c) Object.assign(c, { status: "cancelled", cancel_reason: "Tadilat tamamlandı, kontrol listesi uygun — depozito iadesi" }); msg += " Depozito iadesi ters kayıtla yapıldı."; }
+    if (p.type === "move_out") msg += " Bölümdeki ilişkinin bitiş tarihini bölüm kartından girin.";
+    return HttpResponse.json({ data: p, message: msg });
+  }),
+];
+async function billQuote(_request: Request, slug: string, q: Quote) {
+  const acc = q.account;
+  if (!acc) return null;
+  const set = adHocOf(slug).sources.service;
+  const c: AdHocCharge = { id: crypto.randomUUID(), unit_id: q.unit_id, unit_name: q.unit_name, account_id: acc.id, account_kind: acc.kind, reference_code: acc.reference_code, person_name: acc.person_name, source: "service", description: `Ücretli hizmet — talep #${q.request_number} ${q.request_title}`, amount: q.billed_total!, due_date: addDays(today(), set.due_days), mode: set.mode, status: set.mode === "immediate" ? "posted" : "waiting_next_run", created_by: "Sistem", created_at: new Date().toISOString(), cancel_reason: null };
+  listOf(adHocCharges, slug).push(c);
+  return c;
+}
+
+export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...ik, ...guvenlik, ...hizmet];

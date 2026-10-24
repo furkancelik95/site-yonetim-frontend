@@ -10,6 +10,7 @@ import { useUrlState } from "../../lib/hooks";
 import { CATEGORIES, PRIORITIES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentFilter, DepartmentManager } from "./Departments";
+import { SlaBadge, type Sla } from "./RequestExtras";
 
 type Req = Schemas["RequestOut"];
 
@@ -18,6 +19,7 @@ const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cance
 export function RequestsPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ status: "", category: "", priority: "", departman: "", page: "1" });
+  const sla = useSiteGet<Record<string, Sla>>("/requests/sla");
   const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, department_id: s.departman, page: s.page, page_size: 50 });
   const [adding, setAdding] = useState(false);
   const [managing, setManaging] = useState(false);
@@ -27,7 +29,7 @@ export function RequestsPage() {
       <PageHead
         title="Talepler"
         subtitle={r.data ? `${r.data.total} talep` : undefined}
-        actions={<>{can(P.requestsAssign) && <button className="btn" type="button" aria-expanded={managing} onClick={() => setManaging((v) => !v)}>Departmanlar</button>}<Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link>{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
+        actions={<>{can(P.requestsAssign) && <button className="btn" type="button" aria-expanded={managing} onClick={() => setManaging((v) => !v)}>Departmanlar</button>}<Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link><Link className="btn" to="ana-olaylar">Ana olaylar</Link>{can(P.requestsAssign) && <Link className="btn" to="ayarlar">SLA ve şablonlar</Link>}{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
       />
       {managing && <DepartmentManager onClose={() => setManaging(false)} />}
       {adding && <NewRequestForm onDone={() => setAdding(false)} />}
@@ -70,7 +72,7 @@ export function RequestsPage() {
               <table className="data">
                 <caption className="visually-hidden">Talepler</caption>
                 <thead>
-                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum</th><th scope="col">Departman / atanan</th><th scope="col">Açılış</th></tr>
+                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum</th><th scope="col">Departman / atanan</th><th scope="col">Açılış</th><th scope="col">SLA</th></tr>
                 </thead>
                 <tbody>
                   {r.data.items.map((q) => (
@@ -86,6 +88,7 @@ export function RequestsPage() {
                       </td>
                       <td className="small">{q.department_name && <Badge tone="info">{q.department_name}</Badge>}<div>{q.assigned_to ?? (q.department_name ? null : <span className="subtle">—</span>)}</div></td>
                       <td className="small nowrap">{formatDateTime(q.created_at)}</td>
+                      <td><SlaBadge s={sla.data?.[q.id]} /></td>
                     </tr>
                   ))}
                 </tbody>

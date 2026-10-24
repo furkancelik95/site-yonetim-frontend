@@ -241,3 +241,17 @@ export const tagType = label({ qr: "QR", nfc: "NFC", both: "QR + NFC" });
 export const patrolSlotStatus = label({ upcoming: "Sırada", due: "Başlamalı", running: "Sürüyor", overdue: "Süre aşıldı", done: "Tamamlandı", done_with_deviation: "Sapmalı tamamlandı", not_started: "Başlamadı" });
 export const patrolSlotTone = (v: string): Tone => (v === "done" ? "ok" : v === "running" || v === "upcoming" ? "info" : v === "due" || v === "done_with_deviation" ? "warn" : "danger");
 export const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+
+// Hizmetler paketi (servis istekleri 47–52)
+export const slaState = label({ ok: "Süre içinde", warning: "Süre doluyor", breached: "SLA aşıldı", met: "Süresinde çözüldü", missed: "Geç çözüldü" });
+export const slaTone = (v: string): Tone => (v === "ok" || v === "met" ? "ok" : v === "warning" ? "warn" : "danger");
+export const hourType = label({ "24x7": "7/24", business: "Çalışma saati" });
+export const quoteStatus = label({ pending: "Sakin onayı bekliyor", accepted: "Sakin onayladı", rejected: "Sakin reddetti", extra_pending: "Ek tutar onayı bekliyor", billed: "Cariye yansıdı" });
+export const quoteTone = (v: string): Tone => (v === "billed" || v === "accepted" ? "ok" : v === "rejected" ? "danger" : "warn");
+export const permitType = label({ renovation: "Tadilat", move_in: "Taşınma (giriş)", move_out: "Taşınma (çıkış)" });
+export const permitStatus = label({ pending: "Onay bekliyor", approved: "Onaylandı", rejected: "Reddedildi", completed: "Tamamlandı" });
+export const permitTone = (v: string): Tone => (v === "completed" ? "ok" : v === "approved" ? "info" : v === "rejected" ? "danger" : "warn");
+export const WEEKDAYS_LONG = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+/** Hazır yanıt değişkenleri: {{sakin.ad}}, {{talep.no}}, {{talep.konu}} */
+export const fillTemplate = (body: string, r: { number?: number; reporter_name?: string | null; title?: string }) =>
+  body.replace(/\{\{\s*sakin\.ad\s*\}\}/g, r.reporter_name ?? "Sayın sakin").replace(/\{\{\s*talep\.no\s*\}\}/g, `#${r.number ?? ""}`).replace(/\{\{\s*talep\.konu\s*\}\}/g, r.title ?? "");

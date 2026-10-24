@@ -91,6 +91,10 @@ const siteScreens: [string, string][] = [
   // Güvenlik ve devriye paketi (servis istekleri 40–46)
   ["ayarlar/guvenlik", "SecuritySettingsPage"],
   ["devriye", "PatrolAdminPage"],
+  // Hizmetler paketi (servis istekleri 47–52)
+  ["talepler/ayarlar", "RequestSettingsPage"],
+  ["talepler/ana-olaylar", "OutagesPage"],
+  ["tadilat-tasinma", "PermitsPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -149,6 +153,7 @@ export const router = createBrowserRouter([
               { path: "hane", element: <L c={page(resident, "ResidentHouseholdPage")} /> },
               { path: "araclar", element: <L c={page(resident, "ResidentVehiclesPage")} /> },
               { path: "ziyaretci", element: <L c={page(resident, "ResidentVisitorsPage")} /> },
+              { path: "tadilat", element: <L c={page(resident, "ResidentPermitsPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },
