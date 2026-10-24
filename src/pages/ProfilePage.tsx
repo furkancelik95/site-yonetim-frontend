@@ -14,6 +14,7 @@ type Preferences = Schemas["PreferencesOut"];
 type Change = Schemas["PreferenceChange"];
 
 const RISKY = new Set(["login_failed", "account_locked", "token_reused"]);
+const RULE: Record<string, string> = { locked: "Kapatılamaz", at_least_one: "En az bir kanal açık kalmalı" };
 
 /**
  * Profil (PLT-10): açık oturumlar, güvenlik olayları, bildirim tercihleri. Personel ve sakin
@@ -136,7 +137,7 @@ function NotificationPreferences() {
                 <tbody>
                   {q.data.categories.map((row) => (
                     <tr key={row.category}>
-                      <th scope="row" className="small" style={{ fontWeight: 500 }}>{row.label}{row.rule && <div className="cell-sub">{row.rule}</div>}</th>
+                      <td><div className="cell-main">{row.label}</div>{RULE[row.rule] && <div className="cell-sub">{RULE[row.rule]}</div>}</td>
                       {row.channels.map((cell) => {
                         const k = key({ category: row.category, channel: cell.channel, enabled: cell.enabled });
                         const on = draft[k] ?? cell.enabled;

@@ -207,14 +207,11 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             <span className="userbox__avatar" aria-hidden="true">
               {initials(me.full_name)}
             </span>
-            <span style={{ minWidth: 0, flex: 1 }}>
-              <span className="userbox__name" title={me.full_name}>
-                {me.full_name}
-              </span>
+            {/* Ad alanı profile gider (oturumlar, güvenlik olayları, bildirim tercihleri) */}
+            <Link to="/profil" className="userbox__link" title={`${me.full_name} — profil`}>
+              <span className="userbox__name">{me.full_name}</span>
               <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
-            </span>
-            <Link className="btn btn--ghost btn--sm" to="/profil">
-              Profil
+              <span className="visually-hidden">Profil</span>
             </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>
               Çıkış
