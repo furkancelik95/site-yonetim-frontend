@@ -254,6 +254,334 @@
     ]
    }
   },
+  "/api/v1/me/sessions": {
+   "get": {
+    "tags": [
+     "kimlik"
+    ],
+    "summary": "Açık oturumlarım (cihazlar)",
+    "operationId": "my_sessions_api_v1_me_sessions_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SessionOut"
+         },
+         "title": "Response My Sessions Api V1 Me Sessions Get"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "kimlik"
+    ],
+    "summary": "Tüm cihazlardan çık",
+    "operationId": "revoke_all_sessions_api_v1_me_sessions_delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "keep_current",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true → bu oturum açık kalır",
+       "default": true,
+       "title": "Keep Current"
+      },
+      "description": "true → bu oturum açık kalır"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RevokedOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/sessions/{session_id}": {
+   "delete": {
+    "tags": [
+     "kimlik"
+    ],
+    "summary": "Bir oturumu kapat",
+    "operationId": "revoke_session_api_v1_me_sessions__session_id__delete",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Session Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/me/security-events": {
+   "get": {
+    "tags": [
+     "kimlik"
+    ],
+    "summary": "Giriş geçmişim (son 50 olay)",
+    "operationId": "my_security_events_api_v1_me_security_events_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AuthEventOut"
+         },
+         "type": "array",
+         "title": "Response My Security Events Api V1 Me Security Events Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/notifications/summary": {
+   "get": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Sitelere göre okunmamış bildirim sayısı",
+    "operationId": "unread_summary_api_v1_me_notifications_summary_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/SiteUnreadOut"
+         },
+         "type": "array",
+         "title": "Response Unread Summary Api V1 Me Notifications Summary Get"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/notification-preferences": {
+   "get": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Bildirim tercihlerim (kategori × kanal)",
+    "operationId": "get_preferences_api_v1_me_notification_preferences_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PreferencesOut"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "put": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Bildirim tercihlerimi değiştir",
+    "operationId": "put_preferences_api_v1_me_notification_preferences_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PreferencesIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PreferencesOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/push-tokens": {
+   "post": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Cihaz push jetonunu kaydet",
+    "description": "Uygulama açılışında ve jeton yenilenince çağrılır (tekrar güvenli).",
+    "operationId": "register_push_token_api_v1_me_push_tokens_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PushTokenIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/me/push-tokens/remove": {
+   "post": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Cihaz push jetonunu sil (çıkışta)",
+    "operationId": "remove_push_token_api_v1_me_push_tokens_remove_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PushTokenRemoveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
   "/api/v1/sites/{slug}": {
    "get": {
     "tags": [
@@ -8285,6 +8613,22 @@
       }
      },
      {
+      "name": "actor_type",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/ActorType"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Actor Type"
+      }
+     },
+     {
       "name": "from",
       "in": "query",
       "required": false,
@@ -10396,6 +10740,1287 @@
      }
     }
    }
+  },
+  "/api/v1/sites/{slug}/notifications": {
+   "get": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Bildirimlerim (son 90 gün, yeni üstte)",
+    "operationId": "list_notifications_api_v1_sites__slug__notifications_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "unread",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true → yalnız okunmamış",
+       "default": false,
+       "title": "Unread"
+      },
+      "description": "true → yalnız okunmamış"
+     },
+     {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/NotificationCategory"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Category"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NotificationPage"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/notifications/unread-count": {
+   "get": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Okunmamış sayısı (zil rozeti)",
+    "operationId": "unread_count_api_v1_sites__slug__notifications_unread_count_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "integer",
+         "title": "Response Unread Count Api V1 Sites  Slug  Notifications Unread Count Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/notifications/read": {
+   "post": {
+    "tags": [
+     "bildirim"
+    ],
+    "summary": "Okundu işaretle (seçilenler ya da tümü)",
+    "operationId": "mark_read_api_v1_sites__slug__notifications_read_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReadIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_NotificationReadOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-action-types": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onay kuralı tanımlanabilecek işlem tipleri",
+    "operationId": "action_types_api_v1_sites__slug__approval_action_types_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ActionTypeOut"
+         },
+         "title": "Response Action Types Api V1 Sites  Slug  Approval Action Types Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-rules": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onay kuralları (işlem tipine göre)",
+    "operationId": "list_rules_api_v1_sites__slug__approval_rules_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "archived",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true → arşivdekiler",
+       "default": false,
+       "title": "Archived"
+      },
+      "description": "true → arşivdekiler"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/RuleOut"
+         },
+         "title": "Response List Rules Api V1 Sites  Slug  Approval Rules Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onay kuralı ekle",
+    "operationId": "create_rule_api_v1_sites__slug__approval_rules_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RuleIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RuleWriteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-rules/{rule_id}": {
+   "put": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Kuralı düzenle (yeni versiyon)",
+    "operationId": "update_rule_api_v1_sites__slug__approval_rules__rule_id__put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "rule_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Rule Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RuleIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RuleWriteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-rules/{rule_id}/archive": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Kuralı arşive kaldır",
+    "operationId": "archive_rule_api_v1_sites__slug__approval_rules__rule_id__archive_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "rule_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Rule Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RuleWriteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-rules/restore-defaults": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "\"Önerilen\" hazır şablonları kur",
+    "operationId": "restore_defaults_api_v1_sites__slug__approval_rules_restore_defaults_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RestoreOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approval-rules/simulate": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Bu işlem için hangi kural uygulanır?",
+    "operationId": "simulate_api_v1_sites__slug__approval_rules_simulate_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SimulateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimulateOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onay kutusu: bekleyenler · taleplerim · geçmiş",
+    "operationId": "list_requests_api_v1_sites__slug__approvals_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "tab",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "pending",
+        "mine",
+        "history"
+       ],
+       "type": "string",
+       "default": "pending",
+       "title": "Tab"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_RequestListItem_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onay talebi ayrıntısı ve zinciri",
+    "operationId": "get_request_api_v1_sites__slug__approvals__request_id__get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ApprovalRequestOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}/approve": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Onayla",
+    "operationId": "approve_api_v1_sites__slug__approvals__request_id__approve_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApprovalCommentIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovalRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}/reject": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Reddet (gerekçe zorunlu)",
+    "operationId": "reject_api_v1_sites__slug__approvals__request_id__reject_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApprovalReasonIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovalRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}/request-revision": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Revizyon iste (gerekçe zorunlu)",
+    "operationId": "request_revision_api_v1_sites__slug__approvals__request_id__request_revision_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApprovalReasonIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovalRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}/withdraw": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Talebimi geri çek",
+    "operationId": "withdraw_api_v1_sites__slug__approvals__request_id__withdraw_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovalRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/approvals/{request_id}/resubmit": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Revizyondan sonra yeniden gönder",
+    "operationId": "resubmit_api_v1_sites__slug__approvals__request_id__resubmit_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResubmitIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ApprovalRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/delegations": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Yetki devirlerim (verdiklerim ve aldıklarım)",
+    "operationId": "list_delegations_api_v1_sites__slug__delegations_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/DelegationOut"
+         },
+         "title": "Response List Delegations Api V1 Sites  Slug  Delegations Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Yetki devri tanımla",
+    "operationId": "create_delegation_api_v1_sites__slug__delegations_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DelegationIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_DelegationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/delegations/candidates": {
+   "get": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Yetkimi devredebileceğim kişiler (aynı rol)",
+    "operationId": "delegation_candidates_api_v1_sites__slug__delegations_candidates_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/CandidateOut"
+         },
+         "title": "Response Delegation Candidates Api V1 Sites  Slug  Delegations Candidates Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/delegations/{delegation_id}/end": {
+   "post": {
+    "tags": [
+     "onay"
+    ],
+    "summary": "Devri erken sonlandır",
+    "operationId": "end_delegation_api_v1_sites__slug__delegations__delegation_id__end_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "delegation_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Delegation Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_DelegationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -10407,6 +12032,64 @@
      "occupant"
     ],
     "title": "AccountKind"
+   },
+   "ActionType": {
+    "type": "string",
+    "enum": [
+     "charge_rule",
+     "charge_run",
+     "charge_run_reversal",
+     "refund",
+     "debt_write_off",
+     "expense",
+     "emergency_expense",
+     "purchase_request",
+     "purchase_order",
+     "quote_exception",
+     "reservation",
+     "renovation_permit",
+     "payment_plan",
+     "paid_service_tariff",
+     "role_change",
+     "finance_mode_change",
+     "registration",
+     "stock_count_difference",
+     "approval_rule_change"
+    ],
+    "title": "ActionType",
+    "description": "Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için\ntanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir."
+   },
+   "ActionTypeOut": {
+    "properties": {
+     "key": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "connected": {
+      "type": "boolean",
+      "title": "Connected",
+      "description": "true → bu tipteki işlemler şu an onaydan geçiyor"
+     }
+    },
+    "type": "object",
+    "required": [
+     "key",
+     "label",
+     "connected"
+    ],
+    "title": "ActionTypeOut"
+   },
+   "ActorType": {
+    "type": "string",
+    "enum": [
+     "user",
+     "system",
+     "delegate"
+    ],
+    "title": "ActorType"
    },
    "AddedOut": {
     "properties": {
@@ -10964,6 +12647,249 @@
     "type": "object",
     "title": "ApplicationIn"
    },
+   "ApprovalCommentIn": {
+    "properties": {
+     "comment": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comment"
+     }
+    },
+    "type": "object",
+    "title": "ApprovalCommentIn"
+   },
+   "ApprovalReasonIn": {
+    "properties": {
+     "comment": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Comment",
+      "description": "gerekçe (zorunlu)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "comment"
+    ],
+    "title": "ApprovalReasonIn"
+   },
+   "ApprovalRequestOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "action_label": {
+      "type": "string",
+      "title": "Action Label"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "summary": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Summary"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "status": {
+      "$ref": "#/components/schemas/ApprovalStatus"
+     },
+     "revision": {
+      "type": "integer",
+      "title": "Revision"
+     },
+     "requested_by": {
+      "type": "string",
+      "title": "Requested By"
+     },
+     "requested_by_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Requested By Id"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     },
+     "failure_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Failure Reason"
+     },
+     "post_approval": {
+      "type": "boolean",
+      "title": "Post Approval",
+      "description": "\"sonradan onay\" etiketi (acil gider)"
+     },
+     "escalated": {
+      "type": "boolean",
+      "title": "Escalated"
+     },
+     "remind_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Remind On"
+     },
+     "escalate_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Escalate On"
+     },
+     "progress": {
+      "type": "string",
+      "title": "Progress",
+      "description": "ör. \"2/3 onay\" — açık adım için"
+     },
+     "can_decide": {
+      "type": "boolean",
+      "title": "Can Decide",
+      "description": "oturumdaki kişi şimdi karar verebilir mi"
+     },
+     "acting_for": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acting For",
+      "description": "vekâleten karar verecekse asıl onaycı"
+     },
+     "can_withdraw": {
+      "type": "boolean",
+      "title": "Can Withdraw"
+     },
+     "can_resubmit": {
+      "type": "boolean",
+      "title": "Can Resubmit"
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/RequestStepOut"
+      },
+      "type": "array",
+      "title": "Steps"
+     },
+     "history": {
+      "items": {
+       "$ref": "#/components/schemas/DecisionOut"
+      },
+      "type": "array",
+      "title": "History",
+      "description": "tüm sürümlerin kararları"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "action_type",
+     "action_label",
+     "title",
+     "summary",
+     "amount",
+     "status",
+     "revision",
+     "requested_by",
+     "requested_by_id",
+     "created_at",
+     "decided_at",
+     "failure_reason",
+     "post_approval",
+     "escalated",
+     "remind_on",
+     "escalate_on",
+     "progress",
+     "can_decide",
+     "acting_for",
+     "can_withdraw",
+     "can_resubmit",
+     "steps",
+     "history"
+    ],
+    "title": "ApprovalRequestOut"
+   },
+   "ApprovalStatus": {
+    "type": "string",
+    "enum": [
+     "pending",
+     "revision_requested",
+     "approved",
+     "executed",
+     "execution_failed",
+     "rejected",
+     "withdrawn",
+     "module_disabled"
+    ],
+    "title": "ApprovalStatus"
+   },
    "ApproveIn": {
     "properties": {
      "unit_id": {
@@ -10975,6 +12901,24 @@
       "type": "string",
       "format": "date",
       "title": "Start Date"
+     },
+     "share_percent": {
+      "anyOf": [
+       {
+        "type": "number",
+        "maximum": 100,
+        "exclusiveMinimum": 0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Share Percent",
+      "description": "yalnız malik başvurusunda: yeni malikin hissesi (boşsa %100). Mevcut maliklerle toplam %100'ü aşarsa 409 owner_shares_exceed"
      }
     },
     "type": "object",
@@ -11122,6 +13066,88 @@
      "temporary_password"
     ],
     "title": "ApprovedOut"
+   },
+   "ApproverOut": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "User Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "role": {
+      "type": "string",
+      "title": "Role"
+     },
+     "source": {
+      "type": "string",
+      "enum": [
+       "rule",
+       "escalation"
+      ],
+      "title": "Source"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Decision"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By",
+      "description": "vekâleten verildiyse kararı veren"
+     },
+     "comment": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comment"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id",
+     "name",
+     "role",
+     "source",
+     "decision",
+     "decided_by",
+     "comment",
+     "decided_at"
+    ],
+    "title": "ApproverOut"
    },
    "AreaBasis": {
     "type": "string",
@@ -11494,7 +13520,8 @@
      "update",
      "delete",
      "import",
-     "download"
+     "download",
+     "export"
     ],
     "title": "AuditAction"
    },
@@ -11590,6 +13617,45 @@
        }
       ],
       "title": "Ip"
+     },
+     "actor_type": {
+      "$ref": "#/components/schemas/ActorType",
+      "description": "user (kişi) · system (gece işi, demo) · delegate"
+     },
+     "request_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Request Id",
+      "description": "isteğin kimliği (yanıttaki X-Request-ID)"
+     },
+     "user_agent": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Agent"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason",
+      "description": "hassas işlemlerde gerekçe"
      }
     },
     "type": "object",
@@ -11603,9 +13669,66 @@
      "entity_id",
      "before",
      "after",
-     "ip"
+     "ip",
+     "actor_type",
+     "request_id",
+     "user_agent",
+     "reason"
     ],
     "title": "AuditOut"
+   },
+   "AuthEventKind": {
+    "type": "string",
+    "enum": [
+     "login_succeeded",
+     "login_failed",
+     "account_locked",
+     "logout",
+     "password_changed",
+     "session_revoked",
+     "token_reused"
+    ],
+    "title": "AuthEventKind"
+   },
+   "AuthEventOut": {
+    "properties": {
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/AuthEventKind"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "device": {
+      "type": "string",
+      "title": "Device"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     }
+    },
+    "type": "object",
+    "required": [
+     "at",
+     "kind",
+     "label",
+     "device",
+     "ip"
+    ],
+    "title": "AuthEventOut"
    },
    "BlockCreate": {
     "properties": {
@@ -12373,6 +14496,29 @@
     },
     "type": "object",
     "title": "CancelIn"
+   },
+   "CandidateOut": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "User Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "role": {
+      "$ref": "#/components/schemas/SiteRole"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id",
+     "name",
+     "role"
+    ],
+    "title": "CandidateOut"
    },
    "CashAccountIn": {
     "properties": {
@@ -13924,6 +16070,14 @@
     ],
     "title": "DashboardOut"
    },
+   "DayBasis": {
+    "type": "string",
+    "enum": [
+     "calendar",
+     "business"
+    ],
+    "title": "DayBasis"
+   },
    "DebtorOut": {
     "properties": {
      "id": {
@@ -14199,6 +16353,15 @@
     ],
     "title": "DebtorSummaryOut"
    },
+   "Decision": {
+    "type": "string",
+    "enum": [
+     "approve",
+     "reject",
+     "revision"
+    ],
+    "title": "Decision"
+   },
    "DecisionIn": {
     "properties": {
      "id": {
@@ -14273,6 +16436,64 @@
     ],
     "title": "DecisionIn"
    },
+   "DecisionOut": {
+    "properties": {
+     "revision": {
+      "type": "integer",
+      "title": "Revision"
+     },
+     "step_index": {
+      "type": "integer",
+      "title": "Step Index"
+     },
+     "user_name": {
+      "type": "string",
+      "title": "User Name"
+     },
+     "on_behalf_of": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "On Behalf Of",
+      "description": "vekâleten: asıl onaycı (\"vekâleten: Selin\")"
+     },
+     "decision": {
+      "$ref": "#/components/schemas/Decision"
+     },
+     "comment": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comment"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "revision",
+     "step_index",
+     "user_name",
+     "on_behalf_of",
+     "decision",
+     "comment",
+     "at"
+    ],
+    "title": "DecisionOut"
+   },
    "DecisionsIn": {
     "properties": {
      "attendance_note": {
@@ -14298,6 +16519,154 @@
     },
     "type": "object",
     "title": "DecisionsIn"
+   },
+   "DelegationIn": {
+    "properties": {
+     "to_user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "To User Id"
+     },
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Roles"
+     },
+     "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Starts At"
+     },
+     "ends_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Ends At"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "to_user_id",
+     "roles",
+     "starts_at",
+     "ends_at"
+    ],
+    "title": "DelegationIn"
+   },
+   "DelegationOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "from_user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "From User Id"
+     },
+     "from_name": {
+      "type": "string",
+      "title": "From Name"
+     },
+     "to_user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "To User Id"
+     },
+     "to_name": {
+      "type": "string",
+      "title": "To Name"
+     },
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "title": "Roles"
+     },
+     "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Starts At"
+     },
+     "ends_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Ends At"
+     },
+     "ended_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ended At"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "state": {
+      "type": "string",
+      "enum": [
+       "scheduled",
+       "active",
+       "ended"
+      ],
+      "title": "State"
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "given",
+       "received"
+      ],
+      "title": "Direction"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "from_user_id",
+     "from_name",
+     "to_user_id",
+     "to_name",
+     "roles",
+     "starts_at",
+     "ends_at",
+     "ended_at",
+     "note",
+     "state",
+     "direction"
+    ],
+    "title": "DelegationOut"
    },
    "DeliverIn": {
     "properties": {
@@ -17149,6 +19518,167 @@
     ],
     "title": "NamedRef"
    },
+   "NotificationCategory": {
+    "type": "string",
+    "enum": [
+     "urgent",
+     "financial",
+     "security",
+     "operations",
+     "governance",
+     "announcement"
+    ],
+    "title": "NotificationCategory"
+   },
+   "NotificationChannel": {
+    "type": "string",
+    "enum": [
+     "push",
+     "sms",
+     "email"
+    ],
+    "title": "NotificationChannel"
+   },
+   "NotificationOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "category": {
+      "$ref": "#/components/schemas/NotificationCategory"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind",
+      "description": "olay türü, ör. \"approval.requested\" — ikon seçimi için"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "body": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Body"
+     },
+     "link_entity": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Link Entity",
+      "description": "tıklayınca: kayıt türü, ör. \"approval_requests\""
+     },
+     "link_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Link Id"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "read_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Read At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "category",
+     "kind",
+     "title",
+     "body",
+     "link_entity",
+     "link_id",
+     "created_at",
+     "read_at"
+    ],
+    "title": "NotificationOut"
+   },
+   "NotificationPage": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NotificationOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "unread_count": {
+      "type": "integer",
+      "title": "Unread Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total",
+     "unread_count"
+    ],
+    "title": "NotificationPage"
+   },
+   "NotificationReadOut": {
+    "properties": {
+     "marked": {
+      "type": "integer",
+      "title": "Marked"
+     },
+     "unread_count": {
+      "type": "integer",
+      "title": "Unread Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "marked",
+     "unread_count"
+    ],
+    "title": "NotificationReadOut"
+   },
    "NotifyIn": {
     "properties": {
      "notified_on": {
@@ -18132,6 +20662,37 @@
      "total"
     ],
     "title": "Page[RegistrationOut]"
+   },
+   "Page_RequestListItem_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/RequestListItem"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[RequestListItem]"
    },
    "Page_RequestOut_": {
     "properties": {
@@ -19439,6 +22000,127 @@
     ],
     "title": "PostedChargeOut"
    },
+   "PreferenceCell": {
+    "properties": {
+     "channel": {
+      "$ref": "#/components/schemas/NotificationChannel"
+     },
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled"
+     },
+     "locked": {
+      "type": "boolean",
+      "title": "Locked",
+      "description": "true → kapatılamaz (kilit ikonu)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "channel",
+     "enabled",
+     "locked"
+    ],
+    "title": "PreferenceCell"
+   },
+   "PreferenceChange": {
+    "properties": {
+     "category": {
+      "$ref": "#/components/schemas/NotificationCategory"
+     },
+     "channel": {
+      "$ref": "#/components/schemas/NotificationChannel"
+     },
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled"
+     }
+    },
+    "type": "object",
+    "required": [
+     "category",
+     "channel",
+     "enabled"
+    ],
+    "title": "PreferenceChange"
+   },
+   "PreferenceRow": {
+    "properties": {
+     "category": {
+      "$ref": "#/components/schemas/NotificationCategory"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "rule": {
+      "type": "string",
+      "title": "Rule",
+      "description": "locked · at_least_one (en az bir kanal açık) · free"
+     },
+     "channels": {
+      "items": {
+       "$ref": "#/components/schemas/PreferenceCell"
+      },
+      "type": "array",
+      "title": "Channels"
+     }
+    },
+    "type": "object",
+    "required": [
+     "category",
+     "label",
+     "rule",
+     "channels"
+    ],
+    "title": "PreferenceRow"
+   },
+   "PreferencesIn": {
+    "properties": {
+     "changes": {
+      "items": {
+       "$ref": "#/components/schemas/PreferenceChange"
+      },
+      "type": "array",
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Changes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "changes"
+    ],
+    "title": "PreferencesIn"
+   },
+   "PreferencesOut": {
+    "properties": {
+     "in_app": {
+      "type": "boolean",
+      "title": "In App",
+      "description": "uygulama içi bildirim her zaman açık",
+      "default": true
+     },
+     "delivery_enabled": {
+      "type": "boolean",
+      "title": "Delivery Enabled",
+      "description": "false: push/SMS/e-posta gönderimi henüz yok (K5); tercih saklanır",
+      "default": false
+     },
+     "categories": {
+      "items": {
+       "$ref": "#/components/schemas/PreferenceRow"
+      },
+      "type": "array",
+      "title": "Categories"
+     }
+    },
+    "type": "object",
+    "required": [
+     "categories"
+    ],
+    "title": "PreferencesOut"
+   },
    "PropertyKind": {
     "type": "string",
     "enum": [
@@ -19466,6 +22148,82 @@
      "site_slug"
     ],
     "title": "PublicSiteOut"
+   },
+   "PushPlatform": {
+    "type": "string",
+    "enum": [
+     "ios",
+     "android",
+     "web"
+    ],
+    "title": "PushPlatform"
+   },
+   "PushTokenIn": {
+    "properties": {
+     "token": {
+      "type": "string",
+      "maxLength": 4096,
+      "minLength": 10,
+      "title": "Token"
+     },
+     "platform": {
+      "$ref": "#/components/schemas/PushPlatform"
+     }
+    },
+    "type": "object",
+    "required": [
+     "token",
+     "platform"
+    ],
+    "title": "PushTokenIn"
+   },
+   "PushTokenRemoveIn": {
+    "properties": {
+     "token": {
+      "type": "string",
+      "maxLength": 4096,
+      "minLength": 10,
+      "title": "Token"
+     }
+    },
+    "type": "object",
+    "required": [
+     "token"
+    ],
+    "title": "PushTokenRemoveIn"
+   },
+   "QuorumKind": {
+    "type": "string",
+    "enum": [
+     "any",
+     "all",
+     "majority",
+     "count"
+    ],
+    "title": "QuorumKind"
+   },
+   "ReadIn": {
+    "properties": {
+     "ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string",
+         "format": "uuid"
+        },
+        "type": "array",
+        "maxItems": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ids",
+      "description": "boşsa okunmamışların hepsi"
+     }
+    },
+    "type": "object",
+    "title": "ReadIn"
    },
    "ReadOut": {
     "properties": {
@@ -20132,6 +22890,14 @@
     ],
     "title": "RegistrationOut"
    },
+   "RejectBehavior": {
+    "type": "string",
+    "enum": [
+     "single_rejects",
+     "counts"
+    ],
+    "title": "RejectBehavior"
+   },
    "RejectIn": {
     "properties": {
      "reason": {
@@ -20476,6 +23242,112 @@
     ],
     "title": "RequestEventKind"
    },
+   "RequestListItem": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "action_label": {
+      "type": "string",
+      "title": "Action Label"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "status": {
+      "$ref": "#/components/schemas/ApprovalStatus"
+     },
+     "requested_by": {
+      "type": "string",
+      "title": "Requested By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "progress": {
+      "type": "string",
+      "title": "Progress"
+     },
+     "post_approval": {
+      "type": "boolean",
+      "title": "Post Approval"
+     },
+     "escalated": {
+      "type": "boolean",
+      "title": "Escalated"
+     },
+     "remind_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Remind On"
+     },
+     "escalate_on": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Escalate On"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "action_type",
+     "action_label",
+     "title",
+     "amount",
+     "status",
+     "requested_by",
+     "created_at",
+     "progress",
+     "post_approval",
+     "escalated",
+     "remind_on",
+     "escalate_on"
+    ],
+    "title": "RequestListItem"
+   },
    "RequestOut": {
     "properties": {
      "id": {
@@ -20710,6 +23582,86 @@
     ],
     "title": "RequestStatus"
    },
+   "RequestStepOut": {
+    "properties": {
+     "index": {
+      "type": "integer",
+      "title": "Index"
+     },
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "title": "Roles"
+     },
+     "required": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Required"
+     },
+     "eligible": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eligible"
+     },
+     "approvals": {
+      "type": "integer",
+      "title": "Approvals"
+     },
+     "rejections": {
+      "type": "integer",
+      "title": "Rejections"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "waiting",
+       "open",
+       "approved",
+       "rejected"
+      ],
+      "title": "Status"
+     },
+     "quorum_unreachable": {
+      "type": "boolean",
+      "title": "Quorum Unreachable",
+      "description": "kalanların hepsi onaylasa da M'ye ulaşılamaz"
+     },
+     "approvers": {
+      "items": {
+       "$ref": "#/components/schemas/ApproverOut"
+      },
+      "type": "array",
+      "title": "Approvers"
+     }
+    },
+    "type": "object",
+    "required": [
+     "index",
+     "roles",
+     "required",
+     "eligible",
+     "approvals",
+     "rejections",
+     "status",
+     "quorum_unreachable",
+     "approvers"
+    ],
+    "title": "RequestStepOut"
+   },
    "RequestsOut": {
     "properties": {
      "open": {
@@ -20836,6 +23788,94 @@
     ],
     "title": "ResidentPollOut"
    },
+   "RestoreOut": {
+    "properties": {
+     "created": {
+      "items": {
+       "$ref": "#/components/schemas/RuleOut"
+      },
+      "type": "array",
+      "title": "Created"
+     },
+     "skipped": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Skipped"
+     }
+    },
+    "type": "object",
+    "required": [
+     "created",
+     "skipped"
+    ],
+    "title": "RestoreOut"
+   },
+   "ResubmitIn": {
+    "properties": {
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "rule": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RuleIn"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "onay kuralı değişikliğinde: yeni öneri"
+     }
+    },
+    "type": "object",
+    "title": "ResubmitIn"
+   },
+   "RevokedOut": {
+    "properties": {
+     "revoked": {
+      "type": "integer",
+      "title": "Revoked"
+     },
+     "current_revoked": {
+      "type": "boolean",
+      "title": "Current Revoked",
+      "description": "true → bu oturum da kapandı, girişe dön"
+     }
+    },
+    "type": "object",
+    "required": [
+     "revoked",
+     "current_revoked"
+    ],
+    "title": "RevokedOut"
+   },
    "RoleOut": {
     "properties": {
      "key": {
@@ -20915,6 +23955,18 @@
         "type": "null"
        }
       ]
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason",
+      "description": "yalnız unmatched satırda: neden eşleşmediği (ör. birden çok referans kodu)"
      }
     },
     "type": "object",
@@ -20926,9 +23978,243 @@
      "direction",
      "bank_reference",
      "status",
-     "suggestion"
+     "suggestion",
+     "reason"
     ],
     "title": "RowOut"
+   },
+   "RuleIn": {
+    "properties": {
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/StepIn"
+      },
+      "type": "array",
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Steps"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/StepMode",
+      "default": "sequential"
+     },
+     "reject_behavior": {
+      "$ref": "#/components/schemas/RejectBehavior",
+      "default": "single_rejects"
+     },
+     "amount_min": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Min",
+      "description": "hariç (tutar > alt)"
+     },
+     "amount_max": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Max",
+      "description": "dahil (tutar ≤ üst)"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source",
+      "description": "ör. \"emergency\""
+     },
+     "remind_after_days": {
+      "type": "integer",
+      "maximum": 30,
+      "minimum": 1,
+      "title": "Remind After Days"
+     },
+     "escalate_after_days": {
+      "type": "integer",
+      "maximum": 365,
+      "minimum": 2,
+      "title": "Escalate After Days"
+     },
+     "day_basis": {
+      "$ref": "#/components/schemas/DayBasis",
+      "default": "calendar"
+     },
+     "escalation_role": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SiteRole"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20)"
+     },
+     "effective_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Effective From"
+     },
+     "basis_note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Basis Note",
+      "description": "dayanak, ör. YK kararı"
+     }
+    },
+    "type": "object",
+    "required": [
+     "action_type",
+     "steps",
+     "remind_after_days",
+     "escalate_after_days",
+     "effective_from"
+    ],
+    "title": "RuleIn"
+   },
+   "RuleOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "action_label": {
+      "type": "string",
+      "title": "Action Label"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "is_template": {
+      "type": "boolean",
+      "title": "Is Template",
+      "description": "\"Önerilen\" hazır şablondan, henüz düzenlenmedi"
+     },
+     "applicable": {
+      "type": "boolean",
+      "title": "Applicable",
+      "description": "false → bir adımın rolünde aktif kullanıcı kalmadı"
+     },
+     "current": {
+      "$ref": "#/components/schemas/VersionOut",
+      "description": "en son versiyon (ileri tarihli olabilir)"
+     },
+     "in_force_version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Force Version",
+      "description": "bugün yürürlükteki versiyon"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "action_type",
+     "action_label",
+     "is_active",
+     "is_template",
+     "applicable",
+     "current",
+     "in_force_version"
+    ],
+    "title": "RuleOut"
+   },
+   "RuleWriteOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "saved",
+       "approval_pending"
+      ],
+      "title": "Status"
+     },
+     "rule": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RuleOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "approval_request_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Request Id"
+     },
+     "warnings": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Warnings",
+      "description": "ör. \"10.000,00 TL üstü için kural yok; varsayılan…\""
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "rule",
+     "approval_request_id",
+     "warnings"
+    ],
+    "title": "RuleWriteOut"
    },
    "ScheduleIn": {
     "properties": {
@@ -21053,6 +24339,75 @@
     ],
     "title": "SelectionIn"
    },
+   "SessionOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "device": {
+      "type": "string",
+      "title": "Device",
+      "description": "okunur cihaz adı, ör. \"Chrome · Windows\""
+     },
+     "user_agent": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Agent"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At",
+      "description": "giriş zamanı"
+     },
+     "last_used_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Used At"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     },
+     "is_current": {
+      "type": "boolean",
+      "title": "Is Current",
+      "description": "bu istek bu oturumdan geliyor"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "device",
+     "user_agent",
+     "ip",
+     "created_at",
+     "last_used_at",
+     "expires_at",
+     "is_current"
+    ],
+    "title": "SessionOut"
+   },
    "SettleIn": {
     "properties": {
      "returned_to": {
@@ -21076,6 +24431,126 @@
     },
     "type": "object",
     "title": "SettleIn"
+   },
+   "SimulateIn": {
+    "properties": {
+     "action_type": {
+      "$ref": "#/components/schemas/ActionType"
+     },
+     "amount": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     }
+    },
+    "type": "object",
+    "required": [
+     "action_type"
+    ],
+    "title": "SimulateIn"
+   },
+   "SimulateOut": {
+    "properties": {
+     "rule_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rule Id",
+      "description": "null → varsayılan kural (site yöneticisi 1/1)"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/StepMode"
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/SimulatedStep"
+      },
+      "type": "array",
+      "title": "Steps"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rule_id",
+     "version",
+     "mode",
+     "steps"
+    ],
+    "title": "SimulateOut"
+   },
+   "SimulatedStep": {
+    "properties": {
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "title": "Roles"
+     },
+     "required": {
+      "type": "integer",
+      "title": "Required"
+     },
+     "eligible": {
+      "type": "integer",
+      "title": "Eligible"
+     },
+     "approvers": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Approvers"
+     }
+    },
+    "type": "object",
+    "required": [
+     "roles",
+     "required",
+     "eligible",
+     "approvers"
+    ],
+    "title": "SimulatedStep"
    },
    "SiteAccessOut": {
     "properties": {
@@ -21693,6 +25168,44 @@
     ],
     "title": "SiteResponse"
    },
+   "SiteRole": {
+    "type": "string",
+    "enum": [
+     "Yönetici",
+     "Yönetim Kurulu Üyesi",
+     "Denetçi",
+     "Muhasebe",
+     "Güvenlik",
+     "Teknik Personel",
+     "Sakin"
+    ],
+    "title": "SiteRole",
+    "description": "Site rol şablonları. Adlar Türkçe saklanır (docs/05 §3)."
+   },
+   "SiteUnreadOut": {
+    "properties": {
+     "site_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Site Id"
+     },
+     "slug": {
+      "type": "string",
+      "title": "Slug"
+     },
+     "unread_count": {
+      "type": "integer",
+      "title": "Unread Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "site_id",
+     "slug",
+     "unread_count"
+    ],
+    "title": "SiteUnreadOut"
+   },
    "SiteUsageOut": {
     "properties": {
      "id": {
@@ -22004,6 +25517,95 @@
      "status"
     ],
     "title": "StatusIn"
+   },
+   "StepIn": {
+    "properties": {
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "maxItems": 6,
+      "minItems": 1,
+      "title": "Roles"
+     },
+     "quorum": {
+      "$ref": "#/components/schemas/QuorumKind",
+      "description": "any (1/N) · all (N/N) · majority · count (M)"
+     },
+     "count": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 50,
+        "minimum": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Count",
+      "description": "yalnız quorum=count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "roles",
+     "quorum"
+    ],
+    "title": "StepIn"
+   },
+   "StepMode": {
+    "type": "string",
+    "enum": [
+     "sequential",
+     "parallel"
+    ],
+    "title": "StepMode"
+   },
+   "StepOut": {
+    "properties": {
+     "roles": {
+      "items": {
+       "$ref": "#/components/schemas/SiteRole"
+      },
+      "type": "array",
+      "title": "Roles"
+     },
+     "quorum": {
+      "$ref": "#/components/schemas/QuorumKind"
+     },
+     "count": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Count"
+     },
+     "eligible": {
+      "type": "integer",
+      "title": "Eligible",
+      "description": "bu roldeki aktif kullanıcı sayısı (N)"
+     },
+     "required": {
+      "type": "integer",
+      "title": "Required",
+      "description": "gereken onay sayısı (M)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "roles",
+     "quorum",
+     "count",
+     "eligible",
+     "required"
+    ],
+    "title": "StepOut"
    },
    "StockDirection": {
     "type": "string",
@@ -22924,6 +26526,142 @@
     ],
     "title": "ValidationError"
    },
+   "VersionOut": {
+    "properties": {
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "effective_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Effective From"
+     },
+     "amount_min": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Min"
+     },
+     "amount_max": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Amount Max"
+     },
+     "source": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source"
+     },
+     "mode": {
+      "$ref": "#/components/schemas/StepMode"
+     },
+     "reject_behavior": {
+      "$ref": "#/components/schemas/RejectBehavior"
+     },
+     "remind_after_days": {
+      "type": "integer",
+      "title": "Remind After Days"
+     },
+     "escalate_after_days": {
+      "type": "integer",
+      "title": "Escalate After Days"
+     },
+     "day_basis": {
+      "$ref": "#/components/schemas/DayBasis"
+     },
+     "escalation_role": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SiteRole"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/StepOut"
+      },
+      "type": "array",
+      "title": "Steps"
+     },
+     "basis_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Basis Note"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "version",
+     "effective_from",
+     "amount_min",
+     "amount_max",
+     "source",
+     "mode",
+     "reject_behavior",
+     "remind_after_days",
+     "escalate_after_days",
+     "day_basis",
+     "escalation_role",
+     "steps",
+     "basis_note",
+     "created_by",
+     "created_at"
+    ],
+    "title": "VersionOut"
+   },
    "VisitorIn": {
     "properties": {
      "unit_id": {
@@ -23302,6 +27040,23 @@
     ],
     "title": "Written[AnnouncementOut]"
    },
+   "Written_ApprovalRequestOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ApprovalRequestOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ApprovalRequestOut]"
+   },
    "Written_ApprovedOut_": {
     "properties": {
      "data": {
@@ -23471,6 +27226,23 @@
      "message"
     ],
     "title": "Written[CustomerOut]"
+   },
+   "Written_DelegationOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/DelegationOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[DelegationOut]"
    },
    "Written_DepartmentOut_": {
     "properties": {
@@ -23659,6 +27431,23 @@
     ],
     "title": "Written[MovementOut]"
    },
+   "Written_NotificationReadOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/NotificationReadOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[NotificationReadOut]"
+   },
    "Written_OpeningBalanceOut_": {
     "properties": {
      "data": {
@@ -23778,6 +27567,23 @@
     ],
     "title": "Written[PollOut]"
    },
+   "Written_PreferencesOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PreferencesOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PreferencesOut]"
+   },
    "Written_RecurringOut_": {
     "properties": {
      "data": {
@@ -23862,6 +27668,57 @@
      "message"
     ],
     "title": "Written[RequestDetail]"
+   },
+   "Written_RestoreOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RestoreOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RestoreOut]"
+   },
+   "Written_RevokedOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RevokedOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RevokedOut]"
+   },
+   "Written_RuleWriteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RuleWriteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RuleWriteOut]"
    },
    "Written_ScheduleOut_": {
     "properties": {

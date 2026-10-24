@@ -146,6 +146,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Açık oturumlarım (cihazlar) */
+        get: operations["my_sessions_api_v1_me_sessions_get"];
+        put?: never;
+        post?: never;
+        /** Tüm cihazlardan çık */
+        delete: operations["revoke_all_sessions_api_v1_me_sessions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Bir oturumu kapat */
+        delete: operations["revoke_session_api_v1_me_sessions__session_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/security-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Giriş geçmişim (son 50 olay) */
+        get: operations["my_security_events_api_v1_me_security_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sitelere göre okunmamış bildirim sayısı */
+        get: operations["unread_summary_api_v1_me_notifications_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bildirim tercihlerim (kategori × kanal) */
+        get: operations["get_preferences_api_v1_me_notification_preferences_get"];
+        /** Bildirim tercihlerimi değiştir */
+        put: operations["put_preferences_api_v1_me_notification_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cihaz push jetonunu kaydet
+         * @description Uygulama açılışında ve jeton yenilenince çağrılır (tekrar güvenli).
+         */
+        post: operations["register_push_token_api_v1_me_push_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cihaz push jetonunu sil (çıkışta) */
+        post: operations["remove_push_token_api_v1_me_push_tokens_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}": {
         parameters: {
             query?: never;
@@ -2261,6 +2385,331 @@ export interface paths {
         patch: operations["update_staff_api_v1_sites__slug__staff__staff_id__patch"];
         trace?: never;
     };
+    "/api/v1/sites/{slug}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bildirimlerim (son 90 gün, yeni üstte) */
+        get: operations["list_notifications_api_v1_sites__slug__notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Okunmamış sayısı (zil rozeti) */
+        get: operations["unread_count_api_v1_sites__slug__notifications_unread_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Okundu işaretle (seçilenler ya da tümü) */
+        post: operations["mark_read_api_v1_sites__slug__notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-action-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Onay kuralı tanımlanabilecek işlem tipleri */
+        get: operations["action_types_api_v1_sites__slug__approval_action_types_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Onay kuralları (işlem tipine göre) */
+        get: operations["list_rules_api_v1_sites__slug__approval_rules_get"];
+        put?: never;
+        /** Onay kuralı ekle */
+        post: operations["create_rule_api_v1_sites__slug__approval_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Kuralı düzenle (yeni versiyon) */
+        put: operations["update_rule_api_v1_sites__slug__approval_rules__rule_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-rules/{rule_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kuralı arşive kaldır */
+        post: operations["archive_rule_api_v1_sites__slug__approval_rules__rule_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-rules/restore-defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Önerilen" hazır şablonları kur */
+        post: operations["restore_defaults_api_v1_sites__slug__approval_rules_restore_defaults_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approval-rules/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bu işlem için hangi kural uygulanır? */
+        post: operations["simulate_api_v1_sites__slug__approval_rules_simulate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Onay kutusu: bekleyenler · taleplerim · geçmiş */
+        get: operations["list_requests_api_v1_sites__slug__approvals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Onay talebi ayrıntısı ve zinciri */
+        get: operations["get_request_api_v1_sites__slug__approvals__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Onayla */
+        post: operations["approve_api_v1_sites__slug__approvals__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reddet (gerekçe zorunlu) */
+        post: operations["reject_api_v1_sites__slug__approvals__request_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}/request-revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revizyon iste (gerekçe zorunlu) */
+        post: operations["request_revision_api_v1_sites__slug__approvals__request_id__request_revision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Talebimi geri çek */
+        post: operations["withdraw_api_v1_sites__slug__approvals__request_id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/approvals/{request_id}/resubmit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revizyondan sonra yeniden gönder */
+        post: operations["resubmit_api_v1_sites__slug__approvals__request_id__resubmit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/delegations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yetki devirlerim (verdiklerim ve aldıklarım) */
+        get: operations["list_delegations_api_v1_sites__slug__delegations_get"];
+        put?: never;
+        /** Yetki devri tanımla */
+        post: operations["create_delegation_api_v1_sites__slug__delegations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/delegations/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yetkimi devredebileceğim kişiler (aynı rol) */
+        get: operations["delegation_candidates_api_v1_sites__slug__delegations_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/delegations/{delegation_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devri erken sonlandır */
+        post: operations["end_delegation_api_v1_sites__slug__delegations__delegation_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2270,6 +2719,29 @@ export interface components {
          * @enum {string}
          */
         AccountKind: "owner" | "occupant";
+        /**
+         * ActionType
+         * @description Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için
+         *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
+         * @enum {string}
+         */
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change";
+        /** ActionTypeOut */
+        ActionTypeOut: {
+            key: components["schemas"]["ActionType"];
+            /** Label */
+            label: string;
+            /**
+             * Connected
+             * @description true → bu tipteki işlemler şu an onaydan geçiyor
+             */
+            connected: boolean;
+        };
+        /**
+         * ActorType
+         * @enum {string}
+         */
+        ActorType: "user" | "system" | "delegate";
         /** AddedOut */
         AddedOut: {
             member: components["schemas"]["MemberOut"];
@@ -2453,6 +2925,101 @@ export interface components {
              */
             kvkk_ack: boolean;
         };
+        /** ApprovalCommentIn */
+        ApprovalCommentIn: {
+            /** Comment */
+            comment?: string | null;
+        };
+        /** ApprovalReasonIn */
+        ApprovalReasonIn: {
+            /**
+             * Comment
+             * @description gerekçe (zorunlu)
+             */
+            comment: string;
+        };
+        /** ApprovalRequestOut */
+        ApprovalRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            action_type: components["schemas"]["ActionType"];
+            /** Action Label */
+            action_label: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: {
+                [key: string]: unknown;
+            };
+            /** Amount */
+            amount: string | null;
+            status: components["schemas"]["ApprovalStatus"];
+            /** Revision */
+            revision: number;
+            /** Requested By */
+            requested_by: string;
+            /**
+             * Requested By Id
+             * Format: uuid
+             */
+            requested_by_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /**
+             * Post Approval
+             * @description "sonradan onay" etiketi (acil gider)
+             */
+            post_approval: boolean;
+            /** Escalated */
+            escalated: boolean;
+            /** Remind On */
+            remind_on: string | null;
+            /** Escalate On */
+            escalate_on: string | null;
+            /**
+             * Progress
+             * @description ör. "2/3 onay" — açık adım için
+             */
+            progress: string;
+            /**
+             * Can Decide
+             * @description oturumdaki kişi şimdi karar verebilir mi
+             */
+            can_decide: boolean;
+            /**
+             * Acting For
+             * @description vekâleten karar verecekse asıl onaycı
+             */
+            acting_for: string | null;
+            /** Can Withdraw */
+            can_withdraw: boolean;
+            /** Can Resubmit */
+            can_resubmit: boolean;
+            /** Steps */
+            steps: components["schemas"]["RequestStepOut"][];
+            /**
+             * History
+             * @description tüm sürümlerin kararları
+             */
+            history: components["schemas"]["DecisionOut"][];
+        };
+        /**
+         * ApprovalStatus
+         * @enum {string}
+         */
+        ApprovalStatus: "pending" | "revision_requested" | "approved" | "executed" | "execution_failed" | "rejected" | "withdrawn" | "module_disabled";
         /** ApproveIn */
         ApproveIn: {
             /**
@@ -2465,6 +3032,11 @@ export interface components {
              * Format: date
              */
             start_date: string;
+            /**
+             * Share Percent
+             * @description yalnız malik başvurusunda: yeni malikin hissesi (boşsa %100). Mevcut maliklerle toplam %100'ü aşarsa 409 owner_shares_exceed
+             */
+            share_percent?: number | string | null;
         };
         /** ApprovedOut */
         ApprovedOut: {
@@ -2514,6 +3086,33 @@ export interface components {
              * @description yeni sakin giriş hesabının geçici parolası; yalnız bu yanıtta (K5'e dek elden)
              */
             temporary_password: string | null;
+        };
+        /** ApproverOut */
+        ApproverOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "rule" | "escalation";
+            decision: components["schemas"]["Decision"] | null;
+            /**
+             * Decided By
+             * @description vekâleten verildiyse kararı veren
+             */
+            decided_by: string | null;
+            /** Comment */
+            comment: string | null;
+            /** Decided At */
+            decided_at: string | null;
         };
         /**
          * AreaBasis
@@ -2611,7 +3210,7 @@ export interface components {
          * AuditAction
          * @enum {string}
          */
-        AuditAction: "create" | "update" | "delete" | "import" | "download";
+        AuditAction: "create" | "update" | "delete" | "import" | "download" | "export";
         /** AuditOut */
         AuditOut: {
             /**
@@ -2653,6 +3252,40 @@ export interface components {
             after: {
                 [key: string]: unknown;
             } | null;
+            /** Ip */
+            ip: string | null;
+            /** @description user (kişi) · system (gece işi, demo) · delegate */
+            actor_type: components["schemas"]["ActorType"];
+            /**
+             * Request Id
+             * @description isteğin kimliği (yanıttaki X-Request-ID)
+             */
+            request_id: string | null;
+            /** User Agent */
+            user_agent: string | null;
+            /**
+             * Reason
+             * @description hassas işlemlerde gerekçe
+             */
+            reason: string | null;
+        };
+        /**
+         * AuthEventKind
+         * @enum {string}
+         */
+        AuthEventKind: "login_succeeded" | "login_failed" | "account_locked" | "logout" | "password_changed" | "session_revoked" | "token_reused";
+        /** AuthEventOut */
+        AuthEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            kind: components["schemas"]["AuthEventKind"];
+            /** Label */
+            label: string;
+            /** Device */
+            device: string;
             /** Ip */
             ip: string | null;
         };
@@ -2971,6 +3604,17 @@ export interface components {
         CancelIn: {
             /** Reason */
             reason?: string | null;
+        };
+        /** CandidateOut */
+        CandidateOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            role: components["schemas"]["SiteRole"];
         };
         /** CashAccountIn */
         CashAccountIn: {
@@ -3582,6 +4226,11 @@ export interface components {
              */
             cash_balance: string | null;
         };
+        /**
+         * DayBasis
+         * @enum {string}
+         */
+        DayBasis: "calendar" | "business";
         /** DebtorOut */
         DebtorOut: {
             /**
@@ -3718,6 +4367,11 @@ export interface components {
              */
             average_balance: string;
         };
+        /**
+         * Decision
+         * @enum {string}
+         */
+        Decision: "approve" | "reject" | "revision";
         /** DecisionIn */
         DecisionIn: {
             /**
@@ -3736,12 +4390,104 @@ export interface components {
             /** Votes Abstain */
             votes_abstain?: number | null;
         };
+        /** DecisionOut */
+        DecisionOut: {
+            /** Revision */
+            revision: number;
+            /** Step Index */
+            step_index: number;
+            /** User Name */
+            user_name: string;
+            /**
+             * On Behalf Of
+             * @description vekâleten: asıl onaycı ("vekâleten: Selin")
+             */
+            on_behalf_of: string | null;
+            decision: components["schemas"]["Decision"];
+            /** Comment */
+            comment: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** DecisionsIn */
         DecisionsIn: {
             /** Attendance Note */
             attendance_note?: string | null;
             /** Items */
             items?: components["schemas"]["DecisionIn"][];
+        };
+        /** DelegationIn */
+        DelegationIn: {
+            /**
+             * To User Id
+             * Format: uuid
+             */
+            to_user_id: string;
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** DelegationOut */
+        DelegationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * From User Id
+             * Format: uuid
+             */
+            from_user_id: string;
+            /** From Name */
+            from_name: string;
+            /**
+             * To User Id
+             * Format: uuid
+             */
+            to_user_id: string;
+            /** To Name */
+            to_name: string;
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "scheduled" | "active" | "ended";
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "given" | "received";
         };
         /** DeliverIn */
         DeliverIn: {
@@ -4907,6 +5653,68 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * NotificationCategory
+         * @enum {string}
+         */
+        NotificationCategory: "urgent" | "financial" | "security" | "operations" | "governance" | "announcement";
+        /**
+         * NotificationChannel
+         * @enum {string}
+         */
+        NotificationChannel: "push" | "sms" | "email";
+        /** NotificationOut */
+        NotificationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            category: components["schemas"]["NotificationCategory"];
+            /**
+             * Kind
+             * @description olay türü, ör. "approval.requested" — ikon seçimi için
+             */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string | null;
+            /**
+             * Link Entity
+             * @description tıklayınca: kayıt türü, ör. "approval_requests"
+             */
+            link_entity: string | null;
+            /** Link Id */
+            link_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Read At */
+            read_at: string | null;
+        };
+        /** NotificationPage */
+        NotificationPage: {
+            /** Items */
+            items: components["schemas"]["NotificationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Unread Count */
+            unread_count: number;
+        };
+        /** NotificationReadOut */
+        NotificationReadOut: {
+            /** Marked */
+            marked: number;
+            /** Unread Count */
+            unread_count: number;
+        };
         /** NotifyIn */
         NotifyIn: {
             /**
@@ -5261,6 +6069,17 @@ export interface components {
         Page_RegistrationOut_: {
             /** Items */
             items: components["schemas"]["RegistrationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[RequestListItem] */
+        Page_RequestListItem_: {
+            /** Items */
+            items: components["schemas"]["RequestListItem"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -5787,6 +6606,59 @@ export interface components {
             /** Lines */
             lines: components["schemas"]["LineOut"][];
         };
+        /** PreferenceCell */
+        PreferenceCell: {
+            channel: components["schemas"]["NotificationChannel"];
+            /** Enabled */
+            enabled: boolean;
+            /**
+             * Locked
+             * @description true → kapatılamaz (kilit ikonu)
+             */
+            locked: boolean;
+        };
+        /** PreferenceChange */
+        PreferenceChange: {
+            category: components["schemas"]["NotificationCategory"];
+            channel: components["schemas"]["NotificationChannel"];
+            /** Enabled */
+            enabled: boolean;
+        };
+        /** PreferenceRow */
+        PreferenceRow: {
+            category: components["schemas"]["NotificationCategory"];
+            /** Label */
+            label: string;
+            /**
+             * Rule
+             * @description locked · at_least_one (en az bir kanal açık) · free
+             */
+            rule: string;
+            /** Channels */
+            channels: components["schemas"]["PreferenceCell"][];
+        };
+        /** PreferencesIn */
+        PreferencesIn: {
+            /** Changes */
+            changes: components["schemas"]["PreferenceChange"][];
+        };
+        /** PreferencesOut */
+        PreferencesOut: {
+            /**
+             * In App
+             * @description uygulama içi bildirim her zaman açık
+             * @default true
+             */
+            in_app: boolean;
+            /**
+             * Delivery Enabled
+             * @description false: push/SMS/e-posta gönderimi henüz yok (K5); tercih saklanır
+             * @default false
+             */
+            delivery_enabled: boolean;
+            /** Categories */
+            categories: components["schemas"]["PreferenceRow"][];
+        };
         /**
          * PropertyKind
          * @enum {string}
@@ -5798,6 +6670,35 @@ export interface components {
             site_name: string;
             /** Site Slug */
             site_slug: string;
+        };
+        /**
+         * PushPlatform
+         * @enum {string}
+         */
+        PushPlatform: "ios" | "android" | "web";
+        /** PushTokenIn */
+        PushTokenIn: {
+            /** Token */
+            token: string;
+            platform: components["schemas"]["PushPlatform"];
+        };
+        /** PushTokenRemoveIn */
+        PushTokenRemoveIn: {
+            /** Token */
+            token: string;
+        };
+        /**
+         * QuorumKind
+         * @enum {string}
+         */
+        QuorumKind: "any" | "all" | "majority" | "count";
+        /** ReadIn */
+        ReadIn: {
+            /**
+             * Ids
+             * @description boşsa okunmamışların hepsi
+             */
+            ids?: string[] | null;
         };
         /** ReadOut */
         ReadOut: {
@@ -6087,6 +6988,11 @@ export interface components {
             /** Unit Name */
             unit_name: string | null;
         };
+        /**
+         * RejectBehavior
+         * @enum {string}
+         */
+        RejectBehavior: "single_rejects" | "counts";
         /** RejectIn */
         RejectIn: {
             /** Reason */
@@ -6198,6 +7104,41 @@ export interface components {
          * @enum {string}
          */
         RequestEventKind: "created" | "status_changed" | "assigned" | "comment" | "resolved" | "department_changed";
+        /** RequestListItem */
+        RequestListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            action_type: components["schemas"]["ActionType"];
+            /** Action Label */
+            action_label: string;
+            /** Title */
+            title: string;
+            /** Amount */
+            amount: string | null;
+            status: components["schemas"]["ApprovalStatus"];
+            /** Requested By */
+            requested_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Progress */
+            progress: string;
+            /** Post Approval */
+            post_approval: boolean;
+            /** Escalated */
+            escalated: boolean;
+            /** Remind On */
+            remind_on: string | null;
+            /** Escalate On */
+            escalate_on: string | null;
+        };
         /** RequestOut */
         RequestOut: {
             /**
@@ -6268,6 +7209,33 @@ export interface components {
          * @enum {string}
          */
         RequestStatus: "open" | "in_progress" | "waiting" | "resolved" | "closed" | "cancelled";
+        /** RequestStepOut */
+        RequestStepOut: {
+            /** Index */
+            index: number;
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            /** Required */
+            required: number | null;
+            /** Eligible */
+            eligible: number | null;
+            /** Approvals */
+            approvals: number;
+            /** Rejections */
+            rejections: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "waiting" | "open" | "approved" | "rejected";
+            /**
+             * Quorum Unreachable
+             * @description kalanların hepsi onaylasa da M'ye ulaşılamaz
+             */
+            quorum_unreachable: boolean;
+            /** Approvers */
+            approvers: components["schemas"]["ApproverOut"][];
+        };
         /** RequestsOut */
         RequestsOut: {
             /** Open */
@@ -6319,6 +7287,32 @@ export interface components {
              */
             my_votes: components["schemas"]["MyVote"][];
         };
+        /** RestoreOut */
+        RestoreOut: {
+            /** Created */
+            created: components["schemas"]["RuleOut"][];
+            /** Skipped */
+            skipped: string[];
+        };
+        /** ResubmitIn */
+        ResubmitIn: {
+            /** Title */
+            title?: string | null;
+            /** Amount */
+            amount?: string | null;
+            /** @description onay kuralı değişikliğinde: yeni öneri */
+            rule?: components["schemas"]["RuleIn"] | null;
+        };
+        /** RevokedOut */
+        RevokedOut: {
+            /** Revoked */
+            revoked: number;
+            /**
+             * Current Revoked
+             * @description true → bu oturum da kapandı, girişe dön
+             */
+            current_revoked: boolean;
+        };
         /** RoleOut */
         RoleOut: {
             /** Key */
@@ -6355,6 +7349,100 @@ export interface components {
             /** @description matched (işaretli gelir) · suggested · unmatched · ignored (çıkış) · duplicate */
             status: components["schemas"]["MatchStatus"];
             suggestion: components["schemas"]["SuggestionOut"] | null;
+            /**
+             * Reason
+             * @description yalnız unmatched satırda: neden eşleşmediği (ör. birden çok referans kodu)
+             */
+            reason: string | null;
+        };
+        /** RuleIn */
+        RuleIn: {
+            action_type: components["schemas"]["ActionType"];
+            /** Steps */
+            steps: components["schemas"]["StepIn"][];
+            /** @default sequential */
+            mode: components["schemas"]["StepMode"];
+            /** @default single_rejects */
+            reject_behavior: components["schemas"]["RejectBehavior"];
+            /**
+             * Amount Min
+             * @description hariç (tutar > alt)
+             */
+            amount_min?: string | null;
+            /**
+             * Amount Max
+             * @description dahil (tutar ≤ üst)
+             */
+            amount_max?: string | null;
+            /**
+             * Source
+             * @description ör. "emergency"
+             */
+            source?: string | null;
+            /** Remind After Days */
+            remind_after_days: number;
+            /** Escalate After Days */
+            escalate_after_days: number;
+            /** @default calendar */
+            day_basis: components["schemas"]["DayBasis"];
+            /** @description boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20) */
+            escalation_role?: components["schemas"]["SiteRole"] | null;
+            /**
+             * Effective From
+             * Format: date
+             */
+            effective_from: string;
+            /**
+             * Basis Note
+             * @description dayanak, ör. YK kararı
+             */
+            basis_note?: string | null;
+        };
+        /** RuleOut */
+        RuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            action_type: components["schemas"]["ActionType"];
+            /** Action Label */
+            action_label: string;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Is Template
+             * @description "Önerilen" hazır şablondan, henüz düzenlenmedi
+             */
+            is_template: boolean;
+            /**
+             * Applicable
+             * @description false → bir adımın rolünde aktif kullanıcı kalmadı
+             */
+            applicable: boolean;
+            /** @description en son versiyon (ileri tarihli olabilir) */
+            current: components["schemas"]["VersionOut"];
+            /**
+             * In Force Version
+             * @description bugün yürürlükteki versiyon
+             */
+            in_force_version: number | null;
+        };
+        /** RuleWriteOut */
+        RuleWriteOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "saved" | "approval_pending";
+            rule: components["schemas"]["RuleOut"] | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /**
+             * Warnings
+             * @description ör. "10.000,00 TL üstü için kural yok; varsayılan…"
+             */
+            warnings: string[];
         };
         /** ScheduleIn */
         ScheduleIn: {
@@ -6416,6 +7504,44 @@ export interface components {
              */
             ledger_account_id: string;
         };
+        /** SessionOut */
+        SessionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Device
+             * @description okunur cihaz adı, ör. "Chrome · Windows"
+             */
+            device: string;
+            /** User Agent */
+            user_agent: string | null;
+            /** Ip */
+            ip: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description giriş zamanı
+             */
+            created_at: string;
+            /**
+             * Last Used At
+             * Format: date-time
+             */
+            last_used_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Is Current
+             * @description bu istek bu oturumdan geliyor
+             */
+            is_current: boolean;
+        };
         /** SettleIn */
         SettleIn: {
             /** Returned To */
@@ -6426,6 +7552,38 @@ export interface components {
              * @default false
              */
             disposed: boolean;
+        };
+        /** SimulateIn */
+        SimulateIn: {
+            action_type: components["schemas"]["ActionType"];
+            /** Amount */
+            amount?: string | null;
+            /** Source */
+            source?: string | null;
+        };
+        /** SimulateOut */
+        SimulateOut: {
+            /**
+             * Rule Id
+             * @description null → varsayılan kural (site yöneticisi 1/1)
+             */
+            rule_id: string | null;
+            /** Version */
+            version: number | null;
+            mode: components["schemas"]["StepMode"];
+            /** Steps */
+            steps: components["schemas"]["SimulatedStep"][];
+        };
+        /** SimulatedStep */
+        SimulatedStep: {
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            /** Required */
+            required: number;
+            /** Eligible */
+            eligible: number;
+            /** Approvers */
+            approvers: string[];
         };
         /** SiteAccessOut */
         SiteAccessOut: {
@@ -6635,6 +7793,24 @@ export interface components {
             /** Modules */
             modules: string[];
         };
+        /**
+         * SiteRole
+         * @description Site rol şablonları. Adlar Türkçe saklanır (docs/05 §3).
+         * @enum {string}
+         */
+        SiteRole: "Yönetici" | "Yönetim Kurulu Üyesi" | "Denetçi" | "Muhasebe" | "Güvenlik" | "Teknik Personel" | "Sakin";
+        /** SiteUnreadOut */
+        SiteUnreadOut: {
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /** Slug */
+            slug: string;
+            /** Unread Count */
+            unread_count: number;
+        };
         /** SiteUsageOut */
         SiteUsageOut: {
             /**
@@ -6733,6 +7909,41 @@ export interface components {
              * @description çözüldü/kapandı yapılırken zorunlu
              */
             resolution?: string | null;
+        };
+        /** StepIn */
+        StepIn: {
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            /** @description any (1/N) · all (N/N) · majority · count (M) */
+            quorum: components["schemas"]["QuorumKind"];
+            /**
+             * Count
+             * @description yalnız quorum=count
+             */
+            count?: number | null;
+        };
+        /**
+         * StepMode
+         * @enum {string}
+         */
+        StepMode: "sequential" | "parallel";
+        /** StepOut */
+        StepOut: {
+            /** Roles */
+            roles: components["schemas"]["SiteRole"][];
+            quorum: components["schemas"]["QuorumKind"];
+            /** Count */
+            count: number | null;
+            /**
+             * Eligible
+             * @description bu roldeki aktif kullanıcı sayısı (N)
+             */
+            eligible: number;
+            /**
+             * Required
+             * @description gereken onay sayısı (M)
+             */
+            required: number;
         };
         /**
          * StockDirection
@@ -7029,6 +8240,41 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** VersionOut */
+        VersionOut: {
+            /** Version */
+            version: number;
+            /**
+             * Effective From
+             * Format: date
+             */
+            effective_from: string;
+            /** Amount Min */
+            amount_min: string | null;
+            /** Amount Max */
+            amount_max: string | null;
+            /** Source */
+            source: string | null;
+            mode: components["schemas"]["StepMode"];
+            reject_behavior: components["schemas"]["RejectBehavior"];
+            /** Remind After Days */
+            remind_after_days: number;
+            /** Escalate After Days */
+            escalate_after_days: number;
+            day_basis: components["schemas"]["DayBasis"];
+            escalation_role: components["schemas"]["SiteRole"] | null;
+            /** Steps */
+            steps: components["schemas"]["StepOut"][];
+            /** Basis Note */
+            basis_note: string | null;
+            /** Created By */
+            created_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** VisitorIn */
         VisitorIn: {
             /**
@@ -7158,6 +8404,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ApprovalRequestOut] */
+        Written_ApprovalRequestOut_: {
+            data: components["schemas"]["ApprovalRequestOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ApprovedOut] */
         Written_ApprovedOut_: {
             data: components["schemas"]["ApprovedOut"];
@@ -7215,6 +8467,12 @@ export interface components {
         /** Written[CustomerOut] */
         Written_CustomerOut_: {
             data: components["schemas"]["CustomerOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[DelegationOut] */
+        Written_DelegationOut_: {
+            data: components["schemas"]["DelegationOut"];
             /** Message */
             message: string;
         };
@@ -7284,6 +8542,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[NotificationReadOut] */
+        Written_NotificationReadOut_: {
+            data: components["schemas"]["NotificationReadOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[OpeningBalanceOut] */
         Written_OpeningBalanceOut_: {
             data: components["schemas"]["OpeningBalanceOut"];
@@ -7326,6 +8590,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[PreferencesOut] */
+        Written_PreferencesOut_: {
+            data: components["schemas"]["PreferencesOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[RecurringOut] */
         Written_RecurringOut_: {
             data: components["schemas"]["RecurringOut"];
@@ -7353,6 +8623,24 @@ export interface components {
         /** Written[RequestDetail] */
         Written_RequestDetail_: {
             data: components["schemas"]["RequestDetail"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RestoreOut] */
+        Written_RestoreOut_: {
+            data: components["schemas"]["RestoreOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RevokedOut] */
+        Written_RevokedOut_: {
+            data: components["schemas"]["RevokedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RuleWriteOut] */
+        Written_RuleWriteOut_: {
+            data: components["schemas"]["RuleWriteOut"];
             /** Message */
             message: string;
         };
@@ -7827,6 +9115,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    my_sessions_api_v1_me_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"][];
+                };
+            };
+        };
+    };
+    revoke_all_sessions_api_v1_me_sessions_delete: {
+        parameters: {
+            query?: {
+                /** @description true → bu oturum açık kalır */
+                keep_current?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RevokedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_session_api_v1_me_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_security_events_api_v1_me_security_events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthEventOut"][];
+                };
+            };
+        };
+    };
+    unread_summary_api_v1_me_notifications_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteUnreadOut"][];
+                };
+            };
+        };
+    };
+    get_preferences_api_v1_me_notification_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesOut"];
+                };
+            };
+        };
+    };
+    put_preferences_api_v1_me_notification_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PreferencesOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_push_token_api_v1_me_push_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_push_token_api_v1_me_push_tokens_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenRemoveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -11895,6 +13419,7 @@ export interface operations {
                 entity_id?: string | null;
                 action?: components["schemas"]["AuditAction"] | null;
                 user_id?: string | null;
+                actor_type?: components["schemas"]["ActorType"] | null;
                 from?: string | null;
                 to?: string | null;
                 page?: number;
@@ -13045,6 +14570,715 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_StaffOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_sites__slug__notifications_get: {
+        parameters: {
+            query?: {
+                /** @description true → yalnız okunmamış */
+                unread?: boolean;
+                category?: components["schemas"]["NotificationCategory"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unread_count_api_v1_sites__slug__notifications_unread_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_sites__slug__notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_NotificationReadOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_types_api_v1_sites__slug__approval_action_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionTypeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_v1_sites__slug__approval_rules_get: {
+        parameters: {
+            query?: {
+                /** @description true → arşivdekiler */
+                archived?: boolean;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rule_api_v1_sites__slug__approval_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RuleWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_v1_sites__slug__approval_rules__rule_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RuleWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_rule_api_v1_sites__slug__approval_rules__rule_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RuleWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_defaults_api_v1_sites__slug__approval_rules_restore_defaults_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RestoreOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    simulate_api_v1_sites__slug__approval_rules_simulate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_requests_api_v1_sites__slug__approvals_get: {
+        parameters: {
+            query?: {
+                tab?: "pending" | "mine" | "history";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RequestListItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_request_api_v1_sites__slug__approvals__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_v1_sites__slug__approvals__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalCommentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ApprovalRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_api_v1_sites__slug__approvals__request_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalReasonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ApprovalRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_revision_api_v1_sites__slug__approvals__request_id__request_revision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalReasonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ApprovalRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_api_v1_sites__slug__approvals__request_id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ApprovalRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resubmit_api_v1_sites__slug__approvals__request_id__resubmit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResubmitIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ApprovalRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_delegations_api_v1_sites__slug__delegations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DelegationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_delegation_api_v1_sites__slug__delegations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DelegationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DelegationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delegation_candidates_api_v1_sites__slug__delegations_candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_delegation_api_v1_sites__slug__delegations__delegation_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delegation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DelegationOut_"];
                 };
             };
             /** @description Validation Error */
