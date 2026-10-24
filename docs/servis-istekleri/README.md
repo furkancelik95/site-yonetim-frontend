@@ -10,9 +10,9 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 2. İlgili handler `src/mocks/handlers.ts`'den silinir
 3. Ekranda elle yazılmış tip üretilmiş tiple değiştirilir
 
-Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi).
+Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-Şu an sahte servis yok: 01–18'in hepsi backend'de (15.10.2026).
+01–18 backend'de (15.10.2026). **19–26 sahte serviste** (24.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -34,6 +34,14 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [16](16-sozlesmeler.md) | Hizmet sözleşmeleri | `GET/POST/PATCH …/contracts` | `/sozlesmeler` | **Backend'de** (#44) |
 | [17](17-demirbas-stok.md) | Demirbaş ve stok | `…/assets`, `…/stock-items`, `…/stock-items/{id}/moves` | `/demirbas` | **Backend'de** (#45) |
 | [18](18-personel.md) | Site personeli | `GET/POST/PATCH …/staff` | `/personel` | **Backend'de** (#46) — modül `staff` |
+| [19](19-yapi-tanimlari.md) | Yapı tanımları: ortak alanlar, bölüm tipi, yürürlük tarihli öznitelik, toplu düzenleme, yapı özeti | `…/common-areas`, `POST/PATCH …/unit-types`, `PATCH …/units/{id}/attributes`, `…/attribute-history`, `POST …/units/bulk-update`, `GET …/structure/summary` | `/yapi`, `/daireler`, bölüm kartı | Sahte servis |
+| [20](20-bolum-360.md) | Bölüm 360°: özet, maskeli iletişim + görüntüleme kaydı, `requests/visitors?unit_id`, hane üyeleri | `GET …/units/{id}/overview`, `POST …/people/{id}/contact-views`, `…/units/{id}/household`, `…/resident/household` | `/daireler/{id}`, `/kisiler`, sakin `/hane` | Sahte servis |
+| [21](21-kisiler.md) | Mükerrer kişi önerisi ve birleştirme, satış/veraset | `GET …/people/duplicates`, `POST …/people/merge`, `POST …/units/{id}/ownership-transfer` | `/kisiler`, bölüm kartı | Sahte servis — borç devri K10 |
+| [22](22-araclar.md) | Araçlar ve sakin "Araçlarım" | `…/settings/vehicles`, `…/vehicles`, `…/resident/vehicles` | `/araclar`, bölüm kartı, sakin `/araclar` | Sahte servis |
+| [23](23-kayit-yontemleri-davetler.md) | Kayıt yöntemleri, davetler, QR afiş önseçimi, herkese açık formda blok/bölüm | `…/settings/registration`, `…/invitations`, `/public/invitations/{token}`, `/public/registration/{code}` ek alanlar | `/kayit-basvurulari`, `/kayit-afisi`, `/davet/:token`, `/kayit/:code` | Sahte servis — SMS K5 |
+| [24](24-ozel-alanlar.md) | Özel alanlar (bölüm/kişi) | `…/custom-fields`, `…/units|people/{id}/custom-values` | `/ayarlar/ozel-alanlar`, bölüm kartı, kişi formu | Sahte servis |
+| [25](25-aktarim-gecmisi.md) | Aktarım geçmişi, araç ve açılış bakiyesi aktarımı (mutabakat), geri alma | `GET …/imports`, `POST …/imports/vehicles|opening-balances`, `…/imports/{id}/confirm|rollback` | `/iceri-aktar` | Sahte servis — yalnız .csv okur |
+| [26](26-kurulum-canliya-gecis.md) | Kurulum durumu ve canlıya geçiş kontrol listesi | `GET …/setup`, `POST …/setup/go-live` | `/kurulum` | Sahte servis — Mod K A-01 |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

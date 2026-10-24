@@ -7,6 +7,7 @@ import { AppShell } from "./layouts/AppShell";
 import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
+import { InviteAcceptPage } from "./pages/auth/InviteAcceptPage";
 import { PrivacyNoticePage, PublicRegistrationPage } from "./pages/auth/PublicRegistrationPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
 import { SiteIndex } from "./site/SiteIndex";
@@ -70,6 +71,13 @@ const siteScreens: [string, string][] = [
   ["onaylar", "ApprovalsPage"],
   ["onaylar/:requestId", "ApprovalDetailPage"],
   ["onay-kurallari", "ApprovalRulesPage"],
+  // Yapı, Kişiler ve Kayıt paketi (servis istekleri 19–26)
+  ["yapi", "YapiPage"],
+  ["kisiler", "PeoplePage"],
+  ["araclar", "VehiclesPage"],
+  ["kayit-afisi", "QrPosterPage"],
+  ["ayarlar/ozel-alanlar", "CustomFieldsPage"],
+  ["kurulum", "SetupPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -87,6 +95,7 @@ export const router = createBrowserRouter([
       { path: "/giris", element: <LoginPage /> },
       // Oturumsuz: sakinin kendini kaydetmesi (servis isteği 13) ve aydınlatma metni.
       { path: "/kayit/:code", element: <PublicRegistrationPage /> },
+      { path: "/davet/:token", element: <InviteAcceptPage /> },
       { path: "/aydinlatma", element: <PrivacyNoticePage /> },
       {
         element: <RequireAuth />,
@@ -124,6 +133,8 @@ export const router = createBrowserRouter([
               { path: "giderler", element: <L c={page(resident, "ResidentExpensesPage")} /> },
               { path: "bildirimler", element: <L c={page(resident, "ResidentNotificationsPage")} /> },
               { path: "profil", element: <L c={page(resident, "ResidentProfilePage")} /> },
+              { path: "hane", element: <L c={page(resident, "ResidentHouseholdPage")} /> },
+              { path: "araclar", element: <L c={page(resident, "ResidentVehiclesPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },

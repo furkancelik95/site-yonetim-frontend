@@ -397,8 +397,10 @@ const kisiler: RequestHandler[] = [
     const u = await real<UnitDetail>(request, `/api/v1/sites/${slug}/units/${params.id}`);
     if (u.status !== 200 || !u.body) return HttpResponse.json(u.body, { status: u.status });
     const current = u.body.parties.filter((p) => p.is_current && p.role === "owner");
+    // Bitiş günü dahil sayıldığından eski malik devirden bir gün önce kapanır; devir günü yeni malikindir
+    const prev = new Date(b.transfer_date + "T00:00:00"); prev.setDate(prev.getDate() - 1);
     for (const p of current) {
-      const r = await real<{ error?: { message?: string } }>(request, `/api/v1/sites/${slug}/units/${params.id}/parties/${p.id}/end`, { method: "POST", body: { end_date: b.transfer_date } });
+      const r = await real<{ error?: { message?: string } }>(request, `/api/v1/sites/${slug}/units/${params.id}/parties/${p.id}/end`, { method: "POST", body: { end_date: iso(prev) } });
       if (r.status >= 300) return err(r.status, "upstream", r.body?.error?.message ?? "Eski malik ilişkisi kapatılamadı.");
     }
     for (const o of owners) {
@@ -664,12 +666,12 @@ const ozelAlanlar: RequestHandler[] = [
     f.is_archived = true;
     return HttpResponse.json({ data: f, message: `"${f.label}" arşivlendi; verisi saklama süresince korunur.` });
   }),
-  http.get(`${API}/:entity(units|people)/:id/custom-values`, ({ params }) => {
-    const entity = params.entity === "units" ? "unit" : "person";
-    return HttpResponse.json({ values: customValues.get(`${entity}:${params.id}`) ?? {} });
-  }),
-  http.put(`${API}/:entity(units|people)/:id/custom-values`, async ({ request, params }) => {
-    const entity = params.entity === "units" ? "unit" : "person";
+  // MSW yol deseni regex grubu desteklemez; iki nesne için ayrı handler
+  ...(["units", "people"] as const).flatMap((seg) => {
+    const entity = seg === "units" ? "unit" : "person";
+    return [
+  http.get(`${API}/${seg}/:id/custom-values`, ({ params }) => HttpResponse.json({ values: customValues.get(`${entity}:${params.id}`) ?? {} })),
+  http.put(`${API}/${seg}/:id/custom-values`, async ({ request, params }) => {
     const b = (await request.json()) as { values?: Record<string, unknown> };
     const fields = listOf(customFields, String(params.slug)).filter((f) => f.entity === entity && !f.is_archived);
     const f: Record<string, string> = {};
@@ -686,6 +688,8 @@ const ozelAlanlar: RequestHandler[] = [
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     customValues.set(`${entity}:${params.id}`, out);
     return HttpResponse.json({ data: { values: out }, message: "Özel alanlar kaydedildi." });
+  }),
+    ];
   }),
 ];
 
@@ -714,13 +718,13 @@ const aktarim: RequestHandler[] = [
     }
     return HttpResponse.json(r.body, { status: r.status });
   }),
-  http.post(`${API}/imports/:type(vehicles|opening-balances)`, async ({ request, params }) => {
+  ...(["vehicles", "opening-balances"] as const).map((seg) => http.post(`${API}/imports/${seg}`, async ({ request, params }) => {
     const fd = await request.formData();
     const file = fd.get("file");
     if (!(file instanceof File)) return err(422, "validation", VALIDATION, { file: "Dosya seçin." });
     if (!/\.csv$/i.test(file.name)) return err(422, "invalid_file_type", "Sahte servis yalnız .csv okur; servis gelince .xlsx de kabul edilecek.", { file: "Yalnız .csv" });
     const slug = String(params.slug);
-    const type = params.type === "vehicles" ? "vehicles" : "opening_balances";
+    const type = seg === "vehicles" ? "vehicles" : "opening_balances";
     const cells = parseCsv(await file.text());
     const header = (cells[0] ?? []).map((h) => h.toLocaleLowerCase("tr-TR"));
     const col = (names: string[]) => header.findIndex((h) => names.includes(h));
@@ -755,7 +759,7 @@ const aktarim: RequestHandler[] = [
     const p: CsvPreview & { slug: string; file_name: string } = { import_id: crypto.randomUUID(), type, rows, issues, total_rows: rows.length, importable_count: rows.filter((r) => r.ok).length, total_amount: type === "opening_balances" ? total.toFixed(2) : null, expires_at: new Date(Date.now() + 6 * 3600e3).toISOString(), slug, file_name: file.name };
     previews.set(p.import_id, p);
     return HttpResponse.json(p);
-  }),
+  })),
   http.post(`${API}/imports/:id/confirm`, async ({ request, params }) => {
     const p = previews.get(String(params.id));
     if (!p) return err(404, "not_found", "Önizleme bulunamadı ya da süresi doldu; dosyayı yeniden yükleyin.");
