@@ -89,7 +89,8 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/sigorta` | **Sigorta ve hasar** — poliçe, bitiş uyarısı, hasar dosyası, tazminat (OPS-04) | `expenses.read` | istek 56 | R (sahte servis) |
 | `/s/{slug}/sayaclar` | **Sayaçlar** — sayaç kaydı, dönem okuması, fotoğraf, anormal tüketim onayı (OPS-05) | `units.manage` | istek 57 | R (sahte servis) |
 | `/s/{slug}/gorevler` | **Rutin görevler** — günlük görev listesi, fotoğraflı tamamlama, şablonlar, 7 günlük rapor (OPS-06) | `requests.read` | istek 58 | R (sahte servis) |
-| `/s/{slug}/rezervasyon` | Sosyal tesis rezervasyonu | — | — | **Y** |
+| `/s/{slug}/rezervasyon` | **Rezervasyon** — günlük liste, kodla giriş doğrulama, onay, sakin adına rezervasyon, bekleme listesi, kullanım raporu (REZ-02/03) | `requests.assign` / `security.visitors` | istek 60, 61 | R (sahte servis) |
+| `/s/{slug}/rezervasyon/alanlar` | **Rezervasyon alanları ve kuralları** — saat, kapasite, ücret, kanal, onay, doğrulama, bekleme listesi, no-show (REZ-01) | `modules.manage` | istek 59 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
@@ -109,6 +110,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
 | `/sakin/{slug}/tadilat` | **Tadilat ve taşınma** — kurallar, başvuru, durum (HIZ-05) | R (sahte servis, istek 52) |
 | `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
+| `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

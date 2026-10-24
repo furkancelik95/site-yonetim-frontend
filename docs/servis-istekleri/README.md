@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–58 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–61 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -74,6 +74,9 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [56](56-sigorta-hasar.md) | Sigorta poliçeleri ve hasar dosyaları | `…/insurance-policies`, `…/insurance-claims` | `/sigorta` | Sahte servis |
 | [57](57-sayac-okuma.md) | Sayaçlar ve okuma | `…/meters`, `…/meter-readings`, `…/resident/meter-readings` | `/sayaclar`, sakin `/emanet` | Sahte servis — K23 |
 | [58](58-rutin-gorevler.md) | Görevli rutin görevleri | `…/task-templates`, `…/tasks`, `…/tasks/report` | `/gorevler` | Sahte servis — K29 |
+| [59](59-rezervasyon-alan-kurallari.md) | Rezervasyon alanları ve kuralları | `…/reservable-areas`, `…/reservable-areas/{id}/rules` | `/rezervasyon/alanlar` | Sahte servis — K21 |
+| [60](60-rezervasyon.md) | Rezervasyon: sakin, sakin adına, iptal, bekleme listesi | `…/reservable-areas/{id}/availability`, `…/reservations`, `…/resident/reservations`, `…/resident/waitlist/{id}/accept` | `/rezervasyon`, sakin `/rezervasyon` | Sahte servis — K5 |
+| [61](61-rezervasyon-takvim-dogrulama.md) | Günlük liste, kullanım doğrulama, no-show, kullanım raporu | `…/reservations/check-in-code`, `…/reservations/{id}/check-in`, `…/reservations/report` | `/rezervasyon` | Sahte servis |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

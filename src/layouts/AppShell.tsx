@@ -6,6 +6,7 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  CalendarCheck,
   CalendarClock,
   CalendarDays,
   CalendarOff,
@@ -131,6 +132,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {shows(M.requests, P.requestsRead) && <Item to={`${base}/talepler`} icon={<Wrench aria-hidden="true" />} label="Talepler" />}
           {shows(M.requests, P.requestsAssign) && <Item to={`${base}/tadilat-tasinma`} icon={<Hammer aria-hidden="true" />} label="Tadilat ve Taşınma" />}
           {(can(P.requestsAssign) || shows(M.visitors, P.visitors)) && <Item to={`${base}/anahtarlar`} icon={<KeyRound aria-hidden="true" />} label="Anahtar ve Emanet" />}
+          {(shows(M.reservations, P.requestsAssign) || shows(M.reservations, P.visitors)) && <Item to={`${base}/rezervasyon`} icon={<CalendarCheck aria-hidden="true" />} label="Rezervasyon" />}
           {can(P.requestsRead) && <Item to={`${base}/gorevler`} icon={<ListTodo aria-hidden="true" />} label="Rutin Görevler" />}
           {can(P.requestsAssign) && <Item to={`${base}/denetimler`} icon={<ClipboardCheck aria-hidden="true" />} label="Denetim Listeleri" />}
           {can(P.unitsManage) && <Item to={`${base}/sayaclar`} icon={<Gauge aria-hidden="true" />} label="Sayaçlar" />}

@@ -101,6 +101,9 @@ const siteScreens: [string, string][] = [
   ["sigorta", "InsurancePage"],
   ["sayaclar", "MetersPage"],
   ["gorevler", "TasksPage"],
+  // Rezervasyon paketi (servis istekleri 59-61)
+  ["rezervasyon", "ReservationsPage"],
+  ["rezervasyon/alanlar", "ReservationAreasPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -161,6 +164,7 @@ export const router = createBrowserRouter([
               { path: "ziyaretci", element: <L c={page(resident, "ResidentVisitorsPage")} /> },
               { path: "tadilat", element: <L c={page(resident, "ResidentPermitsPage")} /> },
               { path: "emanet", element: <L c={page(resident, "ResidentKeysMetersPage")} /> },
+              { path: "rezervasyon", element: <L c={page(resident, "ResidentReservationPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },
