@@ -34,6 +34,8 @@ export const P = {
   inventoryRead: "inventory.read",
   inventoryManage: "inventory.manage",
   staffManage: "staff.manage",
+  approvalRulesRead: "approvals.rules.read",
+  approvalRulesManage: "approvals.rules.manage",
 } as const;
 
 export const M = {

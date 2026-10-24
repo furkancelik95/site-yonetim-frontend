@@ -28,6 +28,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
+import { NotificationBell } from "../components/NotificationBell";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
 
@@ -210,6 +211,9 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
               </span>
               <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
             </span>
+            <Link className="btn btn--ghost btn--sm" to="/profil">
+              Profil
+            </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>
               Çıkış
             </button>
@@ -234,6 +238,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             <span className="topbar__title">{title ?? siteCtx?.site.name ?? (platform ? "Platform" : "SiteYönetimi")}</span>
             <div className="topbar__spacer" />
             {platform && <span className="badge badge--info">Platform</span>}
+            {siteCtx && <NotificationBell to={`/s/${siteCtx.site.slug}/bildirimler`} />}
           </header>
           <main id="main" className="page" tabIndex={-1}>
             {children}

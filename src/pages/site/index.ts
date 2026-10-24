@@ -32,3 +32,4 @@ export { BankImportPage } from "./BankImportPage";
 export { BulkPaymentPage } from "./BulkPaymentPage";
 export { RecurringExpensesPage } from "./RecurringExpensesPage";
 export { AttendanceListPage, DunningLetterPage } from "./LetterPages";
+export { SiteNotificationsPage } from "./SiteNotificationsPage";
