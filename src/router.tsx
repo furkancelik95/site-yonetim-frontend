@@ -8,6 +8,7 @@ import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { InviteAcceptPage } from "./pages/auth/InviteAcceptPage";
+import { VendorQuotePage } from "./pages/auth/VendorQuotePage";
 import { PrivacyNoticePage, PublicRegistrationPage } from "./pages/auth/PublicRegistrationPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
 import { SiteIndex } from "./site/SiteIndex";
@@ -104,6 +105,11 @@ const siteScreens: [string, string][] = [
   // Rezervasyon paketi (servis istekleri 59-61)
   ["rezervasyon", "ReservationsPage"],
   ["rezervasyon/alanlar", "ReservationAreasPage"],
+  // Satın alma paketi (servis istekleri 62-67)
+  ["satin-alma", "PurchasePage"],
+  ["satin-alma/siparis/:poId", "PurchaseOrderPage"],
+  ["satin-alma/:prId", "PurchaseRequestPage"],
+  ["tedarikciler", "VendorsPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -122,6 +128,7 @@ export const router = createBrowserRouter([
       // Oturumsuz: sakinin kendini kaydetmesi (servis isteği 13) ve aydınlatma metni.
       { path: "/kayit/:code", element: <PublicRegistrationPage /> },
       { path: "/davet/:token", element: <InviteAcceptPage /> },
+      { path: "/teklif/:token", element: <VendorQuotePage /> },
       { path: "/aydinlatma", element: <PrivacyNoticePage /> },
       {
         element: <RequireAuth />,

@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–61 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–67 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -77,6 +77,12 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [59](59-rezervasyon-alan-kurallari.md) | Rezervasyon alanları ve kuralları | `…/reservable-areas`, `…/reservable-areas/{id}/rules` | `/rezervasyon/alanlar` | Sahte servis — K21 |
 | [60](60-rezervasyon.md) | Rezervasyon: sakin, sakin adına, iptal, bekleme listesi | `…/reservable-areas/{id}/availability`, `…/reservations`, `…/resident/reservations`, `…/resident/waitlist/{id}/accept` | `/rezervasyon`, sakin `/rezervasyon` | Sahte servis — K5 |
 | [61](61-rezervasyon-takvim-dogrulama.md) | Günlük liste, kullanım doğrulama, no-show, kullanım raporu | `…/reservations/check-in-code`, `…/reservations/{id}/check-in`, `…/reservations/report` | `/rezervasyon` | Sahte servis |
+| [62](62-tedarikci-karti.md) | Tedarikçi kartı | `…/vendors` | `/tedarikciler` | Sahte servis |
+| [63](63-satin-alma-ayar-butce.md) | Satın alma ayarları ve bütçe kontrolü | `…/purchase-settings`, `…/purchase-budget` | `/satin-alma?sekme=ayar`, talep formu | Sahte servis |
+| [64](64-satin-alma-talep-teklif-onay.md) | Satın alma talebi, teklif, tedarikçi linki, onay | `…/purchase-requests`, `…/quotes`, `…/quote-links`, `/public/v1/quote-links/{token}`, `…/select-quote`, `…/decide` | `/satin-alma`, `/satin-alma/{id}`, `/teklif/{token}` | Sahte servis — onay modülüne bağlanacak |
+| [65](65-siparis-kabul.md) | Sipariş ve mal/hizmet kabul | `…/purchase-orders`, `…/purchase-orders/{id}/receipts` | `/satin-alma/siparis/{id}` | Sahte servis |
+| [66](66-tedarikci-faturasi-uclu-eslesme.md) | Tedarikçi faturası ve üçlü eşleşme | `…/vendor-invoices`, `…/vendor-invoices/{id}/decide` | sipariş ayrıntısı, `/satin-alma?sekme=fatura` | Sahte servis |
+| [67](67-odenecekler.md) | Ödenecekler ve "ödendi" | `…/payables`, `…/vendor-invoices/{id}/mark-paid` | `/satin-alma?sekme=odenecek` | Sahte servis |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 

@@ -277,3 +277,13 @@ export const resTone = (v: string): Tone => (v === "approved" || v === "checked_
 export const feeType = label({ free: "Ücretsiz", fixed: "Sabit (rezervasyon başı)", hourly: "Saat başı", per_guest: "Misafir başı" });
 export const verifyMethod = label({ none: "Yok", qr: "QR", code: "6 haneli kod", staff: "Görevli listeden onaylar" });
 export const resChannel = label({ resident: "Sakin yapar", staff: "Yönetim sakin adına açar", both: "İkisi de" });
+
+// Satın alma paketi (servis istekleri 62-67)
+export const prStatus = label({ quoting: "Teklif toplanıyor", exception_pending: "Teklif istisnası onayda", approval_pending: "Satın alma onayında", approved: "Onaylandı", rejected: "Reddedildi", ordered: "Sipariş verildi", cancelled: "İptal" });
+export const prTone = (v: string): Tone => (v === "approved" || v === "ordered" ? "ok" : v === "rejected" ? "danger" : v === "cancelled" ? "muted" : v === "quoting" ? "info" : "warn");
+export const vendorStatus = label({ active: "Aktif", passive: "Pasif", blacklist: "Kara liste" });
+export const vendorTone = (v: string): Tone => (v === "active" ? "ok" : v === "blacklist" ? "danger" : "muted");
+export const poStatus = label({ sent: "Gönderildi", partial: "Kısmi teslim", received: "Teslim alındı", closed: "Kapandı" });
+export const poTone = (v: string): Tone => (v === "closed" ? "ok" : v === "received" ? "ok" : v === "partial" ? "warn" : "info");
+export const invoiceStatus = label({ matched: "Eşleşti — ödenecek", diff_pending: "Fark onayda", disputed: "İtiraz edildi", paid: "Ödendi" });
+export const invoiceTone = (v: string): Tone => (v === "paid" ? "ok" : v === "matched" ? "info" : v === "disputed" ? "danger" : "warn");
