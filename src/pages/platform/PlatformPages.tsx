@@ -274,3 +274,44 @@ export function NewSitePage() {
     </div>
   );
 }
+
+/** Servis isteği 70'teki şekil. */
+interface IndexValue { period: string; tufe: number; ufe: number; entered_by: string; entered_at: string }
+
+/** Endeks değerleri (SAT-06, 15.3): TÜFE/ÜFE yıllık değişim oranı aylık girilir; tüm tesislerde sözleşme artışında kullanılır. */
+export function IndexValuesPage() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const q = useQuery({ queryKey: ["platform", "index-values"], queryFn: () => get<IndexValue[]>("/platform/index-values") });
+  const now = new Date();
+  const [f, setF] = useState({ period: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`, tufe: "", ufe: "" });
+  const m = useMutation({
+    mutationFn: () => api<Written<IndexValue>>("PUT", `/platform/index-values/${f.period}`, { body: { tufe: Number(f.tufe.replace(",", ".")), ufe: Number(f.ufe.replace(",", ".")) } }),
+    onSuccess: (r) => { toast(r.message); setF((x) => ({ ...x, tufe: "", ufe: "" })); qc.invalidateQueries({ queryKey: ["platform", "index-values"] }); },
+  });
+  function submit(e: FormEvent) { e.preventDefault(); m.mutate(); }
+  return (
+    <div className="stack">
+      <PageHead title="Endeks değerleri" subtitle="Sözleşmelerdeki TÜFE / ÜFE artış kuralları bu tablodan hesaplanır. Değer, TÜİK'in açıkladığı yıllık değişim oranıdır (%). TÜİK'ten otomatik çekme Faz 2." />
+      <form className="card" noValidate onSubmit={submit}>
+        <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+          <FormError error={m.error} />
+          <div className="grid grid--kpi">
+            <Field label="Dönem" error={fieldError(m.error, "period")}>{(p) => <input {...p} className="field__input" type="month" value={f.period} onChange={(e) => setF((x) => ({ ...x, period: e.target.value }))} />}</Field>
+            <Field label="TÜFE yıllık (%)" error={fieldError(m.error, "tufe")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.tufe} onChange={(e) => setF((x) => ({ ...x, tufe: e.target.value }))} />}</Field>
+            <Field label="ÜFE yıllık (%)" error={fieldError(m.error, "ufe")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.ufe} onChange={(e) => setF((x) => ({ ...x, ufe: e.target.value }))} />}</Field>
+          </div>
+        </div>
+        <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
+      </form>
+      <div className="card"><div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <p className="card__body small muted mb-0">Henüz değer girilmedi.</p> : (
+          <div className="table-wrap"><table className="data"><caption className="visually-hidden">Endeks değerleri</caption>
+            <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">TÜFE %</th><th scope="col" className="right">ÜFE %</th><th scope="col">Giren</th></tr></thead>
+            <tbody>{q.data.map((v) => <tr key={v.period}><td>{v.period}</td><td className="right num">{v.tufe.toLocaleString("tr-TR")}</td><td className="right num">{v.ufe.toLocaleString("tr-TR")}</td><td className="small">{v.entered_by}</td></tr>)}</tbody>
+          </table></div>
+        )}
+      </div></div>
+    </div>
+  );
+}

@@ -222,6 +222,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                 <Item to="/yonetim" end icon={<BarChart3 aria-hidden="true" />} label="Genel bakış" />
                 <Item to="/yonetim/musteri-ekle" icon={<Building2 aria-hidden="true" />} label="Müşteri ekle" />
                 <Item to="/yonetim/site-ac" icon={<Building2 aria-hidden="true" />} label="Site aç" />
+                <Item to="/yonetim/endeksler" icon={<BarChart3 aria-hidden="true" />} label="Endeks değerleri" />
               </Group>
             ) : (
               <>

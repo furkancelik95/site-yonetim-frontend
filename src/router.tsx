@@ -110,6 +110,8 @@ const siteScreens: [string, string][] = [
   ["satin-alma/siparis/:poId", "PurchaseOrderPage"],
   ["satin-alma/:prId", "PurchaseRequestPage"],
   ["tedarikciler", "VendorsPage"],
+  // Sözleşme performansı (servis istekleri 68-70)
+  ["sozlesmeler/:contractId", "ContractDetailPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -153,6 +155,7 @@ export const router = createBrowserRouter([
               { index: true, element: <L c={page(platform, "PlatformOverviewPage")} /> },
               { path: "musteri-ekle", element: <L c={page(platform, "NewCustomerPage")} /> },
               { path: "site-ac", element: <L c={page(platform, "NewSitePage")} /> },
+              { path: "endeksler", element: <L c={page(platform, "IndexValuesPage")} /> },
             ],
           },
           {
