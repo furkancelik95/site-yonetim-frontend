@@ -59,3 +59,4 @@ export { ContractDetailPage } from "./ContractDetailPage";
 export { EmergencyPage, NotificationTemplatesPage, ReadReportPage } from "./CommPages";
 export { DecisionBookPage, GeneralAssemblyPage } from "./AssemblyPages";
 export { AuditPackagesPage, DocumentsPage, PrivacyPage, ReportCatalogPage } from "./RecordsPages";
+export { HelpCenterPage, SupportPage } from "./SupportPages";
