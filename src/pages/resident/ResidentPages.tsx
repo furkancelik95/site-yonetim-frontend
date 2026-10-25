@@ -37,7 +37,7 @@ function StaffNotice({ error }: { error: unknown }) {
 
 export function ResidentHomePage() {
   useDocumentTitle("Ana sayfa");
-  const { site } = useSite();
+  const { site, shows } = useSite();
   const toast = useToast();
   const q = useSiteGet<Home>("/resident/home");
   const pk = useSiteGet<MyPackage[]>("/resident/packages", undefined, { enabled: q.isSuccess });
@@ -133,7 +133,7 @@ export function ResidentHomePage() {
             <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
             <Link className="btn" to={`${base}/rezervasyon`}><CalendarCheck aria-hidden="true" /> Rezervasyon</Link>
             <Link className="btn" to={`${base}/acil-durum`}><Siren aria-hidden="true" /> Acil durum bilgileri</Link>
-            <Link className="btn" to={`${base}/belgeler`}><FileText aria-hidden="true" /> Belgeler</Link>
+            {shows(M.documents) && <Link className="btn" to={`${base}/belgeler`}><FileText aria-hidden="true" /> Belgeler</Link>}
             <Link className="btn" to={`${base}/kvkk`}><ShieldCheck aria-hidden="true" /> Kişisel verilerim</Link>
           </div>
         </div>
