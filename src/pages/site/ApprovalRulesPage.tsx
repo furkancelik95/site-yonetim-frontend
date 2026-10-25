@@ -126,7 +126,6 @@ type StepDraft = { roles: SiteRole[]; quorum: Quorum; count: string };
  * hedefi olan işlem tipinin mevcut kuralıyla dolu gelir.
  */
 export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType }: { rule: Rule | null; initial?: RuleIn; types: ActionTypeOut[]; onDone: () => void; resubmitId?: string; actionType?: string }) {
-  const toast = useToast();
   // Formu dolduran kaynak: talebin önerdiği kural (yeniden gönderme) ya da yürürlükteki sürüm (yeni sürüm)
   const v: Pick<RuleIn, "mode" | "reject_behavior" | "amount_min" | "amount_max" | "remind_after_days" | "escalate_after_days" | "day_basis" | "escalation_role" | "basis_note" | "steps"> | undefined = initial ?? rule?.current;
   const [f, setF] = useState({
@@ -147,8 +146,11 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
   const [warnings, setWarnings] = useState<string[]>([]);
   const m = useSiteMutation<RuleIn, RuleWrite>(rule ? "PUT" : "POST", rule ? `/approval-rules/${rule.id}` : "/approval-rules", {
     onSuccess: (d) => {
-      if (d?.status === "approval_pending") toast("Kural değişikliği onaya gönderildi; onaylanınca yürürlüğe girer.");
       if (d?.warnings.length) setWarnings(d.warnings); else onDone();
+    },
+    onPending: (d) => {
+      const w = Array.isArray(d.warnings) ? (d.warnings as string[]) : [];
+      if (w.length) setWarnings(w); else onDone();
     },
   });
   const resub = useSiteMutation<{ rule: RuleIn; title: null; amount: null }, unknown>("POST", `/approvals/${resubmitId}/resubmit`, { onSuccess: onDone });

@@ -16,8 +16,9 @@ Kaynak: Yazılım Dokümanı **RAP-03** ve **18.2** (belgeler). Diğer modüller
 
 ## İş kuralları
 - Türler: yönetim planı, site kuralları, sigorta poliçesi, yangın raporu, asansör etiketi/muayene, sözleşme, tutanak, mali tablo, diğer.
-- **Dosya doğrulaması**: uzantıya değil içeriğe bakılır (PDF `%PDF`, PNG, JPEG imzası); boyut sınırı (sahte serviste 2 MB,
-  backend için öneri 20 MB); dosya adı temizlenir; **web kökünün dışında** saklanır; virüs taraması (belge: "dosyayı tarar").
+- **Dosya doğrulaması** (Furkan, 25.10.2026 — gider ekleriyle aynı altyapı): uzantıya değil içeriğe bakılır (PDF, PNG, JPEG,
+  WebP imzası); **en fazla 10 MB** (20 MB gerekirse ayrıca konuşulur); dosya adı temizlenir, diskte sunucu üretimi ad;
+  **web kökünün dışında** saklanır; SHA-256 özeti. **Virüs taraması ilk sürümde yok** — ekranda "taranmıştır" denmez.
 - **Sürüm**: aynı ad + aynı kapsamla yüklenen dosya yeni sürüm olur, eski sürümler korunur; son sürümle aynı özetteki dosya reddedilir.
 - **Gizlilik**: sakinlere açık · bölüme özel (bölüm kapsamı zorunlu; o bölümün sakinleri görür) · yönetim · gizli (yalnız
   atanan roller — sahte serviste `audit.read` ya da `members.manage` — ve **her açılış kayda geçer**; yetkisiz için 404).
@@ -29,7 +30,7 @@ Kaynak: Yazılım Dokümanı **RAP-03** ve **18.2** (belgeler). Diğer modüller
 | Durum | Kod | Mesaj |
 |---|---|---|
 | Alanlar | 422 `fields.title/kind/scope/confidentiality/valid_until` | "Bölüme özel belge bir bölüme bağlı olmalı." … |
-| Dosya türü / boyut | 422 `fields.file` | "Yalnız PDF, PNG ya da JPEG (dosya içeriği doğrulandı)." |
+| Dosya türü / boyut | 422 `fields.file` | "Yalnız PDF, PNG, JPEG ya da WebP (dosya içeriği doğrulandı)." / "Dosya en fazla 10 MB." |
 | Aynı dosya | 409 `same_file` | "Bu dosya son sürümle aynı." |
 | Yetkisiz gizli belge | 404 `not_found` | … |
 

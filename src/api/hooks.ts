@@ -43,13 +43,26 @@ export function useMeMutation<TBody, TOut>(method: "POST" | "PUT" | "DELETE", pa
 }
 
 /**
+ * Onay kuralına takılan yazma işlemi (K21, docs/12): backend 202 ve
+ * `{ status: "approval_pending", approval_request_id }` döner; işlem henüz yapılmamıştır.
+ */
+export interface ApprovalPending { status: "approval_pending"; approval_request_id: string | null; [k: string]: unknown }
+export function isApprovalPending(data: unknown): data is ApprovalPending {
+  return !!data && typeof data === "object" && (data as { status?: unknown }).status === "approval_pending";
+}
+
+/**
  * Siteye yazan işlem. Başarıda backend'in Türkçe mesajı bildirim olarak gösterilir ve sitenin
  * önbelleği tazelenir (bakiye, pano, liste birlikte güncellensin). `money: true` → Idempotency-Key.
+ *
+ * İşlem onaya düşerse (202 `approval_pending`) "onaya gönderildi" bildirimi gösterilir ve
+ * `onPending` çağrılır; verilmemişse `onSuccess` veri olmadan (`undefined`) çağrılır — form kapanır,
+ * ama kaydedilmiş bir nesne varmış gibi davranılmaz.
  */
 export function useSiteMutation<TBody, TOut>(
   method: "POST" | "PUT" | "PATCH" | "DELETE",
   path: string | ((vars: TBody) => string),
-  opts?: { money?: boolean; form?: boolean; onSuccess?: (data: TOut) => void },
+  opts?: { money?: boolean; form?: boolean; onSuccess?: (data: TOut) => void; onPending?: (data: ApprovalPending) => void },
 ) {
   const { site } = useSite();
   const qc = useQueryClient();
@@ -65,8 +78,15 @@ export function useSiteMutation<TBody, TOut>(
       });
     },
     onSuccess: (res) => {
-      if (res?.message) toast(res.message);
       qc.invalidateQueries({ queryKey: ["site", site.slug] });
+      const data: unknown = res?.data;
+      if (isApprovalPending(data)) {
+        toast(`${res?.message || "İşlem onaya gönderildi."} Durumunu Onaylar ekranından izleyebilirsiniz.`, "info");
+        if (opts?.onPending) opts.onPending(data);
+        else opts?.onSuccess?.(undefined as TOut);
+        return;
+      }
+      if (res?.message) toast(res.message);
       opts?.onSuccess?.(res?.data);
     },
   });

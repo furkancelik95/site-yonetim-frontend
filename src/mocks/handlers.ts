@@ -4256,7 +4256,9 @@ const privacyReqs = loadMap<string, PrivacyReq[]>("privacyReqs");
 const notices = loadMap<string, Notice[]>("notices");
 const auditPkgs = loadMap<string, AuditPkg[]>("auditPkgs");
 const DOC_KINDS = ["plan", "rules", "insurance", "fire_report", "elevator", "contract", "minutes", "financial", "other"];
-const MAX_DOC = 2 * 1024 * 1024; // sahte serviste 2 MB (oturum deposu); backend 20 MB
+// Furkan (25.10.2026): gider ekleriyle aynı sınır, 10 MB. Sahte servis dosyayı oturum deposunda tuttuğu için
+// tarayıcı kotasını (~5 MB) aşan dosya sayfa yenilenince kaybolur; sınır sözleşmeye uygun tutuldu.
+const MAX_DOC = 10 * 1024 * 1024;
 async function permsOf(request: Request, slug: string) {
   const m = await real<{ sites: { slug: string; permissions: string[] }[] }>(request, "/api/v1/me");
   return new Set(m.body?.sites.find((s) => s.slug === slug)?.permissions ?? []);
@@ -4268,6 +4270,7 @@ function sniff(dataUrl: string) {
   if (head.startsWith("%PDF")) return "application/pdf";
   if (head.charCodeAt(0) === 0x89 && head.slice(1, 4) === "PNG") return "image/png";
   if (head.charCodeAt(0) === 0xff && head.charCodeAt(1) === 0xd8) return "image/jpeg";
+  if (head.startsWith("RIFF") && head.slice(8, 12) === "WEBP") return "image/webp";
   return null;
 }
 async function sha256Hex(dataUrl: string) {
@@ -4313,8 +4316,8 @@ const raporlar: RequestHandler[] = [
     const mime = b.data_url ? sniff(b.data_url) : null;
     const size = b.data_url ? Math.floor(((b.data_url.split(",")[1] ?? "").length * 3) / 4) : 0;
     if (!b.data_url) f.file = "Dosya seçin.";
-    else if (!mime) f.file = "Yalnız PDF, PNG ya da JPEG (dosya içeriği doğrulandı).";
-    else if (size > MAX_DOC) f.file = "Dosya en fazla 2 MB (sahte servis sınırı).";
+    else if (!mime) f.file = "Yalnız PDF, PNG, JPEG ya da WebP (dosya içeriği doğrulandı).";
+    else if (size > MAX_DOC) f.file = "Dosya en fazla 10 MB.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const who = (await me(request)).name;
     const v: DocVersion = { v: 1, file_name: (b.file_name ?? "belge").replace(/[\\/:*?"<>|]/g, "_").slice(0, 120), mime: mime!, size, sha256: await sha256Hex(b.data_url!), data: b.data_url!, uploaded_by: who, at: new Date().toISOString() };
