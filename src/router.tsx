@@ -119,6 +119,11 @@ const siteScreens: [string, string][] = [
   // Genel kurul (servis istekleri 75-77)
   ["toplantilar/:meetingId/genel-kurul", "GeneralAssemblyPage"],
   ["karar-defteri", "DecisionBookPage"],
+  // Raporlar, belgeler ve KVKK (servis istekleri 78-81)
+  ["dokumanlar", "DocumentsPage"],
+  ["rapor-katalogu", "ReportCatalogPage"],
+  ["kvkk", "PrivacyPage"],
+  ["denetim-paketi", "AuditPackagesPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -183,6 +188,8 @@ export const router = createBrowserRouter([
               { path: "emanet", element: <L c={page(resident, "ResidentKeysMetersPage")} /> },
               { path: "rezervasyon", element: <L c={page(resident, "ResidentReservationPage")} /> },
               { path: "acil-durum", element: <L c={page(resident, "ResidentEmergencyPage")} /> },
+              { path: "belgeler", element: <L c={page(resident, "ResidentDocumentsPage")} /> },
+              { path: "kvkk", element: <L c={page(resident, "ResidentPrivacyPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },

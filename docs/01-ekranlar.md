@@ -101,7 +101,10 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | istek 73, 74 | R (sahte servis) |
 | `/s/{slug}/toplantilar/{id}/genel-kurul` | **Genel kurul** — format, karar türü, çağrı ve ispat; hazirun, fiziki vekâlet, nisap (kişi + arsa payı), salonda oylama; tutanak (TOP-01/03/04) | `meetings.manage` | istek 75–77 | R (sahte servis) |
 | `/s/{slug}/karar-defteri` | **Karar defteri** — kesinleşen kararlar sıra numarasıyla (TOP-04) | toplantı okuma | istek 77 | R (sahte servis) |
-| `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
+| `/s/{slug}/dokumanlar` | **Belgeler** — kapsam, gizlilik, sürüm, SHA-256, geçerlilik uyarısı, gizli açılış kaydı (RAP-03) | yönetim rolleri | istek 78 | R (sahte servis) |
+| `/s/{slug}/rapor-katalogu` | **Rapor kataloğu** — yetkiye göre raporlar, metrik sözlüğü, talep/SLA raporu (RAP-01) | rapor bazında | istek 79 | R (sahte servis) |
+| `/s/{slug}/kvkk` | **KVKK** — ilgili kişi başvuruları ve 30 gün sayacı, veri paketi, aydınlatma sürümleri (RAP-04) | `members.manage` | istek 80 | R (sahte servis) |
+| `/s/{slug}/denetim-paketi` | **Denetim kurulu paketi** — dönem raporları, kararlar, belgeler, denetçi raporu (RAP-05) | `finance.charge.post` / `audit.read` | istek 81 | R (sahte servis) |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
 
@@ -123,6 +126,8 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/teklif/{token}` | **Tedarikçi teklif formu** — oturumsuz, tek kullanımlık link (SAT-02) | R (sahte servis, istek 64) |
 | `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
 | `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R (sahte servis, istek 73, 74) |
+| `/sakin/{slug}/belgeler` | **Belgeler** — açık ve bölüme özel belgeler (RAP-03) | R (sahte servis, istek 78) |
+| `/sakin/{slug}/kvkk` | **Kişisel verilerim** — KVKK başvurusu ve yanıtları (RAP-04) | R (sahte servis, istek 80) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

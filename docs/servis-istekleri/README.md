@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–77 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–81 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -93,6 +93,10 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [75](75-genel-kurul-hazirlik-cagri.md) | Genel kurul hazırlığı: format, karar türü, hukuki uyarı, çağrı | `…/meetings/{id}/assembly`, `…/prep`, `…/legal-ack`, `…/invitation`, `…/assembly-settings` | `/toplantilar/{id}/genel-kurul` | Sahte servis |
 | [76](76-hazirun-nisap-oylama.md) | Hazirun, fiziki vekâlet, nisap, salonda oylama (kişi + arsa payı) | `…/assembly/attendance`, `…/items/{itemId}/open\|close`, `…/ballots` | `?sekme=hazirun` | Sahte servis — e-oylama/dijital vekâlet hukuk + K5 |
 | [77](77-tutanak-karar-defteri.md) | Tutanak ve karar defteri | `…/assembly/minutes`, `…/finalize`, `…/signed`, `…/decision-book` | `?sekme=tutanak`, `/karar-defteri` | Sahte servis |
+| [78](78-belge-arsivi.md) | Belge arşivi | `…/documents`, `…/versions/{v}/download`, `…/access-log`, `…/resident/documents` | `/dokumanlar`, sakin `/belgeler` | Sahte servis — K8 |
+| [79](79-rapor-katalogu-sla.md) | Rapor kataloğu, metrik sözlüğü, talep/SLA raporu | `…/reports/catalog`, `…/reports/requests-sla` | `/rapor-katalogu` | Sahte servis |
+| [80](80-kvkk-basvuru-aydinlatma.md) | KVKK başvurusu ve aydınlatma sürümleri | `…/privacy-requests`, `…/resident/privacy-requests`, `…/privacy-notices` | `/kvkk`, sakin `/kvkk` | Sahte servis — K8, hukuk 2.1 |
+| [81](81-denetim-kurulu-paketi.md) | Denetim kurulu paketi | `…/audit-packages`, `…/report` | `/denetim-paketi` | Sahte servis — planlı rapor K5 |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 
