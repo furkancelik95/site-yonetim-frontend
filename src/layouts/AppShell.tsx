@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   BarChart3,
+  BookOpen,
   Boxes,
   Building2,
   CalendarCheck,
@@ -160,6 +161,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           <Item to={`${base}/onaylar`} icon={<ClipboardCheck aria-hidden="true" />} label="Onaylar" />
           {can(P.approvalRulesRead) && <Item to={`${base}/onay-kurallari`} icon={<ListChecks aria-hidden="true" />} label="Onay Kuralları" />}
           {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
+          {meetings && <Item to={`${base}/karar-defteri`} icon={<BookOpen aria-hidden="true" />} label="Karar Defteri" />}
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
