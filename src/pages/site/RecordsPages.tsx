@@ -107,7 +107,7 @@ function DocForm({ onDone }: { onDone: () => void }) {
   const m = useSiteMutation<Record<string, unknown>, DocRow>("POST", "/documents", { onSuccess: onDone });
   function pick(fl: File | undefined) {
     setFileErr(null); if (!fl) return;
-    if (fl.size > 2 * 1024 * 1024) { setFileErr("Dosya en fazla 2 MB (şimdilik)."); return; }
+    if (fl.size > 10 * 1024 * 1024) { setFileErr("Dosya en fazla 10 MB."); return; }
     const r = new FileReader(); r.onload = () => setFile({ name: fl.name, data: String(r.result), size: fl.size }); r.readAsDataURL(fl);
   }
   const block = (blocks.data?.items ?? []).find((b) => b.id === f.block_id);
@@ -126,8 +126,8 @@ function DocForm({ onDone }: { onDone: () => void }) {
           <Field label="Geçerlilik bitişi" hint="Poliçe, yangın raporu, asansör etiketi gibi süreli belgelerde; 60/30 gün kala uyarı" error={fieldError(m.error, "valid_until")}>{(p) => <input {...p} className="field__input" type="date" value={f.valid_until} onChange={(e) => setF((x) => ({ ...x, valid_until: e.target.value }))} />}</Field>
         </div>
         <div className="field">
-          <label className="field__label" htmlFor="dc-file">Dosya (PDF, PNG, JPEG)</label>
-          <input id="dc-file" className="field__input" type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => pick(e.target.files?.[0])} />
+          <label className="field__label" htmlFor="dc-file">Dosya (PDF, PNG, JPEG, WebP · en fazla 10 MB)</label>
+          <input id="dc-file" className="field__input" type="file" accept="application/pdf,image/png,image/jpeg,image/webp" onChange={(e) => pick(e.target.files?.[0])} />
           {file && <span className="xs muted">{file.name} · {kb(file.size)}</span>}
           {(fileErr || fieldError(m.error, "file")) && <span className="field__error" role="alert">{fileErr ?? fieldError(m.error, "file")}</span>}
         </div>
