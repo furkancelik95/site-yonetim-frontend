@@ -1950,6 +1950,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/resident/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bana açık belgeler (sayfalı) */
+        get: operations["my_documents_api_v1_sites__slug__resident_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/documents/{document_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Belgenin son sürümünü indir */
+        get: operations["my_document_download_api_v1_sites__slug__resident_documents__document_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio": {
         parameters: {
             query?: never;
@@ -2710,6 +2744,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Belgeler (son yüklenen üstte; sayfalı) */
+        get: operations["list_documents_api_v1_sites__slug__documents_get"];
+        put?: never;
+        /** Belge yükle (multipart) — aynı ad + kapsam yeni sürüm olur */
+        post: operations["upload_document_api_v1_sites__slug__documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/documents/{document_id}/versions/{version}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sürümü indir (gizli belgede açılış kayda geçer) */
+        get: operations["download_version_api_v1_sites__slug__documents__document_id__versions__version__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/documents/{document_id}/access-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gizli belgenin açılış kaydı (yeni üstte) */
+        get: operations["access_log_api_v1_sites__slug__documents__document_id__access_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3399,6 +3485,46 @@ export interface components {
              */
             cash_account_id?: string | null;
         };
+        /** Body_upload_document_api_v1_sites__slug__documents_post */
+        Body_upload_document_api_v1_sites__slug__documents_post: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Kind
+             * @description plan · rules · …
+             */
+            kind?: string | null;
+            /**
+             * Scope
+             * @description site · block · unit
+             */
+            scope?: string | null;
+            /**
+             * Scope Id
+             * @description blok ya da bölüm id
+             */
+            scope_id?: string | null;
+            /**
+             * Confidentiality
+             * @description public · unit · management · secret
+             */
+            confidentiality?: string | null;
+            /**
+             * Valid Until
+             * @description YYYY-AA-GG
+             */
+            valid_until?: string | null;
+            /**
+             * Retention Years
+             * @description yıl (K8)
+             */
+            retention_years?: string | null;
+            /**
+             * File
+             * @description PDF, PNG, JPEG, WebP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
+        };
         /** Body_upload_units_api_v1_sites__slug__imports_units_post */
         Body_upload_units_api_v1_sites__slug__imports_units_post: {
             /**
@@ -4000,6 +4126,11 @@ export interface components {
              */
             percent: string;
         };
+        /**
+         * Confidentiality
+         * @enum {string}
+         */
+        Confidentiality: "public" | "unit" | "management" | "secret";
         /** ConfirmIn */
         ConfirmIn: {
             /** Rows */
@@ -4540,6 +4671,116 @@ export interface components {
          * @enum {string}
          */
         Direction: "in" | "out";
+        /** DocumentAccessOut */
+        DocumentAccessOut: {
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** V */
+            v: number;
+        };
+        /**
+         * DocumentKind
+         * @enum {string}
+         */
+        DocumentKind: "plan" | "rules" | "insurance" | "fire_report" | "elevator" | "contract" | "minutes" | "financial" | "other";
+        /** DocumentOut */
+        DocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            kind: components["schemas"]["DocumentKind"];
+            /** Kind Label */
+            kind_label: string;
+            scope: components["schemas"]["DocumentScope"];
+            /**
+             * Scope Id
+             * @description blok ya da bölüm; tüm sitede null
+             */
+            scope_id: string | null;
+            /**
+             * Scope Name
+             * @description `A Blok` · `A-12`; tüm sitede null
+             */
+            scope_name: string | null;
+            confidentiality: components["schemas"]["Confidentiality"];
+            /** Valid Until */
+            valid_until: string | null;
+            /**
+             * Days Left
+             * @description bitişe kalan gün (sitenin bugünü); geçmişse eksi
+             */
+            days_left: number | null;
+            /** @description 60 · 30 · expired · null */
+            warning: components["schemas"]["ExpiryWarning"] | null;
+            /**
+             * Retention Years
+             * @description saklama süresi (yıl, K8) — bilgi amaçlı, otomatik silme yok
+             */
+            retention_years: number | null;
+            /**
+             * Version
+             * @description son sürüm
+             */
+            version: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string;
+            /** Uploaded By */
+            uploaded_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description son sürümün yüklenme zamanı
+             */
+            updated_at: string;
+            /**
+             * Versions
+             * @description eskiden yeniye
+             */
+            versions: components["schemas"]["DocumentVersionOut"][];
+        };
+        /**
+         * DocumentScope
+         * @enum {string}
+         */
+        DocumentScope: "site" | "block" | "unit";
+        /** DocumentVersionOut */
+        DocumentVersionOut: {
+            /** V */
+            v: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /**
+             * Size
+             * @description bayt
+             */
+            size: number;
+            /** Sha256 */
+            sha256: string;
+            /** Uploaded By */
+            uploaded_by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /**
          * Employer
          * @enum {string}
@@ -4741,6 +4982,11 @@ export interface components {
             /** By Category */
             by_category: components["schemas"]["CategoryTotalOut"][];
         };
+        /**
+         * ExpiryWarning
+         * @enum {string}
+         */
+        ExpiryWarning: "60" | "30" | "expired";
         /** FinanceOut */
         FinanceOut: {
             /**
@@ -5946,6 +6192,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[DocumentAccessOut] */
+        Page_DocumentAccessOut_: {
+            /** Items */
+            items: components["schemas"]["DocumentAccessOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[DocumentOut] */
+        Page_DocumentOut_: {
+            /** Items */
+            items: components["schemas"]["DocumentOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[EntryOut] */
         Page_EntryOut_: {
             /** Items */
@@ -6093,6 +6361,17 @@ export interface components {
         Page_RequestOut_: {
             /** Items */
             items: components["schemas"]["RequestOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ResidentDocumentOut] */
+        Page_ResidentDocumentOut_: {
+            /** Items */
+            items: components["schemas"]["ResidentDocumentOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7296,6 +7575,44 @@ export interface components {
             urgent: number;
             /** Total */
             total: number;
+        };
+        /**
+         * ResidentDocumentOut
+         * @description Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok.
+         */
+        ResidentDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            kind: components["schemas"]["DocumentKind"];
+            /** Kind Label */
+            kind_label: string;
+            scope: components["schemas"]["DocumentScope"];
+            /** Scope Name */
+            scope_name: string | null;
+            confidentiality: components["schemas"]["Confidentiality"];
+            /** Valid Until */
+            valid_until: string | null;
+            /** Days Left */
+            days_left: number | null;
+            warning: components["schemas"]["ExpiryWarning"] | null;
+            /** Version */
+            version: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** Size */
+            size: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** ResidentPollOut */
         ResidentPollOut: {
@@ -8542,6 +8859,12 @@ export interface components {
         /** Written[DepartmentOut] */
         Written_DepartmentOut_: {
             data: components["schemas"]["DepartmentOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[DocumentOut] */
+        Written_DocumentOut_: {
+            data: components["schemas"]["DocumentOut"];
             /** Message */
             message: string;
         };
@@ -13455,6 +13778,73 @@ export interface operations {
             };
         };
     };
+    my_documents_api_v1_sites__slug__resident_documents_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ResidentDocumentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_document_download_api_v1_sites__slug__resident_documents__document_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                    "image/*": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     portfolio_api_v1_portfolio_get: {
         parameters: {
             query?: never;
@@ -15342,6 +15732,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_DelegationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_documents_api_v1_sites__slug__documents_get: {
+        parameters: {
+            query?: {
+                /** @description ad içinde arar */
+                q?: string | null;
+                kind?: components["schemas"]["DocumentKind"] | null;
+                /** @description yalnız 60 gün içinde biten ya da bitmiş (`1`/`true`) */
+                expiring?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DocumentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_document_api_v1_sites__slug__documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_sites__slug__documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DocumentOut_"];
+                };
+            };
+            /** @description `same_file` — dosya son sürümle aynı */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_version_api_v1_sites__slug__documents__document_id__versions__version__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                version: number;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                    "image/*": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    access_log_api_v1_sites__slug__documents__document_id__access_log_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                document_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DocumentAccessOut_"];
                 };
             };
             /** @description Validation Error */

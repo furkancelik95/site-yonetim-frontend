@@ -4244,43 +4244,19 @@ const genelKurul: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// RAPORLAR, BELGELER VE KVKK (Yazılım Dokümanı RAP-01, 03, 04, 05) — servis istekleri 78–81
+// RAPORLAR VE KVKK (Yazılım Dokümanı RAP-01, 04, 05) — servis istekleri 79–81
+// (78 belge arşivi backend'de: gerçek `…/documents`; denetim paketi belgeyi oradan okur)
 // ============================================================================================
-interface DocVersion { v: number; file_name: string; mime: string; size: number; sha256: string; data: string; uploaded_by: string; at: string }
-interface Doc { id: string; title: string; kind: string; scope: "site" | "block" | "unit"; scope_id: string | null; scope_name: string | null; confidentiality: "public" | "unit" | "management" | "secret"; valid_until: string | null; versions: DocVersion[]; created_at: string; access_log: { by: string; at: string; v: number }[] }
 interface PrivacyReq { id: string; kind: "access" | "rectify" | "erase" | "object"; detail: string; user_id: string; name: string; units: string[]; snapshot: unknown; status: "open" | "answered"; created_at: string; due_on: string; response: string | null; outcome: "fulfilled" | "partial" | "rejected" | null; retained: string | null; answered_by: string | null; answered_at: string | null }
 interface Notice { version: number; text: string; published_at: string; published_by: string; summary: string }
 interface AuditPkg { id: string; title: string; from: string; to: string; created_by: string; created_at: string; decisions: { no: number; item_title: string; decision: string; date: string }[]; document_ids: string[]; status: "open" | "reviewed"; report_document_id: string | null; reviewed_by: string | null; reviewed_at: string | null; note: string | null }
-const docs = loadMap<string, Doc[]>("docs");
 const privacyReqs = loadMap<string, PrivacyReq[]>("privacyReqs");
 const notices = loadMap<string, Notice[]>("notices");
 const auditPkgs = loadMap<string, AuditPkg[]>("auditPkgs");
-const DOC_KINDS = ["plan", "rules", "insurance", "fire_report", "elevator", "contract", "minutes", "financial", "other"];
-// Furkan (25.10.2026): gider ekleriyle aynı sınır, 10 MB. Sahte servis dosyayı oturum deposunda tuttuğu için
-// tarayıcı kotasını (~5 MB) aşan dosya sayfa yenilenince kaybolur; sınır sözleşmeye uygun tutuldu.
-const MAX_DOC = 10 * 1024 * 1024;
 async function permsOf(request: Request, slug: string) {
   const m = await real<{ sites: { slug: string; permissions: string[] }[] }>(request, "/api/v1/me");
   return new Set(m.body?.sites.find((s) => s.slug === slug)?.permissions ?? []);
 }
-function sniff(dataUrl: string) {
-  const b64 = dataUrl.split(",")[1] ?? "";
-  let head = "";
-  try { head = atob(b64.slice(0, 16)); } catch { return null; }
-  if (head.startsWith("%PDF")) return "application/pdf";
-  if (head.charCodeAt(0) === 0x89 && head.slice(1, 4) === "PNG") return "image/png";
-  if (head.charCodeAt(0) === 0xff && head.charCodeAt(1) === 0xd8) return "image/jpeg";
-  if (head.startsWith("RIFF") && head.slice(8, 12) === "WEBP") return "image/webp";
-  return null;
-}
-async function sha256Hex(dataUrl: string) {
-  const bin = atob(dataUrl.split(",")[1] ?? "");
-  const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const h = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-const docOut = (d: Doc) => { const last = d.versions.at(-1)!; const left = d.valid_until ? Math.round((new Date(d.valid_until + "T00:00:00").getTime() - new Date(today() + "T00:00:00").getTime()) / 864e5) : null; return { id: d.id, title: d.title, kind: d.kind, scope: d.scope, scope_name: d.scope_name, confidentiality: d.confidentiality, valid_until: d.valid_until, days_left: left, warning: left == null ? null : left < 0 ? "expired" : left <= 30 ? "30" : left <= 60 ? "60" : null, version: last.v, file_name: last.file_name, size: last.size, sha256: last.sha256, uploaded_by: last.uploaded_by, updated_at: last.at, versions: d.versions.map(({ data: _d, ...v }) => v) }; };
-
 const CATALOG = [
   { key: "income_expense", name: "Gelir–gider", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Gelir", "Dönemde yapılan tahsilatlar (tahakkuk değil)."], ["Gider", "Dönemde kaydedilen, ters kaydı olmayan giderler; fon/kategori bazında."]] },
   { key: "collections", name: "Tahsilat oranı ve trendi", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Tahsilat oranı", "Dönemde tahsil edilen / dönemde vadesi gelen."]] },
@@ -4297,64 +4273,6 @@ const CATALOG = [
 ];
 
 const raporlar: RequestHandler[] = [
-  // 78 — Belge arşivi
-  http.get(`${API}/documents`, ({ request, params }) => {
-    const u = new URL(request.url).searchParams; const q = (u.get("q") ?? "").toLocaleLowerCase("tr-TR"), kind = u.get("kind"), exp = u.get("expiring");
-    return HttpResponse.json(listOf(docs, String(params.slug)).map(docOut).filter((d) => (!q || d.title.toLocaleLowerCase("tr-TR").includes(q)) && (!kind || d.kind === kind) && (!exp || d.warning)).sort((a, b) => b.updated_at.localeCompare(a.updated_at)));
-  }),
-  http.post(`${API}/documents`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { title?: string; kind?: string; scope?: Doc["scope"]; scope_id?: string | null; scope_name?: string | null; confidentiality?: Doc["confidentiality"]; valid_until?: string | null; file_name?: string; data_url?: string };
-    const f: Record<string, string> = {};
-    const title = (b.title ?? "").trim();
-    if (title.length < 3) f.title = "Belge adını yazın.";
-    if (!DOC_KINDS.includes(b.kind ?? "")) f.kind = "Tür seçin.";
-    if (!["site", "block", "unit"].includes(b.scope ?? "")) f.scope = "Kapsam seçin."; else if (b.scope !== "site" && !b.scope_id) f.scope = "Blok ya da bölüm seçin.";
-    if (!["public", "unit", "management", "secret"].includes(b.confidentiality ?? "")) f.confidentiality = "Gizlilik seçin.";
-    if (b.confidentiality === "unit" && b.scope !== "unit") f.confidentiality = "Bölüme özel belge bir bölüme bağlı olmalı.";
-    if (b.valid_until && (!DATE_RE.test(b.valid_until))) f.valid_until = "Tarih seçin.";
-    const mime = b.data_url ? sniff(b.data_url) : null;
-    const size = b.data_url ? Math.floor(((b.data_url.split(",")[1] ?? "").length * 3) / 4) : 0;
-    if (!b.data_url) f.file = "Dosya seçin.";
-    else if (!mime) f.file = "Yalnız PDF, PNG, JPEG ya da WebP (dosya içeriği doğrulandı).";
-    else if (size > MAX_DOC) f.file = "Dosya en fazla 10 MB.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const who = (await me(request)).name;
-    const v: DocVersion = { v: 1, file_name: (b.file_name ?? "belge").replace(/[\\/:*?"<>|]/g, "_").slice(0, 120), mime: mime!, size, sha256: await sha256Hex(b.data_url!), data: b.data_url!, uploaded_by: who, at: new Date().toISOString() };
-    const list = listOf(docs, slug);
-    const same = list.find((d) => d.title.toLocaleLowerCase("tr-TR") === title.toLocaleLowerCase("tr-TR") && d.scope === b.scope && (d.scope_id ?? null) === (b.scope_id ?? null));
-    if (same) {
-      if (same.versions.at(-1)!.sha256 === v.sha256) return err(409, "same_file", "Bu dosya son sürümle aynı.");
-      v.v = same.versions.length + 1; same.versions.push(v); Object.assign(same, { valid_until: b.valid_until ?? same.valid_until, confidentiality: b.confidentiality, kind: b.kind });
-      return HttpResponse.json({ data: docOut(same), message: `${same.title} için ${v.v}. sürüm kaydedildi; eski sürümler korunur.` }, { status: 201 });
-    }
-    const d: Doc = { id: crypto.randomUUID(), title, kind: b.kind!, scope: b.scope!, scope_id: b.scope === "site" ? null : b.scope_id!, scope_name: b.scope === "site" ? null : b.scope_name ?? null, confidentiality: b.confidentiality!, valid_until: b.valid_until || null, versions: [v], created_at: v.at, access_log: [] };
-    list.push(d);
-    return HttpResponse.json({ data: docOut(d), message: `${d.title} arşive eklendi.` }, { status: 201 });
-  }),
-  http.get(`${API}/documents/:id/versions/:v/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const v = d?.versions.find((x) => x.v === Number(params.v));
-    if (!d || !v) return err(404, "not_found", "Belge bulunamadı.");
-    if (d.confidentiality === "secret") { const p = await permsOf(request, slug); if (!p.has("audit.read") && !p.has("members.manage")) return err(404, "not_found", "Belge bulunamadı."); d.access_log.push({ by: (await me(request)).name, at: new Date().toISOString(), v: v.v }); }
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-  http.get(`${API}/documents/:id/access-log`, ({ params }) => { const d = listOf(docs, String(params.slug)).find((x) => x.id === params.id); return d ? HttpResponse.json(d.access_log.slice().reverse()) : err(404, "not_found", "Belge bulunamadı."); }),
-  http.get(`${API}/resident/documents`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    if (mine.status !== 200) return err(403, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const unitIds = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json(listOf(docs, slug).filter((d) => d.confidentiality === "public" || (d.confidentiality === "unit" && d.scope_id && unitIds.has(d.scope_id))).map(docOut).map(({ versions: _v, uploaded_by: _u, sha256: _s, ...x }) => x));
-  }),
-  http.get(`${API}/resident/documents/:id/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const ok = d && (d.confidentiality === "public" || (d.confidentiality === "unit" && mine.units.some((u) => u.unit_id === d.scope_id)));
-    if (!ok) return err(404, "not_found", "Belge bulunamadı.");
-    const v = d!.versions.at(-1)!;
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-
   // 79 — Rapor kataloğu ve talep/SLA raporu
   http.get(`${API}/reports/catalog`, async ({ request, params }) => {
     const p = await permsOf(request, String(params.slug));
@@ -4432,7 +4350,8 @@ const raporlar: RequestHandler[] = [
     if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihi."; if (!b.to || !DATE_RE.test(b.to) || (b.from && b.to < b.from)) f.to = "Bitiş başlangıçtan önce olamaz.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const decisions = listOf(decisionBook, slug).filter((e) => e.date >= b.from! && e.date <= b.to!).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
-    const docIds = (b.document_ids ?? []).filter((id) => listOf(docs, slug).some((d) => d.id === id));
+    const known = new Set((await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).map((d) => d.id));
+    const docIds = (b.document_ids ?? []).filter((id) => known.has(id));
     const p: AuditPkg = { id: crypto.randomUUID(), title: b.title!.trim(), from: b.from!, to: b.to!, created_by: (await me(request)).name, created_at: new Date().toISOString(), decisions, document_ids: docIds, status: "open", report_document_id: null, reviewed_by: null, reviewed_at: null, note: null };
     listOf(auditPkgs, slug).push(p);
     return HttpResponse.json({ data: p, message: `Denetim paketi hazırlandı: ${decisions.length} karar, ${docIds.length} belge.` }, { status: 201 });
@@ -4444,7 +4363,7 @@ const raporlar: RequestHandler[] = [
     const perms = await permsOf(request, slug);
     if (!perms.has("audit.read")) return err(403, "forbidden", "Denetim raporunu denetçi yükler.");
     const b = (await request.json()) as { document_id?: string; note?: string };
-    const d = listOf(docs, slug).find((x) => x.id === b.document_id);
+    const d = (await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).find((x) => x.id === b.document_id);
     if (!d) return err(422, "validation", VALIDATION, { document_id: "Denetim raporu belgesini seçin." });
     Object.assign(p, { status: "reviewed", report_document_id: d.id, reviewed_by: (await me(request)).name, reviewed_at: new Date().toISOString(), note: b.note?.trim() || null });
     return HttpResponse.json({ data: p, message: "Denetim raporu pakete eklendi; paket arşivlendi." });

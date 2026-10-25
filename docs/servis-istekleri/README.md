@@ -93,7 +93,7 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [75](75-genel-kurul-hazirlik-cagri.md) | Genel kurul hazırlığı: format, karar türü, hukuki uyarı, çağrı | `…/meetings/{id}/assembly`, `…/prep`, `…/legal-ack`, `…/invitation`, `…/assembly-settings` | `/toplantilar/{id}/genel-kurul` | Sahte servis |
 | [76](76-hazirun-nisap-oylama.md) | Hazirun, fiziki vekâlet, nisap, salonda oylama (kişi + arsa payı) | `…/assembly/attendance`, `…/items/{itemId}/open\|close`, `…/ballots` | `?sekme=hazirun` | Sahte servis — e-oylama/dijital vekâlet hukuk + K5 |
 | [77](77-tutanak-karar-defteri.md) | Tutanak ve karar defteri | `…/assembly/minutes`, `…/finalize`, `…/signed`, `…/decision-book` | `?sekme=tutanak`, `/karar-defteri` | Sahte servis |
-| [78](78-belge-arsivi.md) | Belge arşivi | `…/documents`, `…/versions/{v}/download`, `…/access-log`, `…/resident/documents` | `/dokumanlar`, sakin `/belgeler` | Sahte servis — K8 |
+| [78](78-belge-arsivi.md) | Belge arşivi | `…/documents`, `…/versions/{v}/download`, `…/access-log`, `…/resident/documents` | `/dokumanlar`, sakin `/belgeler` | **Backend'de** (#67) — liste sayfalı, indirme dosya yanıtı; K8: `retention_years` bilgi amaçlı |
 | [79](79-rapor-katalogu-sla.md) | Rapor kataloğu, metrik sözlüğü, talep/SLA raporu | `…/reports/catalog`, `…/reports/requests-sla` | `/rapor-katalogu` | Sahte servis |
 | [80](80-kvkk-basvuru-aydinlatma.md) | KVKK başvurusu ve aydınlatma sürümleri | `…/privacy-requests`, `…/resident/privacy-requests`, `…/privacy-notices` | `/kvkk`, sakin `/kvkk` | Sahte servis — K8, hukuk 2.1 |
 | [81](81-denetim-kurulu-paketi.md) | Denetim kurulu paketi | `…/audit-packages`, `…/report` | `/denetim-paketi` | Sahte servis — planlı rapor K5 |

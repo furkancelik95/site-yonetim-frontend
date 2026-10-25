@@ -8497,6 +8497,130 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/resident/documents": {
+   "get": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Bana açık belgeler (sayfalı)",
+    "operationId": "my_documents_api_v1_sites__slug__resident_documents_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_ResidentDocumentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/documents/{document_id}/download": {
+   "get": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Belgenin son sürümünü indir",
+    "operationId": "my_document_download_api_v1_sites__slug__resident_documents__document_id__download_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "document_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Document Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/pdf": {},
+       "image/*": {}
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/portfolio": {
    "get": {
     "tags": [
@@ -12021,6 +12145,323 @@
      }
     }
    }
+  },
+  "/api/v1/sites/{slug}/documents": {
+   "get": {
+    "tags": [
+     "belge"
+    ],
+    "summary": "Belgeler (son yüklenen üstte; sayfalı)",
+    "operationId": "list_documents_api_v1_sites__slug__documents_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 120
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "ad içinde arar",
+       "title": "Q"
+      },
+      "description": "ad içinde arar"
+     },
+     {
+      "name": "kind",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/DocumentKind"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "name": "expiring",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "yalnız 60 gün içinde biten ya da bitmiş (`1`/`true`)",
+       "default": false,
+       "title": "Expiring"
+      },
+      "description": "yalnız 60 gün içinde biten ya da bitmiş (`1`/`true`)"
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_DocumentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "belge"
+    ],
+    "summary": "Belge yükle (multipart) — aynı ad + kapsam yeni sürüm olur",
+    "operationId": "upload_document_api_v1_sites__slug__documents_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_document_api_v1_sites__slug__documents_post"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_DocumentOut_"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "`same_file` — dosya son sürümle aynı"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/documents/{document_id}/versions/{version}/download": {
+   "get": {
+    "tags": [
+     "belge"
+    ],
+    "summary": "Sürümü indir (gizli belgede açılış kayda geçer)",
+    "operationId": "download_version_api_v1_sites__slug__documents__document_id__versions__version__download_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "document_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Document Id"
+      }
+     },
+     {
+      "name": "version",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Version"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/pdf": {},
+       "image/*": {}
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/documents/{document_id}/access-log": {
+   "get": {
+    "tags": [
+     "belge"
+    ],
+    "summary": "Gizli belgenin açılış kaydı (yeni üstte)",
+    "operationId": "access_log_api_v1_sites__slug__documents__document_id__access_log_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "document_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Document Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_DocumentAccessOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -12917,8 +13358,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -13758,8 +14199,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13769,7 +14210,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -13855,8 +14296,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13868,7 +14309,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0.0
        },
        {
         "type": "null"
@@ -14025,6 +14466,115 @@
     ],
     "title": "Body_upload_api_v1_sites__slug__bank_imports_post"
    },
+   "Body_upload_document_api_v1_sites__slug__documents_post": {
+    "properties": {
+     "title": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 400
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind",
+      "description": "plan · rules · …"
+     },
+     "scope": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 10
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope",
+      "description": "site · block · unit"
+     },
+     "scope_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 64
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Id",
+      "description": "blok ya da bölüm id"
+     },
+     "confidentiality": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Confidentiality",
+      "description": "public · unit · management · secret"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 10
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until",
+      "description": "YYYY-AA-GG"
+     },
+     "retention_years": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 4
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Years",
+      "description": "yıl (K8)"
+     },
+     "file": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File",
+      "description": "PDF, PNG, JPEG, WebP · ≤ 10 MB (içerik doğrulanır)"
+     }
+    },
+    "type": "object",
+    "title": "Body_upload_document_api_v1_sites__slug__documents_post"
+   },
    "Body_upload_units_api_v1_sites__slug__imports_units_post": {
     "properties": {
      "file": {
@@ -14110,7 +14660,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -14288,8 +14838,8 @@
     "properties": {
      "fiscal_year": {
       "type": "integer",
-      "maximum": 2100,
-      "minimum": 2000,
+      "maximum": 2100.0,
+      "minimum": 2000.0,
       "title": "Fiscal Year"
      },
      "name": {
@@ -15385,6 +15935,16 @@
     ],
     "title": "ComponentOut"
    },
+   "Confidentiality": {
+    "type": "string",
+    "enum": [
+     "public",
+     "unit",
+     "management",
+     "secret"
+    ],
+    "title": "Confidentiality"
+   },
    "ConfirmIn": {
     "properties": {
      "rows": {
@@ -16408,7 +16968,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16420,7 +16980,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16432,7 +16992,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16808,6 +17368,260 @@
      "out"
     ],
     "title": "Direction"
+   },
+   "DocumentAccessOut": {
+    "properties": {
+     "by": {
+      "type": "string",
+      "title": "By"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "v": {
+      "type": "integer",
+      "title": "V"
+     }
+    },
+    "type": "object",
+    "required": [
+     "by",
+     "at",
+     "v"
+    ],
+    "title": "DocumentAccessOut"
+   },
+   "DocumentKind": {
+    "type": "string",
+    "enum": [
+     "plan",
+     "rules",
+     "insurance",
+     "fire_report",
+     "elevator",
+     "contract",
+     "minutes",
+     "financial",
+     "other"
+    ],
+    "title": "DocumentKind"
+   },
+   "DocumentOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/DocumentKind"
+     },
+     "kind_label": {
+      "type": "string",
+      "title": "Kind Label"
+     },
+     "scope": {
+      "$ref": "#/components/schemas/DocumentScope"
+     },
+     "scope_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Id",
+      "description": "blok ya da bölüm; tüm sitede null"
+     },
+     "scope_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Name",
+      "description": "`A Blok` · `A-12`; tüm sitede null"
+     },
+     "confidentiality": {
+      "$ref": "#/components/schemas/Confidentiality"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "days_left": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days Left",
+      "description": "bitişe kalan gün (sitenin bugünü); geçmişse eksi"
+     },
+     "warning": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ExpiryWarning"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "60 · 30 · expired · null"
+     },
+     "retention_years": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Years",
+      "description": "saklama süresi (yıl, K8) — bilgi amaçlı, otomatik silme yok"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version",
+      "description": "son sürüm"
+     },
+     "file_name": {
+      "type": "string",
+      "title": "File Name"
+     },
+     "content_type": {
+      "type": "string",
+      "title": "Content Type"
+     },
+     "size": {
+      "type": "integer",
+      "title": "Size"
+     },
+     "sha256": {
+      "type": "string",
+      "title": "Sha256"
+     },
+     "uploaded_by": {
+      "type": "string",
+      "title": "Uploaded By"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At",
+      "description": "son sürümün yüklenme zamanı"
+     },
+     "versions": {
+      "items": {
+       "$ref": "#/components/schemas/DocumentVersionOut"
+      },
+      "type": "array",
+      "title": "Versions",
+      "description": "eskiden yeniye"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "kind",
+     "kind_label",
+     "scope",
+     "scope_id",
+     "scope_name",
+     "confidentiality",
+     "valid_until",
+     "days_left",
+     "warning",
+     "retention_years",
+     "version",
+     "file_name",
+     "content_type",
+     "size",
+     "sha256",
+     "uploaded_by",
+     "updated_at",
+     "versions"
+    ],
+    "title": "DocumentOut"
+   },
+   "DocumentScope": {
+    "type": "string",
+    "enum": [
+     "site",
+     "block",
+     "unit"
+    ],
+    "title": "DocumentScope"
+   },
+   "DocumentVersionOut": {
+    "properties": {
+     "v": {
+      "type": "integer",
+      "title": "V"
+     },
+     "file_name": {
+      "type": "string",
+      "title": "File Name"
+     },
+     "content_type": {
+      "type": "string",
+      "title": "Content Type"
+     },
+     "size": {
+      "type": "integer",
+      "title": "Size",
+      "description": "bayt"
+     },
+     "sha256": {
+      "type": "string",
+      "title": "Sha256"
+     },
+     "uploaded_by": {
+      "type": "string",
+      "title": "Uploaded By"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "v",
+     "file_name",
+     "content_type",
+     "size",
+     "sha256",
+     "uploaded_by",
+     "at"
+    ],
+    "title": "DocumentVersionOut"
    },
    "Employer": {
     "type": "string",
@@ -17268,6 +18082,15 @@
      "by_category"
     ],
     "title": "ExpenseSummaryOut"
+   },
+   "ExpiryWarning": {
+    "type": "string",
+    "enum": [
+     "60",
+     "30",
+     "expired"
+    ],
+    "title": "ExpiryWarning"
    },
    "FinanceOut": {
     "properties": {
@@ -20302,6 +21125,68 @@
     ],
     "title": "Page[CustomerUsageOut]"
    },
+   "Page_DocumentAccessOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/DocumentAccessOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[DocumentAccessOut]"
+   },
+   "Page_DocumentOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/DocumentOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[DocumentOut]"
+   },
    "Page_EntryOut_": {
     "properties": {
      "items": {
@@ -20736,6 +21621,37 @@
     ],
     "title": "Page[RequestOut]"
    },
+   "Page_ResidentDocumentOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ResidentDocumentOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[ResidentDocumentOut]"
+   },
    "Page_SiteUsageOut_": {
     "properties": {
      "items": {
@@ -20894,8 +21810,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -22213,14 +23129,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -23832,6 +24748,117 @@
     ],
     "title": "RequestsOut"
    },
+   "ResidentDocumentOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/DocumentKind"
+     },
+     "kind_label": {
+      "type": "string",
+      "title": "Kind Label"
+     },
+     "scope": {
+      "$ref": "#/components/schemas/DocumentScope"
+     },
+     "scope_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Name"
+     },
+     "confidentiality": {
+      "$ref": "#/components/schemas/Confidentiality"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "days_left": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days Left"
+     },
+     "warning": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ExpiryWarning"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version"
+     },
+     "file_name": {
+      "type": "string",
+      "title": "File Name"
+     },
+     "content_type": {
+      "type": "string",
+      "title": "Content Type"
+     },
+     "size": {
+      "type": "integer",
+      "title": "Size"
+     },
+     "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "kind",
+     "kind_label",
+     "scope",
+     "scope_name",
+     "confidentiality",
+     "valid_until",
+     "days_left",
+     "warning",
+     "version",
+     "file_name",
+     "content_type",
+     "size",
+     "updated_at"
+    ],
+    "title": "ResidentDocumentOut",
+    "description": "Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok."
+   },
    "ResidentPollOut": {
     "properties": {
      "id": {
@@ -24235,14 +25262,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -24504,7 +25531,7 @@
     "properties": {
      "row_number": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 1.0,
       "title": "Row Number"
      },
      "ledger_account_id": {
@@ -25718,8 +26745,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 50,
-        "minimum": 1
+        "maximum": 50.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26072,8 +27099,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26097,8 +27124,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26114,8 +27141,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26131,7 +27158,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26143,7 +27170,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26528,8 +27555,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26553,8 +27580,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26570,8 +27597,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26587,7 +27614,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26599,7 +27626,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -27441,6 +28468,23 @@
      "message"
     ],
     "title": "Written[DepartmentOut]"
+   },
+   "Written_DocumentOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/DocumentOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[DocumentOut]"
    },
    "Written_ExpenseOut_": {
     "properties": {
