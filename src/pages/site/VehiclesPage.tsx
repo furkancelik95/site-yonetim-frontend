@@ -3,28 +3,25 @@ import { Link } from "react-router";
 import { Car, Plus } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { plateInput } from "../../lib/input";
 import { vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 22'deki şekiller. */
-export interface Vehicle {
-  id: string; plate: string; plate_display: string; brand_model: string | null; color: string | null; unit_id: string; unit_name: string; owner_person_id: string | null; owner_name: string | null;
-  kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive"; created_at: string;
-}
-interface VehicleSettings { plate_limit_per_unit: number; approval_required: boolean }
+export type Vehicle = Schemas["VehicleOut"];
+type VehicleSettings = Schemas["VehicleSettingsOut"];
 
 /** Araçlar (YAP-05): plaka kaydı; güvenlik kapı ekranında okur, sakin kendi aracını ekler. */
 export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?: boolean } = {}) {
   const { site, can } = useSite();
-  const [s, set] = useUrlState({ q: "", durum: "" });
+  const [s, set] = useUrlState({ q: "", durum: "", page: "1" });
   const [search, setSearch] = useState(s.q);
   const q = useDebounced(search, 300);
-  const list = useSiteGet<Vehicle[]>("/vehicles", { unit_id: unitId, status: s.durum || undefined, q: q || undefined });
+  const list = useSiteGet<Page<Vehicle>>("/vehicles", { unit_id: unitId, status: s.durum || undefined, q: q || undefined, page: embedded ? undefined : s.page, page_size: embedded ? 100 : 50 });
   const [adding, setAdding] = useState(false);
   const manage = can(P.unitsManage);
   const body = (
@@ -32,21 +29,23 @@ export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?:
       {adding && <VehicleForm unitId={unitId} onDone={() => setAdding(false)} />}
       {!embedded && (
         <div className="filters">
-          <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value }); }} /></div>
-          <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
+          <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value, page: "1" }); }} /></div>
+          <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
         </div>
       )}
       <div className="card"><div className="card__body card__body--flush">
-        {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.length === 0 ? (
+        {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.items.length === 0 ? (
           <Empty title="Kayıtlı araç yok" icon={<Car aria-hidden="true" />}>Kayıtlı plaka kapı ekranında görünür; sakinler kendi araçlarını uygulamadan ekler.</Empty>
         ) : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Araçlar</caption>
             <thead><tr><th scope="col">Plaka</th>{!unitId && <th scope="col">Bölüm</th>}<th scope="col">Kişi</th><th scope="col">Tür</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{list.data.map((v) => <VehicleRow key={v.id} v={v} showUnit={!unitId} manage={manage} slug={site.slug} />)}</tbody>
+            <tbody>{list.data.items.map((v) => <VehicleRow key={v.id} v={v} showUnit={!unitId} manage={manage} slug={site.slug} />)}</tbody>
           </table></div>
         )}
-      </div></div>
+      </div>
+      {!embedded && list.data && list.data.total > list.data.page_size && <div className="card__foot"><Pager page={list.data.page} pageSize={list.data.page_size} total={list.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
+      </div>
     </>
   );
   if (embedded) {

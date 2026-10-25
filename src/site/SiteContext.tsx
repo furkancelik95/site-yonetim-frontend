@@ -16,6 +16,7 @@ export const P = {
   unitsManage: "units.manage",
   peopleRead: "people.read",
   peopleManage: "people.manage",
+  peopleContact: "people.contact",
   requestsRead: "requests.read",
   requestsCreate: "requests.create",
   requestsAssign: "requests.assign",

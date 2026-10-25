@@ -17,9 +17,9 @@ import { useSite } from "../../site/SiteContext";
 type RegLink = Schemas["LinkOut"];
 type Registration = Schemas["RegistrationOut"];
 type Approved = Schemas["ApprovedOut"];
-/** Servis isteği 23'teki şekiller. */
-interface RegSettings { invite_enabled: boolean; qr_enabled: boolean; code_enabled: boolean; owner_can_approve_tenant: boolean; owner_document_required: boolean; invite_valid_days: number; kvkk_published: boolean }
-interface Invitation { id: string; full_name: string; phone: string; unit_id: string; unit_name: string; relation: "owner" | "tenant"; status: "sent" | "opened" | "completed" | "expired" | "cancelled"; link: string; sent_by: string; sent_at: string; expires_at: string; completed_at: string | null }
+
+type RegSettings = Schemas["RegistrationSettingsOut"];
+type Invitation = Schemas["InvitationOut"];
 
 const TABS = [["basvurular", "Başvurular"], ["davetler", "Davetler"], ["ayarlar", "Kayıt yöntemleri"]] as const;
 
@@ -117,7 +117,7 @@ function Applications({ durum, page, set }: { durum: string; page: string; set: 
 }
 
 function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Approved) => void }) {
-  const [unit, setUnit] = useState<PickedUnit | null>(null);
+  const [unit, setUnit] = useState<PickedUnit | null>(r.requested_unit_id && r.requested_unit_name ? { id: r.requested_unit_id, name: r.requested_unit_name } : null);
   const [reason, setReason] = useState("");
   // Malik başvurusunda hisse (boş = %100); bölümde başka malik varsa toplam %100'ü aşamaz (409)
   const [share, setShare] = useState("");
@@ -133,7 +133,7 @@ function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Appro
         <span className="small muted nowrap">{formatDateTime(r.created_at)}</span>
       </div>
       <div className="grid grid--kpi">
-        <div className="kv" style={{ margin: 0 }}><span className="kv__k">Yazdığı bölüm</span><span className="kv__v">{r.unit_text}</span></div>
+        <div className="kv" style={{ margin: 0 }}><span className="kv__k">Yazdığı bölüm</span><span className="kv__v">{r.unit_text}{r.requested_unit_name && r.requested_unit_name !== r.unit_text ? ` (listeden: ${r.requested_unit_name})` : ""}</span></div>
         <div className="kv" style={{ margin: 0 }}><span className="kv__k">Telefon</span><span className="kv__v">{formatPhone(r.phone)}</span></div>
         {r.email && <div className="kv" style={{ margin: 0 }}><span className="kv__k">E-posta</span><span className="kv__v" style={{ wordBreak: "break-all" }}>{r.email}</span></div>}
       </div>
@@ -164,31 +164,38 @@ function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Appro
 function Invitations() {
   const toast = useToast();
   const [st, setSt] = useState("");
-  const q = useSiteGet<Invitation[]>("/invitations", { status: st || undefined });
+  const [page, setPage] = useState(1);
+  const q = useSiteGet<Page<Invitation>>("/invitations", { status: st || undefined, page, page_size: 30 });
   const [adding, setAdding] = useState(false);
+  // Belirtecin yalnız özeti saklanır: bağlantı oluşturma/yenileme yanıtında bir kez gelir, bu oturumda gösterilir.
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const copy = (link: string) => navigator.clipboard?.writeText(`${window.location.origin}${link}`).then(() => toast("Davet bağlantısı kopyalandı."));
+  const remember = (i?: Invitation) => { if (i?.link) { const l = i.link; setLinks((x) => ({ ...x, [i.id]: l })); copy(l); } };
   return (
     <>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <p className="small muted mb-0">Yönetim kişiyi bölümüyle davet eder; kişi bağlantıdan telefonunu doğrular, hesabı hemen açılır — onay beklemez. SMS gönderimi henüz yok (K5): bağlantıyı siz iletirsiniz.</p>
         <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Mail aria-hidden="true" /> Davet oluştur</button>
       </div>
-      {adding && <InviteForm onDone={() => setAdding(false)} />}
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="inv-st">Durum</label><select id="inv-st" className="field__input" value={st} onChange={(e) => setSt(e.target.value)}><option value="">Tümü</option>{["sent", "opened", "completed", "expired", "cancelled"].map((k) => <option key={k} value={k}>{invitationStatus(k)}</option>)}</select></div></div>
+      {adding && <InviteForm onDone={(i) => { setAdding(false); remember(i); }} />}
+      <div className="filters"><div className="field"><label className="field__label" htmlFor="inv-st">Durum</label><select id="inv-st" className="field__input" value={st} onChange={(e) => { setSt(e.target.value); setPage(1); }}><option value="">Tümü</option>{["sent", "opened", "completed", "expired", "cancelled"].map((k) => <option key={k} value={k}>{invitationStatus(k)}</option>)}</select></div></div>
       <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Davet yok" icon={<Mail aria-hidden="true" />}>Davet oluşturup bağlantıyı kişiye iletin.</Empty> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Davet yok" icon={<Mail aria-hidden="true" />}>Davet oluşturup bağlantıyı kişiye iletin.</Empty> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Davetler</caption>
             <thead><tr><th scope="col">Kişi</th><th scope="col">Bölüm</th><th scope="col">Durum</th><th scope="col">Gönderen</th><th scope="col">Geçerlilik</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
-            <tbody>{q.data.map((i) => <InviteRow key={i.id} i={i} onCopy={() => navigator.clipboard?.writeText(i.link).then(() => toast("Davet bağlantısı kopyalandı."))} />)}</tbody>
+            <tbody>{q.data.items.map((i) => <InviteRow key={i.id} i={i} onCopy={links[i.id] ? () => copy(links[i.id]!) : undefined} onResent={remember} />)}</tbody>
           </table></div>
         )}
-      </div></div>
+      </div>
+      {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} /></div>}
+      </div>
     </>
   );
 }
 
-function InviteRow({ i, onCopy }: { i: Invitation; onCopy: () => void }) {
-  const resend = useSiteMutation<Record<string, never>, Invitation>("POST", `/invitations/${i.id}/resend`);
+function InviteRow({ i, onCopy, onResent }: { i: Invitation; onCopy?: () => void; onResent: (i?: Invitation) => void }) {
+  const resend = useSiteMutation<Record<string, never>, Invitation>("POST", `/invitations/${i.id}/resend`, { onSuccess: onResent });
   const cancel = useSiteMutation<Record<string, never>, Invitation>("POST", `/invitations/${i.id}/cancel`);
   const open = i.status === "sent" || i.status === "opened";
   return (
@@ -196,26 +203,26 @@ function InviteRow({ i, onCopy }: { i: Invitation; onCopy: () => void }) {
       <td><div className="cell-main">{i.full_name}</div><div className="cell-sub">{formatPhone(i.phone)}</div></td>
       <td className="small">{i.unit_name}<div className="cell-sub">{partyRole(i.relation)}</div></td>
       <td><Badge tone={invitationStatusTone(i.status)}>{invitationStatus(i.status)}</Badge>{i.completed_at && <div className="cell-sub">{formatDateTime(i.completed_at)}</div>}</td>
-      <td className="small">{i.sent_by}<div className="cell-sub">{formatDateTime(i.sent_at)}</div></td>
+      <td className="small">{i.sent_by ?? "—"}<div className="cell-sub">{formatDateTime(i.sent_at)}</div></td>
       <td className="small nowrap">{formatDateTime(i.expires_at)}</td>
       <td className="right nowrap">
-        {open && <button className="btn btn--ghost btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Bağlantı</button>}{" "}
-        {i.status !== "completed" && i.status !== "cancelled" && <ConfirmButton className="btn btn--ghost btn--sm" title="Daveti yeniden gönder" confirmLabel="Yeniden gönder" body="Yeni bağlantı üretilir; eskisi geçersiz olur." onConfirm={() => resend.mutateAsync({})}><RefreshCw aria-hidden="true" /> Yenile</ConfirmButton>}{" "}
+        {open && onCopy && <button className="btn btn--ghost btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Bağlantı</button>}{" "}
+        {i.status !== "completed" && i.status !== "cancelled" && <ConfirmButton className="btn btn--ghost btn--sm" title="Daveti yeniden gönder" confirmLabel="Yeniden gönder" body="Yeni bağlantı üretilir ve panoya kopyalanır; eskisi geçersiz olur." onConfirm={() => resend.mutateAsync({})}><RefreshCw aria-hidden="true" /> Yenile</ConfirmButton>}{" "}
         {open && <ConfirmButton className="btn btn--ghost btn--sm" danger title="Daveti iptal et" confirmLabel="İptal et" body="Bağlantı çalışmaz; kişi kaydolamaz." onConfirm={() => cancel.mutateAsync({})}>İptal</ConfirmButton>}
       </td>
     </tr>
   );
 }
 
-function InviteForm({ onDone }: { onDone: () => void }) {
+function InviteForm({ onDone }: { onDone: (created?: Invitation) => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
-  const [f, setF] = useState({ full_name: "", phone: "", relation: "owner" });
+  const [f, setF] = useState({ full_name: "", phone: "", email: "", relation: "owner" });
   const [phoneErr, setPhoneErr] = useState<string>();
   const m = useSiteMutation<Record<string, unknown>, Invitation>("POST", "/invitations", { onSuccess: onDone });
   function submit(e: FormEvent) {
     e.preventDefault();
     if (!isTrMobile(f.phone)) return setPhoneErr("Cep telefonu 5 ile başlayan 10 hane olmalı.");
-    m.mutate({ full_name: f.full_name.trim(), phone: toE164(f.phone), unit_id: unit?.id, relation: f.relation });
+    m.mutate({ full_name: f.full_name.trim(), phone: toE164(f.phone), email: f.email.trim().toLocaleLowerCase("tr-TR") || null, unit_id: unit?.id, relation: f.relation });
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
@@ -225,11 +232,12 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         <div className="grid grid--kpi">
           <Field label="Ad soyad" required error={fieldError(m.error, "full_name")}>{(p) => <input {...p} className="field__input" autoComplete="off" maxLength={60} value={f.full_name} onChange={(e) => setF((x) => ({ ...x, full_name: e.target.value }))} />}</Field>
           <Field label="Cep telefonu" required hint="Kişi bu numarayı doğrulayarak kaydolur" error={phoneErr ?? fieldError(m.error, "phone")}>{(p) => <input {...p} className="field__input" type="tel" inputMode="tel" placeholder="5XX XXX XX XX" value={phoneMask(phoneDigits(f.phone))} onChange={(e) => { setF((x) => ({ ...x, phone: e.target.value })); setPhoneErr(undefined); }} />}</Field>
+          <Field label="E-posta" hint="Giriş e-postayla yapılır; boşsa kişi kayıtta yazar" error={fieldError(m.error, "email")}>{(p) => <input {...p} className="field__input" type="email" inputMode="email" autoComplete="off" value={f.email} onChange={(e) => setF((x) => ({ ...x, email: e.target.value }))} />}</Field>
           <UnitPicker label="Bölüm" value={unit} onChange={setUnit} error={fieldError(m.error, "unit_id")} />
           <Field label="İlişki" required error={fieldError(m.error, "relation")}>{(p) => <select {...p} className="field__input" value={f.relation} onChange={(e) => setF((x) => ({ ...x, relation: e.target.value }))}><option value="owner">Malik</option><option value="tenant">Kiracı</option></select>}</Field>
         </div>
       </div>
-      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.full_name.trim() || !f.phone || !unit}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
+      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.full_name.trim() || !f.phone || !unit}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => onDone()}>Vazgeç</button></div>
     </form>
   );
 }

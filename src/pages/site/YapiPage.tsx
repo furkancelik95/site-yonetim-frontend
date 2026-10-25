@@ -10,12 +10,8 @@ import { P, useSite } from "../../site/SiteContext";
 
 type Block = Schemas["BlockOut"];
 type UnitType = Schemas["UnitTypeOut"];
-/** Servis isteği 19'daki şekiller. */
-interface CommonArea { id: string; name: string; kind: string; block_id: string | null; block_name: string | null; is_reservable: boolean; is_active: boolean; note: string | null }
-export interface StructureSummary {
-  unit_count: number; active_unit_count: number; block_count: number; land_share_sum: number; land_share_denominator: number | null; land_share_mismatch: boolean;
-  units_without_land_share: number; units_without_owner: { id: string; display_name: string }[]; units_shares_incomplete: { id: string; display_name: string; total: string }[]; common_area_count: number;
-}
+type CommonArea = Schemas["CommonAreaOut"];
+export type StructureSummary = Schemas["StructureSummaryOut"];
 
 const AREA_KINDS = ["pool", "hall", "gym", "garden", "playground", "parking", "technical", "roof", "other"];
 const TABS = [["bloklar", "Bloklar"], ["tipler", "Bölüm tipleri"], ["ortak", "Ortak alanlar"]] as const;
@@ -178,7 +174,7 @@ function CommonAreas({ manage }: { manage: boolean }) {
 
 function CommonAreaForm({ a, onDone }: { a: CommonArea | null; onDone: () => void }) {
   const blocks = useSiteGet<Page<Block>>("/blocks", { page_size: 200 });
-  const [f, setF] = useState({ name: a?.name ?? "", kind: a?.kind ?? "hall", block_id: a?.block_id ?? "", is_reservable: a?.is_reservable ?? false, is_active: a?.is_active ?? true, note: a?.note ?? "" });
+  const [f, setF] = useState<{ name: string; kind: string; block_id: string; is_reservable: boolean; is_active: boolean; note: string }>({ name: a?.name ?? "", kind: a?.kind ?? "hall", block_id: a?.block_id ?? "", is_reservable: a?.is_reservable ?? false, is_active: a?.is_active ?? true, note: a?.note ?? "" });
   const m = useSiteMutation<Record<string, unknown>, CommonArea>(a ? "PATCH" : "POST", a ? `/common-areas/${a.id}` : "/common-areas", { onSuccess: onDone });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   return (
