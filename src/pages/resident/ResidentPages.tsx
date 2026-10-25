@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
+import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -133,6 +133,8 @@ export function ResidentHomePage() {
             <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
             <Link className="btn" to={`${base}/rezervasyon`}><CalendarCheck aria-hidden="true" /> Rezervasyon</Link>
             <Link className="btn" to={`${base}/acil-durum`}><Siren aria-hidden="true" /> Acil durum bilgileri</Link>
+            <Link className="btn" to={`${base}/belgeler`}><FileText aria-hidden="true" /> Belgeler</Link>
+            <Link className="btn" to={`${base}/kvkk`}><ShieldCheck aria-hidden="true" /> Kişisel verilerim</Link>
           </div>
         </div>
       </div>
@@ -472,4 +474,5 @@ export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
+export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
 import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";

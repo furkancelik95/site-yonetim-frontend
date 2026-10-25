@@ -58,3 +58,4 @@ export { PurchaseOrderPage, PurchasePage, PurchaseRequestPage, VendorsPage } fro
 export { ContractDetailPage } from "./ContractDetailPage";
 export { EmergencyPage, NotificationTemplatesPage, ReadReportPage } from "./CommPages";
 export { DecisionBookPage, GeneralAssemblyPage } from "./AssemblyPages";
+export { AuditPackagesPage, DocumentsPage, PrivacyPage, ReportCatalogPage } from "./RecordsPages";
