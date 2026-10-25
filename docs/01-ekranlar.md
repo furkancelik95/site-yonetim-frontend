@@ -96,6 +96,9 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/satin-alma/siparis/{id}` | **Sipariş** — sipariş formu, mal/hizmet kabul, fatura üçlü eşleşme (SAT-03..05) | `expenses.read` | istek 65, 66 | R (sahte servis) |
 | `/s/{slug}/tedarikciler` | **Tedarikçiler** — tedarikçi kartı, maskeli IBAN, puan (SAT-06) | `expenses.read` | istek 62 | R (sahte servis) |
 | `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | istek 68–70 | R (sahte servis) |
+| `/s/{slug}/duyurular/{id}/okuma-raporu` | **Okuma raporu** — alıcı/okuyan/onaylayan, zaman damgalı, yazdır (ILT-01) | `announcements.publish` | istek 71 | R (sahte servis) |
+| `/s/{slug}/bildirim-sablonlari` | **Bildirim şablonları** — TR/EN, değişken, SMS parça hesabı, sürüm (ILT-02) | `announcements.publish` | istek 72 | R (sahte servis) |
+| `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | istek 73, 74 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
@@ -117,6 +120,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
 | `/teklif/{token}` | **Tedarikçi teklif formu** — oturumsuz, tek kullanımlık link (SAT-02) | R (sahte servis, istek 64) |
 | `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
+| `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R (sahte servis, istek 73, 74) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |
 
 ## 5. Platform paneli — `/yonetim/...`

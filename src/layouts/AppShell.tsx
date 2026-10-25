@@ -33,11 +33,13 @@ import {
   Lock,
   Megaphone,
   Menu,
+  MessageSquareText,
   Receipt,
   ReceiptText,
   Rocket,
   Route,
   Settings2,
+  Siren,
   ShoppingCart,
   ShieldCheck,
   SlidersHorizontal,
@@ -143,6 +145,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {shows(M.announcements, P.announcementsRead) && (
             <Item to={`${base}/duyurular`} icon={<Megaphone aria-hidden="true" />} label="Duyurular" />
           )}
+          {(can(P.announcementsPublish) || can(P.securityIncidents) || can(P.visitors)) && <Item to={`${base}/acil-durum`} icon={<Siren aria-hidden="true" />} label="Acil Durum" />}
+          {can(P.announcementsPublish) && <Item to={`${base}/bildirim-sablonlari`} icon={<MessageSquareText aria-hidden="true" />} label="Bildirim Şablonları" />}
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}

@@ -112,6 +112,10 @@ const siteScreens: [string, string][] = [
   ["tedarikciler", "VendorsPage"],
   // Sözleşme performansı (servis istekleri 68-70)
   ["sozlesmeler/:contractId", "ContractDetailPage"],
+  // İletişim ve acil durum (servis istekleri 71-74)
+  ["duyurular/:annId/okuma-raporu", "ReadReportPage"],
+  ["bildirim-sablonlari", "NotificationTemplatesPage"],
+  ["acil-durum", "EmergencyPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -175,6 +179,7 @@ export const router = createBrowserRouter([
               { path: "tadilat", element: <L c={page(resident, "ResidentPermitsPage")} /> },
               { path: "emanet", element: <L c={page(resident, "ResidentKeysMetersPage")} /> },
               { path: "rezervasyon", element: <L c={page(resident, "ResidentReservationPage")} /> },
+              { path: "acil-durum", element: <L c={page(resident, "ResidentEmergencyPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },
