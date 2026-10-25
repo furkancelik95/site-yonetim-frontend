@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026). **19–84 sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 40–46 güvenlik ve devriye, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18 backend'de (15.10.2026). **19–84 sahte serviste** (40–46 güvenlik ve devriye backend'de, 26.10.2026) (19–26 yapı: 24.10.2026; 27–34 finans, 35–39 insan kaynakları, 47–52 hizmetler, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -55,13 +55,13 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [37](37-izinler.md) | İzin kaydı ve onayı | `…/leave-requests`, `…/leave-balances` | `/izinler` | Sahte servis — kendi talebi K29 |
 | [38](38-puantaj.md) | Günlük puantaj ve istisna düzeltme | `…/timesheets`, `…/timesheets/finalize` | `/puantaj` | Sahte servis — QR/konum K29 |
 | [39](39-puantaj-aktarimi.md) | Puantaj aktarımı (dosya) | `…/timesheet-exports(/preview)` | `/puantaj?sekme=aktarim` | Sahte servis |
-| [40](40-kapilar-guvenlik-ayarlari.md) | Kapılar ve güvenlik ayarları | `…/gates`, `…/settings/security` | `/ayarlar/guvenlik` | Sahte servis — saklama K8 |
-| [41](41-ziyaretci-on-davet.md) | Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş | `…/resident/visitor-invites`, `…/visitor-invites/expected`, `…/visitor-invites/check-in` | sakin `/ziyaretci`, Güvenlik › Kapı ekranı | Sahte servis |
-| [42](42-sakin-onayi.md) | Habersiz ziyaretçide sakin onayı, zaman aşımı, görevli kararı | `…/visit-requests`, `…/resident/visit-approvals` | Kapı ekranı, sakin `/ziyaretci` | Sahte servis — bildirim K5 |
-| [43](43-plaka-otopark-ihlali.md) | Plaka sorgu, giriş-çıkış kaydı, otopark ihlali | `…/plates/lookup`, `…/gate-logs`, `…/parking-violations` | Kapı ekranı | Sahte servis — park yeri/tahsis K30 |
-| [44](44-kargo-yetkili-uzun-bekleyen.md) | Kargo teslim yetkilisi, uzun bekleyen kargolar | `…/resident/parcel-delegates`, `…/units/{id}/parcel-delegates`, `…/packages/long-waiting` | sakin `/ziyaretci`, Güvenlik | Sahte servis — fotoğraf belge modülüyle |
-| [45](45-nobet-defteri.md) | Nöbet defteri ve vardiya devri | `…/shift-log`, `…/addenda`, `…/acknowledge` | Güvenlik › Nöbet defteri | Sahte servis |
-| [46](46-devriye.md) | Devriye: noktalar (QR etiket), tur planı, yürütme, sapma raporu | `…/patrol-points`, `…/patrol-plans`, `…/patrol-schedule`, `…/patrol-runs` | `/devriye`, Güvenlik › Devriye | Sahte servis — NFC mobilde |
+| [40](40-kapilar-guvenlik-ayarlari.md) | Kapılar ve güvenlik ayarları | `…/gates`, `…/settings/security` | `/ayarlar/guvenlik` | **Backend'de** (#69) — saklama 6 ay site ayarı, gece anonimleştirme varsayılan kapalı (K8) |
+| [41](41-ziyaretci-on-davet.md) | Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş | `…/resident/visitor-invites`, `…/visitor-invites/expected`, `…/visitor-invites/check-in` | sakin `/ziyaretci`, Güvenlik › Kapı ekranı | **Backend'de** (#69) — kod yalnız oluşturulunca gösterilir (özeti saklanır); `…/new-code` |
+| [42](42-sakin-onayi.md) | Habersiz ziyaretçide sakin onayı, zaman aşımı, görevli kararı | `…/visit-requests`, `…/resident/visit-approvals` | Kapı ekranı, sakin `/ziyaretci` | **Backend'de** (#69) — bildirim uygulama içi (K5) |
+| [43](43-plaka-otopark-ihlali.md) | Plaka sorgu, giriş-çıkış kaydı, otopark ihlali | `…/plates/lookup`, `…/gate-logs`, `…/parking-violations` | Kapı ekranı, Araçlar › Park yerleri | **Backend'de** (#69) — park yeri/tahsis K30 eklendi; kayıtlı araç sonucu P02 ile |
+| [44](44-kargo-yetkili-uzun-bekleyen.md) | Kargo teslim yetkilisi, uzun bekleyen kargolar | `…/resident/parcel-delegates`, `…/units/{id}/parcel-delegates`, `…/packages/long-waiting` | sakin `/ziyaretci`, Güvenlik | **Backend'de** (#69) — fotoğraf belge modülüyle |
+| [45](45-nobet-defteri.md) | Nöbet defteri ve vardiya devri | `…/shift-log`, `…/addenda`, `…/acknowledge` | Güvenlik › Nöbet defteri | **Backend'de** (#69) |
+| [46](46-devriye.md) | Devriye: noktalar (QR etiket), tur planı, yürütme, sapma raporu | `…/patrol-points`, `…/patrol-plans`, `…/patrol-schedule`, `…/patrol-runs` | `/devriye`, Güvenlik › Devriye | **Backend'de** (#69) — NFC mobilde |
 | [47](47-sla-calisma-takvimi.md) | Talep SLA'sı ve çalışma takvimi | `…/settings/requests`, `GET …/requests/sla` | `/talepler`, `/talepler/ayarlar` | Sahte servis |
 | [48](48-hazir-yanit-ic-not.md) | Hazır yanıt şablonları ve iç not | `…/reply-templates`, `…/requests/{id}/internal-notes` | talep ayrıntısı, `/talepler/ayarlar` | Sahte servis — K26 |
 | [49](49-ana-olay-birlestirme.md) | Ana olay ve birleştirme önerisi | `…/outages(/links, /unlink, /resolve)`, `…/requests/{id}/merge-suggestions` | talep ayrıntısı, `/talepler/ana-olaylar` | Sahte servis — K27 adı `outages` |
