@@ -90,6 +90,7 @@ const siteScreens: [string, string][] = [
   ["vardiya", "ShiftPlanPage"],
   ["izinler", "LeavePage"],
   ["puantaj", "TimesheetPage"],
+  ["vardiyam", "MyShiftPage"],
   // Güvenlik ve devriye paketi (servis istekleri 40–46)
   ["ayarlar/guvenlik", "SecuritySettingsPage"],
   ["devriye", "PatrolAdminPage"],

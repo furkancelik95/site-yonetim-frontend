@@ -10,6 +10,9 @@
 // 26 kurulum ve canlıya geçiş.
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
+//
+// Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
+// izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -1413,299 +1416,9 @@ const finans: RequestHandler[] = [
   }),
 ];
 
-// ============================================================================================
-// İNSAN KAYNAKLARI PAKETİ (Yazılım Dokümanı IK-01..05) — servis istekleri 35–39
-// Personelin uygulamaya girişi ve kart–kullanıcı eşleşmesi K29'a bağlı: vardiyam, kendi izin talebi ve
-// QR/konumlu giriş-çıkış bu pakette yok; kayıtlar İK sorumlusu tarafından tutulur.
-// ============================================================================================
-interface StaffRow { id: string; full_name: string; position: string; employer: string; contractor_name: string | null; phone: string | null; start_date: string; end_date: string | null; is_active: boolean }
-interface ShiftTemplate { id: string; name: string; start: string; end: string; break_minutes: number; position: string | null; location: string | null; is_active: boolean }
-interface Assignment { id: string; staff_id: string; date: string; template_id: string; changed_after_publish: boolean }
-interface LeaveReq { id: string; staff_id: string; staff_name: string; type: "annual" | "excuse" | "sick" | "unpaid"; from: string; to: string; days: number; note: string | null; status: "pending" | "approved" | "rejected" | "cancelled"; created_by: string; created_at: string; decided_by: string | null; decided_at: string | null; reject_reason: string | null }
-interface TimesheetFix { status: "worked" | "absent" | "leave"; late_minutes: number; early_leave_minutes: number; overtime_minutes: number; reason: string; by: string; at: string }
-interface TsExport { id: string; month: string; rows: Record<string, string | number>[]; created_by: string; created_at: string; file_name: string }
-const payrollNos = loadMap<string, string>("payrollNos"); // staff_id → sicil no
-const shiftTemplates = loadMap<string, ShiftTemplate[]>("shiftTemplates");
-const assignments = loadMap<string, Assignment[]>("shiftAssignments");
-const publishedWeeks = loadMap<string, { week: string; at: string; by: string }[]>("publishedWeeks");
-const leaves = loadMap<string, LeaveReq[]>("leaveRequests");
-const tsFixes = loadMap<string, TimesheetFix>("timesheetFixes"); // assignment_id → düzeltme
-const tsFinal = loadMap<string, { date: string; by: string; at: string }[]>("timesheetFinal");
-const tsExports = loadMap<string, TsExport[]>("timesheetExports");
-const LEAVE_TYPES = ["annual", "excuse", "sick", "unpaid"] as const;
+// Ortak saat yardımcıları (İnsan kaynakları paketi 35–39 gerçek backend'e geçti; aşağıdaki sahte uçlar kullanıyor)
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-/** Vardiyanın başlangıç/bitişi (dakika, gün başından); gece vardiyası ertesi güne taşar. */
-const span = (t: ShiftTemplate) => { const s = toMin(t.start); let e = toMin(t.end); if (e <= s) e += 1440; return { s, e }; };
-const dayIndex = (d: string) => Math.round(new Date(d + "T00:00:00Z").getTime() / 864e5);
 const weekStart = (d: string) => { const x = new Date(d + "T00:00:00"); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); return iso(x); };
-const tplOf = (slug: string) => { if (!shiftTemplates.has(slug)) shiftTemplates.set(slug, [
-  { id: crypto.randomUUID(), name: "Sabah", start: "08:00", end: "16:00", break_minutes: 60, position: null, location: null, is_active: true },
-  { id: crypto.randomUUID(), name: "Akşam", start: "16:00", end: "00:00", break_minutes: 30, position: null, location: null, is_active: true },
-  { id: crypto.randomUUID(), name: "Gece", start: "00:00", end: "08:00", break_minutes: 30, position: null, location: null, is_active: true },
-]); return shiftTemplates.get(slug)!; };
-const nightMinutes = (t: ShiftTemplate) => { const { s, e } = span(t); let n = 0; for (let m = s; m < e; m++) { const h = (m % 1440) / 60; if (h >= 22 || h < 6) n++; } return n; };
-function leaveOn(slug: string, staffId: string, date: string) { return listOf(leaves, slug).find((l) => l.staff_id === staffId && l.status === "approved" && l.from <= date && l.to >= date) ?? null; }
-function conflictsFor(slug: string, list: Assignment[]) {
-  const tpl = new Map(tplOf(slug).map((t) => [t.id, t]));
-  const out: { assignment_id: string; kind: "overlap" | "leave" | "rest"; message: string }[] = [];
-  const byStaff = new Map<string, Assignment[]>();
-  for (const a of list) byStaff.set(a.staff_id, [...(byStaff.get(a.staff_id) ?? []), a]);
-  for (const [, as] of byStaff) {
-    const ivs = as.map((a) => { const t = tpl.get(a.template_id); if (!t) return null; const { s, e } = span(t); const base = dayIndex(a.date) * 1440; return { a, s: base + s, e: base + e }; }).filter((x): x is { a: Assignment; s: number; e: number } => !!x).sort((x, y) => x.s - y.s);
-    for (let i = 0; i < ivs.length; i++) {
-      const cur = ivs[i]!, nxt = ivs[i + 1];
-      const lv = leaveOn(slug, cur.a.staff_id, cur.a.date);
-      if (lv) out.push({ assignment_id: cur.a.id, kind: "leave", message: `Onaylı izin günü (${lv.type === "sick" ? "raporlu" : lv.type === "annual" ? "yıllık" : lv.type === "excuse" ? "mazeret" : "ücretsiz"})` });
-      if (!nxt) continue;
-      if (nxt.s < cur.e) { out.push({ assignment_id: nxt.a.id, kind: "overlap", message: "Aynı kişiye çakışan vardiya" }); continue; }
-      const rest = (nxt.s - cur.e) / 60;
-      if (rest < 11) out.push({ assignment_id: nxt.a.id, kind: "rest", message: `İki vardiya arası dinlenme ${rest.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} saat (11 saatten az)` });
-    }
-  }
-  return out;
-}
-async function staffList(request: Request, slug: string, includeLeft = false) {
-  const a = await real<StaffRow[]>(request, `/api/v1/sites/${slug}/staff?active=true`);
-  const list = [...(a.body ?? [])];
-  if (includeLeft) { const b = await real<StaffRow[]>(request, `/api/v1/sites/${slug}/staff?active=false`); list.push(...(b.body ?? [])); }
-  return list.map((s) => ({ ...s, payroll_no: payrollNos.get(s.id) ?? null }));
-}
-function timesheetRows(slug: string, staff: (StaffRow & { payroll_no: string | null })[], date: string) {
-  const tpl = new Map(tplOf(slug).map((t) => [t.id, t]));
-  const rows = listOf(assignments, slug).filter((a) => a.date === date).map((a) => {
-    const t = tpl.get(a.template_id); const s = staff.find((x) => x.id === a.staff_id);
-    const lv = leaveOn(slug, a.staff_id, date); const fix = tsFixes.get(a.id);
-    const planned = t ? (span(t).e - span(t).s - t.break_minutes) : 0;
-    const status = fix?.status ?? (lv ? "leave" : "worked");
-    const worked = status === "worked" ? Math.max(0, planned - (fix?.late_minutes ?? 0) - (fix?.early_leave_minutes ?? 0) + (fix?.overtime_minutes ?? 0)) : 0;
-    return { id: a.id, staff_id: a.staff_id, staff_name: s?.full_name ?? "—", position: s?.position ?? null, payroll_no: s?.payroll_no ?? null, template: t ? `${t.name} ${t.start}–${t.end}` : "—", planned_minutes: planned, night_minutes: status === "worked" && t ? nightMinutes(t) : 0, status, leave_type: lv?.type ?? null, late_minutes: fix?.late_minutes ?? 0, early_leave_minutes: fix?.early_leave_minutes ?? 0, overtime_minutes: fix?.overtime_minutes ?? 0, worked_minutes: worked, reason: fix?.reason ?? null, fixed_by: fix?.by ?? null, is_exception: !!fix || !!lv };
-  });
-  // Vardiyası olmayan ama izinli personel de satır olarak görünsün
-  for (const l of listOf(leaves, slug).filter((x) => x.status === "approved" && x.from <= date && x.to >= date)) {
-    if (!rows.some((r) => r.staff_id === l.staff_id)) rows.push({ id: `leave-${l.id}-${date}`, staff_id: l.staff_id, staff_name: l.staff_name, position: staff.find((x) => x.id === l.staff_id)?.position ?? null, payroll_no: payrollNos.get(l.staff_id) ?? null, template: "—", planned_minutes: 0, night_minutes: 0, status: "leave", leave_type: l.type, late_minutes: 0, early_leave_minutes: 0, overtime_minutes: 0, worked_minutes: 0, reason: null, fixed_by: null, is_exception: true });
-  }
-  return rows.sort((a, b) => a.staff_name.localeCompare(b.staff_name, "tr"));
-}
-
-async function tsPreview(request: Request, slug: string, month: string) {
-    const staff = await staffList(request, slug, true);
-    const days: string[] = []; for (let d = `${month}-01`; d.startsWith(month); d = addDays(d, 1)) days.push(d);
-    const fin = new Set(listOf(tsFinal, slug).map((d) => d.date));
-    const sum = new Map<string, Record<string, number | string>>();
-    const missing: string[] = [];
-    for (const d of days) {
-      const rows = timesheetRows(slug, staff, d);
-      if (rows.length && !fin.has(d)) missing.push(d);
-      for (const r of rows) {
-        const o = sum.get(r.staff_id) ?? { staff_id: r.staff_id, payroll_no: r.payroll_no ?? "", name: r.staff_name, worked_days: 0, worked_hours: 0, overtime_hours: 0, night_hours: 0, absent_days: 0, leave_annual: 0, leave_excuse: 0, leave_sick: 0, leave_unpaid: 0, holiday_hours: 0 };
-        if (r.status === "worked") { o.worked_days = (o.worked_days as number) + 1; o.worked_hours = (o.worked_hours as number) + r.worked_minutes / 60; o.overtime_hours = (o.overtime_hours as number) + r.overtime_minutes / 60; o.night_hours = (o.night_hours as number) + r.night_minutes / 60; }
-        else if (r.status === "absent") o.absent_days = (o.absent_days as number) + 1;
-        else if (r.leave_type) o[`leave_${r.leave_type}`] = (o[`leave_${r.leave_type}`] as number) + 1;
-        sum.set(r.staff_id, o);
-      }
-    }
-    const rows: Record<string, string | number>[] = [...sum.values()].map((o): Record<string, string | number> => ({ ...o, worked_hours: Math.round((o.worked_hours as number) * 100) / 100, overtime_hours: Math.round((o.overtime_hours as number) * 100) / 100, night_hours: Math.round((o.night_hours as number) * 100) / 100 })).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
-    const exported = listOf(tsExports, slug).find((x) => x.month === month) ?? null;
-    return { month, rows, missing_days: missing, missing_payroll: rows.filter((r) => !r.payroll_no).map((r) => r.name), exported: exported ? { id: exported.id, created_by: exported.created_by, created_at: exported.created_at } : null };
-}
-
-const ik: RequestHandler[] = [
-  // 35 — Personel kartına bordro sicil no; ayrılışta açık işler
-  http.get(`${API}/staff`, async ({ request, params }) => {
-    const r = await real<StaffRow[]>(request, `/api/v1/sites/${params.slug}/staff${new URL(request.url).search}`);
-    if (r.status !== 200 || !r.body) return HttpResponse.json(r.body, { status: r.status });
-    return HttpResponse.json(r.body.map((s) => ({ ...s, payroll_no: payrollNos.get(s.id) ?? null })));
-  }),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/staff` : `${API}/staff/:id`, async ({ request, params }) => {
-    const b = (await request.json()) as Record<string, unknown> & { payroll_no?: string | null };
-    const { payroll_no, ...rest } = b;
-    if (payroll_no != null && payroll_no !== "" && !/^[A-Za-z0-9-]{1,20}$/.test(String(payroll_no))) return err(422, "validation", VALIDATION, { payroll_no: "Sicil no harf, rakam ve tire; en fazla 20 karakter." });
-    const r = await real<{ data?: StaffRow }>(request, `/api/v1/sites/${params.slug}/staff${verb === "patch" ? `/${params.id}` : ""}`, { method: verb.toUpperCase(), body: rest });
-    if (r.status < 300 && r.body?.data && "payroll_no" in b) { if (payroll_no) payrollNos.set(r.body.data.id, String(payroll_no).trim()); else payrollNos.delete(r.body.data.id); }
-    return HttpResponse.json(r.body && r.body.data ? { ...r.body, data: { ...r.body.data, payroll_no: payrollNos.get(r.body.data.id) ?? null } } : r.body, { status: r.status });
-  })),
-  http.get(`${API}/staff/:id/open-items`, ({ params }) => {
-    const slug = String(params.slug);
-    const future = listOf(assignments, slug).filter((a) => a.staff_id === params.id && a.date >= today()).sort((a, b) => a.date.localeCompare(b.date));
-    const pend = listOf(leaves, slug).filter((l) => l.staff_id === params.id && l.status === "pending");
-    return HttpResponse.json({ future_shifts: future.length, first_shift: future[0]?.date ?? null, pending_leaves: pend.length });
-  }),
-
-  // 36 — Vardiya şablonları ve plan
-  http.get(`${API}/shift-templates`, ({ params }) => HttpResponse.json(tplOf(String(params.slug)))),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/shift-templates` : `${API}/shift-templates/:id`, async ({ request, params }) => {
-    const list = tplOf(String(params.slug));
-    const cur = verb === "patch" ? list.find((t) => t.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Vardiya şablonu bulunamadı.");
-    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<ShiftTemplate>) };
-    const f: Record<string, string> = {};
-    if (!b.name?.trim()) f.name = "Ad yazın."; else if (list.some((t) => t.id !== cur?.id && t.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla şablon var.";
-    if (!TIME_RE.test(b.start ?? "")) f.start = "Başlangıç saatini girin (SS:DD).";
-    if (!TIME_RE.test(b.end ?? "")) f.end = "Bitiş saatini girin (SS:DD).";
-    if (!(Number.isInteger(b.break_minutes) && b.break_minutes! >= 0 && b.break_minutes! <= 180)) f.break_minutes = "Mola 0–180 dakika.";
-    if (!f.start && !f.end && b.start === b.end) f.end = "Bitiş başlangıçla aynı olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const t: ShiftTemplate = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), start: b.start!, end: b.end!, break_minutes: b.break_minutes!, position: b.position?.trim() || null, location: b.location?.trim() || null, is_active: b.is_active ?? true };
-    if (cur) Object.assign(cur, t); else list.push(t);
-    return HttpResponse.json({ data: t, message: verb === "post" ? `${t.name} şablonu eklendi.` : `${t.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-  http.get(`${API}/shift-plans`, async ({ request, params }) => {
-    const slug = String(params.slug); const url = new URL(request.url);
-    const from = url.searchParams.get("from") ?? weekStart(today()); const to = url.searchParams.get("to") ?? addDays(from, 6);
-    const list = listOf(assignments, slug).filter((a) => a.date >= from && a.date <= to);
-    const staff = await staffList(request, slug);
-    const lv = listOf(leaves, slug).filter((l) => l.status === "approved" && l.to >= from && l.from <= to).map((l) => ({ staff_id: l.staff_id, from: l.from, to: l.to, type: l.type }));
-    const pub = listOf(publishedWeeks, slug).find((w) => w.week === weekStart(from)) ?? null;
-    return HttpResponse.json({ from, to, staff, templates: tplOf(slug), assignments: list, leaves: lv, conflicts: conflictsFor(slug, listOf(assignments, slug).filter((a) => a.date >= addDays(from, -1) && a.date <= addDays(to, 1))).filter((c) => list.some((a) => a.id === c.assignment_id)), published: pub, changed_after_publish: list.filter((a) => a.changed_after_publish).length });
-  }),
-  http.post(`${API}/shift-plans/assignments`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { staff_id?: string; date?: string; template_id?: string };
-    const f: Record<string, string> = {};
-    if (!b.staff_id) f.staff_id = "Personel seçin.";
-    if (!b.date || !DATE_RE.test(b.date)) f.date = "Gün seçin.";
-    if (!tplOf(slug).some((t) => t.id === b.template_id && t.is_active)) f.template_id = "Vardiya seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const list = listOf(assignments, slug);
-    if (list.some((a) => a.staff_id === b.staff_id && a.date === b.date && a.template_id === b.template_id)) return err(409, "duplicate", "Bu vardiya o gün bu kişiye zaten atanmış.");
-    const published = listOf(publishedWeeks, slug).some((w) => w.week === weekStart(b.date!));
-    const a: Assignment = { id: crypto.randomUUID(), staff_id: b.staff_id!, date: b.date!, template_id: b.template_id!, changed_after_publish: published };
-    list.push(a);
-    const c = conflictsFor(slug, list).filter((x) => x.assignment_id === a.id);
-    return HttpResponse.json({ data: { ...a, conflicts: c }, message: c.length ? `Atandı — uyarı: ${c.map((x) => x.message).join("; ")}` : "Vardiya atandı." }, { status: 201 });
-  }),
-  http.delete(`${API}/shift-plans/assignments/:id`, ({ params }) => {
-    const list = listOf(assignments, String(params.slug));
-    const i = list.findIndex((a) => a.id === params.id);
-    if (i < 0) return err(404, "not_found", "Atama bulunamadı.");
-    if (listOf(tsFinal, String(params.slug)).some((d) => d.date === list[i]!.date)) return err(409, "timesheet_final", "Bu günün puantajı kesinleşti; atama kaldırılamaz.");
-    list.splice(i, 1);
-    return HttpResponse.json({ data: null, message: "Atama kaldırıldı." });
-  }),
-  http.post(`${API}/shift-plans/copy-week`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { from_week?: string; to_week?: string };
-    if (!b.from_week || !b.to_week || weekStart(b.from_week) !== b.from_week || weekStart(b.to_week) !== b.to_week) return err(422, "validation", "Hafta başlarını (pazartesi) seçin.");
-    const list = listOf(assignments, slug);
-    const src = list.filter((a) => a.date >= b.from_week! && a.date <= addDays(b.from_week!, 6));
-    const shift = dayIndex(b.to_week) - dayIndex(b.from_week);
-    let n = 0;
-    for (const a of src) { const d = addDays(a.date, shift); if (!list.some((x) => x.staff_id === a.staff_id && x.date === d && x.template_id === a.template_id)) { list.push({ id: crypto.randomUUID(), staff_id: a.staff_id, date: d, template_id: a.template_id, changed_after_publish: false }); n++; } }
-    return HttpResponse.json({ data: { created: n }, message: `${n} atama kopyalandı.` }, { status: 201 });
-  }),
-  http.post(`${API}/shift-plans/publish`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { week?: string; acknowledge_conflicts?: boolean };
-    if (!b.week || weekStart(b.week) !== b.week) return err(422, "validation", "Hafta seçin.");
-    const wk = listOf(assignments, slug).filter((a) => a.date >= b.week! && a.date <= addDays(b.week!, 6));
-    if (wk.length === 0) return err(409, "empty_plan", "Bu haftada atama yok.");
-    const c = conflictsFor(slug, listOf(assignments, slug)).filter((x) => wk.some((a) => a.id === x.assignment_id));
-    if (c.length && !b.acknowledge_conflicts) return err(409, "conflicts", `${c.length} çakışma var. İnceleyip yine de yayınlamak için onaylayın.`);
-    const pubs = listOf(publishedWeeks, slug).filter((w) => w.week !== b.week);
-    pubs.push({ week: b.week, at: new Date().toISOString(), by: (await me(request)).name });
-    publishedWeeks.set(slug, pubs);
-    for (const a of wk) a.changed_after_publish = false;
-    return HttpResponse.json({ data: { week: b.week, assignments: wk.length }, message: `Hafta planı yayınlandı (${wk.length} vardiya). Personele bildirim, personel hesabı (K29) ve bildirim servisi (K5) gelince gidecek.` });
-  }),
-
-  // 37 — İzinler
-  http.get(`${API}/leave-requests`, ({ request, params }) => {
-    const st = new URL(request.url).searchParams.get("status");
-    return HttpResponse.json([...listOf(leaves, String(params.slug))].filter((l) => !st || l.status === st).sort((a, b) => b.created_at.localeCompare(a.created_at)));
-  }),
-  http.get(`${API}/leave-balances`, async ({ request, params }) => {
-    const slug = String(params.slug); const year = today().slice(0, 4);
-    const staff = await staffList(request, slug);
-    return HttpResponse.json(staff.map((s) => ({ staff_id: s.id, staff_name: s.full_name, used: Object.fromEntries(LEAVE_TYPES.map((t) => [t, listOf(leaves, slug).filter((l) => l.staff_id === s.id && l.type === t && l.status === "approved" && l.from.startsWith(year)).reduce((n, l) => n + l.days, 0)])) })));
-  }),
-  http.post(`${API}/leave-requests`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as Partial<LeaveReq>;
-    const f: Record<string, string> = {};
-    const staff = (await staffList(request, slug)).find((s) => s.id === b.staff_id);
-    if (!staff) f.staff_id = "Personel seçin.";
-    if (!LEAVE_TYPES.includes(b.type as never)) f.type = "İzin türünü seçin.";
-    if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihini girin.";
-    if (!b.to || !DATE_RE.test(b.to)) f.to = "Bitiş tarihini girin."; else if (b.from && b.to < b.from) f.to = "Bitiş başlangıçtan önce olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (listOf(leaves, slug).some((l) => l.staff_id === b.staff_id && (l.status === "pending" || l.status === "approved") && l.from <= b.to! && l.to >= b.from!)) return err(409, "leave_overlap", "Bu tarihlerde kişinin başka bir izni var.");
-    const days = dayIndex(b.to!) - dayIndex(b.from!) + 1;
-    const l: LeaveReq = { id: crypto.randomUUID(), staff_id: staff!.id, staff_name: staff!.full_name, type: b.type!, from: b.from!, to: b.to!, days, note: b.note?.trim() || null, status: "pending", created_by: (await me(request)).name, created_at: new Date().toISOString(), decided_by: null, decided_at: null, reject_reason: null };
-    listOf(leaves, slug).push(l);
-    const clash = listOf(assignments, slug).filter((a) => a.staff_id === l.staff_id && a.date >= l.from && a.date <= l.to).length;
-    return HttpResponse.json({ data: { ...l, clashing_shifts: clash }, message: `İzin talebi kaydedildi${clash ? `; bu tarihlerde ${clash} vardiyası var` : ""}. Onay bekliyor.` }, { status: 201 });
-  }),
-  http.post(`${API}/leave-requests/:id/:action`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    if (!["approve", "reject", "cancel"].includes(String(params.action))) return;
-    const l = listOf(leaves, slug).find((x) => x.id === params.id);
-    if (!l) return err(404, "not_found", "İzin talebi bulunamadı.");
-    const b = (await request.json().catch(() => ({}))) as { reason?: string };
-    const who = (await me(request)).name;
-    if (params.action === "cancel") {
-      if (l.status === "cancelled" || l.status === "rejected") return err(409, "invalid_status", "Bu talep zaten kapanmış.");
-      if (listOf(tsFinal, slug).some((d) => d.date >= l.from && d.date <= l.to)) return err(409, "timesheet_final", "İzin günlerinden birinin puantajı kesinleşti; iptal edilemez.");
-      Object.assign(l, { status: "cancelled", decided_by: who, decided_at: new Date().toISOString() });
-      return HttpResponse.json({ data: l, message: "İzin iptal edildi." });
-    }
-    if (l.status !== "pending") return err(409, "invalid_status", "Yalnız bekleyen talep karara bağlanır.");
-    if (params.action === "reject" && (b.reason ?? "").trim().length < 3) return err(422, "validation", VALIDATION, { reason: "Ret gerekçesi yazın." });
-    Object.assign(l, { status: params.action === "approve" ? "approved" : "rejected", decided_by: who, decided_at: new Date().toISOString(), reject_reason: params.action === "reject" ? b.reason!.trim() : null });
-    const clash = listOf(assignments, slug).filter((a) => a.staff_id === l.staff_id && a.date >= l.from && a.date <= l.to).length;
-    return HttpResponse.json({ data: l, message: params.action === "approve" ? `İzin onaylandı; vardiya planına ve puantaja yansır.${clash ? ` ${clash} vardiya "atanmalı" olarak işaretlendi.` : ""}` : "İzin reddedildi." });
-  }),
-
-  // 38 — Puantaj
-  http.get(`${API}/timesheets`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const date = new URL(request.url).searchParams.get("date") ?? addDays(today(), -1);
-    const staff = await staffList(request, slug, true);
-    const fin = listOf(tsFinal, slug).find((d) => d.date === date) ?? null;
-    return HttpResponse.json({ date, is_final: !!fin, finalized_by: fin?.by ?? null, finalized_at: fin?.at ?? null, rows: timesheetRows(slug, staff, date) });
-  }),
-  http.patch(`${API}/timesheets/:id`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const a = listOf(assignments, slug).find((x) => x.id === params.id);
-    if (!a) return err(404, "not_found", "Puantaj satırı bulunamadı.");
-    if (listOf(tsFinal, slug).some((d) => d.date === a.date)) return err(409, "timesheet_final", "Bu günün puantajı kesinleşti; düzeltme yapılamaz.");
-    const b = (await request.json()) as Partial<TimesheetFix>;
-    const f: Record<string, string> = {};
-    if (!["worked", "absent", "leave"].includes(b.status ?? "")) f.status = "Durum seçin.";
-    for (const k of ["late_minutes", "early_leave_minutes", "overtime_minutes"] as const) if (b[k] != null && !(Number.isInteger(b[k]) && b[k]! >= 0 && b[k]! <= 960)) f[k] = "0–960 dakika.";
-    if ((b.reason ?? "").trim().length < 3) f.reason = "Düzeltme gerekçesi zorunlu.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    tsFixes.set(a.id, { status: b.status!, late_minutes: b.status === "worked" ? b.late_minutes ?? 0 : 0, early_leave_minutes: b.status === "worked" ? b.early_leave_minutes ?? 0 : 0, overtime_minutes: b.status === "worked" ? b.overtime_minutes ?? 0 : 0, reason: b.reason!.trim(), by: (await me(request)).name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: null, message: "Puantaj düzeltildi; denetim kaydına yazıldı." });
-  }),
-  http.post(`${API}/timesheets/finalize`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { date?: string };
-    if (!b.date || !DATE_RE.test(b.date)) return err(422, "validation", VALIDATION, { date: "Gün seçin." });
-    if (b.date >= today()) return err(409, "day_not_ended", "Gün bitmeden puantaj kesinleşmez.");
-    const list = listOf(tsFinal, slug);
-    if (list.some((d) => d.date === b.date)) return err(409, "already_final", "Bu gün zaten kesinleşti.");
-    list.push({ date: b.date, by: (await me(request)).name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: { date: b.date }, message: `${new Date(b.date).toLocaleDateString("tr-TR")} puantajı kesinleşti.` });
-  }),
-
-  // 39 — Puantaj aktarımı
-  http.get(`${API}/timesheet-exports/preview`, async ({ request, params }) => HttpResponse.json(await tsPreview(request, String(params.slug), new URL(request.url).searchParams.get("month") ?? addMonths(monthStart(), -1).slice(0, 7)))),
-  http.get(`${API}/timesheet-exports`, ({ params }) => HttpResponse.json([...listOf(tsExports, String(params.slug))].reverse())),
-  http.post(`${API}/timesheet-exports`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { month?: string };
-    if (!b.month || !/^\d{4}-\d{2}$/.test(b.month)) return err(422, "validation", VALIDATION, { month: "Ay seçin." });
-    if (b.month >= today().slice(0, 7)) return err(409, "month_not_ended", "Ay bitmeden puantaj aktarılmaz.");
-    if (listOf(tsExports, slug).some((x) => x.month === b.month)) return err(409, "already_exported", "Bu ayın puantajı aktarıldı ve kilitli; düzeltme ayrı dönem kaydıyla yapılır.");
-    const pv = await tsPreview(request, slug, b.month);
-    if (pv.missing_days.length) return err(409, "days_not_final", `Kesinleşmemiş günler var: ${pv.missing_days.map((d) => new Date(d).toLocaleDateString("tr-TR")).join(", ")}. Aktarım başlatılamaz.`);
-    if (pv.missing_payroll.length) return err(409, "payroll_missing", `Bordro sicil no eksik: ${pv.missing_payroll.join(", ")}. Personel kartından girin.`);
-    const x: TsExport = { id: crypto.randomUUID(), month: b.month, rows: pv.rows, created_by: (await me(request)).name, created_at: new Date().toISOString(), file_name: `puantaj-${slug}-${b.month}.csv` };
-    listOf(tsExports, slug).push(x);
-    return HttpResponse.json({ data: x, message: `${b.month} puantajı ${pv.rows.length} personel için dosyaya yazıldı ve kilitlendi.` }, { status: 201 });
-  }),
-];
 
 // Güvenlik ve devriye paketi (servis istekleri 40–46) backend'de; aşağıdaki yardımcılar diğer
 // sahte uçlarda (rutin görev, rezervasyon, iletişim) kullanılıyor.
@@ -3853,43 +3566,19 @@ const genelKurul: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// RAPORLAR, BELGELER VE KVKK (Yazılım Dokümanı RAP-01, 03, 04, 05) — servis istekleri 78–81
+// RAPORLAR VE KVKK (Yazılım Dokümanı RAP-01, 04, 05) — servis istekleri 79–81
+// (78 belge arşivi backend'de: gerçek `…/documents`; denetim paketi belgeyi oradan okur)
 // ============================================================================================
-interface DocVersion { v: number; file_name: string; mime: string; size: number; sha256: string; data: string; uploaded_by: string; at: string }
-interface Doc { id: string; title: string; kind: string; scope: "site" | "block" | "unit"; scope_id: string | null; scope_name: string | null; confidentiality: "public" | "unit" | "management" | "secret"; valid_until: string | null; versions: DocVersion[]; created_at: string; access_log: { by: string; at: string; v: number }[] }
 interface PrivacyReq { id: string; kind: "access" | "rectify" | "erase" | "object"; detail: string; user_id: string; name: string; units: string[]; snapshot: unknown; status: "open" | "answered"; created_at: string; due_on: string; response: string | null; outcome: "fulfilled" | "partial" | "rejected" | null; retained: string | null; answered_by: string | null; answered_at: string | null }
 interface Notice { version: number; text: string; published_at: string; published_by: string; summary: string }
 interface AuditPkg { id: string; title: string; from: string; to: string; created_by: string; created_at: string; decisions: { no: number; item_title: string; decision: string; date: string }[]; document_ids: string[]; status: "open" | "reviewed"; report_document_id: string | null; reviewed_by: string | null; reviewed_at: string | null; note: string | null }
-const docs = loadMap<string, Doc[]>("docs");
 const privacyReqs = loadMap<string, PrivacyReq[]>("privacyReqs");
 const notices = loadMap<string, Notice[]>("notices");
 const auditPkgs = loadMap<string, AuditPkg[]>("auditPkgs");
-const DOC_KINDS = ["plan", "rules", "insurance", "fire_report", "elevator", "contract", "minutes", "financial", "other"];
-// Furkan (25.10.2026): gider ekleriyle aynı sınır, 10 MB. Sahte servis dosyayı oturum deposunda tuttuğu için
-// tarayıcı kotasını (~5 MB) aşan dosya sayfa yenilenince kaybolur; sınır sözleşmeye uygun tutuldu.
-const MAX_DOC = 10 * 1024 * 1024;
 async function permsOf(request: Request, slug: string) {
   const m = await real<{ sites: { slug: string; permissions: string[] }[] }>(request, "/api/v1/me");
   return new Set(m.body?.sites.find((s) => s.slug === slug)?.permissions ?? []);
 }
-function sniff(dataUrl: string) {
-  const b64 = dataUrl.split(",")[1] ?? "";
-  let head = "";
-  try { head = atob(b64.slice(0, 16)); } catch { return null; }
-  if (head.startsWith("%PDF")) return "application/pdf";
-  if (head.charCodeAt(0) === 0x89 && head.slice(1, 4) === "PNG") return "image/png";
-  if (head.charCodeAt(0) === 0xff && head.charCodeAt(1) === 0xd8) return "image/jpeg";
-  if (head.startsWith("RIFF") && head.slice(8, 12) === "WEBP") return "image/webp";
-  return null;
-}
-async function sha256Hex(dataUrl: string) {
-  const bin = atob(dataUrl.split(",")[1] ?? "");
-  const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const h = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-const docOut = (d: Doc) => { const last = d.versions.at(-1)!; const left = d.valid_until ? Math.round((new Date(d.valid_until + "T00:00:00").getTime() - new Date(today() + "T00:00:00").getTime()) / 864e5) : null; return { id: d.id, title: d.title, kind: d.kind, scope: d.scope, scope_name: d.scope_name, confidentiality: d.confidentiality, valid_until: d.valid_until, days_left: left, warning: left == null ? null : left < 0 ? "expired" : left <= 30 ? "30" : left <= 60 ? "60" : null, version: last.v, file_name: last.file_name, size: last.size, sha256: last.sha256, uploaded_by: last.uploaded_by, updated_at: last.at, versions: d.versions.map(({ data: _d, ...v }) => v) }; };
-
 const CATALOG = [
   { key: "income_expense", name: "Gelir–gider", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Gelir", "Dönemde yapılan tahsilatlar (tahakkuk değil)."], ["Gider", "Dönemde kaydedilen, ters kaydı olmayan giderler; fon/kategori bazında."]] },
   { key: "collections", name: "Tahsilat oranı ve trendi", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Tahsilat oranı", "Dönemde tahsil edilen / dönemde vadesi gelen."]] },
@@ -3906,64 +3595,6 @@ const CATALOG = [
 ];
 
 const raporlar: RequestHandler[] = [
-  // 78 — Belge arşivi
-  http.get(`${API}/documents`, ({ request, params }) => {
-    const u = new URL(request.url).searchParams; const q = (u.get("q") ?? "").toLocaleLowerCase("tr-TR"), kind = u.get("kind"), exp = u.get("expiring");
-    return HttpResponse.json(listOf(docs, String(params.slug)).map(docOut).filter((d) => (!q || d.title.toLocaleLowerCase("tr-TR").includes(q)) && (!kind || d.kind === kind) && (!exp || d.warning)).sort((a, b) => b.updated_at.localeCompare(a.updated_at)));
-  }),
-  http.post(`${API}/documents`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { title?: string; kind?: string; scope?: Doc["scope"]; scope_id?: string | null; scope_name?: string | null; confidentiality?: Doc["confidentiality"]; valid_until?: string | null; file_name?: string; data_url?: string };
-    const f: Record<string, string> = {};
-    const title = (b.title ?? "").trim();
-    if (title.length < 3) f.title = "Belge adını yazın.";
-    if (!DOC_KINDS.includes(b.kind ?? "")) f.kind = "Tür seçin.";
-    if (!["site", "block", "unit"].includes(b.scope ?? "")) f.scope = "Kapsam seçin."; else if (b.scope !== "site" && !b.scope_id) f.scope = "Blok ya da bölüm seçin.";
-    if (!["public", "unit", "management", "secret"].includes(b.confidentiality ?? "")) f.confidentiality = "Gizlilik seçin.";
-    if (b.confidentiality === "unit" && b.scope !== "unit") f.confidentiality = "Bölüme özel belge bir bölüme bağlı olmalı.";
-    if (b.valid_until && (!DATE_RE.test(b.valid_until))) f.valid_until = "Tarih seçin.";
-    const mime = b.data_url ? sniff(b.data_url) : null;
-    const size = b.data_url ? Math.floor(((b.data_url.split(",")[1] ?? "").length * 3) / 4) : 0;
-    if (!b.data_url) f.file = "Dosya seçin.";
-    else if (!mime) f.file = "Yalnız PDF, PNG, JPEG ya da WebP (dosya içeriği doğrulandı).";
-    else if (size > MAX_DOC) f.file = "Dosya en fazla 10 MB.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const who = (await me(request)).name;
-    const v: DocVersion = { v: 1, file_name: (b.file_name ?? "belge").replace(/[\\/:*?"<>|]/g, "_").slice(0, 120), mime: mime!, size, sha256: await sha256Hex(b.data_url!), data: b.data_url!, uploaded_by: who, at: new Date().toISOString() };
-    const list = listOf(docs, slug);
-    const same = list.find((d) => d.title.toLocaleLowerCase("tr-TR") === title.toLocaleLowerCase("tr-TR") && d.scope === b.scope && (d.scope_id ?? null) === (b.scope_id ?? null));
-    if (same) {
-      if (same.versions.at(-1)!.sha256 === v.sha256) return err(409, "same_file", "Bu dosya son sürümle aynı.");
-      v.v = same.versions.length + 1; same.versions.push(v); Object.assign(same, { valid_until: b.valid_until ?? same.valid_until, confidentiality: b.confidentiality, kind: b.kind });
-      return HttpResponse.json({ data: docOut(same), message: `${same.title} için ${v.v}. sürüm kaydedildi; eski sürümler korunur.` }, { status: 201 });
-    }
-    const d: Doc = { id: crypto.randomUUID(), title, kind: b.kind!, scope: b.scope!, scope_id: b.scope === "site" ? null : b.scope_id!, scope_name: b.scope === "site" ? null : b.scope_name ?? null, confidentiality: b.confidentiality!, valid_until: b.valid_until || null, versions: [v], created_at: v.at, access_log: [] };
-    list.push(d);
-    return HttpResponse.json({ data: docOut(d), message: `${d.title} arşive eklendi.` }, { status: 201 });
-  }),
-  http.get(`${API}/documents/:id/versions/:v/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const v = d?.versions.find((x) => x.v === Number(params.v));
-    if (!d || !v) return err(404, "not_found", "Belge bulunamadı.");
-    if (d.confidentiality === "secret") { const p = await permsOf(request, slug); if (!p.has("audit.read") && !p.has("members.manage")) return err(404, "not_found", "Belge bulunamadı."); d.access_log.push({ by: (await me(request)).name, at: new Date().toISOString(), v: v.v }); }
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-  http.get(`${API}/documents/:id/access-log`, ({ params }) => { const d = listOf(docs, String(params.slug)).find((x) => x.id === params.id); return d ? HttpResponse.json(d.access_log.slice().reverse()) : err(404, "not_found", "Belge bulunamadı."); }),
-  http.get(`${API}/resident/documents`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    if (mine.status !== 200) return err(403, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const unitIds = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json(listOf(docs, slug).filter((d) => d.confidentiality === "public" || (d.confidentiality === "unit" && d.scope_id && unitIds.has(d.scope_id))).map(docOut).map(({ versions: _v, uploaded_by: _u, sha256: _s, ...x }) => x));
-  }),
-  http.get(`${API}/resident/documents/:id/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const ok = d && (d.confidentiality === "public" || (d.confidentiality === "unit" && mine.units.some((u) => u.unit_id === d.scope_id)));
-    if (!ok) return err(404, "not_found", "Belge bulunamadı.");
-    const v = d!.versions.at(-1)!;
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-
   // 79 — Rapor kataloğu ve talep/SLA raporu
   http.get(`${API}/reports/catalog`, async ({ request, params }) => {
     const p = await permsOf(request, String(params.slug));
@@ -4041,7 +3672,8 @@ const raporlar: RequestHandler[] = [
     if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihi."; if (!b.to || !DATE_RE.test(b.to) || (b.from && b.to < b.from)) f.to = "Bitiş başlangıçtan önce olamaz.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const decisions = listOf(decisionBook, slug).filter((e) => e.date >= b.from! && e.date <= b.to!).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
-    const docIds = (b.document_ids ?? []).filter((id) => listOf(docs, slug).some((d) => d.id === id));
+    const known = new Set((await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).map((d) => d.id));
+    const docIds = (b.document_ids ?? []).filter((id) => known.has(id));
     const p: AuditPkg = { id: crypto.randomUUID(), title: b.title!.trim(), from: b.from!, to: b.to!, created_by: (await me(request)).name, created_at: new Date().toISOString(), decisions, document_ids: docIds, status: "open", report_document_id: null, reviewed_by: null, reviewed_at: null, note: null };
     listOf(auditPkgs, slug).push(p);
     return HttpResponse.json({ data: p, message: `Denetim paketi hazırlandı: ${decisions.length} karar, ${docIds.length} belge.` }, { status: 201 });
@@ -4053,7 +3685,7 @@ const raporlar: RequestHandler[] = [
     const perms = await permsOf(request, slug);
     if (!perms.has("audit.read")) return err(403, "forbidden", "Denetim raporunu denetçi yükler.");
     const b = (await request.json()) as { document_id?: string; note?: string };
-    const d = listOf(docs, slug).find((x) => x.id === b.document_id);
+    const d = (await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).find((x) => x.id === b.document_id);
     if (!d) return err(422, "validation", VALIDATION, { document_id: "Denetim raporu belgesini seçin." });
     Object.assign(p, { status: "reviewed", report_document_id: d.id, reviewed_by: (await me(request)).name, reviewed_at: new Date().toISOString(), note: b.note?.trim() || null });
     return HttpResponse.json({ data: p, message: "Denetim raporu pakete eklendi; paket arşivlendi." });
@@ -4201,4 +3833,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...ik, ...hizmet, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
+export const handlers: RequestHandler[] = [...yapi, ...bolum360, ...kisiler, ...araclar, ...kayit, ...ozelAlanlar, ...aktarim, ...kurulum, ...finans, ...hizmet, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
