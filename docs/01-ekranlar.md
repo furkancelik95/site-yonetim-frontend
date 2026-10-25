@@ -99,6 +99,8 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/duyurular/{id}/okuma-raporu` | **Okuma raporu** — alıcı/okuyan/onaylayan, zaman damgalı, yazdır (ILT-01) | `announcements.publish` | istek 71 | R (sahte servis) |
 | `/s/{slug}/bildirim-sablonlari` | **Bildirim şablonları** — TR/EN, değişken, SMS parça hesabı, sürüm (ILT-02) | `announcements.publish` | istek 72 | R (sahte servis) |
 | `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | istek 73, 74 | R (sahte servis) |
+| `/s/{slug}/toplantilar/{id}/genel-kurul` | **Genel kurul** — format, karar türü, çağrı ve ispat; hazirun, fiziki vekâlet, nisap (kişi + arsa payı), salonda oylama; tutanak (TOP-01/03/04) | `meetings.manage` | istek 75–77 | R (sahte servis) |
+| `/s/{slug}/karar-defteri` | **Karar defteri** — kesinleşen kararlar sıra numarasıyla (TOP-04) | toplantı okuma | istek 77 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`

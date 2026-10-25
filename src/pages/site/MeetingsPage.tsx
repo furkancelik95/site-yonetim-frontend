@@ -135,6 +135,7 @@ export function MeetingDetailPage() {
             <>
               <Badge tone={meetingStatusTone(m.status)}>{meetingStatus(m.status)}</Badge>
               <Link className="btn" to={`/s/${site.slug}/toplantilar`}>Geri</Link>
+              {m.kind !== "board" && m.status !== "cancelled" && <Link className="btn btn--primary" to={`/s/${site.slug}/toplantilar/${m.id}/genel-kurul`}>Genel kurul</Link>}
               {m.kind !== "board" && <Link className="btn" to={`/s/${site.slug}/belge/hazirun`}>Hazirun listesi</Link>}
               {m.status === "held" && <button className="btn btn--primary" type="button" onClick={() => window.print()}><Printer aria-hidden="true" /> Tutanağı yazdır</button>}
             </>

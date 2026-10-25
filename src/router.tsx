@@ -116,6 +116,9 @@ const siteScreens: [string, string][] = [
   ["duyurular/:annId/okuma-raporu", "ReadReportPage"],
   ["bildirim-sablonlari", "NotificationTemplatesPage"],
   ["acil-durum", "EmergencyPage"],
+  // Genel kurul (servis istekleri 75-77)
+  ["toplantilar/:meetingId/genel-kurul", "GeneralAssemblyPage"],
+  ["karar-defteri", "DecisionBookPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
