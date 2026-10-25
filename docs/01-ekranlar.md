@@ -105,6 +105,8 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/rapor-katalogu` | **Rapor kataloğu** — yetkiye göre raporlar, metrik sözlüğü, talep/SLA raporu (RAP-01) | rapor bazında | istek 79 | R (sahte servis) |
 | `/s/{slug}/kvkk` | **KVKK** — ilgili kişi başvuruları ve 30 gün sayacı, veri paketi, aydınlatma sürümleri (RAP-04) | `members.manage` | istek 80 | R (sahte servis) |
 | `/s/{slug}/denetim-paketi` | **Denetim kurulu paketi** — dönem raporları, kararlar, belgeler, denetçi raporu (RAP-05) | `finance.charge.post` / `audit.read` | istek 81 | R (sahte servis) |
+| `/s/{slug}/destek` | **Destek** — destek biletleri, destek oturumu onayı (PYN-06, PYN-04) | `members.manage` / `finance.read` / `modules.manage` | istek 82, 84 | R (sahte servis) |
+| `/s/{slug}/yardim` | **Yardım** — bilgi bankası, ekran bazlı makaleler, faydalı mı (PYN-06) | herkes | istek 83 | R (sahte servis) |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
 
@@ -141,6 +143,8 @@ etmemek yanlış müşterinin verisine dokunmakla biter).
 | `/yonetim/musteri-ekle` | Müşteri + ilk yetkili; kayıt sonrası **geçici parola bir kez gösterilir** | R |
 | `/yonetim/site-ac` | Site aç — açılışta ne kurulacağı bilgi kutusunda yazılı | R |
 | `/yonetim/endeksler` | **Endeks değerleri** — TÜFE/ÜFE aylık giriş, tüm tesislerde sözleşme artışı (SAT-06, istek 70) | R (sahte servis) |
+| `/yonetim/destek` | **Destek** — tüm tesislerin biletleri, SLA, yanıt; destek oturumu talebi (PYN-04/06, istek 82, 84) | R (sahte servis) |
+| `/yonetim/bilgi-bankasi` | **Bilgi bankası** — makale yazma, faydalı/faydasız (PYN-06, istek 83) | R (sahte servis) |
 
 ## 6. Ekran örnekleri
 

@@ -23,6 +23,7 @@ const page = (load: () => Promise<unknown>, name: string): LazyExoticComponent<C
 const site = () => import("./pages/site");
 const resident = () => import("./pages/resident/ResidentPages");
 const platform = () => import("./pages/platform/PlatformPages");
+const platformSupport = () => import("./pages/platform/PlatformSupportPages");
 
 function L({ c: C }: { c: LazyExoticComponent<ComponentType> }) {
   return (
@@ -124,6 +125,9 @@ const siteScreens: [string, string][] = [
   ["rapor-katalogu", "ReportCatalogPage"],
   ["kvkk", "PrivacyPage"],
   ["denetim-paketi", "AuditPackagesPage"],
+  // Platform destek (servis istekleri 82-84)
+  ["destek", "SupportPage"],
+  ["yardim", "HelpCenterPage"],
 ];
 
 const Dashboard = page(site, "DashboardPage");
@@ -168,6 +172,8 @@ export const router = createBrowserRouter([
               { path: "musteri-ekle", element: <L c={page(platform, "NewCustomerPage")} /> },
               { path: "site-ac", element: <L c={page(platform, "NewSitePage")} /> },
               { path: "endeksler", element: <L c={page(platform, "IndexValuesPage")} /> },
+              { path: "destek", element: <L c={page(platformSupport, "PlatformSupportPage")} /> },
+              { path: "bilgi-bankasi", element: <L c={page(platformSupport, "KnowledgeAdminPage")} /> },
             ],
           },
           {

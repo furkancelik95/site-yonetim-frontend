@@ -21,6 +21,7 @@ import {
   FileOutput,
   FolderOpen,
   Gauge,
+  HelpCircle,
   Hammer,
   FileSignature,
   FileSpreadsheet,
@@ -30,6 +31,7 @@ import {
   KeyRound,
   Landmark,
   Layers,
+  LifeBuoy,
   LayoutDashboard,
   ListChecks,
   ListTodo,
@@ -58,6 +60,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
+import { SupportSessionBanner } from "../pages/site/SupportPages";
 import { NotificationBell } from "../components/NotificationBell";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
@@ -168,6 +171,8 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {(can(P.financeRead) || can(P.requestsRead) || can(P.auditRead)) && <Item to={`${base}/rapor-katalogu`} icon={<BarChart3 aria-hidden="true" />} label="Rapor Kataloğu" />}
           {(can(P.chargePost) || can(P.auditRead)) && <Item to={`${base}/denetim-paketi`} icon={<FileCheck2 aria-hidden="true" />} label="Denetim Paketi" />}
           {can(P.membersManage) && <Item to={`${base}/kvkk`} icon={<ShieldCheck aria-hidden="true" />} label="KVKK" />}
+          {(can(P.membersManage) || can(P.financeRead) || can(P.modulesManage)) && <Item to={`${base}/destek`} icon={<LifeBuoy aria-hidden="true" />} label="Destek" />}
+          <Item to={`${base}/yardim`} icon={<HelpCircle aria-hidden="true" />} label="Yardım" />
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
@@ -235,6 +240,8 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                 <Item to="/yonetim/musteri-ekle" icon={<Building2 aria-hidden="true" />} label="Müşteri ekle" />
                 <Item to="/yonetim/site-ac" icon={<Building2 aria-hidden="true" />} label="Site aç" />
                 <Item to="/yonetim/endeksler" icon={<BarChart3 aria-hidden="true" />} label="Endeks değerleri" />
+                <Item to="/yonetim/destek" icon={<LifeBuoy aria-hidden="true" />} label="Destek" />
+                <Item to="/yonetim/bilgi-bankasi" icon={<HelpCircle aria-hidden="true" />} label="Bilgi bankası" />
               </Group>
             ) : (
               <>
@@ -304,6 +311,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             {siteCtx && <NotificationBell to={`/s/${siteCtx.site.slug}/bildirimler`} />}
           </header>
           <main id="main" className="page" tabIndex={-1}>
+            {siteCtx && <SupportSessionBanner />}
             {children}
           </main>
         </div>
