@@ -287,3 +287,7 @@ export const poStatus = label({ sent: "Gönderildi", partial: "Kısmi teslim", r
 export const poTone = (v: string): Tone => (v === "closed" ? "ok" : v === "received" ? "ok" : v === "partial" ? "warn" : "info");
 export const invoiceStatus = label({ matched: "Eşleşti — ödenecek", diff_pending: "Fark onayda", disputed: "İtiraz edildi", paid: "Ödendi" });
 export const invoiceTone = (v: string): Tone => (v === "paid" ? "ok" : v === "matched" ? "info" : v === "disputed" ? "danger" : "warn");
+
+// Sözleşme performansı (servis istekleri 68-70)
+export const kpiSource = label({ inspection: "Denetim listesi puanı", patrol: "Devriye tamamlama oranı", tasks: "Görev tamamlama oranı", sla: "Talep SLA uyumu", manual: "Elle giriş" });
+export const escalationKind = label({ none: "Artış yok", tufe: "TÜFE", ufe: "ÜFE", avg: "TÜFE+ÜFE ortalaması", fixed: "Sabit oran" });

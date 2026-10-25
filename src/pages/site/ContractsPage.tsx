@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { FileSignature, Plus } from "lucide-react";
+import { Link } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
@@ -21,7 +22,7 @@ function StateBadge({ c }: { c: Contract }) {
 
 /** Hizmet sözleşmeleri (Apsiyon "Cari ve kira sözleşmeleri"): firma, süre, bedel, bitiş uyarısı. */
 export function ContractsPage() {
-  const { can } = useSite();
+  const { can, site } = useSite();
   const [s, set] = useUrlState({ arsiv: "" });
   const q = useSiteGet<Contract[]>("/contracts", { archived: s.arsiv ? "true" : undefined });
   const [editing, setEditing] = useState<Contract | "new" | null>(null);
@@ -57,7 +58,7 @@ export function ContractsPage() {
                 <tbody>
                   {q.data.map((c) => (
                     <tr key={c.id}>
-                      <td><div className="cell-main">{c.vendor}</div><div className="cell-sub">{contractCategory(c.category)} · {c.subject}</div></td>
+                      <td><Link className="cell-main" to={`/s/${site.slug}/sozlesmeler/${c.id}`}>{c.vendor}</Link><div className="cell-sub">{contractCategory(c.category)} · {c.subject}</div></td>
                       <td className="small nowrap">{formatDate(c.start_date)} – {formatDate(c.end_date)}{c.auto_renew && <div className="cell-sub">Kendiliğinden yenilenir</div>}</td>
                       <td className="right nowrap">{c.amount ? <>{formatMoney(c.amount)}<div className="cell-sub">{contractPeriod(c.period)}</div></> : "—"}</td>
                       <td><StateBadge c={c} /></td>

@@ -95,6 +95,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/satin-alma/{id}` | **Satın alma talebi** — bütçe, teklif karşılaştırma, tedarikçi linki, istisna, onay, sipariş (SAT-01..03) | `expenses.read` | istek 64 | R (sahte servis) |
 | `/s/{slug}/satin-alma/siparis/{id}` | **Sipariş** — sipariş formu, mal/hizmet kabul, fatura üçlü eşleşme (SAT-03..05) | `expenses.read` | istek 65, 66 | R (sahte servis) |
 | `/s/{slug}/tedarikciler` | **Tedarikçiler** — tedarikçi kartı, maskeli IBAN, puan (SAT-06) | `expenses.read` | istek 62 | R (sahte servis) |
+| `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | istek 68–70 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | Doküman | — | — | **Y** |
 
 ## 4. Sakin ekranı — `/sakin/{slug}/...`
@@ -128,6 +129,7 @@ etmemek yanlış müşterinin verisine dokunmakla biter).
 | `/yonetim` | Genel bakış — müşteri, site, bölüm sayısı, tavan aşımı; müşteri tablosu; site tablosu (kullanım çubuğu, satır içinde plan değiştir) | R |
 | `/yonetim/musteri-ekle` | Müşteri + ilk yetkili; kayıt sonrası **geçici parola bir kez gösterilir** | R |
 | `/yonetim/site-ac` | Site aç — açılışta ne kurulacağı bilgi kutusunda yazılı | R |
+| `/yonetim/endeksler` | **Endeks değerleri** — TÜFE/ÜFE aylık giriş, tüm tesislerde sözleşme artışı (SAT-06, istek 70) | R (sahte servis) |
 
 ## 6. Ekran örnekleri
 
