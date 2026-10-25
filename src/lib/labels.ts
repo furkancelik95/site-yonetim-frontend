@@ -226,6 +226,8 @@ export const leaveStatus = label({ pending: "Onay bekliyor", approved: "Onayland
 export const leaveStatusTone = (v: string): Tone => (v === "approved" ? "ok" : v === "pending" ? "warn" : v === "rejected" ? "danger" : "muted");
 export const timesheetStatus = label({ worked: "Çalıştı", absent: "Gelmedi", leave: "İzinli" });
 export const conflictKind = label({ overlap: "Çakışan vardiya", leave: "İzin günü", rest: "Dinlenme < 11 saat" });
+export const attendanceFlag = label({ no_check_in: "Giriş kaydı yok", no_check_out: "Çıkış kaydı yok", late: "Geç giriş", early_leave: "Erken çıkış", overtime: "Vardiya sonrası çıkış", unverified: "Doğrulanamayan kayıt" });
+export const attendanceMethod = label({ none: "Doğrulama yok (plana göre)", qr: "Kulübedeki QR kodu", location: "O anki konum (tesis sınırı)" });
 
 // Güvenlik ve devriye paketi (servis istekleri 40–46)
 export const gateKind = label({ vehicle: "Araç", pedestrian: "Yaya", service: "Servis" });

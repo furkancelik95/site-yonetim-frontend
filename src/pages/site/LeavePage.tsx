@@ -1,26 +1,28 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import { CalendarOff, Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import type { Page, Schemas } from "../../api/types";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { leaveStatus, leaveStatusTone, leaveType } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 37'deki şekiller. */
-interface Leave { id: string; staff_id: string; staff_name: string; type: string; from: string; to: string; days: number; note: string | null; status: string; created_by: string; created_at: string; decided_by: string | null; decided_at: string | null; reject_reason: string | null }
-interface Balance { staff_id: string; staff_name: string; used: Record<string, number> }
+type Leave = Schemas["LeaveRequestOut"];
+type Balance = Schemas["LeaveBalanceOut"];
 const TYPES = ["annual", "excuse", "sick", "unpaid"];
 
 /**
- * İzinler (IK-03): İK sorumlusu personel adına izni kaydeder, yetkili onaylar; onaylı izin vardiya planında ve
- * puantajda görünür. Personelin mobilden kendi talebi K29'a bağlı. Raporlu izinde tanı bilgisi tutulmaz.
+ * İzinler (IK-03): personel kendi talebini "Vardiyam" ekranından açar (K29); İK sorumlusu personel adına da kaydeder.
+ * Sitede "İzin talebi" onay kuralı varsa karar onay mekanizmasından geçer (buradaki düğme de oraya yazar), yoksa
+ * İK karar verir. Onaylı izin vardiya planında ve puantajda görünür. Raporlu izinde tanı bilgisi tutulmaz.
  */
 export function LeavePage() {
-  const { can } = useSite();
+  const { can, site } = useSite();
   const manage = can(P.staffManage);
-  const [s, set] = useUrlState({ durum: "pending" });
-  const q = useSiteGet<Leave[]>("/leave-requests", { status: s.durum || undefined });
+  const [s, set] = useUrlState({ durum: "pending", page: "1" });
+  const q = useSiteGet<Page<Leave>>("/leave-requests", { status: s.durum || undefined, page: s.page, page_size: 50 });
   const bal = useSiteGet<Balance[]>("/leave-balances");
   const [adding, setAdding] = useState(false);
   return (
@@ -28,25 +30,32 @@ export function LeavePage() {
       <PageHead title="İzinler" subtitle="Personel izinlerini kaydedin ve onaylayın; onaylı izin vardiya planına ve puantaja yansır." actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> İzin kaydet</button>} />
       {adding && <LeaveForm onDone={() => setAdding(false)} />}
       <div className="row" role="tablist" aria-label="İzin durumu" style={{ gap: "var(--s-2)" }}>
-        {[["pending", "Onay bekleyen"], ["approved", "Onaylanan"], ["rejected", "Reddedilen"], ["", "Tümü"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k! })}>{l}</button>)}
+        {[["pending", "Onay bekleyen"], ["approved", "Onaylanan"], ["rejected", "Reddedilen"], ["", "Tümü"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>)}
       </div>
       <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Kayıt yok" icon={<CalendarOff aria-hidden="true" />} /> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Kayıt yok" icon={<CalendarOff aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">İzin talepleri</caption>
             <thead><tr><th scope="col">Personel</th><th scope="col">İzin</th><th scope="col">Tarih</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{q.data.map((l) => (
+            <tbody>{q.data.items.map((l) => (
               <tr key={l.id}>
-                <td className="cell-main">{l.staff_name}<div className="cell-sub">{l.created_by}, {formatDateTime(l.created_at)}</div></td>
+                <td className="cell-main">{l.staff_name}<div className="cell-sub">{l.source === "staff" ? "Kendi talebi" : l.created_by}, {formatDateTime(l.created_at)}</div></td>
                 <td className="small">{leaveType(l.type)}{l.note && <div className="cell-sub">{l.note}</div>}</td>
-                <td className="small nowrap">{formatDate(l.from)} – {formatDate(l.to)}<div className="cell-sub">{l.days} gün</div></td>
-                <td><Badge tone={leaveStatusTone(l.status)}>{leaveStatus(l.status)}</Badge>{l.decided_by && <div className="cell-sub">{l.decided_by}</div>}{l.reject_reason && <div className="cell-sub">{l.reject_reason}</div>}</td>
+                <td className="small nowrap">{formatDate(l.from)} – {formatDate(l.to)}<div className="cell-sub">{l.days} gün{l.clashing_shifts > 0 && ` · ${l.clashing_shifts} vardiya`}</div></td>
+                <td>
+                  <Badge tone={leaveStatusTone(l.status)}>{leaveStatus(l.status)}</Badge>
+                  {l.approval_request_id && <div className="cell-sub"><Link to={`/s/${site.slug}/onaylar/${l.approval_request_id}`}>Onay #{l.approval_number}</Link></div>}
+                  {l.decided_by && <div className="cell-sub">{l.decided_by}</div>}
+                  {l.reject_reason && <div className="cell-sub">{l.reject_reason}</div>}
+                </td>
                 {manage && <td className="right nowrap"><LeaveActions l={l} /></td>}
               </tr>
             ))}</tbody>
           </table></div>
         )}
-      </div></div>
+      </div>
+      {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
+      </div>
       {bal.data && bal.data.length > 0 && (
         <details className="card">
           <summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">Bu yıl kullanılan izinler</span><span className="card__meta ml-auto">bilgi amaçlı; bordro hesabı platformda yapılmaz</span></summary>
@@ -68,8 +77,9 @@ function LeaveActions({ l }: { l: Leave }) {
   const cancel = useSiteMutation<Record<string, never>, Leave>("POST", `/leave-requests/${l.id}/cancel`);
   if (l.status === "pending") return (
     <>
-      <button className="btn btn--sm btn--primary" type="button" disabled={approve.isPending} onClick={() => approve.mutate({})}>Onayla</button>{" "}
-      <ConfirmButton className="btn btn--ghost btn--sm" danger title="İzni reddet" confirmLabel="Reddet" body={<div className="field"><label className="field__label" htmlFor={`lr-${l.id}`}>Gerekçe *</label><input id={`lr-${l.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} /></div>} onConfirm={() => reject.mutateAsync({ reason })}>Reddet</ConfirmButton>
+      <ConfirmButton className="btn btn--sm btn--primary" title="İzni onayla" confirmLabel="Onayla" body={l.clashing_shifts > 0 ? `Bu tarihlerde ${l.clashing_shifts} vardiyası var; onaydan sonra vardiya planında "atanmalı" olarak görünür.` : "İzin vardiya planına ve puantaja yansır."} onConfirm={() => approve.mutateAsync({})}>Onayla</ConfirmButton>{" "}
+      <ConfirmButton className="btn btn--ghost btn--sm" danger title="İzni reddet" confirmLabel="Reddet" body={<div className="field"><label className="field__label" htmlFor={`lr-${l.id}`}>Gerekçe *</label><input id={`lr-${l.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} /></div>} onConfirm={() => reject.mutateAsync({ reason })}>Reddet</ConfirmButton>{" "}
+      <ConfirmButton className="btn btn--ghost btn--sm" title="Talebi iptal et" confirmLabel="İptal et" body={l.approval_request_id ? "Onay talebi de geri çekilir (yalnız talebi açan geri çekebilir)." : "Talep iptal edilir."} onConfirm={() => cancel.mutateAsync({})}>İptal</ConfirmButton>
     </>
   );
   if (l.status === "approved") return <ConfirmButton className="btn btn--ghost btn--sm" title="Onaylı izni iptal et" confirmLabel="İptal et" body="İzin kalkar; vardiya planı ve puantaj buna göre güncellenir. Puantajı kesinleşmiş günü olan izin iptal edilemez." onConfirm={() => cancel.mutateAsync({})}>İptal</ConfirmButton>;
@@ -77,11 +87,12 @@ function LeaveActions({ l }: { l: Leave }) {
 }
 
 function LeaveForm({ onDone }: { onDone: () => void }) {
-  const staff = useSiteGet<{ id: string; full_name: string }[]>("/staff", { active: "true" });
+  const staff = useSiteGet<Schemas["StaffOut"][]>("/staff", { active: "true" });
   const [f, setF] = useState({ staff_id: "", type: "annual", from: todayIso(), to: todayIso(), note: "" });
   const m = useSiteMutation<Record<string, unknown>, Leave>("POST", "/leave-requests", { onSuccess: onDone });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
-  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ ...f, note: f.note.trim() || null }); }
+  const sick = f.type === "sick";
+  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ ...f, note: sick ? null : f.note.trim() || null }); }
   return (
     <form className="card" onSubmit={submit} noValidate>
       <div className="card__head"><span className="card__title">İzin kaydet</span></div>
@@ -93,8 +104,8 @@ function LeaveForm({ onDone }: { onDone: () => void }) {
           <Field label="Başlangıç" required error={fieldError(m.error, "from")}>{(p) => <input {...p} className="field__input" type="date" value={f.from} onChange={up("from")} />}</Field>
           <Field label="Bitiş" required error={fieldError(m.error, "to")}>{(p) => <input {...p} className="field__input" type="date" min={f.from} value={f.to} onChange={up("to")} />}</Field>
         </div>
-        <Field label="Açıklama" hint={f.type === "sick" ? "Tanı ya da hastalık bilgisi yazmayın (KVKK özel nitelikli veri)." : undefined}>{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={up("note")} />}</Field>
-        {f.type === "sick" && <Alert tone="info">Raporlu izinde yalnız rapor belgesi tutulur; belge yükleme belge modülüyle gelecek. Tanı bilgisi istenmez.</Alert>}
+        {sick ? <Alert tone="info">Raporlu izinde açıklama ve tanı bilgisi tutulmaz (KVKK özel nitelikli veri); yalnız rapor belgesi, belge modülüyle (gizli kategori) bağlanacak.</Alert>
+          : <Field label="Açıklama" error={fieldError(m.error, "note")}>{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={up("note")} />}</Field>}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.staff_id}>Kaydet</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
