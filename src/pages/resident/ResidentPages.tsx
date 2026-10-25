@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
+import { CalendarCheck, Car, Hammer, KeyRound, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -14,6 +14,7 @@ import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, prio
 import { M, useSite } from "../../site/SiteContext";
 import { NotificationsPage } from "../NotificationsPage";
 import { ProfilePage } from "../ProfilePage";
+import { AckButton, ResidentAlerts } from "./ResidentCommPages";
 
 type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
@@ -49,6 +50,7 @@ export function ResidentHomePage() {
 
   return (
     <>
+      <ResidentAlerts />
       {/* Borç kartı — sakinin uygulamayı açma sebebinin çoğu bu */}
       <div className="balance">
         <div className="balance__label">Güncel bakiyeniz</div>
@@ -130,6 +132,7 @@ export function ResidentHomePage() {
             <Link className="btn" to={`${base}/tadilat`}><Hammer aria-hidden="true" /> Tadilat ve taşınma</Link>
             <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
             <Link className="btn" to={`${base}/rezervasyon`}><CalendarCheck aria-hidden="true" /> Rezervasyon</Link>
+            <Link className="btn" to={`${base}/acil-durum`}><Siren aria-hidden="true" /> Acil durum bilgileri</Link>
           </div>
         </div>
       </div>
@@ -177,10 +180,12 @@ function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
           {formatDateTime(a.published_at)} {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
         </div>
         <div className="r-item__body" style={{ whiteSpace: "pre-wrap" }}>{body}</div>
+        {!short && (a as AnnAck).requires_ack && <AckButton id={a.id} ackedAt={(a as AnnAck).acked_at} />}
       </div>
     </div>
   );
 }
+type AnnAck = Ann & { requires_ack?: boolean; acked_at?: string | null };
 
 export function ResidentStatementPage() {
   useDocumentTitle("Borcum");
@@ -466,4 +471,5 @@ export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHousehold
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 export { ResidentReservationPage } from "./ResidentReservationPage";
+export { ResidentEmergencyPage } from "./ResidentCommPages";
 import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";

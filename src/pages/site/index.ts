@@ -56,3 +56,4 @@ export { InspectionsPage, InsurancePage, KeysPage, MetersPage, TasksPage } from 
 export { ReservationAreasPage, ReservationsPage } from "./ReservationPages";
 export { PurchaseOrderPage, PurchasePage, PurchaseRequestPage, VendorsPage } from "./PurchasePages";
 export { ContractDetailPage } from "./ContractDetailPage";
+export { EmergencyPage, NotificationTemplatesPage, ReadReportPage } from "./CommPages";
