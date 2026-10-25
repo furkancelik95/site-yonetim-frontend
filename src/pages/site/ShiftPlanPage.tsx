@@ -1,20 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Copy, Pencil, Plus, Send, X } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { conflictKind, leaveType } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 36'daki şekiller. */
-interface Template { id: string; name: string; start: string; end: string; break_minutes: number; position: string | null; location: string | null; is_active: boolean }
-interface Assignment { id: string; staff_id: string; date: string; template_id: string; changed_after_publish: boolean }
-interface Plan {
-  from: string; to: string; staff: { id: string; full_name: string; position: string }[]; templates: Template[]; assignments: Assignment[];
-  leaves: { staff_id: string; from: string; to: string; type: string }[]; conflicts: { assignment_id: string; kind: string; message: string }[];
-  published: { week: string; at: string; by: string } | null; changed_after_publish: number;
-}
+type Template = Schemas["ShiftTemplateOut"];
+type Plan = Schemas["ShiftPlanOut"];
 
 const DAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -24,7 +19,8 @@ const short = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("tr-TR
 
 /**
  * Vardiya planı (IK-02): şablonlar, haftalık plan (personel × gün), çakışma kontrolü (aynı kişiye çakışan vardiya,
- * onaylı izin günü, 11 saatten az dinlenme), kopyala ve yayınla. Personelin mobilde "Vardiyam"ı K29'a bağlı.
+ * onaylı izin günü, 11 saatten az dinlenme), kopyala ve yayınla. Yayınlanan hafta kartı bağlı personelin "Vardiyam"ında
+ * görünür ve bildirim gider (K29). Raporlu izin türü yalnız staff.manage'e gelir; diğerleri "İzinli" görür.
  */
 export function ShiftPlanPage() {
   const { can } = useSite();
@@ -51,6 +47,7 @@ function WeekPlan({ p, week, setWeek, manage }: { p: Plan; week: string; setWeek
   const copy = useSiteMutation<{ from_week: string; to_week: string }, unknown>("POST", "/shift-plans/copy-week");
   const del = useSiteMutation<{ id: string }, unknown>("DELETE", (v) => `/shift-plans/assignments/${v.id}`);
   const onLeave = (staff: string, date: string) => p.leaves.find((l) => l.staff_id === staff && l.from <= date && l.to >= date);
+  const finalDays = new Set(p.final_days);
   return (
     <>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
@@ -64,7 +61,7 @@ function WeekPlan({ p, week, setWeek, manage }: { p: Plan; week: string; setWeek
           <div className="row" style={{ gap: "var(--s-2)" }}>
             <ConfirmButton className="btn btn--sm" title="Önceki haftayı kopyala" confirmLabel="Kopyala" body="Önceki haftanın atamaları bu haftaya kopyalanır; var olan atamalar korunur." onConfirm={() => copy.mutateAsync({ from_week: plus(week, -7), to_week: week })}><Copy aria-hidden="true" /> Önceki haftayı kopyala</ConfirmButton>
             <ConfirmButton className="btn btn--sm btn--primary" disabled={p.assignments.length === 0} title="Haftayı yayınla" confirmLabel={p.conflicts.length ? "Uyarılara rağmen yayınla" : "Yayınla"}
-              body={<>{p.conflicts.length > 0 && <p className="field__error">{p.conflicts.length} çakışma var (kırmızı hücreler).</p>}<p className="mb-0">Plan yayınlanınca personele bildirim gider (personel hesabı K29 ve bildirim servisi K5 gelince).</p></>}
+              body={<>{p.conflicts.length > 0 && <p className="field__error">{p.conflicts.length} çakışma var (kırmızı hücreler).</p>}<p className="mb-0">Plan yayınlanınca giriş hesabı bağlı personele uygulama içi bildirim gider ve "Vardiyam"da görünür (SMS/e-posta K5 ile).</p></>}
               onConfirm={() => publish.mutateAsync({ week, acknowledge_conflicts: true })}><Send aria-hidden="true" /> Yayınla</ConfirmButton>
           </div>
         )}
@@ -83,17 +80,18 @@ function WeekPlan({ p, week, setWeek, manage }: { p: Plan; week: string; setWeek
                 const lv = onLeave(st.id, d);
                 return (
                   <td key={d} className={lv ? "shift-cell shift-cell--leave" : "shift-cell"}>
-                    {lv && <div className="xs muted">{leaveType(lv.type)}</div>}
+                    {lv && <div className="xs muted">{lv.type ? leaveType(lv.type) : "İzinli"}</div>}
+                    {finalDays.has(d) && <div className="xs muted">puantaj kesin</div>}
                     {as.map((a) => {
                       const t = tpl.get(a.template_id); const c = conflict.get(a.id);
                       return (
                         <span key={a.id} className={`shift-chip${c ? " shift-chip--conflict" : ""}`} title={c?.message}>
                           {t ? `${t.name} ${t.start}–${t.end}` : "?"}{c && <span className="visually-hidden"> — {c.message}</span>}
-                          {manage && <button type="button" className="shift-chip__x" aria-label={`${st.full_name} ${short(d)} ${t?.name ?? ""} atamasını kaldır`} onClick={() => del.mutate({ id: a.id })}><X aria-hidden="true" /></button>}
+                          {manage && !finalDays.has(d) && <button type="button" className="shift-chip__x" aria-label={`${st.full_name} ${short(d)} ${t?.name ?? ""} atamasını kaldır`} onClick={() => del.mutate({ id: a.id })}><X aria-hidden="true" /></button>}
                         </span>
                       );
                     })}
-                    {manage && (cell?.staff === st.id && cell.date === d ? (
+                    {manage && !finalDays.has(d) && (cell?.staff === st.id && cell.date === d ? (
                       <AssignForm staff={st.id} date={d} templates={p.templates.filter((t) => t.is_active)} onDone={() => setCell(null)} />
                     ) : <button type="button" className="btn btn--ghost btn--sm shift-add" aria-label={`${st.full_name} ${short(d)} vardiya ekle`} onClick={() => setCell({ staff: st.id, date: d })}><Plus aria-hidden="true" /></button>)}
                   </td>
