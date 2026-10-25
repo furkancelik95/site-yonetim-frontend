@@ -1,28 +1,29 @@
 import { useState } from "react";
 import { Download, FileText } from "lucide-react";
-import { api } from "../../api/client";
+import { download } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { Badge, Empty, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
-import { DOC_KIND, PRIV_KIND, saveDataUrl, type DocRow } from "../site/RecordsPages";
+import type { Page, Schemas } from "../../api/types";
+import { PRIV_KIND } from "../site/RecordsPages";
 
-/** Belgeler (RAP-03, sakin): sakinlere açık ve kendi bölümüne özel belgeler. */
+/** Belgeler (RAP-03, sakin; backend `…/resident/documents`): sakinlere açık ve kendi bölümüne özel belgeler. */
 export function ResidentDocumentsPage() {
   useDocumentTitle("Belgeler");
   const { site } = useSite();
-  const q = useSiteGet<DocRow[]>("/resident/documents");
+  const q = useSiteGet<Page<Schemas["ResidentDocumentOut"]>>("/resident/documents", { page_size: 200 });
   const [err, setErr] = useState<unknown>(null);
-  async function dl(id: string) { setErr(null); try { const r = await api<{ file_name: string; data_url: string }>("GET", `/sites/${site.slug}/resident/documents/${id}/download`); saveDataUrl(r.file_name, r.data_url); } catch (e) { setErr(e); } }
+  async function dl(id: string, name: string) { setErr(null); try { await download(`/sites/${site.slug}/resident/documents/${id}/download`, undefined, name); } catch (e) { setErr(e); } }
   return (
     <>
       <div className="section-title">Belgeler</div>
       <FormError error={err} />
-      {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : q.data.map((d) => (
+      {q.isPending ? <Loading /> : !q.data || q.data.items.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : q.data.items.map((d) => (
         <div key={d.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
           <div className="r-item__title">{d.title} {d.confidentiality === "unit" && <Badge tone="info">Bölümünüze özel</Badge>}</div>
-          <div className="r-item__meta">{DOC_KIND[d.kind]} · sürüm {d.version} · {formatDate(d.updated_at)}{d.valid_until && ` · geçerlilik ${formatDate(d.valid_until)}`}</div>
-        </div><button className="btn btn--sm" type="button" onClick={() => dl(d.id)}><Download aria-hidden="true" /> İndir</button></div>
+          <div className="r-item__meta">{d.kind_label} · sürüm {d.version} · {formatDate(d.updated_at)}{d.valid_until && ` · geçerlilik ${formatDate(d.valid_until)}`}</div>
+        </div><button className="btn btn--sm" type="button" onClick={() => dl(d.id, d.file_name)}><Download aria-hidden="true" /> İndir</button></div>
       ))}
     </>
   );

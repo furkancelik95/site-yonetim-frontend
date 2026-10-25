@@ -167,7 +167,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.approvalRulesRead) && <Item to={`${base}/onay-kurallari`} icon={<ListChecks aria-hidden="true" />} label="Onay Kuralları" />}
           {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
           {meetings && <Item to={`${base}/karar-defteri`} icon={<BookOpen aria-hidden="true" />} label="Karar Defteri" />}
-          {(can(P.announcementsRead) || can(P.financeRead) || can(P.auditRead)) && <Item to={`${base}/dokumanlar`} icon={<FolderOpen aria-hidden="true" />} label="Belgeler" />}
+          {shows(M.documents, P.documentsRead) && <Item to={`${base}/dokumanlar`} icon={<FolderOpen aria-hidden="true" />} label="Belgeler" />}
           {(can(P.financeRead) || can(P.requestsRead) || can(P.auditRead)) && <Item to={`${base}/rapor-katalogu`} icon={<BarChart3 aria-hidden="true" />} label="Rapor Kataloğu" />}
           {(can(P.chargePost) || can(P.auditRead)) && <Item to={`${base}/denetim-paketi`} icon={<FileCheck2 aria-hidden="true" />} label="Denetim Paketi" />}
           {can(P.membersManage) && <Item to={`${base}/kvkk`} icon={<ShieldCheck aria-hidden="true" />} label="KVKK" />}
