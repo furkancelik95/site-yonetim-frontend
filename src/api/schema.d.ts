@@ -1293,7 +1293,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Durumu değiştir */
+        /** Durumu değiştir (geçiş tablosuyla) */
         post: operations["change_status_api_v1_sites__slug__requests__request_id__status_post"];
         delete?: never;
         options?: never;
@@ -1310,7 +1310,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Ata */
+        /** Ata (açık talep 'Atandı' olur) */
         post: operations["assign_request_api_v1_sites__slug__requests__request_id__assign_post"];
         delete?: never;
         options?: never;
@@ -1327,7 +1327,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Yorum ekle */
+        /**
+         * Yorum ekle
+         * @description Yorumu talebi açan sakin de görür; yalnız personelin göreceği not için `/internal-notes`.
+         */
         post: operations["add_comment_api_v1_sites__slug__requests__request_id__comments_post"];
         delete?: never;
         options?: never;
@@ -1346,6 +1349,61 @@ export interface paths {
         put?: never;
         /** Talebi departmana yönlendir */
         post: operations["set_department_api_v1_sites__slug__requests__request_id__department_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/requests/{request_id}/internal-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** İç notlar (yalnız personel) */
+        get: operations["internal_notes_api_v1_sites__slug__requests__request_id__internal_notes_get"];
+        put?: never;
+        /** İç not ekle (sakin görmez; değişmez) */
+        post: operations["add_internal_note_api_v1_sites__slug__requests__request_id__internal_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/requests/{request_id}/merge-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bu talepler aynı arıza olabilir
+         * @description Kural tabanlı öneri (yapay zekâ yok): aynı kategori + konum/blok + zaman penceresi.
+         */
+        get: operations["merge_suggestions_api_v1_sites__slug__requests__request_id__merge_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/requests/{request_id}/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ücretli hizmet teklifi */
+        post: operations["create_quote_api_v1_sites__slug__requests__request_id__quotes_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1385,6 +1443,301 @@ export interface paths {
         head?: never;
         /** Yeniden adlandır ya da pasifleştir */
         patch: operations["update_department_api_v1_sites__slug__departments__department_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/request-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Talep kategorileri */
+        get: operations["list_categories_api_v1_sites__slug__request_categories_get"];
+        put?: never;
+        /** Kategori ekle */
+        post: operations["create_category_api_v1_sites__slug__request_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/request-categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Kategoriyi düzenle / pasifleştir */
+        patch: operations["update_category_api_v1_sites__slug__request_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Talep ayarları: SLA, takvim, süreler */
+        get: operations["get_settings_api_v1_sites__slug__settings_requests_get"];
+        /** Talep ayarlarını kaydet */
+        put: operations["put_settings_api_v1_sites__slug__settings_requests_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reply-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hazır yanıt şablonları */
+        get: operations["list_templates_api_v1_sites__slug__reply_templates_get"];
+        put?: never;
+        /** Şablon ekle */
+        post: operations["create_template_api_v1_sites__slug__reply_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reply-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Şablonu düzenle */
+        patch: operations["update_template_api_v1_sites__slug__reply_templates__template_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/outages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ana olaylar (yeni üstte) */
+        get: operations["list_outages_api_v1_sites__slug__outages_get"];
+        put?: never;
+        /** Ana olay oluştur */
+        post: operations["create_outage_api_v1_sites__slug__outages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/outages/{outage_id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Talebi ana olaya bağla */
+        post: operations["link_outage_api_v1_sites__slug__outages__outage_id__links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/outages/{outage_id}/unlink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Talebi ana olaydan ayır */
+        post: operations["unlink_outage_api_v1_sites__slug__outages__outage_id__unlink_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/outages/{outage_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ana olay çözüldü (bağlı talepler çözülür) */
+        post: operations["resolve_outage_api_v1_sites__slug__outages__outage_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/service-tariffs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hizmet tarifesi */
+        get: operations["list_tariffs_api_v1_sites__slug__service_tariffs_get"];
+        put?: never;
+        /** Tarife kalemi ekle (onay kuralı varsa 202) */
+        post: operations["create_tariff_api_v1_sites__slug__service_tariffs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/service-tariffs/{tariff_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tarife kalemini değiştir (onay kuralı varsa 202) */
+        patch: operations["update_tariff_api_v1_sites__slug__service_tariffs__tariff_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/quotes/{quote_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İş tamamlandı: gerçekleşen tutar */
+        post: operations["complete_quote_api_v1_sites__slug__quotes__quote_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/permits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tadilat kuralları */
+        get: operations["get_permit_rules_api_v1_sites__slug__settings_permits_get"];
+        /** Tadilat kurallarını kaydet */
+        put: operations["put_permit_rules_api_v1_sites__slug__settings_permits_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/permits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tadilat ve taşınma başvuruları */
+        get: operations["list_permits_api_v1_sites__slug__permits_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/permits/{permit_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Başvuruyu onayla (onay kuralı varsa 202) */
+        post: operations["approve_permit_api_v1_sites__slug__permits__permit_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/permits/{permit_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Başvuruyu reddet (gerekçeli) */
+        post: operations["reject_permit_api_v1_sites__slug__permits__permit_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/permits/{permit_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tamamla (kontrol listesi, depozito iadesi) */
+        post: operations["complete_permit_api_v1_sites__slug__permits__permit_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sites/{slug}/announcements": {
@@ -1849,9 +2202,87 @@ export interface paths {
         put?: never;
         /**
          * Yeni talep
-         * @description Talep her zaman sakinin kendi adına; bölüm verilirse kendi bölümü olmalı (422).
+         * @description Talep her zaman sakinin kendi adına; bölüm verilirse kendi bölümü olmalı (422). Öncelik
+         *     kategoriden gelir.
          */
         post: operations["new_request_api_v1_sites__slug__resident_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/requests/{request_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kapanış onayı ve memnuniyet puanı
+         * @description Yalnız "çözüldü" talep (409 `not_resolved`). Çözüldü → talep kapanır; devam ediyor →
+         *     yeniden açılır. Puan ≤ eşik yöneticiye bildirilir.
+         */
+        post: operations["confirm_request_api_v1_sites__slug__resident_requests__request_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/requests/{request_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Talebi iptal et (iş başlamadan) */
+        post: operations["cancel_request_api_v1_sites__slug__resident_requests__request_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/quotes/{quote_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ücretli hizmet teklifine karar
+         * @description Karar, teklifin bölümünde bugün malik/kiracı/oturan olan sakindedir. Teklif aşamasında
+         *     onay/ret; gerçekleşen teklifi aşmışsa ek tutar onayı/reddi (ret → teklif tutarı).
+         */
+        post: operations["quote_decision_api_v1_sites__slug__resident_quotes__quote_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/permits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tadilat ve taşınma başvurularım + kurallar */
+        get: operations["my_permits_api_v1_sites__slug__resident_permits_get"];
+        put?: never;
+        /** Tadilat/taşınma başvurusu */
+        post: operations["apply_permit_api_v1_sites__slug__resident_permits_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3705,6 +4136,26 @@ export interface components {
          * @enum {string}
          */
         CashSource: "manual" | "payment" | "expense" | "transfer" | "opening" | "refund";
+        /** CategoryIn */
+        CategoryIn: {
+            /** Name */
+            name: string;
+            /** @default business */
+            hour_type: components["schemas"]["HourType"];
+            /** Resolve Hours */
+            resolve_hours?: {
+                [key: string]: unknown;
+            };
+            /** @default normal */
+            default_priority: components["schemas"]["RequestPriority"];
+            /** Department Id */
+            department_id?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
         /** CategoryOut */
         CategoryOut: {
             /**
@@ -3727,6 +4178,11 @@ export interface components {
              * @description pay %, metin (`25.00`)
              */
             share: string;
+        };
+        /** CategorySlaOut */
+        CategorySlaOut: {
+            hour_type: components["schemas"]["HourType"];
+            resolve_hours: components["schemas"]["ResolveHours"];
         };
         /** CategoryTotalOut */
         CategoryTotalOut: {
@@ -3926,6 +4382,13 @@ export interface components {
             legal_basis: string | null;
             /** Is Advance */
             is_advance: boolean;
+        };
+        /** ChecklistItem */
+        ChecklistItem: {
+            /** Item */
+            item: string;
+            /** Ok */
+            ok: boolean;
         };
         /** CloseIn */
         CloseIn: {
@@ -4233,6 +4696,18 @@ export interface components {
          * @enum {string}
          */
         DayBasis: "calendar" | "business";
+        /** DayHoursOut */
+        DayHoursOut: {
+            /** Closed */
+            closed: boolean;
+            /**
+             * Open
+             * @description SS:DD
+             */
+            open: string;
+            /** Close */
+            close: string;
+        };
         /** DebtorOut */
         DebtorOut: {
             /**
@@ -4845,6 +5320,11 @@ export interface components {
             /** @description sitenin IBAN'ı girilmemişse null ("ödeme bilgisi için yönetimle görüşün") */
             payment_info: components["schemas"]["PaymentInfo"] | null;
         };
+        /**
+         * HourType
+         * @enum {string}
+         */
+        HourType: "24x7" | "business";
         /** ImportIssueOut */
         ImportIssueOut: {
             /**
@@ -5091,6 +5571,28 @@ export interface components {
              */
             years: number[];
         };
+        /** InternalNoteIn */
+        InternalNoteIn: {
+            /** Body */
+            body: string;
+        };
+        /** InternalNoteOut */
+        InternalNoteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Body */
+            body: string;
+            /** Author Name */
+            author_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ItemTotalOut */
         ItemTotalOut: {
             /**
@@ -5151,7 +5653,7 @@ export interface components {
          * LedgerSource
          * @enum {string}
          */
-        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund";
+        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund" | "service" | "deposit";
         /** LineOut */
         LineOut: {
             /**
@@ -5412,6 +5914,16 @@ export interface components {
             /** Is Active */
             is_active?: boolean | null;
         };
+        /** MergeSuggestionsOut */
+        MergeSuggestionsOut: {
+            linked_outage: components["schemas"]["RequestOutageBrief"] | null;
+            /** Similar */
+            similar: components["schemas"]["SimilarRequestOut"][];
+            /** Open Outages */
+            open_outages: components["schemas"]["OpenOutageBrief"][];
+            /** Window Hours */
+            window_hours: number;
+        };
         /**
          * ModuleKey
          * @enum {string}
@@ -5603,6 +6115,12 @@ export interface components {
              */
             pickup_code: string;
         };
+        /** MyPermitsOut */
+        MyPermitsOut: {
+            rules: components["schemas"]["PermitRulesOut"];
+            /** Items */
+            items: components["schemas"]["PermitOut"][];
+        };
         /** MyRequest */
         MyRequest: {
             /**
@@ -5726,6 +6244,18 @@ export interface components {
              */
             notified_on: string;
         };
+        /** OpenOutageBrief */
+        OpenOutageBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Request Count */
+            request_count: number;
+        };
         /** OpeningBalanceIn */
         OpeningBalanceIn: {
             /**
@@ -5787,6 +6317,69 @@ export interface components {
              * @description sakinde oy vermeden ve anket açıkken null
              */
             votes: number | null;
+        };
+        /** OutageIn */
+        OutageIn: {
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Location */
+            location?: string | null;
+            /**
+             * Public Description
+             * @description sakinlerin göreceği açıklama
+             */
+            public_description: string;
+            /** Request Ids */
+            request_ids?: string[];
+        };
+        /** OutageLinkIn */
+        OutageLinkIn: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
+        /** OutageOut */
+        OutageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Location */
+            location: string | null;
+            /** Public Description */
+            public_description: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "resolved";
+            /** Request Ids */
+            request_ids: string[];
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Resolution */
+            resolution: string | null;
+        };
+        /** OutageResolveIn */
+        OutageResolveIn: {
+            /** Resolution */
+            resolution: string;
         };
         /** OverviewOut */
         OverviewOut: {
@@ -6001,6 +6594,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[OutageOut] */
+        Page_OutageOut_: {
+            /** Items */
+            items: components["schemas"]["OutageOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[PackageOut] */
         Page_PackageOut_: {
             /** Items */
@@ -6016,6 +6620,17 @@ export interface components {
         Page_PaymentListItem_: {
             /** Items */
             items: components["schemas"]["PaymentListItem"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[PermitOut] */
+        Page_PermitOut_: {
+            /** Items */
+            items: components["schemas"]["PermitOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -6394,6 +7009,172 @@ export interface components {
          * @enum {string}
          */
         PaymentStatus: "pending" | "confirmed" | "cancelled";
+        /** PermitApplyIn */
+        PermitApplyIn: {
+            /**
+             * Unit Id
+             * @description boş: ilk bölümü
+             */
+            unit_id?: string | null;
+            type: components["schemas"]["PermitType"];
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * @description yalnız tadilatta
+             */
+            date_to?: string | null;
+            /** Contractor */
+            contractor?: string | null;
+            /** Description */
+            description: string;
+        };
+        /** PermitCompleteIn */
+        PermitCompleteIn: {
+            /** Checklist */
+            checklist?: components["schemas"]["ChecklistItem"][];
+            /**
+             * Refund Deposit
+             * @default false
+             */
+            refund_deposit: boolean;
+        };
+        /** PermitDecisionOut */
+        PermitDecisionOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "approval_pending";
+            permit: components["schemas"]["PermitOut"];
+            /** Approval Request Id */
+            approval_request_id: string | null;
+        };
+        /** PermitOut */
+        PermitOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            type: components["schemas"]["PermitType"];
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Contractor */
+            contractor: string | null;
+            /** Description */
+            description: string;
+            status: components["schemas"]["PermitStatus"];
+            /**
+             * Approval Request Id
+             * @description onay kuralı varsa açılan talep
+             */
+            approval_request_id: string | null;
+            approval_status: components["schemas"]["ApprovalStatus"] | null;
+            /** Reject Reason */
+            reject_reason: string | null;
+            /** Checklist */
+            checklist: components["schemas"]["ChecklistItem"][];
+            /** Deposit */
+            deposit: string | null;
+            /** Deposit Refunded */
+            deposit_refunded: boolean;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided By */
+            decided_by: string | null;
+            /** Decided At */
+            decided_at: string | null;
+            /** Completed By */
+            completed_by: string | null;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** PermitRejectIn */
+        PermitRejectIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** PermitRulesIn */
+        PermitRulesIn: {
+            /** Weekday Hours */
+            weekday_hours: string;
+            /** Saturday Hours */
+            saturday_hours?: string | null;
+            /**
+             * Sunday Allowed
+             * @default false
+             */
+            sunday_allowed: boolean;
+            /**
+             * Deposit Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @default 0
+             * @example 1234.56
+             */
+            deposit_amount: string;
+            /** Checklist */
+            checklist?: string[];
+        };
+        /** PermitRulesOut */
+        PermitRulesOut: {
+            /**
+             * Weekday Hours
+             * @description `09:00-18:00`
+             */
+            weekday_hours: string;
+            /**
+             * Saturday Hours
+             * @description null: cumartesi yasak
+             */
+            saturday_hours: string | null;
+            /** Sunday Allowed */
+            sunday_allowed: boolean;
+            /**
+             * Deposit Amount
+             * @description 0: depozito alınmaz
+             * @example 1234.56
+             */
+            deposit_amount: string;
+            /**
+             * Checklist
+             * @description tamamlanma kontrol listesi (tadilat)
+             */
+            checklist: string[];
+        };
+        /**
+         * PermitStatus
+         * @enum {string}
+         */
+        PermitStatus: "pending" | "approved" | "rejected" | "completed";
+        /**
+         * PermitType
+         * @enum {string}
+         */
+        PermitType: "renovation" | "move_in" | "move_out";
         /** PersonCreate */
         PersonCreate: {
             /** Phone */
@@ -6740,6 +7521,72 @@ export interface components {
          * @enum {string}
          */
         QuorumKind: "any" | "all" | "majority" | "count";
+        /** QuoteCompleteIn */
+        QuoteCompleteIn: {
+            /**
+             * Actual Total
+             * @description gerçekleşen tutar
+             */
+            actual_total: string | null;
+        };
+        /** QuoteDecisionIn */
+        QuoteDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "accept" | "reject";
+        };
+        /** QuoteIn */
+        QuoteIn: {
+            /** Lines */
+            lines: components["schemas"]["QuoteLineIn"][];
+            /** Note */
+            note?: string | null;
+        };
+        /** QuoteLineIn */
+        QuoteLineIn: {
+            /** Description */
+            description: string;
+            /**
+             * Qty
+             * @description miktar > 0, en çok 2 ondalık
+             */
+            qty: number | string;
+            /**
+             * Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            unit_price: string;
+        };
+        /** QuoteLineOut */
+        QuoteLineOut: {
+            /** Description */
+            description: string;
+            /**
+             * Qty
+             * @description miktar (en çok 2 ondalık)
+             */
+            qty: string;
+            /**
+             * Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            unit_price: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+        };
+        /**
+         * QuoteStatus
+         * @enum {string}
+         */
+        QuoteStatus: "pending" | "accepted" | "rejected" | "extra_pending" | "billed";
         /** ReadIn */
         ReadIn: {
             /**
@@ -7051,21 +7898,102 @@ export interface components {
          * @enum {string}
          */
         Relation: "owner" | "tenant";
-        /**
-         * RequestCategory
-         * @enum {string}
-         */
-        RequestCategory: "other" | "plumbing" | "electrical" | "elevator" | "heating" | "cleaning" | "security" | "garden" | "common_area";
+        /** ReplyTemplateIn */
+        ReplyTemplateIn: {
+            /** Title */
+            title: string;
+            /** Category */
+            category?: string | null;
+            /** Body */
+            body: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** ReplyTemplateOut */
+        ReplyTemplateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Category
+             * @description null = tüm kategoriler
+             */
+            category: string | null;
+            /**
+             * Body
+             * @description değişkenler: {{sakin.ad}}, {{talep.no}}, {{talep.konu}}
+             */
+            body: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** RequestCancelIn */
+        RequestCancelIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** RequestCategoryOut */
+        RequestCategoryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Key
+             * @description değişmez anahtar; talepte `category`
+             */
+            key: string;
+            /** Name */
+            name: string;
+            hour_type: components["schemas"]["HourType"];
+            /** @description öncelik bazında çözüm süresi (saat) */
+            resolve_hours: components["schemas"]["ResolveHours"];
+            default_priority: components["schemas"]["RequestPriority"];
+            /**
+             * Department Id
+             * @description atanacak ekip (talep buraya yönlenir)
+             */
+            department_id: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** RequestConfirmIn */
+        RequestConfirmIn: {
+            /**
+             * Solved
+             * @description true: sorun çözüldü (puan zorunlu); false: devam ediyor
+             */
+            solved: boolean;
+            /**
+             * Score
+             * @description 1–5
+             */
+            score?: number | null;
+            /** Comment */
+            comment?: string | null;
+        };
         /** RequestCreate */
         RequestCreate: {
             /** Title */
             title: string;
             /** Description */
             description?: string | null;
-            /** @default other */
-            category: components["schemas"]["RequestCategory"];
-            /** @default normal */
-            priority: components["schemas"]["RequestPriority"];
+            /**
+             * Category
+             * @description kategori anahtarı
+             * @default other
+             */
+            category: string;
+            /** @description boş → kategorinin varsayılanı; sakinde yok sayılır (öncelik kategoriden) */
+            priority?: components["schemas"]["RequestPriority"] | null;
             /**
              * Unit Id
              * @description ortak alan talebinde boş
@@ -7098,7 +8026,13 @@ export interface components {
             title: string;
             /** Description */
             description: string | null;
-            category: components["schemas"]["RequestCategory"];
+            /**
+             * Category
+             * @description site kategorisinin anahtarı (GET …/request-categories)
+             */
+            category: string;
+            /** Category Name */
+            category_name: string;
             priority: components["schemas"]["RequestPriority"];
             status: components["schemas"]["RequestStatus"];
             /**
@@ -7106,6 +8040,16 @@ export interface components {
              * @description `İşlemde`
              */
             status_label: string;
+            /**
+             * Allowed Transitions
+             * @description personelin seçebileceği durumlar (requests.assign yoksa boş)
+             */
+            allowed_transitions: components["schemas"]["RequestStatus"][];
+            /**
+             * Can Cancel
+             * @description sakin kendi talebini iptal edebilir mi (iş başlamadan)
+             */
+            can_cancel: boolean;
             /** Unit Id */
             unit_id: string | null;
             /**
@@ -7130,10 +8074,24 @@ export interface components {
             department_name: string | null;
             /** Due At */
             due_at: string | null;
+            /** @description SLA kuralı olmayan eski talepte null */
+            sla: components["schemas"]["RequestSlaOut"] | null;
             /** Resolved At */
             resolved_at: string | null;
             /** Resolution */
             resolution: string | null;
+            /**
+             * Auto Close At
+             * @description çözüldü talep sakin yanıt vermezse bu anda kapanır
+             */
+            auto_close_at: string | null;
+            /** Closed At */
+            closed_at: string | null;
+            outage: components["schemas"]["RequestOutageBrief"] | null;
+            /** @description son sakin değerlendirmesi */
+            feedback: components["schemas"]["RequestFeedbackOut"] | null;
+            /** @description son ücretli hizmet teklifi */
+            quote: components["schemas"]["ServiceQuoteOut"] | null;
             /** Created By Name */
             created_by_name: string | null;
             /**
@@ -7151,7 +8109,23 @@ export interface components {
          * RequestEventKind
          * @enum {string}
          */
-        RequestEventKind: "created" | "status_changed" | "assigned" | "comment" | "resolved" | "department_changed";
+        RequestEventKind: "created" | "status_changed" | "assigned" | "comment" | "resolved" | "department_changed" | "closed" | "cancelled" | "reopened" | "feedback" | "outage_linked" | "outage_unlinked" | "quote";
+        /** RequestFeedbackOut */
+        RequestFeedbackOut: {
+            /** Solved */
+            solved: boolean;
+            /** Score */
+            score: number | null;
+            /** Comment */
+            comment: string | null;
+            /** By Name */
+            by_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** RequestListItem */
         RequestListItem: {
             /**
@@ -7203,7 +8177,13 @@ export interface components {
             title: string;
             /** Description */
             description: string | null;
-            category: components["schemas"]["RequestCategory"];
+            /**
+             * Category
+             * @description site kategorisinin anahtarı (GET …/request-categories)
+             */
+            category: string;
+            /** Category Name */
+            category_name: string;
             priority: components["schemas"]["RequestPriority"];
             status: components["schemas"]["RequestStatus"];
             /**
@@ -7211,6 +8191,16 @@ export interface components {
              * @description `İşlemde`
              */
             status_label: string;
+            /**
+             * Allowed Transitions
+             * @description personelin seçebileceği durumlar (requests.assign yoksa boş)
+             */
+            allowed_transitions: components["schemas"]["RequestStatus"][];
+            /**
+             * Can Cancel
+             * @description sakin kendi talebini iptal edebilir mi (iş başlamadan)
+             */
+            can_cancel: boolean;
             /** Unit Id */
             unit_id: string | null;
             /**
@@ -7235,10 +8225,24 @@ export interface components {
             department_name: string | null;
             /** Due At */
             due_at: string | null;
+            /** @description SLA kuralı olmayan eski talepte null */
+            sla: components["schemas"]["RequestSlaOut"] | null;
             /** Resolved At */
             resolved_at: string | null;
             /** Resolution */
             resolution: string | null;
+            /**
+             * Auto Close At
+             * @description çözüldü talep sakin yanıt vermezse bu anda kapanır
+             */
+            auto_close_at: string | null;
+            /** Closed At */
+            closed_at: string | null;
+            outage: components["schemas"]["RequestOutageBrief"] | null;
+            /** @description son sakin değerlendirmesi */
+            feedback: components["schemas"]["RequestFeedbackOut"] | null;
+            /** @description son ücretli hizmet teklifi */
+            quote: components["schemas"]["ServiceQuoteOut"] | null;
             /** Created By Name */
             created_by_name: string | null;
             /**
@@ -7248,15 +8252,110 @@ export interface components {
             created_at: string;
         };
         /**
+         * RequestOutageBrief
+         * @description Ana olay özeti — sakin de görür (genel açıklama); diğer sakinlerin talepleri yok.
+         */
+        RequestOutageBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Public Description */
+            public_description: string;
+            /**
+             * Status
+             * @description open · resolved
+             */
+            status: string;
+        };
+        /**
          * RequestPriority
          * @enum {string}
          */
         RequestPriority: "low" | "normal" | "high" | "urgent";
+        /** RequestSettingsIn */
+        RequestSettingsIn: {
+            /**
+             * Categories
+             * @description yalnız değişen kategoriler de gönderilebilir
+             */
+            categories?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+            /** Calendar */
+            calendar: {
+                [key: string]: unknown;
+            }[];
+            /** Auto Close Days */
+            auto_close_days: number;
+            /** Merge Window Hours */
+            merge_window_hours: number;
+            /** Low Rating Threshold */
+            low_rating_threshold: number;
+        };
+        /** RequestSettingsOut */
+        RequestSettingsOut: {
+            /**
+             * Categories
+             * @description kategori anahtarı → SLA
+             */
+            categories: {
+                [key: string]: components["schemas"]["CategorySlaOut"];
+            };
+            /**
+             * Calendar
+             * @description 7 gün, 0 = pazartesi
+             */
+            calendar: components["schemas"]["DayHoursOut"][];
+            /**
+             * Auto Close Days
+             * @description çözüldü talep, sakin yanıtsızsa kaç günde kapanır
+             */
+            auto_close_days: number;
+            /**
+             * Merge Window Hours
+             * @description birleştirme önerisi penceresi
+             */
+            merge_window_hours: number;
+            /**
+             * Low Rating Threshold
+             * @description bu puan ve altı yöneticiye bildirilir
+             */
+            low_rating_threshold: number;
+        };
+        /** RequestSlaOut */
+        RequestSlaOut: {
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /** @description `24x7` · `business` (mesai dışında sayaç durur) */
+            hour_type: components["schemas"]["HourType"];
+            /** Target Hours */
+            target_hours: number;
+            /** Used Minutes */
+            used_minutes: number;
+            /** Remaining Minutes */
+            remaining_minutes: number;
+            /** @description ok · warning (≥%80) · breached · met · missed */
+            state: components["schemas"]["SlaState"];
+            /**
+             * Paused
+             * @description çalışma saati dışında: sayaç durdu
+             */
+            paused: boolean;
+        };
         /**
          * RequestStatus
          * @enum {string}
          */
-        RequestStatus: "open" | "in_progress" | "waiting" | "resolved" | "closed" | "cancelled";
+        RequestStatus: "open" | "assigned" | "in_progress" | "waiting" | "resolved" | "closed" | "cancelled";
         /** RequestStepOut */
         RequestStepOut: {
             /** Index */
@@ -7334,6 +8433,17 @@ export interface components {
              * @description oy verebileceğim bölümler
              */
             my_votes: components["schemas"]["MyVote"][];
+        };
+        /** ResolveHours */
+        ResolveHours: {
+            /** Low */
+            low: number;
+            /** Normal */
+            normal: number;
+            /** High */
+            high: number;
+            /** Urgent */
+            urgent: number;
         };
         /** RestoreOut */
         RestoreOut: {
@@ -7567,6 +8677,86 @@ export interface components {
              */
             ledger_account_id: string;
         };
+        /** ServiceQuoteOut */
+        ServiceQuoteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Lines */
+            lines: components["schemas"]["QuoteLineOut"][];
+            /**
+             * Total
+             * @description teklif toplamı
+             * @example 1234.56
+             */
+            total: string;
+            /** Note */
+            note: string | null;
+            status: components["schemas"]["QuoteStatus"];
+            /** Status Label */
+            status_label: string;
+            /** Actual Total */
+            actual_total: string | null;
+            /**
+             * Billed Total
+             * @description cariye yansıyan (dönem dışı ücret)
+             */
+            billed_total: string | null;
+            /** Created By Name */
+            created_by_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+        };
+        /** ServiceTariffIn */
+        ServiceTariffIn: {
+            /** Name */
+            name: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            price: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** ServiceTariffOut */
+        ServiceTariffOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            price: string;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** SessionOut */
         SessionOut: {
             /**
@@ -7615,6 +8805,27 @@ export interface components {
              * @default false
              */
             disposed: boolean;
+        };
+        /** SimilarRequestOut */
+        SimilarRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /** Title */
+            title: string;
+            /** Unit Name */
+            unit_name: string | null;
+            /** Location */
+            location: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** SimulateIn */
         SimulateIn: {
@@ -7908,6 +9119,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * SlaState
+         * @enum {string}
+         */
+        SlaState: "ok" | "warning" | "breached" | "met" | "missed";
         /** StaffIn */
         StaffIn: {
             /** Full Name */
@@ -7969,7 +9185,7 @@ export interface components {
             status: components["schemas"]["RequestStatus"];
             /**
              * Resolution
-             * @description çözüldü/kapandı yapılırken zorunlu
+             * @description çözüldü yapılırken çözüm, iptalde gerekçe
              */
             resolution?: string | null;
         };
@@ -8082,6 +9298,17 @@ export interface components {
             confidence: "high" | "medium";
             /** Reason */
             reason: string;
+        };
+        /** TariffWriteOut */
+        TariffWriteOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "saved" | "approval_pending";
+            tariff: components["schemas"]["ServiceTariffOut"] | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -8563,6 +9790,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[InternalNoteOut] */
+        Written_InternalNoteOut_: {
+            data: components["schemas"]["InternalNoteOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[LinkOut] */
         Written_LinkOut_: {
             data: components["schemas"]["LinkOut"];
@@ -8617,6 +9850,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[OutageOut] */
+        Written_OutageOut_: {
+            data: components["schemas"]["OutageOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[PackageOut] */
         Written_PackageOut_: {
             data: components["schemas"]["PackageOut"];
@@ -8638,6 +9877,24 @@ export interface components {
         /** Written[PaymentResultOut] */
         Written_PaymentResultOut_: {
             data: components["schemas"]["PaymentResultOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PermitDecisionOut] */
+        Written_PermitDecisionOut_: {
+            data: components["schemas"]["PermitDecisionOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PermitOut] */
+        Written_PermitOut_: {
+            data: components["schemas"]["PermitOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PermitRulesOut] */
+        Written_PermitRulesOut_: {
+            data: components["schemas"]["PermitRulesOut"];
             /** Message */
             message: string;
         };
@@ -8683,9 +9940,27 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ReplyTemplateOut] */
+        Written_ReplyTemplateOut_: {
+            data: components["schemas"]["ReplyTemplateOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RequestCategoryOut] */
+        Written_RequestCategoryOut_: {
+            data: components["schemas"]["RequestCategoryOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[RequestDetail] */
         Written_RequestDetail_: {
             data: components["schemas"]["RequestDetail"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RequestSettingsOut] */
+        Written_RequestSettingsOut_: {
+            data: components["schemas"]["RequestSettingsOut"];
             /** Message */
             message: string;
         };
@@ -8713,6 +9988,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ServiceQuoteOut] */
+        Written_ServiceQuoteOut_: {
+            data: components["schemas"]["ServiceQuoteOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[SiteOut] */
         Written_SiteOut_: {
             data: components["schemas"]["SiteOut"];
@@ -8728,6 +10009,12 @@ export interface components {
         /** Written[StockItemOut] */
         Written_StockItemOut_: {
             data: components["schemas"]["StockItemOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[TariffWriteOut] */
+        Written_TariffWriteOut_: {
+            data: components["schemas"]["TariffWriteOut"];
             /** Message */
             message: string;
         };
@@ -11799,9 +13086,11 @@ export interface operations {
         parameters: {
             query?: {
                 status?: components["schemas"]["RequestStatus"] | null;
-                category?: components["schemas"]["RequestCategory"] | null;
+                category?: string | null;
                 priority?: components["schemas"]["RequestPriority"] | null;
                 department_id?: string | null;
+                /** @description true → süresi geçmiş açık talepler */
+                sla_breached?: boolean | null;
                 page?: number;
                 page_size?: number;
             };
@@ -12044,6 +13333,142 @@ export interface operations {
             };
         };
     };
+    internal_notes_api_v1_sites__slug__requests__request_id__internal_notes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalNoteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_internal_note_api_v1_sites__slug__requests__request_id__internal_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalNoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_InternalNoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_suggestions_api_v1_sites__slug__requests__request_id__merge_suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MergeSuggestionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_quote_api_v1_sites__slug__requests__request_id__quotes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ServiceQuoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_departments_api_v1_sites__slug__departments_get: {
         parameters: {
             query?: never;
@@ -12133,6 +13558,800 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_DepartmentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_categories_api_v1_sites__slug__request_categories_get: {
+        parameters: {
+            query?: {
+                /** @description true → yalnız kullanımdakiler */
+                active?: boolean;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestCategoryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_category_api_v1_sites__slug__request_categories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RequestCategoryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_category_api_v1_sites__slug__request_categories__category_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RequestCategoryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__settings_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__settings_requests_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RequestSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_sites__slug__reply_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyTemplateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_template_api_v1_sites__slug__reply_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyTemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReplyTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_template_api_v1_sites__slug__reply_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyTemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReplyTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_outages_api_v1_sites__slug__outages_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "resolved") | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_OutageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_outage_api_v1_sites__slug__outages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_OutageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_outage_api_v1_sites__slug__outages__outage_id__links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outage_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutageLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_OutageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_outage_api_v1_sites__slug__outages__outage_id__unlink_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outage_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutageLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_OutageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_outage_api_v1_sites__slug__outages__outage_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outage_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutageResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_OutageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tariffs_api_v1_sites__slug__service_tariffs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceTariffOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tariff_api_v1_sites__slug__service_tariffs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceTariffIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TariffWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tariff_api_v1_sites__slug__service_tariffs__tariff_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tariff_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceTariffIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TariffWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_quote_api_v1_sites__slug__quotes__quote_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quote_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteCompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ServiceQuoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_permit_rules_api_v1_sites__slug__settings_permits_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermitRulesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_permit_rules_api_v1_sites__slug__settings_permits_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PermitRulesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PermitRulesOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_permits_api_v1_sites__slug__permits_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PermitStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PermitOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_permit_api_v1_sites__slug__permits__permit_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                permit_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PermitDecisionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_permit_api_v1_sites__slug__permits__permit_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                permit_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PermitRejectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PermitOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_permit_api_v1_sites__slug__permits__permit_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                permit_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PermitCompleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PermitOut_"];
                 };
             };
             /** @description Validation Error */
@@ -13275,6 +15494,180 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_RequestDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_request_api_v1_sites__slug__resident_requests__request_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RequestDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_request_api_v1_sites__slug__resident_requests__request_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RequestDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    quote_decision_api_v1_sites__slug__resident_quotes__quote_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quote_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ServiceQuoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_permits_api_v1_sites__slug__resident_permits_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyPermitsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_permit_api_v1_sites__slug__resident_permits_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PermitApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PermitOut_"];
                 };
             };
             /** @description Validation Error */

@@ -5265,7 +5265,8 @@
       "schema": {
        "anyOf": [
         {
-         "$ref": "#/components/schemas/RequestCategory"
+         "type": "string",
+         "maxLength": 60
         },
         {
          "type": "null"
@@ -5306,6 +5307,24 @@
        ],
        "title": "Department Id"
       }
+     },
+     {
+      "name": "sla_breached",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "true → süresi geçmiş açık talepler",
+       "title": "Sla Breached"
+      },
+      "description": "true → süresi geçmiş açık talepler"
      },
      {
       "name": "page",
@@ -5472,7 +5491,7 @@
     "tags": [
      "talep"
     ],
-    "summary": "Durumu değiştir",
+    "summary": "Durumu değiştir (geçiş tablosuyla)",
     "operationId": "change_status_api_v1_sites__slug__requests__request_id__status_post",
     "security": [
      {
@@ -5539,7 +5558,7 @@
     "tags": [
      "talep"
     ],
-    "summary": "Ata",
+    "summary": "Ata (açık talep 'Atandı' olur)",
     "operationId": "assign_request_api_v1_sites__slug__requests__request_id__assign_post",
     "security": [
      {
@@ -5607,6 +5626,7 @@
      "talep"
     ],
     "summary": "Yorum ekle",
+    "description": "Yorumu talebi açan sakin de görür; yalnız personelin göreceği not için `/internal-notes`.",
     "operationId": "add_comment_api_v1_sites__slug__requests__request_id__comments_post",
     "security": [
      {
@@ -5718,6 +5738,257 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/requests/{request_id}/internal-notes": {
+   "get": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "İç notlar (yalnız personel)",
+    "operationId": "internal_notes_api_v1_sites__slug__requests__request_id__internal_notes_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/InternalNoteOut"
+         },
+         "title": "Response Internal Notes Api V1 Sites  Slug  Requests  Request Id  Internal Notes Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "İç not ekle (sakin görmez; değişmez)",
+    "operationId": "add_internal_note_api_v1_sites__slug__requests__request_id__internal_notes_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InternalNoteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_InternalNoteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/requests/{request_id}/merge-suggestions": {
+   "get": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Bu talepler aynı arıza olabilir",
+    "description": "Kural tabanlı öneri (yapay zekâ yok): aynı kategori + konum/blok + zaman penceresi.",
+    "operationId": "merge_suggestions_api_v1_sites__slug__requests__request_id__merge_suggestions_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MergeSuggestionsOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/requests/{request_id}/quotes": {
+   "post": {
+    "tags": [
+     "talep"
+    ],
+    "summary": "Ücretli hizmet teklifi",
+    "operationId": "create_quote_api_v1_sites__slug__requests__request_id__quotes_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/QuoteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ServiceQuoteOut_"
         }
        }
       }
@@ -5891,6 +6162,1431 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Written_DepartmentOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/request-categories": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Talep kategorileri",
+    "operationId": "list_categories_api_v1_sites__slug__request_categories_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "active",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "description": "true → yalnız kullanımdakiler",
+       "default": false,
+       "title": "Active"
+      },
+      "description": "true → yalnız kullanımdakiler"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/RequestCategoryOut"
+         },
+         "title": "Response List Categories Api V1 Sites  Slug  Request Categories Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Kategori ekle",
+    "operationId": "create_category_api_v1_sites__slug__request_categories_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CategoryIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestCategoryOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/request-categories/{category_id}": {
+   "patch": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Kategoriyi düzenle / pasifleştir",
+    "operationId": "update_category_api_v1_sites__slug__request_categories__category_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "category_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Category Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CategoryIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestCategoryOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/settings/requests": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Talep ayarları: SLA, takvim, süreler",
+    "operationId": "get_settings_api_v1_sites__slug__settings_requests_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RequestSettingsOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Talep ayarlarını kaydet",
+    "operationId": "put_settings_api_v1_sites__slug__settings_requests_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RequestSettingsIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestSettingsOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/reply-templates": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Hazır yanıt şablonları",
+    "operationId": "list_templates_api_v1_sites__slug__reply_templates_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ReplyTemplateOut"
+         },
+         "title": "Response List Templates Api V1 Sites  Slug  Reply Templates Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Şablon ekle",
+    "operationId": "create_template_api_v1_sites__slug__reply_templates_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReplyTemplateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ReplyTemplateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/reply-templates/{template_id}": {
+   "patch": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Şablonu düzenle",
+    "operationId": "update_template_api_v1_sites__slug__reply_templates__template_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "template_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Template Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReplyTemplateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ReplyTemplateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/outages": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Ana olaylar (yeni üstte)",
+    "operationId": "list_outages_api_v1_sites__slug__outages_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "open",
+          "resolved"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_OutageOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Ana olay oluştur",
+    "operationId": "create_outage_api_v1_sites__slug__outages_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutageIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_OutageOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/outages/{outage_id}/links": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Talebi ana olaya bağla",
+    "operationId": "link_outage_api_v1_sites__slug__outages__outage_id__links_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "outage_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Outage Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutageLinkIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_OutageOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/outages/{outage_id}/unlink": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Talebi ana olaydan ayır",
+    "operationId": "unlink_outage_api_v1_sites__slug__outages__outage_id__unlink_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "outage_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Outage Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutageLinkIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_OutageOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/outages/{outage_id}/resolve": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Ana olay çözüldü (bağlı talepler çözülür)",
+    "operationId": "resolve_outage_api_v1_sites__slug__outages__outage_id__resolve_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "outage_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Outage Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutageResolveIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_OutageOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/service-tariffs": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Hizmet tarifesi",
+    "operationId": "list_tariffs_api_v1_sites__slug__service_tariffs_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ServiceTariffOut"
+         },
+         "title": "Response List Tariffs Api V1 Sites  Slug  Service Tariffs Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tarife kalemi ekle (onay kuralı varsa 202)",
+    "operationId": "create_tariff_api_v1_sites__slug__service_tariffs_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ServiceTariffIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_TariffWriteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/service-tariffs/{tariff_id}": {
+   "patch": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tarife kalemini değiştir (onay kuralı varsa 202)",
+    "operationId": "update_tariff_api_v1_sites__slug__service_tariffs__tariff_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "tariff_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Tariff Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ServiceTariffIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_TariffWriteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/quotes/{quote_id}/complete": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "İş tamamlandı: gerçekleşen tutar",
+    "operationId": "complete_quote_api_v1_sites__slug__quotes__quote_id__complete_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "quote_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Quote Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/QuoteCompleteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ServiceQuoteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/settings/permits": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tadilat kuralları",
+    "operationId": "get_permit_rules_api_v1_sites__slug__settings_permits_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PermitRulesOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tadilat kurallarını kaydet",
+    "operationId": "put_permit_rules_api_v1_sites__slug__settings_permits_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PermitRulesIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PermitRulesOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/permits": {
+   "get": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tadilat ve taşınma başvuruları",
+    "operationId": "list_permits_api_v1_sites__slug__permits_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/PermitStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_PermitOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/permits/{permit_id}/approve": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Başvuruyu onayla (onay kuralı varsa 202)",
+    "operationId": "approve_permit_api_v1_sites__slug__permits__permit_id__approve_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "permit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Permit Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PermitDecisionOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/permits/{permit_id}/reject": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Başvuruyu reddet (gerekçeli)",
+    "operationId": "reject_permit_api_v1_sites__slug__permits__permit_id__reject_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "permit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Permit Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PermitRejectIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PermitOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/permits/{permit_id}/complete": {
+   "post": {
+    "tags": [
+     "hizmetler"
+    ],
+    "summary": "Tamamla (kontrol listesi, depozito iadesi)",
+    "operationId": "complete_permit_api_v1_sites__slug__permits__permit_id__complete_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "permit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Permit Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PermitCompleteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PermitOut_"
         }
        }
       }
@@ -8130,7 +9826,7 @@
      "sakin"
     ],
     "summary": "Yeni talep",
-    "description": "Talep her zaman sakinin kendi adına; bölüm verilirse kendi bölümü olmalı (422).",
+    "description": "Talep her zaman sakinin kendi adına; bölüm verilirse kendi bölümü olmalı (422). Öncelik\nkategoriden gelir.",
     "operationId": "new_request_api_v1_sites__slug__resident_requests_post",
     "security": [
      {
@@ -8165,6 +9861,311 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/requests/{request_id}/confirm": {
+   "post": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Kapanış onayı ve memnuniyet puanı",
+    "description": "Yalnız \"çözüldü\" talep (409 `not_resolved`). Çözüldü → talep kapanır; devam ediyor →\nyeniden açılır. Puan ≤ eşik yöneticiye bildirilir.",
+    "operationId": "confirm_request_api_v1_sites__slug__resident_requests__request_id__confirm_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RequestConfirmIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/requests/{request_id}/cancel": {
+   "post": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Talebi iptal et (iş başlamadan)",
+    "operationId": "cancel_request_api_v1_sites__slug__resident_requests__request_id__cancel_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RequestCancelIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_RequestDetail_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/quotes/{quote_id}/decision": {
+   "post": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Ücretli hizmet teklifine karar",
+    "description": "Karar, teklifin bölümünde bugün malik/kiracı/oturan olan sakindedir. Teklif aşamasında\nonay/ret; gerçekleşen teklifi aşmışsa ek tutar onayı/reddi (ret → teklif tutarı).",
+    "operationId": "quote_decision_api_v1_sites__slug__resident_quotes__quote_id__decision_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "quote_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Quote Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/QuoteDecisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ServiceQuoteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/permits": {
+   "get": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Tadilat ve taşınma başvurularım + kurallar",
+    "operationId": "my_permits_api_v1_sites__slug__resident_permits_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MyPermitsOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "sakin"
+    ],
+    "summary": "Tadilat/taşınma başvurusu",
+    "operationId": "apply_permit_api_v1_sites__slug__resident_permits_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PermitApplyIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PermitOut_"
         }
        }
       }
@@ -12917,8 +14918,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -13758,8 +15759,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13769,7 +15770,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -13855,8 +15856,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13868,7 +15869,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0.0
        },
        {
         "type": "null"
@@ -14110,7 +16111,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -14288,8 +16289,8 @@
     "properties": {
      "fiscal_year": {
       "type": "integer",
-      "maximum": 2100,
-      "minimum": 2000,
+      "maximum": 2100.0,
+      "minimum": 2000.0,
       "title": "Fiscal Year"
      },
      "name": {
@@ -14771,6 +16772,50 @@
     ],
     "title": "CashSource"
    },
+   "CategoryIn": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Name"
+     },
+     "hour_type": {
+      "$ref": "#/components/schemas/HourType",
+      "default": "business"
+     },
+     "resolve_hours": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Resolve Hours"
+     },
+     "default_priority": {
+      "$ref": "#/components/schemas/RequestPriority",
+      "default": "normal"
+     },
+     "department_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Id"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "CategoryIn"
+   },
    "CategoryOut": {
     "properties": {
      "category_id": {
@@ -14810,6 +16855,22 @@
      "share"
     ],
     "title": "CategoryOut"
+   },
+   "CategorySlaOut": {
+    "properties": {
+     "hour_type": {
+      "$ref": "#/components/schemas/HourType"
+     },
+     "resolve_hours": {
+      "$ref": "#/components/schemas/ResolveHours"
+     }
+    },
+    "type": "object",
+    "required": [
+     "hour_type",
+     "resolve_hours"
+    ],
+    "title": "CategorySlaOut"
    },
    "CategoryTotalOut": {
     "properties": {
@@ -15224,6 +17285,25 @@
      "is_advance"
     ],
     "title": "ChargeTypeOut"
+   },
+   "ChecklistItem": {
+    "properties": {
+     "item": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Item"
+     },
+     "ok": {
+      "type": "boolean",
+      "title": "Ok"
+     }
+    },
+    "type": "object",
+    "required": [
+     "item",
+     "ok"
+    ],
+    "title": "ChecklistItem"
    },
    "CloseIn": {
     "properties": {
@@ -16089,6 +18169,30 @@
     ],
     "title": "DayBasis"
    },
+   "DayHoursOut": {
+    "properties": {
+     "closed": {
+      "type": "boolean",
+      "title": "Closed"
+     },
+     "open": {
+      "type": "string",
+      "title": "Open",
+      "description": "SS:DD"
+     },
+     "close": {
+      "type": "string",
+      "title": "Close"
+     }
+    },
+    "type": "object",
+    "required": [
+     "closed",
+     "open",
+     "close"
+    ],
+    "title": "DayHoursOut"
+   },
    "DebtorOut": {
     "properties": {
      "id": {
@@ -16408,7 +18512,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16420,7 +18524,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16432,7 +18536,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -17487,6 +19591,14 @@
     ],
     "title": "HomeOut"
    },
+   "HourType": {
+    "type": "string",
+    "enum": [
+     "24x7",
+     "business"
+    ],
+    "title": "HourType"
+   },
    "ImportIssueOut": {
     "properties": {
      "row_number": {
@@ -18143,6 +20255,50 @@
     ],
     "title": "IncomeExpenseOut"
    },
+   "InternalNoteIn": {
+    "properties": {
+     "body": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Body"
+     }
+    },
+    "type": "object",
+    "required": [
+     "body"
+    ],
+    "title": "InternalNoteIn"
+   },
+   "InternalNoteOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "body": {
+      "type": "string",
+      "title": "Body"
+     },
+     "author_name": {
+      "type": "string",
+      "title": "Author Name"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "body",
+     "author_name",
+     "created_at"
+    ],
+    "title": "InternalNoteOut"
+   },
    "ItemTotalOut": {
     "properties": {
      "budget_item_id": {
@@ -18273,7 +20429,9 @@
      "transfer",
      "advance",
      "opening",
-     "refund"
+     "refund",
+     "service",
+     "deposit"
     ],
     "title": "LedgerSource"
    },
@@ -18975,6 +21133,46 @@
     "type": "object",
     "title": "MemberPatch"
    },
+   "MergeSuggestionsOut": {
+    "properties": {
+     "linked_outage": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestOutageBrief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "similar": {
+      "items": {
+       "$ref": "#/components/schemas/SimilarRequestOut"
+      },
+      "type": "array",
+      "title": "Similar"
+     },
+     "open_outages": {
+      "items": {
+       "$ref": "#/components/schemas/OpenOutageBrief"
+      },
+      "type": "array",
+      "title": "Open Outages"
+     },
+     "window_hours": {
+      "type": "integer",
+      "title": "Window Hours"
+     }
+    },
+    "type": "object",
+    "required": [
+     "linked_outage",
+     "similar",
+     "open_outages",
+     "window_hours"
+    ],
+    "title": "MergeSuggestionsOut"
+   },
    "ModuleKey": {
     "type": "string",
     "enum": [
@@ -19420,6 +21618,26 @@
     ],
     "title": "MyPackage"
    },
+   "MyPermitsOut": {
+    "properties": {
+     "rules": {
+      "$ref": "#/components/schemas/PermitRulesOut"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PermitOut"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rules",
+     "items"
+    ],
+    "title": "MyPermitsOut"
+   },
    "MyRequest": {
     "properties": {
      "id": {
@@ -19705,6 +21923,30 @@
     ],
     "title": "NotifyIn"
    },
+   "OpenOutageBrief": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "request_count": {
+      "type": "integer",
+      "title": "Request Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "request_count"
+    ],
+    "title": "OpenOutageBrief"
+   },
    "OpeningBalanceIn": {
     "properties": {
      "amount": {
@@ -19833,6 +22075,177 @@
      "votes"
     ],
     "title": "OptionOut"
+   },
+   "OutageIn": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Title"
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Category"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "public_description": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Public Description",
+      "description": "sakinlerin göreceği açıklama"
+     },
+     "request_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "maxItems": 500,
+      "title": "Request Ids"
+     }
+    },
+    "type": "object",
+    "required": [
+     "title",
+     "category",
+     "public_description"
+    ],
+    "title": "OutageIn"
+   },
+   "OutageLinkIn": {
+    "properties": {
+     "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Request Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "request_id"
+    ],
+    "title": "OutageLinkIn"
+   },
+   "OutageOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "category": {
+      "type": "string",
+      "title": "Category"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "public_description": {
+      "type": "string",
+      "title": "Public Description"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "open",
+       "resolved"
+      ],
+      "title": "Status"
+     },
+     "request_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Request Ids"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "resolved_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resolved At"
+     },
+     "resolution": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resolution"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "category",
+     "location",
+     "public_description",
+     "status",
+     "request_ids",
+     "created_by",
+     "created_at",
+     "resolved_at",
+     "resolution"
+    ],
+    "title": "OutageOut"
+   },
+   "OutageResolveIn": {
+    "properties": {
+     "resolution": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Resolution"
+     }
+    },
+    "type": "object",
+    "required": [
+     "resolution"
+    ],
+    "title": "OutageResolveIn"
    },
    "OverviewOut": {
     "properties": {
@@ -20457,6 +22870,37 @@
     ],
     "title": "Page[MovementOut]"
    },
+   "Page_OutageOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/OutageOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[OutageOut]"
+   },
    "Page_PackageOut_": {
     "properties": {
      "items": {
@@ -20518,6 +22962,37 @@
      "total"
     ],
     "title": "Page[PaymentListItem]"
+   },
+   "Page_PermitOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PermitOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[PermitOut]"
    },
    "Page_PersonOut_": {
     "properties": {
@@ -20894,8 +23369,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -21432,6 +23907,444 @@
      "cancelled"
     ],
     "title": "PaymentStatus"
+   },
+   "PermitApplyIn": {
+    "properties": {
+     "unit_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Id",
+      "description": "boş: ilk bölümü"
+     },
+     "type": {
+      "$ref": "#/components/schemas/PermitType"
+     },
+     "date_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Date From"
+     },
+     "date_to": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date To",
+      "description": "yalnız tadilatta"
+     },
+     "contractor": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contractor"
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 500,
+      "title": "Description"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type",
+     "date_from",
+     "description"
+    ],
+    "title": "PermitApplyIn"
+   },
+   "PermitCompleteIn": {
+    "properties": {
+     "checklist": {
+      "items": {
+       "$ref": "#/components/schemas/ChecklistItem"
+      },
+      "type": "array",
+      "maxItems": 30,
+      "title": "Checklist"
+     },
+     "refund_deposit": {
+      "type": "boolean",
+      "title": "Refund Deposit",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "PermitCompleteIn"
+   },
+   "PermitDecisionOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "approved",
+       "approval_pending"
+      ],
+      "title": "Status"
+     },
+     "permit": {
+      "$ref": "#/components/schemas/PermitOut"
+     },
+     "approval_request_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Request Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "permit",
+     "approval_request_id"
+    ],
+    "title": "PermitDecisionOut"
+   },
+   "PermitOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "type": {
+      "$ref": "#/components/schemas/PermitType"
+     },
+     "date_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Date From"
+     },
+     "date_to": {
+      "type": "string",
+      "format": "date",
+      "title": "Date To"
+     },
+     "contractor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contractor"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "status": {
+      "$ref": "#/components/schemas/PermitStatus"
+     },
+     "approval_request_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Request Id",
+      "description": "onay kuralı varsa açılan talep"
+     },
+     "approval_status": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ApprovalStatus"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "reject_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reject Reason"
+     },
+     "checklist": {
+      "items": {
+       "$ref": "#/components/schemas/ChecklistItem"
+      },
+      "type": "array",
+      "title": "Checklist"
+     },
+     "deposit": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deposit"
+     },
+     "deposit_refunded": {
+      "type": "boolean",
+      "title": "Deposit Refunded"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     },
+     "completed_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed By"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_id",
+     "unit_name",
+     "type",
+     "date_from",
+     "date_to",
+     "contractor",
+     "description",
+     "status",
+     "approval_request_id",
+     "approval_status",
+     "reject_reason",
+     "checklist",
+     "deposit",
+     "deposit_refunded",
+     "created_by",
+     "created_at",
+     "decided_by",
+     "decided_at",
+     "completed_by",
+     "completed_at"
+    ],
+    "title": "PermitOut"
+   },
+   "PermitRejectIn": {
+    "properties": {
+     "reason": {
+      "type": "string",
+      "maxLength": 500,
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reason"
+    ],
+    "title": "PermitRejectIn"
+   },
+   "PermitRulesIn": {
+    "properties": {
+     "weekday_hours": {
+      "type": "string",
+      "maxLength": 11,
+      "title": "Weekday Hours"
+     },
+     "saturday_hours": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 11
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Saturday Hours"
+     },
+     "sunday_allowed": {
+      "type": "boolean",
+      "title": "Sunday Allowed",
+      "default": false
+     },
+     "deposit_amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Deposit Amount",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "default": "0",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "checklist": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 30,
+      "title": "Checklist"
+     }
+    },
+    "type": "object",
+    "required": [
+     "weekday_hours"
+    ],
+    "title": "PermitRulesIn"
+   },
+   "PermitRulesOut": {
+    "properties": {
+     "weekday_hours": {
+      "type": "string",
+      "title": "Weekday Hours",
+      "description": "`09:00-18:00`"
+     },
+     "saturday_hours": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Saturday Hours",
+      "description": "null: cumartesi yasak"
+     },
+     "sunday_allowed": {
+      "type": "boolean",
+      "title": "Sunday Allowed"
+     },
+     "deposit_amount": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Deposit Amount",
+      "description": "0: depozito alınmaz",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "checklist": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Checklist",
+      "description": "tamamlanma kontrol listesi (tadilat)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "weekday_hours",
+     "saturday_hours",
+     "sunday_allowed",
+     "deposit_amount",
+     "checklist"
+    ],
+    "title": "PermitRulesOut"
+   },
+   "PermitStatus": {
+    "type": "string",
+    "enum": [
+     "pending",
+     "approved",
+     "rejected",
+     "completed"
+    ],
+    "title": "PermitStatus"
+   },
+   "PermitType": {
+    "type": "string",
+    "enum": [
+     "renovation",
+     "move_in",
+     "move_out"
+    ],
+    "title": "PermitType"
    },
    "PersonCreate": {
     "properties": {
@@ -22213,14 +25126,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -22338,6 +25251,167 @@
      "count"
     ],
     "title": "QuorumKind"
+   },
+   "QuoteCompleteIn": {
+    "properties": {
+     "actual_total": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actual Total",
+      "description": "gerçekleşen tutar"
+     }
+    },
+    "type": "object",
+    "required": [
+     "actual_total"
+    ],
+    "title": "QuoteCompleteIn"
+   },
+   "QuoteDecisionIn": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "enum": [
+       "accept",
+       "reject"
+      ],
+      "title": "Decision"
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision"
+    ],
+    "title": "QuoteDecisionIn"
+   },
+   "QuoteIn": {
+    "properties": {
+     "lines": {
+      "items": {
+       "$ref": "#/components/schemas/QuoteLineIn"
+      },
+      "type": "array",
+      "maxItems": 50,
+      "title": "Lines"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "lines"
+    ],
+    "title": "QuoteIn"
+   },
+   "QuoteLineIn": {
+    "properties": {
+     "description": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Description"
+     },
+     "qty": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Qty",
+      "description": "miktar > 0, en çok 2 ondalık"
+     },
+     "unit_price": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Unit Price",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "description",
+     "qty",
+     "unit_price"
+    ],
+    "title": "QuoteLineIn"
+   },
+   "QuoteLineOut": {
+    "properties": {
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "qty": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Qty",
+      "description": "miktar (en çok 2 ondalık)"
+     },
+     "unit_price": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Unit Price",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "total": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Total",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "description",
+     "qty",
+     "unit_price",
+     "total"
+    ],
+    "title": "QuoteLineOut"
+   },
+   "QuoteStatus": {
+    "type": "string",
+    "enum": [
+     "pending",
+     "accepted",
+     "rejected",
+     "extra_pending",
+     "billed"
+    ],
+    "title": "QuoteStatus"
    },
    "ReadIn": {
     "properties": {
@@ -23057,20 +26131,198 @@
     ],
     "title": "Relation"
    },
-   "RequestCategory": {
-    "type": "string",
-    "enum": [
-     "other",
-     "plumbing",
-     "electrical",
-     "elevator",
-     "heating",
-     "cleaning",
-     "security",
-     "garden",
-     "common_area"
+   "ReplyTemplateIn": {
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Title"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "body": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Body"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "title",
+     "body"
     ],
-    "title": "RequestCategory"
+    "title": "ReplyTemplateIn"
+   },
+   "ReplyTemplateOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category",
+      "description": "null = tüm kategoriler"
+     },
+     "body": {
+      "type": "string",
+      "title": "Body",
+      "description": "değişkenler: {{sakin.ad}}, {{talep.no}}, {{talep.konu}}"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "category",
+     "body",
+     "is_active"
+    ],
+    "title": "ReplyTemplateOut"
+   },
+   "RequestCancelIn": {
+    "properties": {
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "title": "RequestCancelIn"
+   },
+   "RequestCategoryOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "key": {
+      "type": "string",
+      "title": "Key",
+      "description": "değişmez anahtar; talepte `category`"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "hour_type": {
+      "$ref": "#/components/schemas/HourType"
+     },
+     "resolve_hours": {
+      "$ref": "#/components/schemas/ResolveHours",
+      "description": "öncelik bazında çözüm süresi (saat)"
+     },
+     "default_priority": {
+      "$ref": "#/components/schemas/RequestPriority"
+     },
+     "department_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Department Id",
+      "description": "atanacak ekip (talep buraya yönlenir)"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "key",
+     "name",
+     "hour_type",
+     "resolve_hours",
+     "default_priority",
+     "department_id",
+     "is_active"
+    ],
+    "title": "RequestCategoryOut"
+   },
+   "RequestConfirmIn": {
+    "properties": {
+     "solved": {
+      "type": "boolean",
+      "title": "Solved",
+      "description": "true: sorun çözüldü (puan zorunlu); false: devam ediyor"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score",
+      "description": "1–5"
+     },
+     "comment": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comment"
+     }
+    },
+    "type": "object",
+    "required": [
+     "solved"
+    ],
+    "title": "RequestConfirmIn"
    },
    "RequestCreate": {
     "properties": {
@@ -23093,12 +26345,22 @@
       "title": "Description"
      },
      "category": {
-      "$ref": "#/components/schemas/RequestCategory",
+      "type": "string",
+      "maxLength": 60,
+      "title": "Category",
+      "description": "kategori anahtarı",
       "default": "other"
      },
      "priority": {
-      "$ref": "#/components/schemas/RequestPriority",
-      "default": "normal"
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestPriority"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "boş → kategorinin varsayılanı; sakinde yok sayılır (öncelik kategoriden)"
      },
      "unit_id": {
       "anyOf": [
@@ -23174,7 +26436,13 @@
       "title": "Description"
      },
      "category": {
-      "$ref": "#/components/schemas/RequestCategory"
+      "type": "string",
+      "title": "Category",
+      "description": "site kategorisinin anahtarı (GET …/request-categories)"
+     },
+     "category_name": {
+      "type": "string",
+      "title": "Category Name"
      },
      "priority": {
       "$ref": "#/components/schemas/RequestPriority"
@@ -23186,6 +26454,19 @@
       "type": "string",
       "title": "Status Label",
       "description": "`İşlemde`"
+     },
+     "allowed_transitions": {
+      "items": {
+       "$ref": "#/components/schemas/RequestStatus"
+      },
+      "type": "array",
+      "title": "Allowed Transitions",
+      "description": "personelin seçebileceği durumlar (requests.assign yoksa boş)"
+     },
+     "can_cancel": {
+      "type": "boolean",
+      "title": "Can Cancel",
+      "description": "sakin kendi talebini iptal edebilir mi (iş başlamadan)"
      },
      "unit_id": {
       "anyOf": [
@@ -23292,6 +26573,17 @@
       ],
       "title": "Due At"
      },
+     "sla": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestSlaOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "SLA kuralı olmayan eski talepte null"
+     },
      "resolved_at": {
       "anyOf": [
        {
@@ -23314,6 +26606,63 @@
        }
       ],
       "title": "Resolution"
+     },
+     "auto_close_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Close At",
+      "description": "çözüldü talep sakin yanıt vermezse bu anda kapanır"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "outage": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestOutageBrief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "son sakin değerlendirmesi"
+     },
+     "quote": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ServiceQuoteOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "son ücretli hizmet teklifi"
      },
      "created_by_name": {
       "anyOf": [
@@ -23347,9 +26696,12 @@
      "title",
      "description",
      "category",
+     "category_name",
      "priority",
      "status",
      "status_label",
+     "allowed_transitions",
+     "can_cancel",
      "unit_id",
      "unit_name",
      "location",
@@ -23359,8 +26711,14 @@
      "department_id",
      "department_name",
      "due_at",
+     "sla",
      "resolved_at",
      "resolution",
+     "auto_close_at",
+     "closed_at",
+     "outage",
+     "feedback",
+     "quote",
      "created_by_name",
      "created_at",
      "events"
@@ -23375,9 +26733,64 @@
      "assigned",
      "comment",
      "resolved",
-     "department_changed"
+     "department_changed",
+     "closed",
+     "cancelled",
+     "reopened",
+     "feedback",
+     "outage_linked",
+     "outage_unlinked",
+     "quote"
     ],
     "title": "RequestEventKind"
+   },
+   "RequestFeedbackOut": {
+    "properties": {
+     "solved": {
+      "type": "boolean",
+      "title": "Solved"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score"
+     },
+     "comment": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Comment"
+     },
+     "by_name": {
+      "type": "string",
+      "title": "By Name"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "solved",
+     "score",
+     "comment",
+     "by_name",
+     "created_at"
+    ],
+    "title": "RequestFeedbackOut"
    },
    "RequestListItem": {
     "properties": {
@@ -23513,7 +26926,13 @@
       "title": "Description"
      },
      "category": {
-      "$ref": "#/components/schemas/RequestCategory"
+      "type": "string",
+      "title": "Category",
+      "description": "site kategorisinin anahtarı (GET …/request-categories)"
+     },
+     "category_name": {
+      "type": "string",
+      "title": "Category Name"
      },
      "priority": {
       "$ref": "#/components/schemas/RequestPriority"
@@ -23525,6 +26944,19 @@
       "type": "string",
       "title": "Status Label",
       "description": "`İşlemde`"
+     },
+     "allowed_transitions": {
+      "items": {
+       "$ref": "#/components/schemas/RequestStatus"
+      },
+      "type": "array",
+      "title": "Allowed Transitions",
+      "description": "personelin seçebileceği durumlar (requests.assign yoksa boş)"
+     },
+     "can_cancel": {
+      "type": "boolean",
+      "title": "Can Cancel",
+      "description": "sakin kendi talebini iptal edebilir mi (iş başlamadan)"
      },
      "unit_id": {
       "anyOf": [
@@ -23631,6 +27063,17 @@
       ],
       "title": "Due At"
      },
+     "sla": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestSlaOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "SLA kuralı olmayan eski talepte null"
+     },
      "resolved_at": {
       "anyOf": [
        {
@@ -23653,6 +27096,63 @@
        }
       ],
       "title": "Resolution"
+     },
+     "auto_close_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Close At",
+      "description": "çözüldü talep sakin yanıt vermezse bu anda kapanır"
+     },
+     "closed_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Closed At"
+     },
+     "outage": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestOutageBrief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "feedback": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/RequestFeedbackOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "son sakin değerlendirmesi"
+     },
+     "quote": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ServiceQuoteOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "son ücretli hizmet teklifi"
      },
      "created_by_name": {
       "anyOf": [
@@ -23678,9 +27178,12 @@
      "title",
      "description",
      "category",
+     "category_name",
      "priority",
      "status",
      "status_label",
+     "allowed_transitions",
+     "can_cancel",
      "unit_id",
      "unit_name",
      "location",
@@ -23690,12 +27193,49 @@
      "department_id",
      "department_name",
      "due_at",
+     "sla",
      "resolved_at",
      "resolution",
+     "auto_close_at",
+     "closed_at",
+     "outage",
+     "feedback",
+     "quote",
      "created_by_name",
      "created_at"
     ],
     "title": "RequestOut"
+   },
+   "RequestOutageBrief": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "public_description": {
+      "type": "string",
+      "title": "Public Description"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status",
+      "description": "open · resolved"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "public_description",
+     "status"
+    ],
+    "title": "RequestOutageBrief",
+    "description": "Ana olay özeti — sakin de görür (genel açıklama); diğer sakinlerin talepleri yok."
    },
    "RequestPriority": {
     "type": "string",
@@ -23707,10 +27247,141 @@
     ],
     "title": "RequestPriority"
    },
+   "RequestSettingsIn": {
+    "properties": {
+     "categories": {
+      "additionalProperties": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "object",
+      "title": "Categories",
+      "description": "yalnız değişen kategoriler de gönderilebilir"
+     },
+     "calendar": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Calendar"
+     },
+     "auto_close_days": {
+      "type": "integer",
+      "title": "Auto Close Days"
+     },
+     "merge_window_hours": {
+      "type": "integer",
+      "title": "Merge Window Hours"
+     },
+     "low_rating_threshold": {
+      "type": "integer",
+      "title": "Low Rating Threshold"
+     }
+    },
+    "type": "object",
+    "required": [
+     "calendar",
+     "auto_close_days",
+     "merge_window_hours",
+     "low_rating_threshold"
+    ],
+    "title": "RequestSettingsIn"
+   },
+   "RequestSettingsOut": {
+    "properties": {
+     "categories": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/CategorySlaOut"
+      },
+      "type": "object",
+      "title": "Categories",
+      "description": "kategori anahtarı → SLA"
+     },
+     "calendar": {
+      "items": {
+       "$ref": "#/components/schemas/DayHoursOut"
+      },
+      "type": "array",
+      "title": "Calendar",
+      "description": "7 gün, 0 = pazartesi"
+     },
+     "auto_close_days": {
+      "type": "integer",
+      "title": "Auto Close Days",
+      "description": "çözüldü talep, sakin yanıtsızsa kaç günde kapanır"
+     },
+     "merge_window_hours": {
+      "type": "integer",
+      "title": "Merge Window Hours",
+      "description": "birleştirme önerisi penceresi"
+     },
+     "low_rating_threshold": {
+      "type": "integer",
+      "title": "Low Rating Threshold",
+      "description": "bu puan ve altı yöneticiye bildirilir"
+     }
+    },
+    "type": "object",
+    "required": [
+     "categories",
+     "calendar",
+     "auto_close_days",
+     "merge_window_hours",
+     "low_rating_threshold"
+    ],
+    "title": "RequestSettingsOut"
+   },
+   "RequestSlaOut": {
+    "properties": {
+     "due_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Due At"
+     },
+     "hour_type": {
+      "$ref": "#/components/schemas/HourType",
+      "description": "`24x7` · `business` (mesai dışında sayaç durur)"
+     },
+     "target_hours": {
+      "type": "integer",
+      "title": "Target Hours"
+     },
+     "used_minutes": {
+      "type": "integer",
+      "title": "Used Minutes"
+     },
+     "remaining_minutes": {
+      "type": "integer",
+      "title": "Remaining Minutes"
+     },
+     "state": {
+      "$ref": "#/components/schemas/SlaState",
+      "description": "ok · warning (≥%80) · breached · met · missed"
+     },
+     "paused": {
+      "type": "boolean",
+      "title": "Paused",
+      "description": "çalışma saati dışında: sayaç durdu"
+     }
+    },
+    "type": "object",
+    "required": [
+     "due_at",
+     "hour_type",
+     "target_hours",
+     "used_minutes",
+     "remaining_minutes",
+     "state",
+     "paused"
+    ],
+    "title": "RequestSlaOut"
+   },
    "RequestStatus": {
     "type": "string",
     "enum": [
      "open",
+     "assigned",
      "in_progress",
      "waiting",
      "resolved",
@@ -23924,6 +27595,34 @@
      "my_votes"
     ],
     "title": "ResidentPollOut"
+   },
+   "ResolveHours": {
+    "properties": {
+     "low": {
+      "type": "integer",
+      "title": "Low"
+     },
+     "normal": {
+      "type": "integer",
+      "title": "Normal"
+     },
+     "high": {
+      "type": "integer",
+      "title": "High"
+     },
+     "urgent": {
+      "type": "integer",
+      "title": "Urgent"
+     }
+    },
+    "type": "object",
+    "required": [
+     "low",
+     "normal",
+     "high",
+     "urgent"
+    ],
+    "title": "ResolveHours"
    },
    "RestoreOut": {
     "properties": {
@@ -24235,14 +27934,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -24504,7 +28203,7 @@
     "properties": {
      "row_number": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 1.0,
       "title": "Row Number"
      },
      "ledger_account_id": {
@@ -24519,6 +28218,198 @@
      "ledger_account_id"
     ],
     "title": "SelectionIn"
+   },
+   "ServiceQuoteOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Request Id"
+     },
+     "lines": {
+      "items": {
+       "$ref": "#/components/schemas/QuoteLineOut"
+      },
+      "type": "array",
+      "title": "Lines"
+     },
+     "total": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Total",
+      "description": "teklif toplamı",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "status": {
+      "$ref": "#/components/schemas/QuoteStatus"
+     },
+     "status_label": {
+      "type": "string",
+      "title": "Status Label"
+     },
+     "actual_total": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actual Total"
+     },
+     "billed_total": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+        "description": "Para: metin, 2 ondalık (TRY).",
+        "examples": [
+         "1234.56"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Billed Total",
+      "description": "cariye yansıyan (dönem dışı ücret)"
+     },
+     "created_by_name": {
+      "type": "string",
+      "title": "Created By Name"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "request_id",
+     "lines",
+     "total",
+     "note",
+     "status",
+     "status_label",
+     "actual_total",
+     "billed_total",
+     "created_by_name",
+     "created_at",
+     "decided_at"
+    ],
+    "title": "ServiceQuoteOut"
+   },
+   "ServiceTariffIn": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 60,
+      "title": "Name"
+     },
+     "unit": {
+      "type": "string",
+      "maxLength": 20,
+      "title": "Unit"
+     },
+     "price": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Price",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "unit",
+     "price"
+    ],
+    "title": "ServiceTariffIn"
+   },
+   "ServiceTariffOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "price": {
+      "type": "string",
+      "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+      "title": "Price",
+      "description": "Para: metin, 2 ondalık (TRY).",
+      "examples": [
+       "1234.56"
+      ]
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "unit",
+     "price",
+     "is_active"
+    ],
+    "title": "ServiceTariffOut"
    },
    "SessionOut": {
     "properties": {
@@ -24612,6 +28503,60 @@
     },
     "type": "object",
     "title": "SettleIn"
+   },
+   "SimilarRequestOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "number": {
+      "type": "integer",
+      "title": "Number"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "number",
+     "title",
+     "unit_name",
+     "location",
+     "created_at"
+    ],
+    "title": "SimilarRequestOut"
    },
    "SimulateIn": {
     "properties": {
@@ -25481,6 +29426,17 @@
     ],
     "title": "SkippedOut"
    },
+   "SlaState": {
+    "type": "string",
+    "enum": [
+     "ok",
+     "warning",
+     "breached",
+     "met",
+     "missed"
+    ],
+    "title": "SlaState"
+   },
    "StaffIn": {
     "properties": {
      "full_name": {
@@ -25690,7 +29646,7 @@
        }
       ],
       "title": "Resolution",
-      "description": "çözüldü/kapandı yapılırken zorunlu"
+      "description": "çözüldü yapılırken çözüm, iptalde gerekçe"
      }
     },
     "type": "object",
@@ -25718,8 +29674,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 50,
-        "minimum": 1
+        "maximum": 50.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -25965,6 +29921,47 @@
     ],
     "title": "SuggestionOut"
    },
+   "TariffWriteOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "saved",
+       "approval_pending"
+      ],
+      "title": "Status"
+     },
+     "tariff": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ServiceTariffOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "approval_request_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Request Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "tariff",
+     "approval_request_id"
+    ],
+    "title": "TariffWriteOut"
+   },
    "TokenResponse": {
     "properties": {
      "access_token": {
@@ -26072,8 +30069,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26097,8 +30094,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26114,8 +30111,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26131,7 +30128,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26143,7 +30140,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26528,8 +30525,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26553,8 +30550,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26570,8 +30567,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26587,7 +30584,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26599,7 +30596,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -27493,6 +31490,23 @@
     ],
     "title": "Written[IncidentOut]"
    },
+   "Written_InternalNoteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/InternalNoteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[InternalNoteOut]"
+   },
    "Written_LinkOut_": {
     "properties": {
      "data": {
@@ -27646,6 +31660,23 @@
     ],
     "title": "Written[OpeningBalanceOut]"
    },
+   "Written_OutageOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/OutageOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[OutageOut]"
+   },
    "Written_PackageOut_": {
     "properties": {
      "data": {
@@ -27713,6 +31744,57 @@
      "message"
     ],
     "title": "Written[PaymentResultOut]"
+   },
+   "Written_PermitDecisionOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PermitDecisionOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PermitDecisionOut]"
+   },
+   "Written_PermitOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PermitOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PermitOut]"
+   },
+   "Written_PermitRulesOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PermitRulesOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PermitRulesOut]"
    },
    "Written_PersonOut_": {
     "properties": {
@@ -27833,6 +31915,40 @@
     ],
     "title": "Written[RegistrationOut]"
    },
+   "Written_ReplyTemplateOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ReplyTemplateOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ReplyTemplateOut]"
+   },
+   "Written_RequestCategoryOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RequestCategoryOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RequestCategoryOut]"
+   },
    "Written_RequestDetail_": {
     "properties": {
      "data": {
@@ -27849,6 +31965,23 @@
      "message"
     ],
     "title": "Written[RequestDetail]"
+   },
+   "Written_RequestSettingsOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/RequestSettingsOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[RequestSettingsOut]"
    },
    "Written_RestoreOut_": {
     "properties": {
@@ -27918,6 +32051,23 @@
     ],
     "title": "Written[ScheduleOut]"
    },
+   "Written_ServiceQuoteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ServiceQuoteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ServiceQuoteOut]"
+   },
    "Written_SiteOut_": {
     "properties": {
      "data": {
@@ -27968,6 +32118,23 @@
      "message"
     ],
     "title": "Written[StockItemOut]"
+   },
+   "Written_TariffWriteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/TariffWriteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[TariffWriteOut]"
    },
    "Written_TransferOut_": {
     "properties": {
