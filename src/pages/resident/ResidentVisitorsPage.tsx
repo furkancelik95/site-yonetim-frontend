@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
-import { Copy, Plus, UserRoundCheck } from "lucide-react";
+import { Copy, Plus, RefreshCw, UserRoundCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { useToast } from "../../components/toast";
@@ -9,20 +9,23 @@ import { formatDate, todayIso } from "../../lib/format";
 import { plateInput } from "../../lib/input";
 import { WEEKDAYS, inviteStatus, inviteType, visitRequestStatus } from "../../lib/labels";
 
-/** Servis isteği 41, 42 ve 44'teki şekiller (sakin tarafı). */
-interface Invite { id: string; unit_name: string; visitor_name: string; type: string; date_from: string; date_to: string; weekdays: number[]; time_from: string | null; time_to: string | null; plate: string | null; note: string | null; code: string; status: string; valid_now: boolean; expired: boolean }
-interface Approval { id: string; unit_name: string; full_name: string; kind: string; status: string; timed_out: boolean; seconds_left: number; decision_source: string | null }
-interface Delegate { id: string; name: string; unit_name: string }
+type Invite = Schemas["VisitorInviteOut"];
+type Approval = Schemas["VisitRequestOut"];
+type Delegate = Schemas["ParcelDelegateOut"];
 
 /**
  * Ziyaretçiler (GUV-02/03, sakin): ön davet (tek kullanımlık / tarih aralıklı / süreli kalıcı) — 6 haneli kod ve QR;
- * kapıdaki habersiz ziyaretçi için onay/ret; kargo teslim yetkilisi.
+ * kapıdaki habersiz ziyaretçi için onay/ret; kargo teslim yetkilisi. Kod güvenlik için sunucuda saklanmaz: yalnız
+ * oluşturulduğunda (ya da yeni kod üretilince) bu oturumda gösterilir.
  */
 export function ResidentVisitorsPage() {
   useDocumentTitle("Ziyaretçiler");
   const approvals = useSiteGet<Approval[]>("/resident/visit-approvals", undefined, { refetchInterval: 5000 });
   const q = useSiteGet<Invite[]>("/resident/visitor-invites");
   const [adding, setAdding] = useState(false);
+  // Yalnız bu oturumda: oluşturma / yeni kod yanıtındaki kodlar (sunucu kodu yeniden göstermez)
+  const [codes, setCodes] = useState<Record<string, string>>({});
+  const keep = (i: Invite) => { if (i.code) setCodes((c) => ({ ...c, [i.id]: i.code! })); };
   const pending = (approvals.data ?? []).filter((a) => a.status === "awaiting" && !a.timed_out);
   return (
     <>
@@ -36,8 +39,8 @@ export function ResidentVisitorsPage() {
       <p className="small muted">Davet edilen ziyaretçi kapıda 6 haneli kodu ya da QR'ı gösterir; beklemeden girer.</p>
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <div className="stack" style={{ gap: "var(--s-3)" }}>
-          {adding ? <InviteForm onDone={() => setAdding(false)} /> : <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Ziyaretçi davet et</button>}
-          {q.data.length === 0 ? <Empty title="Davet yok" /> : q.data.map((i) => <InviteItem key={i.id} i={i} />)}
+          {adding ? <InviteForm onDone={(i) => { setAdding(false); if (i) keep(i); }} /> : <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Ziyaretçi davet et</button>}
+          {q.data.length === 0 ? <Empty title="Davet yok" /> : q.data.map((i) => <InviteItem key={i.id} i={i} code={codes[i.id] ?? i.code} onCode={keep} />)}
         </div>
       )}
       {(approvals.data ?? []).filter((a) => a.status !== "awaiting").length > 0 && (
@@ -66,12 +69,13 @@ function ApprovalCard({ a }: { a: Approval }) {
   );
 }
 
-function InviteItem({ i }: { i: Invite }) {
+function InviteItem({ i, code, onCode }: { i: Invite; code: string | null; onCode: (i: Invite) => void }) {
   const toast = useToast();
   const [qr, setQr] = useState<string>();
   const cancel = useSiteMutation<Record<string, never>, Invite>("POST", `/resident/visitor-invites/${i.id}/cancel`);
+  const renew = useSiteMutation<Record<string, never>, Invite>("POST", `/resident/visitor-invites/${i.id}/new-code`, { onSuccess: onCode });
   const live = i.status === "active" && !i.expired;
-  useEffect(() => { if (live) QRCode.toDataURL(`SY-DAVET:${i.code}`, { width: 240, margin: 1 }).then(setQr); }, [i.code, live]);
+  useEffect(() => { if (live && code) QRCode.toDataURL(`SY-DAVET:${code}`, { width: 240, margin: 1 }).then(setQr); else setQr(undefined); }, [code, live]);
   return (
     <div className="r-item" style={!live ? { opacity: 0.6 } : undefined}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -79,11 +83,12 @@ function InviteItem({ i }: { i: Invite }) {
         <div className="r-item__meta">{inviteType(i.type)} · {formatDate(i.date_from)}{i.date_to !== i.date_from && ` – ${formatDate(i.date_to)}`}{i.weekdays.length > 0 && ` · ${i.weekdays.map((d) => WEEKDAYS[d]).join(", ")}`}{i.time_from && ` · ${i.time_from}–${i.time_to}`}{i.plate && ` · ${i.plate}`}</div>
         {live && (
           <div className="row" style={{ gap: "var(--s-3)", marginTop: "var(--s-2)", alignItems: "center" }}>
-            {qr && <img src={qr} alt={`${i.visitor_name} davet QR kodu`} width={96} height={96} style={{ background: "#fff", borderRadius: 8 }} />}
+            {code && qr && <img src={qr} alt={`${i.visitor_name} davet QR kodu`} width={96} height={96} style={{ background: "#fff", borderRadius: 8 }} />}
             <div className="stack" style={{ gap: "var(--s-1)" }}>
-              <div className="mono strong" style={{ fontSize: "1.375rem", letterSpacing: ".15em" }}>{i.code}</div>
+              {code ? <div className="mono strong" style={{ fontSize: "1.375rem", letterSpacing: ".15em" }}>{code}</div> : <div className="small muted">Kod güvenlik için yalnız oluşturulurken gösterilir. Kaybettiyseniz yeni kod üretin (eskisi geçersiz olur).</div>}
               <div className="row" style={{ gap: "var(--s-2)" }}>
-                <button className="btn btn--sm" type="button" onClick={() => navigator.clipboard?.writeText(`${i.visitor_name}, site girişinde bu kodu gösterin: ${i.code}`).then(() => toast("Davet metni kopyalandı."))}><Copy aria-hidden="true" /> Paylaş</button>
+                {code ? <button className="btn btn--sm" type="button" onClick={() => navigator.clipboard?.writeText(`${i.visitor_name}, site girişinde bu kodu gösterin: ${code}`).then(() => toast("Davet metni kopyalandı."))}><Copy aria-hidden="true" /> Paylaş</button>
+                  : <button className="btn btn--sm" type="button" disabled={renew.isPending} onClick={() => renew.mutate({})}><RefreshCw aria-hidden="true" /> Yeni kod</button>}
                 <ConfirmButton className="btn btn--ghost btn--sm" danger title="Daveti iptal et" confirmLabel="İptal et" body="Kod artık kapıda çalışmaz." onConfirm={() => cancel.mutateAsync({})}>İptal</ConfirmButton>
               </div>
             </div>
@@ -94,7 +99,7 @@ function InviteItem({ i }: { i: Invite }) {
   );
 }
 
-function InviteForm({ onDone }: { onDone: () => void }) {
+function InviteForm({ onDone }: { onDone: (created?: Invite) => void }) {
   const home = useSiteGet<Schemas["HomeOut"]>("/resident/home");
   const [f, setF] = useState({ visitor_name: "", type: "once", date_from: todayIso(), date_to: todayIso(), weekdays: [0, 1, 2, 3, 4] as number[], time_from: "", time_to: "", plate: "", note: "", unit_id: "" });
   const m = useSiteMutation<Record<string, unknown>, Invite>("POST", "/resident/visitor-invites", { onSuccess: onDone });
@@ -125,7 +130,7 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         <Field label="Araç plakası" hint="İsteğe bağlı; misafir parkına kaydedilir" error={fieldError(m.error, "plate")}>{(p) => <input {...p} className="field__input mono" value={f.plate} onChange={(e) => setF((x) => ({ ...x, plate: plateInput(e.target.value) }))} />}</Field>
         <Field label="Not">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={up("note")} />}</Field>
       </div>
-      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={f.visitor_name.trim().length < 3}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
+      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={f.visitor_name.trim().length < 3}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => onDone()}>Vazgeç</button></div>
     </form>
   );
 }

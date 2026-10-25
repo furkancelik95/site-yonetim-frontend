@@ -10,6 +10,7 @@ import { useDebounced, useUrlState } from "../../lib/hooks";
 import { plateInput } from "../../lib/input";
 import { vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { ParkingSpacesPanel } from "./ParkingSpacesPanel";
 
 /** Servis isteği 22'deki şekiller. */
 export interface Vehicle {
@@ -21,7 +22,7 @@ interface VehicleSettings { plate_limit_per_unit: number; approval_required: boo
 /** Araçlar (YAP-05): plaka kaydı; güvenlik kapı ekranında okur, sakin kendi aracını ekler. */
 export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?: boolean } = {}) {
   const { site, can } = useSite();
-  const [s, set] = useUrlState({ q: "", durum: "" });
+  const [s, set] = useUrlState({ q: "", durum: "", sekme: "" });
   const [search, setSearch] = useState(s.q);
   const q = useDebounced(search, 300);
   const list = useSiteGet<Vehicle[]>("/vehicles", { unit_id: unitId, status: s.durum || undefined, q: q || undefined });
@@ -57,11 +58,17 @@ export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?:
       </div>
     );
   }
+  const parking = s.sekme === "park";
   return (
     <div className="stack">
-      <PageHead title="Araçlar" subtitle="Sakinlerin plakaları; kapı ekranında sorgulanır. Plaka verisi KVKK kapsamındadır." actions={manage && <><Link className="btn" to={`/s/${site.slug}/iceri-aktar?tip=araclar`}>Excel'den aktar</Link><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((x) => !x)}><Plus aria-hidden="true" /> Araç ekle</button></>} />
-      {manage && <VehicleSettingsCard />}
-      {body}
+      <PageHead title="Araçlar" subtitle="Sakinlerin plakaları ve park yerleri; plaka kapı ekranında sorgulanır. Plaka verisi KVKK kapsamındadır." actions={manage && !parking && <><Link className="btn" to={`/s/${site.slug}/iceri-aktar?tip=araclar`}>Excel'den aktar</Link><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((x) => !x)}><Plus aria-hidden="true" /> Araç ekle</button></>} />
+      <div className="row" role="tablist" aria-label="Araçlar ve park yerleri" style={{ gap: "var(--s-2)" }}>
+        {[["", "Araçlar"], ["park", "Park yerleri"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
+      </div>
+      {parking ? <ParkingSpacesPanel /> : <>
+        {manage && <VehicleSettingsCard />}
+        {body}
+      </>}
     </div>
   );
 }

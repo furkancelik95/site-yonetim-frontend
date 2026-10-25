@@ -1881,6 +1881,2964 @@
     }
    }
   },
+  "/api/v1/sites/{slug}/gates": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kapılar",
+    "operationId": "list_gates_api_v1_sites__slug__gates_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/GateOut"
+         },
+         "title": "Response List Gates Api V1 Sites  Slug  Gates Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kapı ekle",
+    "operationId": "create_gate_api_v1_sites__slug__gates_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_GateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/gates/{gate_id}": {
+   "patch": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kapıyı düzenle",
+    "operationId": "update_gate_api_v1_sites__slug__gates__gate_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "gate_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Gate Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_GateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/settings/security": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Güvenlik ayarları",
+    "operationId": "get_settings_api_v1_sites__slug__settings_security_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SecuritySettingsOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Güvenlik ayarlarını kaydet (sürüm artar)",
+    "operationId": "put_settings_api_v1_sites__slug__settings_security_put",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SecuritySettingsIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_SecuritySettingsOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/parcel-delegates": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kargo teslim yetkililerim",
+    "operationId": "my_delegates_api_v1_sites__slug__resident_parcel_delegates_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ParcelDelegateOut"
+         },
+         "title": "Response My Delegates Api V1 Sites  Slug  Resident Parcel Delegates Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Yetkili ekle",
+    "operationId": "add_delegate_api_v1_sites__slug__resident_parcel_delegates_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParcelDelegateIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParcelDelegateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/parcel-delegates/{delegate_id}/remove": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Yetkiyi kaldır",
+    "operationId": "remove_delegate_api_v1_sites__slug__resident_parcel_delegates__delegate_id__remove_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "delegate_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Delegate Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParcelDelegateOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/units/{unit_id}/parcel-delegates": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Bölümün teslim yetkilileri (görevli)",
+    "operationId": "unit_delegates_api_v1_sites__slug__units__unit_id__parcel_delegates_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "unit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Unit Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/DelegateNameOut"
+         },
+         "title": "Response Unit Delegates Api V1 Sites  Slug  Units  Unit Id  Parcel Delegates Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/packages/long-waiting": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Uzun bekleyen kargolar",
+    "operationId": "long_waiting_api_v1_sites__slug__packages_long_waiting_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LongWaitingOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/visitor-invites": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Ziyaretçi davetlerim",
+    "operationId": "my_invites_api_v1_sites__slug__resident_visitor_invites_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/VisitorInviteOut"
+         },
+         "title": "Response My Invites Api V1 Sites  Slug  Resident Visitor Invites Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Ziyaretçi davet et",
+    "operationId": "create_invite_api_v1_sites__slug__resident_visitor_invites_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VisitorInviteIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitorInviteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/cancel": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Daveti iptal et",
+    "operationId": "cancel_invite_api_v1_sites__slug__resident_visitor_invites__invite_id__cancel_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "invite_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Invite Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitorInviteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/new-code": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Yeni davet kodu üret",
+    "operationId": "reissue_code_api_v1_sites__slug__resident_visitor_invites__invite_id__new_code_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "invite_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Invite Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitorInviteOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/visitor-invites/expected": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Bugün beklenen davetliler",
+    "operationId": "expected_api_v1_sites__slug__visitor_invites_expected_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ExpectedInviteOut"
+         },
+         "title": "Response Expected Api V1 Sites  Slug  Visitor Invites Expected Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/visitor-invites/check-in": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kodla içeri al",
+    "operationId": "check_in_api_v1_sites__slug__visitor_invites_check_in_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InviteCheckInIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_InviteCheckInOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/visit-requests": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Habersiz ziyaretçi kaydı",
+    "operationId": "create_request_api_v1_sites__slug__visit_requests_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VisitRequestIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Bugünkü ve bekleyen habersiz ziyaretçiler",
+    "operationId": "list_requests_api_v1_sites__slug__visit_requests_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/VisitRequestStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/VisitRequestOut"
+         },
+         "title": "Response List Requests Api V1 Sites  Slug  Visit Requests Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/visit-requests/{request_id}/decide": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Görevli kararı (süre dolunca)",
+    "operationId": "guard_decide_api_v1_sites__slug__visit_requests__request_id__decide_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VisitGuardDecisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/visit-approvals": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Kapıda bekleyen ziyaretçilerim",
+    "operationId": "my_approvals_api_v1_sites__slug__resident_visit_approvals_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/VisitRequestOut"
+         },
+         "title": "Response My Approvals Api V1 Sites  Slug  Resident Visit Approvals Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/visit-approvals/{request_id}": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Ziyaretçiyi onayla / reddet",
+    "operationId": "resident_decide_api_v1_sites__slug__resident_visit_approvals__request_id__post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "request_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Request Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VisitResidentDecisionIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_VisitRequestOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/plates/lookup": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Plaka sorgula",
+    "operationId": "lookup_api_v1_sites__slug__plates_lookup_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "plate",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "maxLength": 20,
+       "description": "büyük/küçük harf ve boşluk duyarsız",
+       "title": "Plate"
+      },
+      "description": "büyük/küçük harf ve boşluk duyarsız"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlateLookupOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/gate-logs": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Plaka giriş-çıkış kayıtları (gün; yeni üstte)",
+    "operationId": "list_gate_logs_api_v1_sites__slug__gate_logs_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "boşsa bugün",
+       "title": "Date"
+      },
+      "description": "boşsa bugün"
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_GateLogOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Plaka giriş/çıkış kaydı",
+    "operationId": "create_gate_log_api_v1_sites__slug__gate_logs_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GateLogIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_GateLogOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-violations": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Otopark ihlalleri (yeni üstte)",
+    "operationId": "list_violations_api_v1_sites__slug__parking_violations_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_ParkingViolationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Otopark ihlali kaydet",
+    "operationId": "create_violation_api_v1_sites__slug__parking_violations_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParkingViolationIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParkingViolationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/shift-log": {
+   "get": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Nöbet defteri (gün, tesis saatiyle; yeni üstte)",
+    "operationId": "list_log_api_v1_sites__slug__shift_log_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "boşsa bugün",
+       "title": "Date"
+      },
+      "description": "boşsa bugün"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ShiftLogEntryOut"
+         },
+         "title": "Response List Log Api V1 Sites  Slug  Shift Log Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Deftere yaz",
+    "operationId": "write_api_v1_sites__slug__shift_log_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ShiftLogEntryIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ShiftLogEntryOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/shift-log/{entry_id}/addenda": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Ek not",
+    "operationId": "add_addendum_api_v1_sites__slug__shift_log__entry_id__addenda_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Entry Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ShiftLogAddendumIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ShiftLogEntryOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/shift-log/{entry_id}/acknowledge": {
+   "post": {
+    "tags": [
+     "güvenlik"
+    ],
+    "summary": "Devri onayla (Okudum, devraldım)",
+    "operationId": "acknowledge_api_v1_sites__slug__shift_log__entry_id__acknowledge_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Entry Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ShiftLogEntryOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-points": {
+   "get": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Kontrol noktaları",
+    "operationId": "list_points_api_v1_sites__slug__patrol_points_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PatrolPointOut"
+         },
+         "title": "Response List Points Api V1 Sites  Slug  Patrol Points Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Nokta ekle",
+    "operationId": "create_point_api_v1_sites__slug__patrol_points_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolPointIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolPointOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-points/{point_id}": {
+   "patch": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Noktayı düzenle",
+    "operationId": "update_point_api_v1_sites__slug__patrol_points__point_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "point_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Point Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolPointIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolPointOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-plans": {
+   "get": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Tur planları",
+    "operationId": "list_plans_api_v1_sites__slug__patrol_plans_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PatrolPlanOut"
+         },
+         "title": "Response List Plans Api V1 Sites  Slug  Patrol Plans Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Tur planı ekle",
+    "operationId": "create_plan_api_v1_sites__slug__patrol_plans_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolPlanIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolPlanOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-plans/{plan_id}": {
+   "patch": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Tur planını düzenle",
+    "operationId": "update_plan_api_v1_sites__slug__patrol_plans__plan_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "plan_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Plan Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolPlanIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolPlanOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-schedule": {
+   "get": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Günün devriye takvimi",
+    "operationId": "schedule_api_v1_sites__slug__patrol_schedule_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "boşsa bugün (tesis saati)",
+       "title": "Date"
+      },
+      "description": "boşsa bugün (tesis saati)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PatrolSlotOut"
+         },
+         "title": "Response Schedule Api V1 Sites  Slug  Patrol Schedule Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-runs": {
+   "get": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Yürütülen turlar (gün; yeni üstte)",
+    "operationId": "list_runs_api_v1_sites__slug__patrol_runs_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "boşsa bugün (tesis saati)",
+       "title": "Date"
+      },
+      "description": "boşsa bugün (tesis saati)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PatrolRunOut"
+         },
+         "title": "Response List Runs Api V1 Sites  Slug  Patrol Runs Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Turu başlat",
+    "operationId": "start_run_api_v1_sites__slug__patrol_runs_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolRunIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolRunOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-runs/{run_id}/scans": {
+   "post": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Nokta okut",
+    "operationId": "scan_api_v1_sites__slug__patrol_runs__run_id__scans_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatrolScanIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolRunOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/patrol-runs/{run_id}/finish": {
+   "post": {
+    "tags": [
+     "devriye"
+    ],
+    "summary": "Turu bitir (sapma raporu)",
+    "operationId": "finish_api_v1_sites__slug__patrol_runs__run_id__finish_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_PatrolRunOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-spaces": {
+   "get": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Park yerleri (koda göre)",
+    "operationId": "list_spaces_api_v1_sites__slug__parking_spaces_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "kind",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/ParkingKind"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 20
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "kod araması",
+       "title": "Q"
+      },
+      "description": "kod araması"
+     },
+     {
+      "name": "unit_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "bugün bu bölüme tahsisliler",
+       "title": "Unit Id"
+      },
+      "description": "bugün bu bölüme tahsisliler"
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_ParkingSpaceOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Park yeri ekle",
+    "operationId": "create_space_api_v1_sites__slug__parking_spaces_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParkingSpaceIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParkingSpaceOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-spaces/{space_id}": {
+   "patch": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Park yerini düzenle",
+    "operationId": "update_space_api_v1_sites__slug__parking_spaces__space_id__patch",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "space_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Space Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParkingSpaceIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParkingSpaceOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-allocations": {
+   "get": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Tahsis geçmişi (yeni üstte)",
+    "operationId": "list_allocations_api_v1_sites__slug__parking_allocations_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     },
+     {
+      "name": "space_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Space Id"
+      }
+     },
+     {
+      "name": "unit_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Unit Id"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_ParkingAllocationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-spaces/{space_id}/allocations": {
+   "post": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Park yerini bölüme tahsis et",
+    "operationId": "allocate_api_v1_sites__slug__parking_spaces__space_id__allocations_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "space_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Space Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParkingAllocationIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParkingAllocationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/parking-allocations/{allocation_id}/end": {
+   "post": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Tahsisi bitir",
+    "operationId": "end_allocation_api_v1_sites__slug__parking_allocations__allocation_id__end_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "allocation_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Allocation Id"
+      }
+     },
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ParkingAllocationEndIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Written_ParkingAllocationOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/sites/{slug}/resident/parking-spaces": {
+   "get": {
+    "tags": [
+     "otopark"
+    ],
+    "summary": "Park yerim (bugünkü tahsisler)",
+    "operationId": "my_spaces_api_v1_sites__slug__resident_parking_spaces_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "slug",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Slug"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/ParkingSpaceOut"
+         },
+         "title": "Response My Spaces Api V1 Sites  Slug  Resident Parking Spaces Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/sites/{slug}/blocks": {
    "get": {
     "tags": [
@@ -12917,8 +15875,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -13758,8 +16716,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13769,7 +16727,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -13855,8 +16813,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": 1
+        "maximum": 100.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -13868,7 +16826,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0.0
        },
        {
         "type": "null"
@@ -14110,7 +17068,7 @@
      },
      "sort_order": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 0.0,
       "title": "Sort Order",
       "default": 0
      }
@@ -14288,8 +17246,8 @@
     "properties": {
      "fiscal_year": {
       "type": "integer",
-      "maximum": 2100,
-      "minimum": 2000,
+      "maximum": 2100.0,
+      "minimum": 2000.0,
       "title": "Fiscal Year"
      },
      "name": {
@@ -16408,7 +19366,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16420,7 +19378,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16432,7 +19390,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 1000000
+        "maximum": 1000000.0
        },
        {
         "type": "null"
@@ -16505,6 +19463,14 @@
     ],
     "title": "DecisionOut"
    },
+   "DecisionSource": {
+    "type": "string",
+    "enum": [
+     "resident",
+     "guard"
+    ],
+    "title": "DecisionSource"
+   },
    "DecisionsIn": {
     "properties": {
      "attendance_note": {
@@ -16530,6 +19496,25 @@
     },
     "type": "object",
     "title": "DecisionsIn"
+   },
+   "DelegateNameOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name"
+    ],
+    "title": "DelegateNameOut"
    },
    "DelegationIn": {
     "properties": {
@@ -16954,6 +19939,71 @@
     ],
     "title": "EventOut"
    },
+   "ExpectedInviteOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "visitor_name": {
+      "type": "string",
+      "title": "Visitor Name"
+     },
+     "type": {
+      "$ref": "#/components/schemas/InviteType"
+     },
+     "time_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time From"
+     },
+     "time_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time To"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_name",
+     "visitor_name",
+     "type",
+     "time_from",
+     "time_to",
+     "plate"
+    ],
+    "title": "ExpectedInviteOut",
+    "description": "Görevlinin gördüğü: ad, bölüm, tip, saat, plaka — kod ve not yok."
+   },
    "ExpenseCategoryKind": {
     "type": "string",
     "enum": [
@@ -17371,6 +20421,241 @@
      "one_time"
     ],
     "title": "Frequency"
+   },
+   "GateDirection": {
+    "type": "string",
+    "enum": [
+     "in",
+     "out"
+    ],
+    "title": "GateDirection"
+   },
+   "GateIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind",
+      "description": "vehicle · pedestrian · service"
+     },
+     "block_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Block Ids",
+      "description": "boş: tüm bloklar"
+     },
+     "always_open": {
+      "type": "boolean",
+      "title": "Always Open",
+      "default": true
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "GateIn"
+   },
+   "GateKind": {
+    "type": "string",
+    "enum": [
+     "vehicle",
+     "pedestrian",
+     "service"
+    ],
+    "title": "GateKind"
+   },
+   "GateLogIn": {
+    "properties": {
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "direction": {
+      "type": "string",
+      "enum": [
+       "in",
+       "out"
+      ],
+      "title": "Direction",
+      "default": "in"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     }
+    },
+    "type": "object",
+    "title": "GateLogIn"
+   },
+   "GateLogOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate",
+      "description": "saklama süresi dolunca boş"
+     },
+     "plate_display": {
+      "type": "string",
+      "title": "Plate Display"
+     },
+     "result": {
+      "$ref": "#/components/schemas/PlateResult"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     },
+     "direction": {
+      "$ref": "#/components/schemas/GateDirection"
+     },
+     "by": {
+      "type": "string",
+      "title": "By"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "plate",
+     "plate_display",
+     "result",
+     "detail",
+     "unit_name",
+     "gate_id",
+     "direction",
+     "by",
+     "at"
+    ],
+    "title": "GateLogOut"
+   },
+   "GateOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/GateKind"
+     },
+     "block_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Block Ids"
+     },
+     "always_open": {
+      "type": "boolean",
+      "title": "Always Open"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "kind",
+     "block_ids",
+     "always_open",
+     "is_active"
+    ],
+    "title": "GateOut"
    },
    "HTTPValidationError": {
     "properties": {
@@ -18143,6 +21428,72 @@
     ],
     "title": "IncomeExpenseOut"
    },
+   "InviteCheckInIn": {
+    "properties": {
+     "code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code"
+     }
+    },
+    "type": "object",
+    "title": "InviteCheckInIn"
+   },
+   "InviteCheckInOut": {
+    "properties": {
+     "visitor_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Visitor Id"
+     },
+     "invite_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Invite Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "visitor_name": {
+      "type": "string",
+      "title": "Visitor Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "visitor_id",
+     "invite_id",
+     "unit_name",
+     "visitor_name"
+    ],
+    "title": "InviteCheckInOut"
+   },
+   "InviteStatus": {
+    "type": "string",
+    "enum": [
+     "active",
+     "used",
+     "cancelled"
+    ],
+    "title": "InviteStatus"
+   },
+   "InviteType": {
+    "type": "string",
+    "enum": [
+     "once",
+     "range",
+     "recurring"
+    ],
+    "title": "InviteType"
+   },
    "ItemTotalOut": {
     "properties": {
      "budget_item_id": {
@@ -18420,6 +21771,85 @@
      "password"
     ],
     "title": "LoginRequest"
+   },
+   "LongWaitingItem": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "carrier": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Carrier"
+     },
+     "received_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Received At"
+     },
+     "waiting_days": {
+      "type": "integer",
+      "title": "Waiting Days"
+     },
+     "delegates": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Delegates"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_id",
+     "unit_name",
+     "carrier",
+     "received_at",
+     "waiting_days",
+     "delegates"
+    ],
+    "title": "LongWaitingItem"
+   },
+   "LongWaitingOut": {
+    "properties": {
+     "days": {
+      "type": "integer",
+      "title": "Days",
+      "description": "ayardaki uzun bekleme günü"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/LongWaitingItem"
+      },
+      "type": "array",
+      "title": "Items",
+      "description": "en eski üstte; en fazla 200"
+     }
+    },
+    "type": "object",
+    "required": [
+     "days",
+     "items"
+    ],
+    "title": "LongWaitingOut"
    },
    "LookupOut": {
     "properties": {
@@ -20333,6 +23763,37 @@
     ],
     "title": "Page[EntryOut]"
    },
+   "Page_GateLogOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/GateLogOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[GateLogOut]"
+   },
    "Page_IncidentOut_": {
     "properties": {
      "items": {
@@ -20487,6 +23948,99 @@
      "total"
     ],
     "title": "Page[PackageOut]"
+   },
+   "Page_ParkingAllocationOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ParkingAllocationOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[ParkingAllocationOut]"
+   },
+   "Page_ParkingSpaceOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ParkingSpaceOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[ParkingSpaceOut]"
+   },
+   "Page_ParkingViolationOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ParkingViolationOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "page",
+     "page_size",
+     "total"
+    ],
+    "title": "Page[ParkingViolationOut]"
    },
    "Page_PaymentListItem_": {
     "properties": {
@@ -20860,6 +24414,570 @@
     ],
     "title": "Page[VisitorOut]"
    },
+   "ParcelDelegateIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "unit_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Id",
+      "description": "boşsa ilk bölümüm"
+     }
+    },
+    "type": "object",
+    "title": "ParcelDelegateIn"
+   },
+   "ParcelDelegateOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_id",
+     "unit_name",
+     "name",
+     "created_by",
+     "created_at",
+     "is_active"
+    ],
+    "title": "ParcelDelegateOut"
+   },
+   "ParcelMethod": {
+    "type": "string",
+    "enum": [
+     "code",
+     "qr",
+     "both"
+    ],
+    "title": "ParcelMethod"
+   },
+   "ParkingAllocationEndIn": {
+    "properties": {
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     }
+    },
+    "type": "object",
+    "title": "ParkingAllocationEndIn"
+   },
+   "ParkingAllocationIn": {
+    "properties": {
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "start_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date",
+      "description": "boşsa süresiz"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id"
+    ],
+    "title": "ParkingAllocationIn"
+   },
+   "ParkingAllocationOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "space_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Space Id"
+     },
+     "space_code": {
+      "type": "string",
+      "title": "Space Code"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     },
+     "is_current": {
+      "type": "boolean",
+      "title": "Is Current"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "ended_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ended By"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "space_id",
+     "space_code",
+     "unit_id",
+     "unit_name",
+     "start_date",
+     "end_date",
+     "is_current",
+     "note",
+     "created_by",
+     "ended_by"
+    ],
+    "title": "ParkingAllocationOut"
+   },
+   "ParkingHolderOut": {
+    "properties": {
+     "allocation_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Allocation Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+     },
+     "end_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End Date"
+     }
+    },
+    "type": "object",
+    "required": [
+     "allocation_id",
+     "unit_id",
+     "unit_name",
+     "start_date",
+     "end_date"
+    ],
+    "title": "ParkingHolderOut"
+   },
+   "ParkingKind": {
+    "type": "string",
+    "enum": [
+     "standard",
+     "disabled",
+     "ev",
+     "guest"
+    ],
+    "title": "ParkingKind"
+   },
+   "ParkingSpaceIn": {
+    "properties": {
+     "code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 100
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind",
+      "description": "standard · disabled · ev · guest"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 300
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "is_paid": {
+      "type": "boolean",
+      "title": "Is Paid",
+      "default": false
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "ParkingSpaceIn"
+   },
+   "ParkingSpaceOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/ParkingKind"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "is_paid": {
+      "type": "boolean",
+      "title": "Is Paid"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "current": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ParkingHolderOut"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "bugünkü tahsis (yoksa boş)"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "code",
+     "kind",
+     "location",
+     "is_paid",
+     "is_active",
+     "note",
+     "current"
+    ],
+    "title": "ParkingSpaceOut"
+   },
+   "ParkingViolationIn": {
+    "properties": {
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "ParkingViolationIn"
+   },
+   "ParkingViolationOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "plate_display": {
+      "type": "string",
+      "title": "Plate Display"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "result": {
+      "$ref": "#/components/schemas/PlateResult"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "notified": {
+      "$ref": "#/components/schemas/ViolationNotice"
+     },
+     "by": {
+      "type": "string",
+      "title": "By"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "plate",
+     "plate_display",
+     "location",
+     "note",
+     "result",
+     "detail",
+     "unit_name",
+     "notified",
+     "by",
+     "at"
+    ],
+    "title": "ParkingViolationOut"
+   },
    "PartyAdded": {
     "properties": {
      "party": {
@@ -20894,8 +25012,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100,
-        "exclusiveMinimum": 0
+        "maximum": 100.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -21012,6 +25130,567 @@
      "proxy"
     ],
     "title": "PartyRole"
+   },
+   "PatrolPlanIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "point_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 200,
+      "title": "Point Ids"
+     },
+     "ordered": {
+      "type": "boolean",
+      "title": "Ordered",
+      "default": true
+     },
+     "start_times": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 48,
+      "title": "Start Times"
+     },
+     "allowed_minutes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Allowed Minutes"
+     },
+     "assignee": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Assignee"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "PatrolPlanIn"
+   },
+   "PatrolPlanOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "point_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Point Ids",
+      "description": "sırayla"
+     },
+     "ordered": {
+      "type": "boolean",
+      "title": "Ordered"
+     },
+     "start_times": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Start Times",
+      "description": "SS:DD, sıralı"
+     },
+     "allowed_minutes": {
+      "type": "integer",
+      "title": "Allowed Minutes"
+     },
+     "assignee": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Assignee"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "point_ids",
+     "ordered",
+     "start_times",
+     "allowed_minutes",
+     "assignee",
+     "is_active"
+    ],
+    "title": "PatrolPlanOut"
+   },
+   "PatrolPointIn": {
+    "properties": {
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "area": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area"
+     },
+     "tag": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tag",
+      "description": "qr · nfc · both"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "PatrolPointIn"
+   },
+   "PatrolPointOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "area": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Area"
+     },
+     "tag": {
+      "$ref": "#/components/schemas/PatrolTag"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "description": "6 hane; QR içeriği SY-DEVRIYE:{kod}"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "location",
+     "area",
+     "tag",
+     "code",
+     "is_active"
+    ],
+    "title": "PatrolPointOut"
+   },
+   "PatrolReportOut": {
+    "properties": {
+     "missed": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Missed",
+      "description": "okutulmayan nokta adları"
+     },
+     "out_of_order": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Out Of Order"
+     },
+     "duration_minutes": {
+      "type": "integer",
+      "title": "Duration Minutes"
+     },
+     "overtime": {
+      "type": "boolean",
+      "title": "Overtime"
+     },
+     "late_start_minutes": {
+      "type": "integer",
+      "title": "Late Start Minutes"
+     },
+     "total_points": {
+      "type": "integer",
+      "title": "Total Points"
+     },
+     "scanned_points": {
+      "type": "integer",
+      "title": "Scanned Points"
+     },
+     "ok": {
+      "type": "boolean",
+      "title": "Ok"
+     }
+    },
+    "type": "object",
+    "required": [
+     "missed",
+     "out_of_order",
+     "duration_minutes",
+     "overtime",
+     "late_start_minutes",
+     "total_points",
+     "scanned_points",
+     "ok"
+    ],
+    "title": "PatrolReportOut"
+   },
+   "PatrolRunIn": {
+    "properties": {
+     "plan_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plan Id"
+     },
+     "slot": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slot",
+      "description": "SS:DD; boşsa şu andan önceki son saat"
+     }
+    },
+    "type": "object",
+    "title": "PatrolRunIn"
+   },
+   "PatrolRunOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "plan_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Plan Id"
+     },
+     "plan_name": {
+      "type": "string",
+      "title": "Plan Name"
+     },
+     "point_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Point Ids",
+      "description": "başlatıldığı andaki plan noktaları"
+     },
+     "ordered": {
+      "type": "boolean",
+      "title": "Ordered"
+     },
+     "allowed_minutes": {
+      "type": "integer",
+      "title": "Allowed Minutes"
+     },
+     "slot": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slot"
+     },
+     "started_by": {
+      "type": "string",
+      "title": "Started By"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     },
+     "scans": {
+      "items": {
+       "$ref": "#/components/schemas/PatrolScanOut"
+      },
+      "type": "array",
+      "title": "Scans"
+     },
+     "report": {
+      "$ref": "#/components/schemas/PatrolReportOut"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "plan_id",
+     "plan_name",
+     "point_ids",
+     "ordered",
+     "allowed_minutes",
+     "slot",
+     "started_by",
+     "started_at",
+     "finished_at",
+     "scans",
+     "report"
+    ],
+    "title": "PatrolRunOut"
+   },
+   "PatrolScanIn": {
+    "properties": {
+     "code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code",
+      "description": "etiketteki 6 haneli kod"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "PatrolScanIn"
+   },
+   "PatrolScanOut": {
+    "properties": {
+     "point_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Point Id"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "out_of_order": {
+      "type": "boolean",
+      "title": "Out Of Order"
+     },
+     "by": {
+      "type": "string",
+      "title": "By"
+     }
+    },
+    "type": "object",
+    "required": [
+     "point_id",
+     "at",
+     "note",
+     "out_of_order",
+     "by"
+    ],
+    "title": "PatrolScanOut"
+   },
+   "PatrolSlotOut": {
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Plan Id"
+     },
+     "plan_name": {
+      "type": "string",
+      "title": "Plan Name"
+     },
+     "slot": {
+      "type": "string",
+      "title": "Slot"
+     },
+     "status": {
+      "$ref": "#/components/schemas/SlotStatus"
+     },
+     "run_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Id"
+     },
+     "report": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PatrolReportOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "plan_id",
+     "plan_name",
+     "slot",
+     "status",
+     "run_id",
+     "report"
+    ],
+    "title": "PatrolSlotOut"
+   },
+   "PatrolTag": {
+    "type": "string",
+    "enum": [
+     "qr",
+     "nfc",
+     "both"
+    ],
+    "title": "PatrolTag"
    },
    "PayIn": {
     "properties": {
@@ -21631,6 +26310,88 @@
     ],
     "title": "PlanOut"
    },
+   "PlateLookupOut": {
+    "properties": {
+     "plate": {
+      "type": "string",
+      "title": "Plate",
+      "description": "normalize: 34ABC123"
+     },
+     "plate_display": {
+      "type": "string",
+      "title": "Plate Display",
+      "description": "34 ABC 123"
+     },
+     "result": {
+      "$ref": "#/components/schemas/PlateResult"
+     },
+     "unit_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Name"
+     },
+     "owner_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Name"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "required": [
+     "plate",
+     "plate_display",
+     "result",
+     "unit_name",
+     "owner_name",
+     "valid_until",
+     "detail"
+    ],
+    "title": "PlateLookupOut"
+   },
+   "PlateResult": {
+    "type": "string",
+    "enum": [
+     "registered",
+     "guest",
+     "unknown"
+    ],
+    "title": "PlateResult"
+   },
    "PollAudience": {
     "type": "string",
     "enum": [
@@ -22213,14 +26974,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -24235,14 +28996,14 @@
      },
      "remind_after_days": {
       "type": "integer",
-      "maximum": 30,
-      "minimum": 1,
+      "maximum": 30.0,
+      "minimum": 1.0,
       "title": "Remind After Days"
      },
      "escalate_after_days": {
       "type": "integer",
-      "maximum": 365,
-      "minimum": 2,
+      "maximum": 365.0,
+      "minimum": 2.0,
       "title": "Escalate After Days"
      },
      "day_basis": {
@@ -24500,11 +29261,185 @@
     ],
     "title": "ScopeKind"
    },
+   "SecuritySettingsIn": {
+    "properties": {
+     "unannounced_method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unannounced Method"
+     },
+     "approval_timeout_seconds": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Timeout Seconds"
+     },
+     "gate_methods": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "type": "object",
+      "title": "Gate Methods"
+     },
+     "parcel_method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parcel Method"
+     },
+     "visitor_fields": {
+      "$ref": "#/components/schemas/VisitorFieldsSchema"
+     },
+     "retention_months": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Months"
+     },
+     "auto_anonymize": {
+      "type": "boolean",
+      "title": "Auto Anonymize",
+      "default": false
+     },
+     "parcel_long_wait_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parcel Long Wait Days"
+     },
+     "guest_parking_capacity": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Guest Parking Capacity"
+     }
+    },
+    "type": "object",
+    "title": "SecuritySettingsIn"
+   },
+   "SecuritySettingsOut": {
+    "properties": {
+     "unannounced_method": {
+      "$ref": "#/components/schemas/UnannouncedMethod"
+     },
+     "approval_timeout_seconds": {
+      "type": "integer",
+      "title": "Approval Timeout Seconds"
+     },
+     "gate_methods": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/UnannouncedMethod"
+      },
+      "type": "object",
+      "title": "Gate Methods",
+      "description": "kapı kimliği → yöntem"
+     },
+     "parcel_method": {
+      "$ref": "#/components/schemas/ParcelMethod"
+     },
+     "visitor_fields": {
+      "$ref": "#/components/schemas/VisitorFieldsSchema"
+     },
+     "retention_months": {
+      "type": "integer",
+      "title": "Retention Months",
+      "description": "ziyaretçi ve plaka kayıtları (K8; en fazla 24)"
+     },
+     "auto_anonymize": {
+      "type": "boolean",
+      "title": "Auto Anonymize",
+      "description": "süre dolanları gece anonimleştir — hukuk onayına kadar varsayılan kapalı"
+     },
+     "parcel_long_wait_days": {
+      "type": "integer",
+      "title": "Parcel Long Wait Days"
+     },
+     "guest_parking_capacity": {
+      "type": "integer",
+      "title": "Guest Parking Capacity"
+     },
+     "version": {
+      "type": "integer",
+      "title": "Version",
+      "description": "0: hiç kaydedilmedi (varsayılanlar)"
+     },
+     "updated_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Updated At"
+     },
+     "updated_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Updated By"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unannounced_method",
+     "approval_timeout_seconds",
+     "gate_methods",
+     "parcel_method",
+     "visitor_fields",
+     "retention_months",
+     "auto_anonymize",
+     "parcel_long_wait_days",
+     "guest_parking_capacity",
+     "version",
+     "updated_at",
+     "updated_by"
+    ],
+    "title": "SecuritySettingsOut"
+   },
    "SelectionIn": {
     "properties": {
      "row_number": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 1.0,
       "title": "Row Number"
      },
      "ledger_account_id": {
@@ -24612,6 +29547,185 @@
     },
     "type": "object",
     "title": "SettleIn"
+   },
+   "ShiftLogAddendumIn": {
+    "properties": {
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "title": "ShiftLogAddendumIn"
+   },
+   "ShiftLogAddendumOut": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "by": {
+      "type": "string",
+      "title": "By"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text",
+     "by",
+     "at"
+    ],
+    "title": "ShiftLogAddendumOut"
+   },
+   "ShiftLogEntryIn": {
+    "properties": {
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind",
+      "description": "note · event · handover"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 5000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     }
+    },
+    "type": "object",
+    "title": "ShiftLogEntryIn"
+   },
+   "ShiftLogEntryOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/ShiftLogKind"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     },
+     "by": {
+      "type": "string",
+      "title": "By"
+     },
+     "by_me": {
+      "type": "boolean",
+      "title": "By Me",
+      "description": "kayıt bu kullanıcının mı (kendi devrini onaylayamaz)"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "addenda": {
+      "items": {
+       "$ref": "#/components/schemas/ShiftLogAddendumOut"
+      },
+      "type": "array",
+      "title": "Addenda"
+     },
+     "acknowledged_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acknowledged By"
+     },
+     "acknowledged_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acknowledged At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "text",
+     "gate_id",
+     "by",
+     "by_me",
+     "at",
+     "addenda",
+     "acknowledged_by",
+     "acknowledged_at"
+    ],
+    "title": "ShiftLogEntryOut"
+   },
+   "ShiftLogKind": {
+    "type": "string",
+    "enum": [
+     "note",
+     "event",
+     "handover"
+    ],
+    "title": "ShiftLogKind"
    },
    "SimulateIn": {
     "properties": {
@@ -25481,6 +30595,19 @@
     ],
     "title": "SkippedOut"
    },
+   "SlotStatus": {
+    "type": "string",
+    "enum": [
+     "upcoming",
+     "due",
+     "not_started",
+     "running",
+     "overdue",
+     "done",
+     "done_with_deviation"
+    ],
+    "title": "SlotStatus"
+   },
    "StaffIn": {
     "properties": {
      "full_name": {
@@ -25718,8 +30845,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 50,
-        "minimum": 1
+        "maximum": 50.0,
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26060,6 +31187,14 @@
     ],
     "title": "TransferOut"
    },
+   "UnannouncedMethod": {
+    "type": "string",
+    "enum": [
+     "info",
+     "approval"
+    ],
+    "title": "UnannouncedMethod"
+   },
    "UnitCreate": {
     "properties": {
      "number": {
@@ -26072,8 +31207,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26097,8 +31232,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26114,8 +31249,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26131,7 +31266,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26143,7 +31278,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26528,8 +31663,8 @@
       "anyOf": [
        {
         "type": "integer",
-        "maximum": 100,
-        "minimum": -5
+        "maximum": 100.0,
+        "minimum": -5.0
        },
        {
         "type": "null"
@@ -26553,8 +31688,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26570,8 +31705,8 @@
       "anyOf": [
        {
         "type": "number",
-        "maximum": 100000,
-        "exclusiveMinimum": 0
+        "maximum": 100000.0,
+        "exclusiveMinimum": 0.0
        },
        {
         "type": "string",
@@ -26587,7 +31722,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26599,7 +31734,7 @@
       "anyOf": [
        {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1.0
        },
        {
         "type": "null"
@@ -26843,6 +31978,296 @@
     ],
     "title": "VersionOut"
    },
+   "ViolationNotice": {
+    "type": "string",
+    "enum": [
+     "resident",
+     "management"
+    ],
+    "title": "ViolationNotice"
+   },
+   "VisitGuardDecisionIn": {
+    "properties": {
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "allow",
+         "deny"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "title": "VisitGuardDecisionIn"
+   },
+   "VisitRequestIn": {
+    "properties": {
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "full_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Full Name"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/VisitorKind",
+      "default": "guest"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id"
+    ],
+    "title": "VisitRequestIn"
+   },
+   "VisitRequestOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "full_name": {
+      "type": "string",
+      "title": "Full Name"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/VisitorKind"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "gate_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gate Id"
+     },
+     "method": {
+      "$ref": "#/components/schemas/UnannouncedMethod"
+     },
+     "status": {
+      "$ref": "#/components/schemas/VisitRequestStatus"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By"
+     },
+     "decision_source": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DecisionSource"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Expires At"
+     },
+     "timed_out": {
+      "type": "boolean",
+      "title": "Timed Out",
+      "description": "sakin süresi doldu; görevli karar verebilir"
+     },
+     "seconds_left": {
+      "type": "integer",
+      "title": "Seconds Left"
+     },
+     "visitor_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Visitor Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_id",
+     "unit_name",
+     "full_name",
+     "kind",
+     "plate",
+     "gate_id",
+     "method",
+     "status",
+     "decided_by",
+     "decision_source",
+     "reason",
+     "created_by",
+     "created_at",
+     "expires_at",
+     "timed_out",
+     "seconds_left",
+     "visitor_id"
+    ],
+    "title": "VisitRequestOut"
+   },
+   "VisitRequestStatus": {
+    "type": "string",
+    "enum": [
+     "awaiting",
+     "allowed",
+     "denied"
+    ],
+    "title": "VisitRequestStatus"
+   },
+   "VisitResidentDecisionIn": {
+    "properties": {
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "allow",
+         "deny"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     }
+    },
+    "type": "object",
+    "title": "VisitResidentDecisionIn"
+   },
+   "VisitorFieldsSchema": {
+    "properties": {
+     "plate": {
+      "type": "boolean",
+      "title": "Plate",
+      "default": true
+     },
+     "phone": {
+      "type": "boolean",
+      "title": "Phone",
+      "default": false
+     },
+     "id_seen": {
+      "type": "boolean",
+      "title": "Id Seen",
+      "description": "yalnız işaret; kimlik no tutulmaz",
+      "default": false
+     }
+    },
+    "type": "object",
+    "title": "VisitorFieldsSchema"
+   },
    "VisitorIn": {
     "properties": {
      "unit_id": {
@@ -26934,6 +32359,286 @@
      "full_name"
     ],
     "title": "VisitorIn"
+   },
+   "VisitorInviteIn": {
+    "properties": {
+     "unit_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit Id",
+      "description": "boşsa ilk bölümüm"
+     },
+     "visitor_name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Visitor Name"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Type",
+      "description": "once · range · recurring"
+     },
+     "date_from": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date From"
+     },
+     "date_to": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date To",
+      "description": "tek kullanımlıkta yok sayılır"
+     },
+     "weekdays": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "maxItems": 7,
+      "title": "Weekdays"
+     },
+     "time_from": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time From"
+     },
+     "time_to": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time To"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 500
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "title": "VisitorInviteIn"
+   },
+   "VisitorInviteOut": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "unit_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Unit Id"
+     },
+     "unit_name": {
+      "type": "string",
+      "title": "Unit Name"
+     },
+     "visitor_name": {
+      "type": "string",
+      "title": "Visitor Name"
+     },
+     "type": {
+      "$ref": "#/components/schemas/InviteType"
+     },
+     "date_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Date From"
+     },
+     "date_to": {
+      "type": "string",
+      "format": "date",
+      "title": "Date To"
+     },
+     "weekdays": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Weekdays",
+      "description": "0 = pazartesi (yalnız süreli kalıcı)"
+     },
+     "time_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time From",
+      "description": "SS:DD"
+     },
+     "time_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Time To"
+     },
+     "plate": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Plate",
+      "description": "görüntü biçimi: 34 ABC 123"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code",
+      "description": "6 haneli kod — YALNIZ oluşturma ve yeni kod yanıtında; saklanmaz"
+     },
+     "status": {
+      "$ref": "#/components/schemas/InviteStatus"
+     },
+     "valid_now": {
+      "type": "boolean",
+      "title": "Valid Now"
+     },
+     "expired": {
+      "type": "boolean",
+      "title": "Expired"
+     },
+     "created_by": {
+      "type": "string",
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "used_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Used At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "unit_id",
+     "unit_name",
+     "visitor_name",
+     "type",
+     "date_from",
+     "date_to",
+     "weekdays",
+     "time_from",
+     "time_to",
+     "plate",
+     "note",
+     "code",
+     "status",
+     "valid_now",
+     "expired",
+     "created_by",
+     "created_at",
+     "used_at"
+    ],
+    "title": "VisitorInviteOut"
    },
    "VisitorKind": {
     "type": "string",
@@ -27459,6 +33164,40 @@
     ],
     "title": "Written[ExpenseOut]"
    },
+   "Written_GateLogOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/GateLogOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[GateLogOut]"
+   },
+   "Written_GateOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/GateOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[GateOut]"
+   },
    "Written_ImportResultOut_": {
     "properties": {
      "data": {
@@ -27492,6 +33231,23 @@
      "message"
     ],
     "title": "Written[IncidentOut]"
+   },
+   "Written_InviteCheckInOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/InviteCheckInOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[InviteCheckInOut]"
    },
    "Written_LinkOut_": {
     "properties": {
@@ -27663,6 +33419,74 @@
     ],
     "title": "Written[PackageOut]"
    },
+   "Written_ParcelDelegateOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ParcelDelegateOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ParcelDelegateOut]"
+   },
+   "Written_ParkingAllocationOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ParkingAllocationOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ParkingAllocationOut]"
+   },
+   "Written_ParkingSpaceOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ParkingSpaceOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ParkingSpaceOut]"
+   },
+   "Written_ParkingViolationOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ParkingViolationOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ParkingViolationOut]"
+   },
    "Written_PartyAdded_": {
     "properties": {
      "data": {
@@ -27696,6 +33520,57 @@
      "message"
     ],
     "title": "Written[PartyOut]"
+   },
+   "Written_PatrolPlanOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PatrolPlanOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PatrolPlanOut]"
+   },
+   "Written_PatrolPointOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PatrolPointOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PatrolPointOut]"
+   },
+   "Written_PatrolRunOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/PatrolRunOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[PatrolRunOut]"
    },
    "Written_PaymentResultOut_": {
     "properties": {
@@ -27918,6 +33793,40 @@
     ],
     "title": "Written[ScheduleOut]"
    },
+   "Written_SecuritySettingsOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/SecuritySettingsOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[SecuritySettingsOut]"
+   },
+   "Written_ShiftLogEntryOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/ShiftLogEntryOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[ShiftLogEntryOut]"
+   },
    "Written_SiteOut_": {
     "properties": {
      "data": {
@@ -28002,6 +33911,40 @@
      "message"
     ],
     "title": "Written[UnitDetail]"
+   },
+   "Written_VisitRequestOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/VisitRequestOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[VisitRequestOut]"
+   },
+   "Written_VisitorInviteOut_": {
+    "properties": {
+     "data": {
+      "$ref": "#/components/schemas/VisitorInviteOut"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "data",
+     "message"
+    ],
+    "title": "Written[VisitorInviteOut]"
    },
    "Written_VisitorOut_": {
     "properties": {
