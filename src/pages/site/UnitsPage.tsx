@@ -150,7 +150,7 @@ export function UnitsPage() {
 function BulkForm({ ids, onDone }: { ids: string[]; onDone: () => void }) {
   const types = useSiteGet<Page<UnitType>>("/unit-types", { page_size: 200 });
   const [f, setF] = useState({ unit_type_id: "", usage: "", is_active: "" });
-  const m = useSiteMutation<Record<string, unknown>, { updated: number; failed: { unit_id: string; message: string }[] }>("POST", "/units/bulk-update", { onSuccess: onDone });
+  const m = useSiteMutation<Record<string, unknown>, Schemas["BulkUpdateOut"]>("POST", "/units/bulk-update", { onSuccess: onDone });
   const changes: Record<string, unknown> = {};
   if (f.unit_type_id) changes.unit_type_id = f.unit_type_id === "__none" ? null : f.unit_type_id;
   if (f.usage) changes.usage = f.usage;

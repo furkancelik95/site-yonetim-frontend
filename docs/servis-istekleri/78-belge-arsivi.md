@@ -1,5 +1,10 @@
 # [Servis] Belge arşivi
 
+> **Durum: backend'de** (site-yonetim-backend #67, 25.10.2026). Farklar: listeler `Page` (`items/total`),
+> indirme dosya yanıtı (JSON `data_url` değil), yükleme gerçek multipart (`file`), izinler
+> `documents.read` / `documents.manage` / `documents.confidential`; geçerlilik uyarısı bildirim merkezine
+> (`run-document-expiry`); saklama süresi `retention_years` (K8, otomatik silme yok). Virüs taraması yok.
+
 Kaynak: Yazılım Dokümanı **RAP-03** ve **18.2** (belgeler). Diğer modüllerdeki "belge modülü gelince" notlarının karşılığı.
 
 ## Ekran

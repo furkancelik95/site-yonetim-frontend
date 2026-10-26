@@ -16,6 +16,7 @@ export const P = {
   unitsManage: "units.manage",
   peopleRead: "people.read",
   peopleManage: "people.manage",
+  peopleContact: "people.contact",
   requestsRead: "requests.read",
   requestsCreate: "requests.create",
   requestsAssign: "requests.assign",
@@ -37,6 +38,9 @@ export const P = {
   staffManage: "staff.manage",
   approvalRulesRead: "approvals.rules.read",
   approvalRulesManage: "approvals.rules.manage",
+  documentsRead: "documents.read",
+  documentsManage: "documents.manage",
+  documentsConfidential: "documents.confidential",
 } as const;
 
 export const M = {

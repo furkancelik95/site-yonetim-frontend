@@ -1,15 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { CheckCircle2, Circle, Rocket } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, ErrorState, Loading, PageHead } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
 
-/** Servis isteği 26'daki şekil. */
-interface Setup {
-  status: "setup" | "live"; went_live_at: string | null; finance_mode: "platform" | "kivi"; ready: boolean;
-  checklist: { key: string; label: string; ok: boolean; detail: string; link: string | null; required: boolean }[];
-}
+type Setup = Schemas["SetupOut"];
 
 const STEPS: [string, string, string | null][] = [
   ["Tesis bilgileri", "Ad, tip, adres; platform yöneticisi açar", null],
@@ -28,8 +26,7 @@ const STEPS: [string, string, string | null][] = [
 export function SetupPage() {
   const { site } = useSite();
   const q = useSiteGet<Setup>("/setup");
-  const goLive = useSiteMutation<Record<string, never>, Setup>("POST", "/setup/go-live");
-  const reset = useSiteMutation<Record<string, never>, Setup>("POST", "/setup/reset-demo");
+  const goLive = useSiteMutation<Record<string, never>, Schemas["GoLiveOut"]>("POST", "/setup/go-live");
   if (q.isPending) return <Loading label="Kontrol listesi hesaplanıyor…" />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const s = q.data;
@@ -43,7 +40,6 @@ export function SetupPage() {
         subtitle="Tesisi adım adım canlıya hazırlayın. Kurulumdaki tesiste sakin daveti gönderilmez."
         actions={<>
           {s.status === "live" ? <Badge tone="ok">Canlı{s.went_live_at ? ` · ${formatDateTime(s.went_live_at)}` : ""}</Badge> : <Badge tone="warn">Kurulumda</Badge>}
-          {import.meta.env.DEV && s.status === "live" && <button className="btn btn--ghost btn--sm" type="button" onClick={() => reset.mutate({})}>Demo: kuruluma al</button>}
         </>}
       />
       <div className="grid grid--2">
@@ -72,6 +68,7 @@ export function SetupPage() {
                   <div><span className="strong">{c.label}</span>{!c.required && <span className="small muted"> · isteğe bağlı</span>}<span className="visually-hidden">{c.ok ? " — tamam" : " — eksik"}</span></div>
                   <div className="small muted">{c.detail}</div>
                 </div>
+                {c.key === "opening" && !c.ok && <OpeningReconciled />}
                 {c.link && !c.ok && <Link className="btn btn--sm" to={`${base}/${c.link}`}>Git</Link>}
               </li>
             ))}
@@ -86,5 +83,18 @@ export function SetupPage() {
       </div>
       {!s.ready && s.status === "setup" && <Alert tone="info">Eksik maddelerin yanındaki "Git" bağlantısı ilgili ekrana götürür; liste her açılışta yeniden hesaplanır.</Alert>}
     </div>
+  );
+}
+
+/** Açılış bakiyesi aktarım yerine elle girildiyse: imzalı mutabakat beyanı (denetimli). */
+function OpeningReconciled() {
+  const [note, setNote] = useState("");
+  const m = useSiteMutation<{ note: string }, Setup>("POST", "/setup/opening-reconciled");
+  return (
+    <ConfirmButton className="btn btn--ghost btn--sm" title="Açılış bakiyesi mutabakatı yapıldı" confirmLabel="İşaretle"
+      body={<div className="field"><label className="field__label" htmlFor="recon-note">Açıklama *</label><input id="recon-note" className="field__input" maxLength={300} placeholder="ör. 01.10.2026 tarihli imzalı mutabakat tutanağı" value={note} onChange={(e) => setNote(e.target.value)} /><span className="field__hint">Eski sistem bakiyeleri aktarıldı ve toplam tutturuldu; beyan denetim kaydına yazılır.</span></div>}
+      onConfirm={() => { if (note.trim().length < 3) throw new Error("Açıklama yazın."); return m.mutateAsync({ note: note.trim() }); }}>
+      Mutabakat yapıldı
+    </ConfirmButton>
   );
 }
