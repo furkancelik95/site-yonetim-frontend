@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Download, FileText, Info, Plus, Upload } from "lucide-react";
 import { Link } from "react-router";
-import { api } from "../../api/client";
+import { api, download } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Page } from "../../api/types";
+import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { requestCategory } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 78–81'deki şekiller. */
-export interface DocRow { id: string; title: string; kind: string; scope: string; scope_name: string | null; confidentiality: string; valid_until: string | null; days_left: number | null; warning: string | null; version: number; file_name: string; size: number; sha256?: string; uploaded_by?: string; updated_at: string; versions?: { v: number; file_name: string; size: number; sha256: string; uploaded_by: string; at: string }[] }
+/** Servis isteği 79–81'deki şekiller (78 backend'de). */
+/** Belge (backend `DocumentOut`, servis isteği 78). */
+export type DocRow = Schemas["DocumentOut"];
 interface CatalogItem { key: string; name: string; group: string; link: string; metrics: { name: string; definition: string }[] }
 interface SlaLine { total: number; open: number; closed: number; sla_rate: number | null; avg_hours: number | null; satisfaction: number | null; rated: number }
 interface PReq { id: string; kind: string; detail: string; name: string; units: string[]; status: string; created_at: string; due_on: string; days_left: number; response: string | null; outcome: string | null; retained: string | null; answered_by: string | null; answered_at: string | null }
@@ -28,44 +29,42 @@ const tabs = (items: [string, string][], v: string, set: (k: string) => void, la
   <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
 );
 
-/** Veri adresini dosya olarak indirir (sunucu dosya ucu gelince doğrudan bağlantı olur). */
-export function saveDataUrl(fileName: string, dataUrl: string) {
-  const [meta, b64] = dataUrl.split(",");
-  const bin = atob(b64 ?? ""); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const url = URL.createObjectURL(new Blob([bytes], { type: meta?.slice(5).split(";")[0] }));
-  const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
 export function saveJson(fileName: string, data: unknown) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   const a = document.createElement("a"); a.href = url; a.download = fileName; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 // ===================================================================== 78 Belge arşivi
-/** Belgeler (RAP-03): kapsam, gizlilik, sürüm, özet (SHA-256), geçerlilik uyarısı; gizli belge açılışı kayda geçer. */
+/** Belgeler (RAP-03, backend `…/documents`): kapsam, gizlilik, sürüm, özet (SHA-256), geçerlilik
+ * uyarısı, saklama süresi (K8, bilgi amaçlı); gizli belge açılışı kayda geçer. */
 export function DocumentsPage() {
   const { can, site } = useSite();
-  const [s, set] = useUrlState({ q: "", tur: "", suresi: "" });
-  const q = useSiteGet<DocRow[]>("/documents", { q: s.q || undefined, kind: s.tur || undefined, expiring: s.suresi || undefined });
+  const [s, set] = useUrlState({ q: "", tur: "", suresi: "", sayfa: "" });
+  const q = useSiteGet<Page<DocRow>>("/documents", { q: s.q || undefined, kind: s.tur || undefined, expiring: s.suresi ? "true" : undefined, page: s.sayfa || undefined });
+  const expiring = useSiteGet<Page<DocRow>>("/documents", { expiring: "true", page_size: 50 });
   const [adding, setAdding] = useState(false);
-  const warn = (q.data ?? []).filter((d) => d.warning);
+  const warn = expiring.data?.items ?? [];
   return (
     <div className="stack">
-      <PageHead title="Belgeler" subtitle="Yönetim planı, poliçe, yangın raporu, asansör etiketi, sözleşme ve tutanaklar tek arşivde; aynı adla yüklenen dosya yeni sürüm olur." actions={can(P.announcementsPublish) && <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Upload aria-hidden="true" /> Belge yükle</button>} />
+      <PageHead title="Belgeler" subtitle="Yönetim planı, poliçe, yangın raporu, asansör etiketi, sözleşme ve tutanaklar tek arşivde; aynı adla yüklenen dosya yeni sürüm olur." actions={can(P.documentsManage) && <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Upload aria-hidden="true" /> Belge yükle</button>} />
       {adding && <DocForm onDone={() => setAdding(false)} />}
       {warn.length > 0 && <Alert tone="warn" title="Geçerliliği biten / yaklaşan belge">{warn.map((d) => `${d.title} (${d.warning === "expired" ? "süresi doldu" : `${d.days_left} gün`})`).join(", ")}</Alert>}
       <div className="filters">
-        <div className="field"><label className="field__label" htmlFor="dc-q">Ara</label><input id="dc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value })} /></div>
-        <div className="field"><label className="field__label" htmlFor="dc-k">Tür</label><select id="dc-k" className="field__input" value={s.tur} onChange={(e) => set({ tur: e.target.value })}><option value="">Tümü</option>{Object.entries(DOC_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-        <label className="check" style={{ alignSelf: "flex-end" }}><input type="checkbox" checked={!!s.suresi} onChange={(e) => set({ suresi: e.target.checked ? "1" : "" })} /><span>Yalnız süresi yaklaşan</span></label>
+        <div className="field"><label className="field__label" htmlFor="dc-q">Ara</label><input id="dc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value, sayfa: "" })} /></div>
+        <div className="field"><label className="field__label" htmlFor="dc-k">Tür</label><select id="dc-k" className="field__input" value={s.tur} onChange={(e) => set({ tur: e.target.value, sayfa: "" })}><option value="">Tümü</option>{Object.entries(DOC_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+        <label className="check" style={{ alignSelf: "flex-end" }}><input type="checkbox" checked={!!s.suresi} onChange={(e) => set({ suresi: e.target.checked ? "1" : "", sayfa: "" })} /><span>Yalnız süresi yaklaşan</span></label>
       </div>
-      <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : (
-          <div className="table-wrap"><table className="data"><caption className="visually-hidden">Belgeler</caption>
-            <thead><tr><th scope="col">Belge</th><th scope="col">Kapsam / gizlilik</th><th scope="col">Geçerlilik</th><th scope="col">Sürüm</th><th scope="col"><span className="visually-hidden">İndir</span></th></tr></thead>
-            <tbody>{q.data.map((d) => <DocRowView key={d.id} d={d} slug={site.slug} />)}</tbody>
-          </table></div>
-        )}
-      </div></div>
+      <div className="card">
+        <div className="card__body card__body--flush">
+          {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : (
+            <div className="table-wrap"><table className="data"><caption className="visually-hidden">Belgeler</caption>
+              <thead><tr><th scope="col">Belge</th><th scope="col">Kapsam / gizlilik</th><th scope="col">Geçerlilik</th><th scope="col">Sürüm</th><th scope="col"><span className="visually-hidden">İndir</span></th></tr></thead>
+              <tbody>{q.data.items.map((d) => <DocRowView key={d.id} d={d} slug={site.slug} />)}</tbody>
+            </table></div>
+          )}
+        </div>
+        {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ sayfa: String(p) })} /></div>}
+      </div>
     </div>
   );
 }
@@ -73,25 +72,25 @@ export function DocumentsPage() {
 function DocRowView({ d, slug }: { d: DocRow; slug: string }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<unknown>(null);
-  const log = useSiteGet<{ by: string; at: string; v: number }[]>(`/documents/${d.id}/access-log`, undefined, { enabled: open && d.confidentiality === "secret" });
-  async function dl(v: number) {
+  const log = useSiteGet<Page<Schemas["DocumentAccessOut"]>>(`/documents/${d.id}/access-log`, { page_size: 50 }, { enabled: open && d.confidentiality === "secret" });
+  async function dl(v: number, name: string) {
     setErr(null);
-    try { const r = await api<{ file_name: string; data_url: string }>("GET", `/sites/${slug}/documents/${d.id}/versions/${v}/download`); saveDataUrl(r.file_name, r.data_url); } catch (e) { setErr(e); }
+    try { await download(`/sites/${slug}/documents/${d.id}/versions/${v}/download`, undefined, name); } catch (e) { setErr(e); }
   }
   return (
     <>
       <tr>
-        <td><div className="cell-main">{d.title}</div><div className="cell-sub">{DOC_KIND[d.kind]} · {d.file_name} · {kb(d.size)}</div></td>
+        <td><div className="cell-main">{d.title}</div><div className="cell-sub">{d.kind_label} · {d.file_name} · {kb(d.size)}{d.retention_years != null && ` · saklama ${d.retention_years} yıl`}</div></td>
         <td className="small">{d.scope === "site" ? "Tüm site" : d.scope_name}<div><Badge tone={CONF[d.confidentiality]![1]}>{CONF[d.confidentiality]![0]}</Badge></div></td>
         <td className="small nowrap">{d.valid_until ? <>{formatDate(d.valid_until)}{d.warning && <div><Badge tone={d.warning === "expired" ? "danger" : "warn"}>{d.warning === "expired" ? "Süresi doldu" : `${d.days_left} gün kaldı`}</Badge></div>}</> : "—"}</td>
-        <td className="small"><button className="btn btn--ghost btn--sm" type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>v{d.version}{(d.versions?.length ?? 1) > 1 ? ` · ${d.versions!.length} sürüm` : ""}</button></td>
-        <td className="right"><button className="btn btn--sm" type="button" onClick={() => dl(d.version)}><Download aria-hidden="true" /> İndir</button></td>
+        <td className="small"><button className="btn btn--ghost btn--sm" type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>v{d.version}{d.versions.length > 1 ? ` · ${d.versions.length} sürüm` : ""}</button></td>
+        <td className="right"><button className="btn btn--sm" type="button" onClick={() => dl(d.version, d.file_name)}><Download aria-hidden="true" /> İndir</button></td>
       </tr>
       {(open || err != null) && <tr><td colSpan={5}>
         <FormError error={err} />
         {open && <div className="stack" style={{ gap: 4 }}>
-          {(d.versions ?? []).slice().reverse().map((v) => <div key={v.v} className="small row" style={{ gap: "var(--s-2)", alignItems: "center", flexWrap: "wrap" }}><strong>v{v.v}</strong> {v.file_name} · {kb(v.size)} · {v.uploaded_by}, {formatDateTime(v.at)} · <span className="mono xs" title="SHA-256">{v.sha256.slice(0, 16)}…</span><button className="btn btn--ghost btn--sm" type="button" onClick={() => dl(v.v)}>İndir</button></div>)}
-          {d.confidentiality === "secret" && <div className="xs muted">Açılış kaydı: {(log.data ?? []).length ? log.data!.map((x) => `${x.by} (v${x.v}, ${formatDateTime(x.at)})`).join("; ") : "henüz açılmadı"}</div>}
+          {d.versions.slice().reverse().map((v) => <div key={v.v} className="small row" style={{ gap: "var(--s-2)", alignItems: "center", flexWrap: "wrap" }}><strong>v{v.v}</strong> {v.file_name} · {kb(v.size)} · {v.uploaded_by}, {formatDateTime(v.at)} · <span className="mono xs" title={`SHA-256: ${v.sha256}`}>{v.sha256.slice(0, 16)}…</span><button className="btn btn--ghost btn--sm" type="button" onClick={() => dl(v.v, v.file_name)}>İndir</button></div>)}
+          {d.confidentiality === "secret" && <div className="xs muted">Açılış kaydı: {(log.data?.items ?? []).length ? log.data!.items.map((x) => `${x.by} (v${x.v}, ${formatDateTime(x.at)})`).join("; ") : "henüz açılmadı"}</div>}
         </div>}
       </td></tr>}
     </>
@@ -99,20 +98,31 @@ function DocRowView({ d, slug }: { d: DocRow; slug: string }) {
 }
 
 function DocForm({ onDone }: { onDone: () => void }) {
+  const { can } = useSite();
   const blocks = useSiteGet<Page<{ id: string; name: string }>>("/blocks", { page_size: 200 });
-  const [f, setF] = useState({ title: "", kind: "plan", scope: "site", block_id: "", confidentiality: "public", valid_until: "" });
+  const [f, setF] = useState({ title: "", kind: "plan", scope: "site", block_id: "", confidentiality: "public", valid_until: "", retention_years: "" });
   const [unit, setUnit] = useState<PickedUnit | null>(null);
-  const [file, setFile] = useState<{ name: string; data: string; size: number } | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [fileErr, setFileErr] = useState<string | null>(null);
-  const m = useSiteMutation<Record<string, unknown>, DocRow>("POST", "/documents", { onSuccess: onDone });
+  const m = useSiteMutation<FormData, DocRow>("POST", "/documents", { form: true, onSuccess: onDone });
   function pick(fl: File | undefined) {
-    setFileErr(null); if (!fl) return;
+    setFileErr(null); setFile(null); if (!fl) return;
     if (fl.size > 10 * 1024 * 1024) { setFileErr("Dosya en fazla 10 MB."); return; }
-    const r = new FileReader(); r.onload = () => setFile({ name: fl.name, data: String(r.result), size: fl.size }); r.readAsDataURL(fl);
+    setFile(fl);
   }
-  const block = (blocks.data?.items ?? []).find((b) => b.id === f.block_id);
+  function submit() {
+    const fd = new FormData();
+    fd.set("title", f.title); fd.set("kind", f.kind); fd.set("scope", f.scope); fd.set("confidentiality", f.confidentiality);
+    const target = f.scope === "block" ? f.block_id : f.scope === "unit" ? unit?.id : "";
+    if (target) fd.set("scope_id", target);
+    if (f.valid_until) fd.set("valid_until", f.valid_until);
+    if (f.retention_years) fd.set("retention_years", f.retention_years);
+    if (file) fd.set("file", file, file.name);
+    m.mutate(fd);
+  }
+  const levels = Object.entries(CONF).filter(([k]) => (k !== "unit" || f.scope === "unit") && (k !== "secret" || can(P.documentsConfidential)));
   return (
-    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ title: f.title, kind: f.kind, scope: f.scope, scope_id: f.scope === "block" ? f.block_id : f.scope === "unit" ? unit?.id : null, scope_name: f.scope === "block" ? block?.name : f.scope === "unit" ? unit?.name : null, confidentiality: f.confidentiality, valid_until: f.valid_until || null, file_name: file?.name, data_url: file?.data }); }}>
+    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <div className="card__head"><span className="card__title">Belge yükle</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
@@ -122,8 +132,9 @@ function DocForm({ onDone }: { onDone: () => void }) {
           <Field label="Kapsam" error={fieldError(m.error, "scope")}>{(p) => <select {...p} className="field__input" value={f.scope} onChange={(e) => setF((x) => ({ ...x, scope: e.target.value, confidentiality: e.target.value !== "unit" && x.confidentiality === "unit" ? "public" : x.confidentiality }))}><option value="site">Tüm site</option><option value="block">Blok</option><option value="unit">Bölüm</option></select>}</Field>
           {f.scope === "block" && <Field label="Blok">{(p) => <select {...p} className="field__input" value={f.block_id} onChange={(e) => setF((x) => ({ ...x, block_id: e.target.value }))}><option value="">Seçin</option>{(blocks.data?.items ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select>}</Field>}
           {f.scope === "unit" && <UnitPicker label="Bölüm" value={unit} onChange={setUnit} />}
-          <Field label="Gizlilik" error={fieldError(m.error, "confidentiality")}>{(p) => <select {...p} className="field__input" value={f.confidentiality} onChange={(e) => setF((x) => ({ ...x, confidentiality: e.target.value }))}>{Object.entries(CONF).filter(([k]) => k !== "unit" || f.scope === "unit").map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select>}</Field>
-          <Field label="Geçerlilik bitişi" hint="Poliçe, yangın raporu, asansör etiketi gibi süreli belgelerde; 60/30 gün kala uyarı" error={fieldError(m.error, "valid_until")}>{(p) => <input {...p} className="field__input" type="date" value={f.valid_until} onChange={(e) => setF((x) => ({ ...x, valid_until: e.target.value }))} />}</Field>
+          <Field label="Gizlilik" error={fieldError(m.error, "confidentiality")}>{(p) => <select {...p} className="field__input" value={f.confidentiality} onChange={(e) => setF((x) => ({ ...x, confidentiality: e.target.value }))}>{levels.map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select>}</Field>
+          <Field label="Geçerlilik bitişi" hint="Poliçe, yangın raporu, asansör etiketi gibi süreli belgelerde; 60/30 gün kala bildirim" error={fieldError(m.error, "valid_until")}>{(p) => <input {...p} className="field__input" type="date" value={f.valid_until} onChange={(e) => setF((x) => ({ ...x, valid_until: e.target.value }))} />}</Field>
+          <Field label="Saklama süresi (yıl)" hint="İsteğe bağlı; boşsa kanuni süre. Bilgi amaçlıdır, belge kendiliğinden silinmez" error={fieldError(m.error, "retention_years")}>{(p) => <input {...p} className="field__input" type="number" min={1} max={100} inputMode="numeric" value={f.retention_years} onChange={(e) => setF((x) => ({ ...x, retention_years: e.target.value }))} />}</Field>
         </div>
         <div className="field">
           <label className="field__label" htmlFor="dc-file">Dosya (PDF, PNG, JPEG, WebP · en fazla 10 MB)</label>
@@ -131,7 +142,7 @@ function DocForm({ onDone }: { onDone: () => void }) {
           {file && <span className="xs muted">{file.name} · {kb(file.size)}</span>}
           {(fileErr || fieldError(m.error, "file")) && <span className="field__error" role="alert">{fileErr ?? fieldError(m.error, "file")}</span>}
         </div>
-        {f.confidentiality === "secret" && <p className="xs muted mb-0">Gizli belgeyi yalnız denetim ve kullanıcı yönetimi yetkisi olanlar açar; her açılış kayda geçer.</p>}
+        {f.confidentiality === "secret" && <p className="xs muted mb-0">Gizli belgeyi yalnız gizli belge yetkisi olanlar (Yönetici, Denetçi) görür ve açar; her açılış kayda geçer.</p>}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!file}>Yükle</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
@@ -262,13 +273,13 @@ function Notices() {
 export function AuditPackagesPage() {
   const { can, site } = useSite();
   const q = useSiteGet<Pkg[]>("/audit-packages");
-  const docs = useSiteGet<DocRow[]>("/documents");
+  const docs = useSiteGet<Page<DocRow>>("/documents", { page_size: 200 }, { enabled: can(P.documentsRead) });
   const [adding, setAdding] = useState(false);
   return (
     <div className="stack">
       <PageHead title="Denetim kurulu paketi" subtitle="Dönem sonu finansal raporlar, bütçe–gerçekleşme, karar defteri özeti ve belgeler tek pakette; denetçi salt okunur inceler ve raporunu ekler." actions={can(P.chargePost) && <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Paket hazırla</button>} />
-      {adding && <PkgForm docs={docs.data ?? []} onDone={() => setAdding(false)} />}
-      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Paket yok" /> : q.data.map((p) => <PkgCard key={p.id} p={p} docs={docs.data ?? []} slug={site.slug} canReview={can(P.auditRead)} />)}
+      {adding && <PkgForm docs={docs.data?.items ?? []} onDone={() => setAdding(false)} />}
+      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Paket yok" /> : q.data.map((p) => <PkgCard key={p.id} p={p} docs={docs.data?.items ?? []} slug={site.slug} canReview={can(P.auditRead)} />)}
     </div>
   );
 }

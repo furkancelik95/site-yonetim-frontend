@@ -549,6 +549,630 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/gates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kapılar */
+        get: operations["list_gates_api_v1_sites__slug__gates_get"];
+        put?: never;
+        /** Kapı ekle */
+        post: operations["create_gate_api_v1_sites__slug__gates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/gates/{gate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Kapıyı düzenle */
+        patch: operations["update_gate_api_v1_sites__slug__gates__gate_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Güvenlik ayarları */
+        get: operations["get_settings_api_v1_sites__slug__settings_security_get"];
+        /** Güvenlik ayarlarını kaydet (sürüm artar) */
+        put: operations["put_settings_api_v1_sites__slug__settings_security_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parcel-delegates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kargo teslim yetkililerim */
+        get: operations["my_delegates_api_v1_sites__slug__resident_parcel_delegates_get"];
+        put?: never;
+        /** Yetkili ekle */
+        post: operations["add_delegate_api_v1_sites__slug__resident_parcel_delegates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parcel-delegates/{delegate_id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yetkiyi kaldır */
+        post: operations["remove_delegate_api_v1_sites__slug__resident_parcel_delegates__delegate_id__remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/units/{unit_id}/parcel-delegates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bölümün teslim yetkilileri (görevli) */
+        get: operations["unit_delegates_api_v1_sites__slug__units__unit_id__parcel_delegates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/packages/long-waiting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Uzun bekleyen kargolar */
+        get: operations["long_waiting_api_v1_sites__slug__packages_long_waiting_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ziyaretçi davetlerim */
+        get: operations["my_invites_api_v1_sites__slug__resident_visitor_invites_get"];
+        put?: never;
+        /** Ziyaretçi davet et */
+        post: operations["create_invite_api_v1_sites__slug__resident_visitor_invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Daveti iptal et */
+        post: operations["cancel_invite_api_v1_sites__slug__resident_visitor_invites__invite_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/new-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yeni davet kodu üret */
+        post: operations["reissue_code_api_v1_sites__slug__resident_visitor_invites__invite_id__new_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visitor-invites/expected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugün beklenen davetliler */
+        get: operations["expected_api_v1_sites__slug__visitor_invites_expected_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visitor-invites/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kodla içeri al */
+        post: operations["check_in_api_v1_sites__slug__visitor_invites_check_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visit-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugünkü ve bekleyen habersiz ziyaretçiler */
+        get: operations["list_requests_api_v1_sites__slug__visit_requests_get"];
+        put?: never;
+        /** Habersiz ziyaretçi kaydı */
+        post: operations["create_request_api_v1_sites__slug__visit_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visit-requests/{request_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Görevli kararı (süre dolunca) */
+        post: operations["guard_decide_api_v1_sites__slug__visit_requests__request_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visit-approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kapıda bekleyen ziyaretçilerim */
+        get: operations["my_approvals_api_v1_sites__slug__resident_visit_approvals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visit-approvals/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ziyaretçiyi onayla / reddet */
+        post: operations["resident_decide_api_v1_sites__slug__resident_visit_approvals__request_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/plates/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plaka sorgula */
+        get: operations["lookup_api_v1_sites__slug__plates_lookup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/gate-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plaka giriş-çıkış kayıtları (gün; yeni üstte) */
+        get: operations["list_gate_logs_api_v1_sites__slug__gate_logs_get"];
+        put?: never;
+        /** Plaka giriş/çıkış kaydı */
+        post: operations["create_gate_log_api_v1_sites__slug__gate_logs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-violations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Otopark ihlalleri (yeni üstte) */
+        get: operations["list_violations_api_v1_sites__slug__parking_violations_get"];
+        put?: never;
+        /** Otopark ihlali kaydet */
+        post: operations["create_violation_api_v1_sites__slug__parking_violations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nöbet defteri (gün, tesis saatiyle; yeni üstte) */
+        get: operations["list_log_api_v1_sites__slug__shift_log_get"];
+        put?: never;
+        /** Deftere yaz */
+        post: operations["write_api_v1_sites__slug__shift_log_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log/{entry_id}/addenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ek not */
+        post: operations["add_addendum_api_v1_sites__slug__shift_log__entry_id__addenda_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log/{entry_id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devri onayla (Okudum, devraldım) */
+        post: operations["acknowledge_api_v1_sites__slug__shift_log__entry_id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kontrol noktaları */
+        get: operations["list_points_api_v1_sites__slug__patrol_points_get"];
+        put?: never;
+        /** Nokta ekle */
+        post: operations["create_point_api_v1_sites__slug__patrol_points_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-points/{point_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Noktayı düzenle */
+        patch: operations["update_point_api_v1_sites__slug__patrol_points__point_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tur planları */
+        get: operations["list_plans_api_v1_sites__slug__patrol_plans_get"];
+        put?: never;
+        /** Tur planı ekle */
+        post: operations["create_plan_api_v1_sites__slug__patrol_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tur planını düzenle */
+        patch: operations["update_plan_api_v1_sites__slug__patrol_plans__plan_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Günün devriye takvimi */
+        get: operations["schedule_api_v1_sites__slug__patrol_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yürütülen turlar (gün; yeni üstte) */
+        get: operations["list_runs_api_v1_sites__slug__patrol_runs_get"];
+        put?: never;
+        /** Turu başlat */
+        post: operations["start_run_api_v1_sites__slug__patrol_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs/{run_id}/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nokta okut */
+        post: operations["scan_api_v1_sites__slug__patrol_runs__run_id__scans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs/{run_id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turu bitir (sapma raporu) */
+        post: operations["finish_api_v1_sites__slug__patrol_runs__run_id__finish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Park yerleri (koda göre) */
+        get: operations["list_spaces_api_v1_sites__slug__parking_spaces_get"];
+        put?: never;
+        /** Park yeri ekle */
+        post: operations["create_space_api_v1_sites__slug__parking_spaces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces/{space_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Park yerini düzenle */
+        patch: operations["update_space_api_v1_sites__slug__parking_spaces__space_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tahsis geçmişi (yeni üstte) */
+        get: operations["list_allocations_api_v1_sites__slug__parking_allocations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces/{space_id}/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Park yerini bölüme tahsis et */
+        post: operations["allocate_api_v1_sites__slug__parking_spaces__space_id__allocations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-allocations/{allocation_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tahsisi bitir */
+        post: operations["end_allocation_api_v1_sites__slug__parking_allocations__allocation_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parking-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Park yerim (bugünkü tahsisler) */
+        get: operations["my_spaces_api_v1_sites__slug__resident_parking_spaces_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/blocks": {
         parameters: {
             query?: never;
@@ -2480,6 +3104,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/resident/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bana açık belgeler (sayfalı) */
+        get: operations["my_documents_api_v1_sites__slug__resident_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/documents/{document_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Belgenin son sürümünü indir */
+        get: operations["my_document_download_api_v1_sites__slug__resident_documents__document_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolio": {
         parameters: {
             query?: never;
@@ -3146,6 +3804,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/staff/linkable-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Karta bağlanabilecek giriş hesapları (K29) */
+        get: operations["linkable_users_api_v1_sites__slug__staff_linkable_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/staff/{staff_id}": {
         parameters: {
             query?: never;
@@ -3161,6 +3836,436 @@ export interface paths {
         head?: never;
         /** Personeli düzenle; `end_date` ile ayrılış (kısmi) */
         patch: operations["update_staff_api_v1_sites__slug__staff__staff_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/staff/{staff_id}/open-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ayrılışta devredilecek açık işler (bilgi) */
+        get: operations["open_items_api_v1_sites__slug__staff__staff_id__open_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vardiya şablonları (dizi) */
+        get: operations["list_templates_api_v1_sites__slug__shift_templates_get"];
+        put?: never;
+        /** Şablon ekle */
+        post: operations["create_template_api_v1_sites__slug__shift_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Şablonu düzenle / kapat (kısmi) */
+        patch: operations["update_template_api_v1_sites__slug__shift_templates__template_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan: personel × gün, izinler, çakışmalar, yayın durumu */
+        get: operations["get_plan_api_v1_sites__slug__shift_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-plans/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vardiya ata */
+        post: operations["create_assignment_api_v1_sites__slug__shift_plans_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-plans/assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Atamayı kaldır */
+        delete: operations["delete_assignment_api_v1_sites__slug__shift_plans_assignments__assignment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-plans/copy-week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Haftayı kopyala */
+        post: operations["copy_week_api_v1_sites__slug__shift_plans_copy_week_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-plans/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Haftayı yayınla (çakışma varsa onay ister) */
+        post: operations["publish_api_v1_sites__slug__shift_plans_publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/leave-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** İzin talepleri (yeni üstte) */
+        get: operations["list_leaves_api_v1_sites__slug__leave_requests_get"];
+        put?: never;
+        /** İzin kaydet */
+        post: operations["create_leave_api_v1_sites__slug__leave_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/leave-requests/{leave_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İzni onayla */
+        post: operations["approve_leave_api_v1_sites__slug__leave_requests__leave_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/leave-requests/{leave_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İzni reddet (gerekçe zorunlu) */
+        post: operations["reject_leave_api_v1_sites__slug__leave_requests__leave_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/leave-requests/{leave_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İzni iptal et / talebi geri çek */
+        post: operations["cancel_leave_api_v1_sites__slug__leave_requests__leave_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/leave-balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bu yıl kullanılan izinler (bilgi amaçlı; dizi) */
+        get: operations["leave_balances_api_v1_sites__slug__leave_balances_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Günlük puantaj (boş → dün) */
+        get: operations["get_day_api_v1_sites__slug__timesheets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheets/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** İstisnayı düzelt (gerekçe zorunlu) */
+        patch: operations["fix_row_api_v1_sites__slug__timesheets__assignment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheets/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Günü kesinleştir (sonra değişmez) */
+        post: operations["finalize_api_v1_sites__slug__timesheets_finalize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheet-exports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ay özeti ve aktarım engelleri */
+        get: operations["export_preview_api_v1_sites__slug__timesheet_exports_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheet-exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktarım geçmişi (yeni üstte) */
+        get: operations["list_exports_api_v1_sites__slug__timesheet_exports_get"];
+        put?: never;
+        /** Aktar (ay kilitlenir) */
+        post: operations["create_export_api_v1_sites__slug__timesheet_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/timesheet-exports/{export_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktarım dosyası (CSV, `;`, UTF-8 BOM) */
+        get: operations["export_file_api_v1_sites__slug__timesheet_exports__export_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/attendance-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vardiya giriş-çıkış doğrulama ayarı */
+        get: operations["get_settings_api_v1_sites__slug__attendance_settings_get"];
+        /** Doğrulama yöntemi, konum, tolerans */
+        put: operations["put_settings_api_v1_sites__slug__attendance_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/attendance-settings/rotate-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kulübe kodunu yenile */
+        post: operations["rotate_code_api_v1_sites__slug__attendance_settings_rotate_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/me/shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vardiyam — yayınlanmış haftalar (boş → bu hafta + gelecek) */
+        get: operations["own_shifts_api_v1_sites__slug__me_shifts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/me/attendance-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vardiyaya başla / bitir (QR ya da o anki konum) */
+        post: operations["record_event_api_v1_sites__slug__me_attendance_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/me/leave-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** İzin taleplerim (yeni üstte) */
+        get: operations["own_leaves_api_v1_sites__slug__me_leave_requests_get"];
+        put?: never;
+        /** İzin talep et */
+        post: operations["create_own_leave_api_v1_sites__slug__me_leave_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/me/leave-requests/{leave_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleyen talebimi geri çek */
+        post: operations["cancel_own_leave_api_v1_sites__slug__me_leave_requests__leave_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sites/{slug}/notifications": {
@@ -3488,6 +4593,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Belgeler (son yüklenen üstte; sayfalı) */
+        get: operations["list_documents_api_v1_sites__slug__documents_get"];
+        put?: never;
+        /** Belge yükle (multipart) — aynı ad + kapsam yeni sürüm olur */
+        post: operations["upload_document_api_v1_sites__slug__documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/documents/{document_id}/versions/{version}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sürümü indir (gizli belgede açılış kayda geçer) */
+        get: operations["download_version_api_v1_sites__slug__documents__document_id__versions__version__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/documents/{document_id}/access-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gizli belgenin açılış kaydı (yeni üstte) */
+        get: operations["access_log_api_v1_sites__slug__documents__document_id__access_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3530,7 +4687,7 @@ export interface components {
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -4020,6 +5177,137 @@ export interface components {
              */
             assignee: string;
         };
+        /** AttendanceEventIn */
+        AttendanceEventIn: {
+            /**
+             * Kind
+             * @description in · out
+             */
+            kind?: string | null;
+            /**
+             * Assignment Id
+             * @description boşsa en yakın vardiya seçilir
+             */
+            assignment_id?: string | null;
+            /**
+             * Occurred At
+             * @description çevrimdışı kayıtta cihaz saati; boşsa sunucu saati
+             */
+            occurred_at?: string | null;
+            /**
+             * Code
+             * @description QR yönteminde kulübe kodu
+             */
+            code?: string | null;
+            /** Latitude */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
+        };
+        /** AttendanceEventOut */
+        AttendanceEventOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AttendanceKind"];
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Verified */
+            verified: boolean;
+        };
+        /**
+         * AttendanceFlag
+         * @description Giriş-çıkış karşılaştırmasının işaretlediği istisnalar (IK-04 adım 4).
+         * @enum {string}
+         */
+        AttendanceFlag: "no_check_in" | "no_check_out" | "late" | "early_leave" | "overtime" | "unverified";
+        /**
+         * AttendanceKind
+         * @enum {string}
+         */
+        AttendanceKind: "in" | "out";
+        /**
+         * AttendanceMethod
+         * @enum {string}
+         */
+        AttendanceMethod: "none" | "qr" | "location";
+        /** AttendanceRecordedOut */
+        AttendanceRecordedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AttendanceKind"];
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Verified */
+            verified: boolean;
+            /** Assignment Id */
+            assignment_id: string | null;
+            /**
+             * Clock Skew Minutes
+             * @description cihaz ile sunucu saati farkı
+             */
+            clock_skew_minutes: number;
+        };
+        /** AttendanceSettingsIn */
+        AttendanceSettingsIn: {
+            /**
+             * Method
+             * @description none · qr · location
+             */
+            method?: string | null;
+            /** Latitude */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
+            /** Radius M */
+            radius_m?: number | null;
+            /** Late Tolerance Minutes */
+            late_tolerance_minutes?: number | null;
+            /** Early Tolerance Minutes */
+            early_tolerance_minutes?: number | null;
+        };
+        /** AttendanceSettingsOut */
+        AttendanceSettingsOut: {
+            method: components["schemas"]["AttendanceMethod"];
+            /**
+             * Qr Code
+             * @description kulübedeki koda basılacak değer (yalnız staff.manage)
+             */
+            qr_code: string | null;
+            /** Qr Rotated At */
+            qr_rotated_at: string | null;
+            /** Latitude */
+            latitude: string | null;
+            /** Longitude */
+            longitude: string | null;
+            /** Radius M */
+            radius_m: number;
+            /** Late Tolerance Minutes */
+            late_tolerance_minutes: number;
+            /** Early Tolerance Minutes */
+            early_tolerance_minutes: number;
+        };
         /** AttributeChangeOut */
         AttributeChangeOut: {
             /**
@@ -4246,6 +5534,46 @@ export interface components {
              * @description paranın girdiği banka hesabı
              */
             cash_account_id?: string | null;
+        };
+        /** Body_upload_document_api_v1_sites__slug__documents_post */
+        Body_upload_document_api_v1_sites__slug__documents_post: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Kind
+             * @description plan · rules · …
+             */
+            kind?: string | null;
+            /**
+             * Scope
+             * @description site · block · unit
+             */
+            scope?: string | null;
+            /**
+             * Scope Id
+             * @description blok ya da bölüm id
+             */
+            scope_id?: string | null;
+            /**
+             * Confidentiality
+             * @description public · unit · management · secret
+             */
+            confidentiality?: string | null;
+            /**
+             * Valid Until
+             * @description YYYY-AA-GG
+             */
+            valid_until?: string | null;
+            /**
+             * Retention Years
+             * @description yıl (K8)
+             */
+            retention_years?: string | null;
+            /**
+             * File
+             * @description PDF, PNG, JPEG, WebP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
         };
         /** Body_upload_opening_api_v1_sites__slug__imports_opening_balances_post */
         Body_upload_opening_api_v1_sites__slug__imports_opening_balances_post: {
@@ -4953,6 +6281,11 @@ export interface components {
              */
             percent: string;
         };
+        /**
+         * Confidentiality
+         * @enum {string}
+         */
+        Confidentiality: "public" | "unit" | "management" | "secret";
         /** ConfirmIn */
         ConfirmIn: {
             /** Rows */
@@ -4971,6 +6304,11 @@ export interface components {
             /** Skipped */
             skipped: components["schemas"]["SkippedOut"][];
         };
+        /**
+         * ConflictKind
+         * @enum {string}
+         */
+        ConflictKind: "overlap" | "leave" | "rest";
         /** ContactOut */
         ContactOut: {
             /** Phone */
@@ -5468,12 +6806,27 @@ export interface components {
              */
             at: string;
         };
+        /**
+         * DecisionSource
+         * @enum {string}
+         */
+        DecisionSource: "resident" | "guard";
         /** DecisionsIn */
         DecisionsIn: {
             /** Attendance Note */
             attendance_note?: string | null;
             /** Items */
             items?: components["schemas"]["DecisionIn"][];
+        };
+        /** DelegateNameOut */
+        DelegateNameOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** DelegationIn */
         DelegationIn: {
@@ -5594,6 +6947,116 @@ export interface components {
          * @enum {string}
          */
         Direction: "in" | "out";
+        /** DocumentAccessOut */
+        DocumentAccessOut: {
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** V */
+            v: number;
+        };
+        /**
+         * DocumentKind
+         * @enum {string}
+         */
+        DocumentKind: "plan" | "rules" | "insurance" | "fire_report" | "elevator" | "contract" | "minutes" | "financial" | "other";
+        /** DocumentOut */
+        DocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            kind: components["schemas"]["DocumentKind"];
+            /** Kind Label */
+            kind_label: string;
+            scope: components["schemas"]["DocumentScope"];
+            /**
+             * Scope Id
+             * @description blok ya da bölüm; tüm sitede null
+             */
+            scope_id: string | null;
+            /**
+             * Scope Name
+             * @description `A Blok` · `A-12`; tüm sitede null
+             */
+            scope_name: string | null;
+            confidentiality: components["schemas"]["Confidentiality"];
+            /** Valid Until */
+            valid_until: string | null;
+            /**
+             * Days Left
+             * @description bitişe kalan gün (sitenin bugünü); geçmişse eksi
+             */
+            days_left: number | null;
+            /** @description 60 · 30 · expired · null */
+            warning: components["schemas"]["ExpiryWarning"] | null;
+            /**
+             * Retention Years
+             * @description saklama süresi (yıl, K8) — bilgi amaçlı, otomatik silme yok
+             */
+            retention_years: number | null;
+            /**
+             * Version
+             * @description son sürüm
+             */
+            version: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** Size */
+            size: number;
+            /** Sha256 */
+            sha256: string;
+            /** Uploaded By */
+            uploaded_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description son sürümün yüklenme zamanı
+             */
+            updated_at: string;
+            /**
+             * Versions
+             * @description eskiden yeniye
+             */
+            versions: components["schemas"]["DocumentVersionOut"][];
+        };
+        /**
+         * DocumentScope
+         * @enum {string}
+         */
+        DocumentScope: "site" | "block" | "unit";
+        /** DocumentVersionOut */
+        DocumentVersionOut: {
+            /** V */
+            v: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /**
+             * Size
+             * @description bayt
+             */
+            size: number;
+            /** Sha256 */
+            sha256: string;
+            /** Uploaded By */
+            uploaded_by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** DuplicateGroupOut */
         DuplicateGroupOut: {
             /**
@@ -5670,6 +7133,28 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * ExpectedInviteOut
+         * @description Görevlinin gördüğü: ad, bölüm, tip, saat, plaka — kod ve not yok.
+         */
+        ExpectedInviteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+            type: components["schemas"]["InviteType"];
+            /** Time From */
+            time_from: string | null;
+            /** Time To */
+            time_to: string | null;
+            /** Plate */
+            plate: string | null;
         };
         /**
          * ExpenseCategoryKind
@@ -5810,6 +7295,11 @@ export interface components {
             /** By Category */
             by_category: components["schemas"]["CategoryTotalOut"][];
         };
+        /**
+         * ExpiryWarning
+         * @enum {string}
+         */
+        ExpiryWarning: "60" | "30" | "expired";
         /** FinanceOut */
         FinanceOut: {
             /**
@@ -5868,6 +7358,101 @@ export interface components {
          * @enum {string}
          */
         Frequency: "monthly" | "quarterly" | "yearly" | "one_time";
+        /**
+         * GateDirection
+         * @enum {string}
+         */
+        GateDirection: "in" | "out";
+        /** GateIn */
+        GateIn: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Kind
+             * @description vehicle · pedestrian · service
+             */
+            kind?: string | null;
+            /**
+             * Block Ids
+             * @description boş: tüm bloklar
+             */
+            block_ids?: string[];
+            /**
+             * Always Open
+             * @default true
+             */
+            always_open: boolean;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /**
+         * GateKind
+         * @enum {string}
+         */
+        GateKind: "vehicle" | "pedestrian" | "service";
+        /** GateLogIn */
+        GateLogIn: {
+            /** Plate */
+            plate?: string | null;
+            /**
+             * Direction
+             * @default in
+             * @enum {string}
+             */
+            direction: "in" | "out";
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** GateLogOut */
+        GateLogOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Plate
+             * @description saklama süresi dolunca boş
+             */
+            plate: string | null;
+            /** Plate Display */
+            plate_display: string;
+            result: components["schemas"]["PlateResult"];
+            /** Detail */
+            detail: string | null;
+            /** Unit Name */
+            unit_name: string | null;
+            /** Gate Id */
+            gate_id: string | null;
+            direction: components["schemas"]["GateDirection"];
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** GateOut */
+        GateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            kind: components["schemas"]["GateKind"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Always Open */
+            always_open: boolean;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** GoLiveOut */
         GoLiveOut: {
             /**
@@ -6427,6 +8012,38 @@ export interface components {
          * @enum {string}
          */
         InvitationStatus: "sent" | "opened" | "completed" | "expired" | "cancelled";
+        /** InviteCheckInIn */
+        InviteCheckInIn: {
+            /** Code */
+            code?: string | null;
+        };
+        /** InviteCheckInOut */
+        InviteCheckInOut: {
+            /**
+             * Visitor Id
+             * Format: uuid
+             */
+            visitor_id: string;
+            /**
+             * Invite Id
+             * Format: uuid
+             */
+            invite_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+        };
+        /**
+         * InviteStatus
+         * @enum {string}
+         */
+        InviteStatus: "active" | "used" | "cancelled";
+        /**
+         * InviteType
+         * @enum {string}
+         */
+        InviteType: "once" | "range" | "recurring";
         /** ItemTotalOut */
         ItemTotalOut: {
             /**
@@ -6488,6 +8105,119 @@ export interface components {
             /** Message */
             message: string | null;
         };
+        /** LeaveBalanceOut */
+        LeaveBalanceOut: {
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /** Staff Name */
+            staff_name: string;
+            /**
+             * Used
+             * @description annual · excuse · sick · unpaid → onaylı gün
+             */
+            used: {
+                [key: string]: number;
+            };
+        };
+        /** LeaveRejectIn */
+        LeaveRejectIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** LeaveRequestIn */
+        LeaveRequestIn: {
+            /** Staff Id */
+            staff_id?: string | null;
+            /** Type */
+            type?: string | null;
+            /** From */
+            from?: string | null;
+            /** To */
+            to?: string | null;
+            /**
+             * Note
+             * @description raporlu izinde yazılmaz (tanı tutulmaz)
+             */
+            note?: string | null;
+        };
+        /** LeaveRequestOut */
+        LeaveRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /** Staff Name */
+            staff_name: string;
+            type: components["schemas"]["LeaveType"];
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /**
+             * Days
+             * @description takvim günü
+             */
+            days: number;
+            /** Note */
+            note: string | null;
+            status: components["schemas"]["LeaveStatus"];
+            /**
+             * Source
+             * @description manager: İK adına · staff: personelin kendisi (K29)
+             */
+            source: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided By */
+            decided_by: string | null;
+            /** Decided At */
+            decided_at: string | null;
+            /** Reject Reason */
+            reject_reason: string | null;
+            /**
+             * Clashing Shifts
+             * @description izin tarihlerindeki vardiya sayısı
+             */
+            clashing_shifts: number;
+            /**
+             * Approval Request Id
+             * @description onay kuralına bağlıysa onay talebi (karar onay kutusunda)
+             */
+            approval_request_id: string | null;
+            /** Approval Number */
+            approval_number: number | null;
+        };
+        /**
+         * LeaveStatus
+         * @enum {string}
+         */
+        LeaveStatus: "pending" | "approved" | "rejected" | "cancelled";
+        /**
+         * LeaveType
+         * @description İzin türleri — tesis ayarı olacak (IK-03); şimdilik belgenin varsayılan dört türü.
+         * @enum {string}
+         */
+        LeaveType: "annual" | "excuse" | "sick" | "unpaid";
         /**
          * LedgerSource
          * @enum {string}
@@ -6545,12 +8275,70 @@ export interface components {
             /** Is Enabled */
             is_enabled: boolean;
         };
+        /** LinkableUserOut */
+        LinkableUserOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Email */
+            email: string;
+            /** Role Name */
+            role_name: string;
+            /**
+             * Staff Id
+             * @description bağlı olduğu personel kartı (varsa)
+             */
+            staff_id: string | null;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Email */
             email: string;
             /** Password */
             password: string;
+        };
+        /** LongWaitingItem */
+        LongWaitingItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Carrier */
+            carrier: string | null;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Waiting Days */
+            waiting_days: number;
+            /** Delegates */
+            delegates: string[];
+        };
+        /** LongWaitingOut */
+        LongWaitingOut: {
+            /**
+             * Days
+             * @description ayardaki uzun bekleme günü
+             */
+            days: number;
+            /**
+             * Items
+             * @description en eski üstte; en fazla 200
+             */
+            items: components["schemas"]["LongWaitingItem"][];
         };
         /** LookupOut */
         LookupOut: {
@@ -7415,10 +9203,43 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[DocumentAccessOut] */
+        Page_DocumentAccessOut_: {
+            /** Items */
+            items: components["schemas"]["DocumentAccessOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[DocumentOut] */
+        Page_DocumentOut_: {
+            /** Items */
+            items: components["schemas"]["DocumentOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[EntryOut] */
         Page_EntryOut_: {
             /** Items */
             items: components["schemas"]["EntryOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[GateLogOut] */
+        Page_GateLogOut_: {
+            /** Items */
+            items: components["schemas"]["GateLogOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7452,6 +9273,17 @@ export interface components {
         Page_InvitationOut_: {
             /** Items */
             items: components["schemas"]["InvitationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[LeaveRequestOut] */
+        Page_LeaveRequestOut_: {
+            /** Items */
+            items: components["schemas"]["LeaveRequestOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7496,6 +9328,39 @@ export interface components {
         Page_PackageOut_: {
             /** Items */
             items: components["schemas"]["PackageOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingAllocationOut] */
+        Page_ParkingAllocationOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingAllocationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingSpaceOut] */
+        Page_ParkingSpaceOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingSpaceOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingViolationOut] */
+        Page_ParkingViolationOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingViolationOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7591,10 +9456,32 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[ResidentDocumentOut] */
+        Page_ResidentDocumentOut_: {
+            /** Items */
+            items: components["schemas"]["ResidentDocumentOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[SiteUsageOut] */
         Page_SiteUsageOut_: {
             /** Items */
             items: components["schemas"]["SiteUsageOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[TimesheetExportOut] */
+        Page_TimesheetExportOut_: {
+            /** Items */
+            items: components["schemas"]["TimesheetExportOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7645,6 +9532,216 @@ export interface components {
             page_size: number;
             /** Total */
             total: number;
+        };
+        /** ParcelDelegateIn */
+        ParcelDelegateIn: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Unit Id
+             * @description boşsa ilk bölümüm
+             */
+            unit_id?: string | null;
+        };
+        /** ParcelDelegateOut */
+        ParcelDelegateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Name */
+            name: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /**
+         * ParcelMethod
+         * @enum {string}
+         */
+        ParcelMethod: "code" | "qr" | "both";
+        /** ParkingAllocationEndIn */
+        ParkingAllocationEndIn: {
+            /** End Date */
+            end_date?: string | null;
+        };
+        /** ParkingAllocationIn */
+        ParkingAllocationIn: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * End Date
+             * @description boşsa süresiz
+             */
+            end_date?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingAllocationOut */
+        ParkingAllocationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Space Id
+             * Format: uuid
+             */
+            space_id: string;
+            /** Space Code */
+            space_code: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+            /** Is Current */
+            is_current: boolean;
+            /** Note */
+            note: string | null;
+            /** Created By */
+            created_by: string;
+            /** Ended By */
+            ended_by: string | null;
+        };
+        /** ParkingHolderOut */
+        ParkingHolderOut: {
+            /**
+             * Allocation Id
+             * Format: uuid
+             */
+            allocation_id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+        };
+        /**
+         * ParkingKind
+         * @enum {string}
+         */
+        ParkingKind: "standard" | "disabled" | "ev" | "guest";
+        /** ParkingSpaceIn */
+        ParkingSpaceIn: {
+            /** Code */
+            code?: string | null;
+            /**
+             * Kind
+             * @description standard · disabled · ev · guest
+             */
+            kind?: string | null;
+            /** Location */
+            location?: string | null;
+            /**
+             * Is Paid
+             * @default false
+             */
+            is_paid: boolean;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingSpaceOut */
+        ParkingSpaceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            kind: components["schemas"]["ParkingKind"];
+            /** Location */
+            location: string | null;
+            /** Is Paid */
+            is_paid: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Note */
+            note: string | null;
+            /** @description bugünkü tahsis (yoksa boş) */
+            current: components["schemas"]["ParkingHolderOut"] | null;
+        };
+        /** ParkingViolationIn */
+        ParkingViolationIn: {
+            /** Plate */
+            plate?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingViolationOut */
+        ParkingViolationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Plate */
+            plate: string | null;
+            /** Plate Display */
+            plate_display: string;
+            /** Location */
+            location: string;
+            /** Note */
+            note: string | null;
+            result: components["schemas"]["PlateResult"];
+            /** Detail */
+            detail: string | null;
+            /** Unit Name */
+            unit_name: string | null;
+            notified: components["schemas"]["ViolationNotice"];
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /** PartyAdded */
         PartyAdded: {
@@ -7708,6 +9805,218 @@ export interface components {
          * @enum {string}
          */
         PartyRole: "owner" | "tenant" | "resident" | "proxy";
+        /** PatrolPlanIn */
+        PatrolPlanIn: {
+            /** Name */
+            name?: string | null;
+            /** Point Ids */
+            point_ids?: string[];
+            /**
+             * Ordered
+             * @default true
+             */
+            ordered: boolean;
+            /** Start Times */
+            start_times?: string[];
+            /** Allowed Minutes */
+            allowed_minutes?: number | null;
+            /** Assignee */
+            assignee?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** PatrolPlanOut */
+        PatrolPlanOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Point Ids
+             * @description sırayla
+             */
+            point_ids: string[];
+            /** Ordered */
+            ordered: boolean;
+            /**
+             * Start Times
+             * @description SS:DD, sıralı
+             */
+            start_times: string[];
+            /** Allowed Minutes */
+            allowed_minutes: number;
+            /** Assignee */
+            assignee: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** PatrolPointIn */
+        PatrolPointIn: {
+            /** Name */
+            name?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Area */
+            area?: string | null;
+            /**
+             * Tag
+             * @description qr · nfc · both
+             */
+            tag?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** PatrolPointOut */
+        PatrolPointOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Location */
+            location: string | null;
+            /** Area */
+            area: string | null;
+            tag: components["schemas"]["PatrolTag"];
+            /**
+             * Code
+             * @description 6 hane; QR içeriği SY-DEVRIYE:{kod}
+             */
+            code: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** PatrolReportOut */
+        PatrolReportOut: {
+            /**
+             * Missed
+             * @description okutulmayan nokta adları
+             */
+            missed: string[];
+            /** Out Of Order */
+            out_of_order: string[];
+            /** Duration Minutes */
+            duration_minutes: number;
+            /** Overtime */
+            overtime: boolean;
+            /** Late Start Minutes */
+            late_start_minutes: number;
+            /** Total Points */
+            total_points: number;
+            /** Scanned Points */
+            scanned_points: number;
+            /** Ok */
+            ok: boolean;
+        };
+        /** PatrolRunIn */
+        PatrolRunIn: {
+            /** Plan Id */
+            plan_id?: string | null;
+            /**
+             * Slot
+             * @description SS:DD; boşsa şu andan önceki son saat
+             */
+            slot?: string | null;
+        };
+        /** PatrolRunOut */
+        PatrolRunOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan Name */
+            plan_name: string;
+            /**
+             * Point Ids
+             * @description başlatıldığı andaki plan noktaları
+             */
+            point_ids: string[];
+            /** Ordered */
+            ordered: boolean;
+            /** Allowed Minutes */
+            allowed_minutes: number;
+            /** Slot */
+            slot: string | null;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Scans */
+            scans: components["schemas"]["PatrolScanOut"][];
+            report: components["schemas"]["PatrolReportOut"];
+        };
+        /** PatrolScanIn */
+        PatrolScanIn: {
+            /**
+             * Code
+             * @description etiketteki 6 haneli kod
+             */
+            code?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** PatrolScanOut */
+        PatrolScanOut: {
+            /**
+             * Point Id
+             * Format: uuid
+             */
+            point_id: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string | null;
+            /** Out Of Order */
+            out_of_order: boolean;
+            /** By */
+            by: string;
+        };
+        /** PatrolSlotOut */
+        PatrolSlotOut: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan Name */
+            plan_name: string;
+            /** Slot */
+            slot: string;
+            status: components["schemas"]["SlotStatus"];
+            /** Run Id */
+            run_id: string | null;
+            report: components["schemas"]["PatrolReportOut"] | null;
+        };
+        /**
+         * PatrolTag
+         * @enum {string}
+         */
+        PatrolTag: "qr" | "nfc" | "both";
         /** PayIn */
         PayIn: {
             /**
@@ -7958,6 +10267,33 @@ export interface components {
             /** Allowed Modules */
             allowed_modules: string[];
         };
+        /** PlateLookupOut */
+        PlateLookupOut: {
+            /**
+             * Plate
+             * @description normalize: 34ABC123
+             */
+            plate: string;
+            /**
+             * Plate Display
+             * @description 34 ABC 123
+             */
+            plate_display: string;
+            result: components["schemas"]["PlateResult"];
+            /** Unit Name */
+            unit_name: string | null;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Valid Until */
+            valid_until: string | null;
+            /** Detail */
+            detail: string | null;
+        };
+        /**
+         * PlateResult
+         * @enum {string}
+         */
+        PlateResult: "registered" | "guest" | "unknown";
         /**
          * PollAudience
          * @enum {string}
@@ -8909,6 +11245,44 @@ export interface components {
             /** Total */
             total: number;
         };
+        /**
+         * ResidentDocumentOut
+         * @description Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok.
+         */
+        ResidentDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            kind: components["schemas"]["DocumentKind"];
+            /** Kind Label */
+            kind_label: string;
+            scope: components["schemas"]["DocumentScope"];
+            /** Scope Name */
+            scope_name: string | null;
+            confidentiality: components["schemas"]["Confidentiality"];
+            /** Valid Until */
+            valid_until: string | null;
+            /** Days Left */
+            days_left: number | null;
+            warning: components["schemas"]["ExpiryWarning"] | null;
+            /** Version */
+            version: number;
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** Size */
+            size: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** ResidentPollOut */
         ResidentPollOut: {
             /**
@@ -9181,6 +11555,69 @@ export interface components {
          * @enum {string}
          */
         ScopeKind: "whole_site" | "blocks" | "unit_types" | "usage";
+        /** SecuritySettingsIn */
+        SecuritySettingsIn: {
+            /** Unannounced Method */
+            unannounced_method?: string | null;
+            /** Approval Timeout Seconds */
+            approval_timeout_seconds?: number | null;
+            /** Gate Methods */
+            gate_methods?: {
+                [key: string]: string;
+            };
+            /** Parcel Method */
+            parcel_method?: string | null;
+            visitor_fields?: components["schemas"]["VisitorFieldsSchema"];
+            /** Retention Months */
+            retention_months?: number | null;
+            /**
+             * Auto Anonymize
+             * @default false
+             */
+            auto_anonymize: boolean;
+            /** Parcel Long Wait Days */
+            parcel_long_wait_days?: number | null;
+            /** Guest Parking Capacity */
+            guest_parking_capacity?: number | null;
+        };
+        /** SecuritySettingsOut */
+        SecuritySettingsOut: {
+            unannounced_method: components["schemas"]["UnannouncedMethod"];
+            /** Approval Timeout Seconds */
+            approval_timeout_seconds: number;
+            /**
+             * Gate Methods
+             * @description kapı kimliği → yöntem
+             */
+            gate_methods: {
+                [key: string]: components["schemas"]["UnannouncedMethod"];
+            };
+            parcel_method: components["schemas"]["ParcelMethod"];
+            visitor_fields: components["schemas"]["VisitorFieldsSchema"];
+            /**
+             * Retention Months
+             * @description ziyaretçi ve plaka kayıtları (K8; en fazla 24)
+             */
+            retention_months: number;
+            /**
+             * Auto Anonymize
+             * @description süre dolanları gece anonimleştir — hukuk onayına kadar varsayılan kapalı
+             */
+            auto_anonymize: boolean;
+            /** Parcel Long Wait Days */
+            parcel_long_wait_days: number;
+            /** Guest Parking Capacity */
+            guest_parking_capacity: number;
+            /**
+             * Version
+             * @description 0: hiç kaydedilmedi (varsayılanlar)
+             */
+            version: number;
+            /** Updated At */
+            updated_at: string | null;
+            /** Updated By */
+            updated_by: string | null;
+        };
         /** SelectionIn */
         SelectionIn: {
             /** Row Number */
@@ -9279,6 +11716,303 @@ export interface components {
              * @description malik hisse toplamı, "50.00"
              */
             total: string;
+        };
+        /** ShiftAssignedOut */
+        ShiftAssignedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Template Id
+             * Format: uuid
+             */
+            template_id: string;
+            /** Changed After Publish */
+            changed_after_publish: boolean;
+            /** Conflicts */
+            conflicts: components["schemas"]["ShiftConflictOut"][];
+        };
+        /** ShiftAssignmentIn */
+        ShiftAssignmentIn: {
+            /** Staff Id */
+            staff_id?: string | null;
+            /** Date */
+            date?: string | null;
+            /** Template Id */
+            template_id?: string | null;
+        };
+        /** ShiftAssignmentOut */
+        ShiftAssignmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Template Id
+             * Format: uuid
+             */
+            template_id: string;
+            /** Changed After Publish */
+            changed_after_publish: boolean;
+        };
+        /** ShiftConflictOut */
+        ShiftConflictOut: {
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            kind: components["schemas"]["ConflictKind"];
+            /** Message */
+            message: string;
+        };
+        /** ShiftCopiedOut */
+        ShiftCopiedOut: {
+            /** Created */
+            created: number;
+        };
+        /** ShiftCopyWeekIn */
+        ShiftCopyWeekIn: {
+            /** From Week */
+            from_week?: string | null;
+            /** To Week */
+            to_week?: string | null;
+        };
+        /** ShiftLogAddendumIn */
+        ShiftLogAddendumIn: {
+            /** Text */
+            text?: string | null;
+        };
+        /** ShiftLogAddendumOut */
+        ShiftLogAddendumOut: {
+            /** Text */
+            text: string;
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ShiftLogEntryIn */
+        ShiftLogEntryIn: {
+            /**
+             * Kind
+             * @description note · event · handover
+             */
+            kind?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** ShiftLogEntryOut */
+        ShiftLogEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["ShiftLogKind"];
+            /** Text */
+            text: string;
+            /** Gate Id */
+            gate_id: string | null;
+            /** By */
+            by: string;
+            /**
+             * By Me
+             * @description kayıt bu kullanıcının mı (kendi devrini onaylayamaz)
+             */
+            by_me: boolean;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Addenda */
+            addenda: components["schemas"]["ShiftLogAddendumOut"][];
+            /** Acknowledged By */
+            acknowledged_by: string | null;
+            /** Acknowledged At */
+            acknowledged_at: string | null;
+        };
+        /**
+         * ShiftLogKind
+         * @enum {string}
+         */
+        ShiftLogKind: "note" | "event" | "handover";
+        /** ShiftPlanLeaveOut */
+        ShiftPlanLeaveOut: {
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** @description yalnız staff.manage'e; diğerlerine boş */
+            type: components["schemas"]["LeaveType"] | null;
+        };
+        /** ShiftPlanOut */
+        ShiftPlanOut: {
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Staff */
+            staff: components["schemas"]["ShiftPlanStaffOut"][];
+            /** Templates */
+            templates: components["schemas"]["ShiftTemplateOut"][];
+            /** Assignments */
+            assignments: components["schemas"]["ShiftAssignmentOut"][];
+            /** Leaves */
+            leaves: components["schemas"]["ShiftPlanLeaveOut"][];
+            /** Conflicts */
+            conflicts: components["schemas"]["ShiftConflictOut"][];
+            published: components["schemas"]["ShiftWeekOut"] | null;
+            /** Changed After Publish */
+            changed_after_publish: number;
+            /**
+             * Final Days
+             * @description puantajı kesinleşmiş günler (değişmez)
+             */
+            final_days: string[];
+        };
+        /** ShiftPlanStaffOut */
+        ShiftPlanStaffOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Full Name */
+            full_name: string;
+            /** Position */
+            position: string;
+        };
+        /** ShiftPublishIn */
+        ShiftPublishIn: {
+            /** Week */
+            week?: string | null;
+            /**
+             * Acknowledge Conflicts
+             * @default false
+             */
+            acknowledge_conflicts: boolean;
+        };
+        /** ShiftPublishedOut */
+        ShiftPublishedOut: {
+            /**
+             * Week
+             * Format: date
+             */
+            week: string;
+            /** Assignments */
+            assignments: number;
+        };
+        /** ShiftTemplateIn */
+        ShiftTemplateIn: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Start
+             * @description "08:00"
+             */
+            start?: string | null;
+            /**
+             * End
+             * @description "16:00"; ≤ start → ertesi gün
+             */
+            end?: string | null;
+            /** Break Minutes */
+            break_minutes?: number | null;
+            /** Position */
+            position?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
+        /** ShiftTemplateOut */
+        ShiftTemplateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Break Minutes */
+            break_minutes: number;
+            /** Position */
+            position: string | null;
+            /** Location */
+            location: string | null;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Overnight
+             * @description bitiş ertesi güne taşar
+             */
+            overnight: boolean;
+        };
+        /** ShiftWeekOut */
+        ShiftWeekOut: {
+            /**
+             * Week
+             * Format: date
+             */
+            week: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string;
         };
         /** SimulateIn */
         SimulateIn: {
@@ -9572,6 +12306,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * SlotStatus
+         * @enum {string}
+         */
+        SlotStatus: "upcoming" | "due" | "not_started" | "running" | "overdue" | "done" | "done_with_deviation";
         /** StaffIn */
         StaffIn: {
             /** Full Name */
@@ -9593,6 +12332,25 @@ export interface components {
             end_date?: string | null;
             /** Shift */
             shift?: string | null;
+            /**
+             * Payroll No
+             * @description bordro sicil no: harf, rakam, tire; ≤ 20
+             */
+            payroll_no?: string | null;
+            /**
+             * User Id
+             * @description K29: bağlı giriş hesabı (`GET …/staff/linkable-users`)
+             */
+            user_id?: string | null;
+        };
+        /** StaffOpenItemsOut */
+        StaffOpenItemsOut: {
+            /** Future Shifts */
+            future_shifts: number;
+            /** First Shift */
+            first_shift: string | null;
+            /** Pending Leaves */
+            pending_leaves: number;
         };
         /** StaffOut */
         StaffOut: {
@@ -9627,6 +12385,67 @@ export interface components {
              * @description ayrılışı yok ya da bugün/ileride
              */
             is_active: boolean;
+            /**
+             * Payroll No
+             * @description bordro sicil no (T.C. kimlik no tutulmaz)
+             */
+            payroll_no: string | null;
+            /**
+             * User Id
+             * @description K29: bağlı giriş hesabı
+             */
+            user_id: string | null;
+            /** User Name */
+            user_name: string | null;
+            /**
+             * Access Closed At
+             * @description ayrılış nedeniyle site erişiminin kapandığı an (K29)
+             */
+            access_closed_at: string | null;
+        };
+        /** StaffOwnLeaveIn */
+        StaffOwnLeaveIn: {
+            /** Type */
+            type?: string | null;
+            /** From */
+            from?: string | null;
+            /** To */
+            to?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** StaffOwnShiftOut */
+        StaffOwnShiftOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            template: components["schemas"]["ShiftTemplateOut"];
+            /** Changed After Publish */
+            changed_after_publish: boolean;
+            /** Events */
+            events: components["schemas"]["AttendanceEventOut"][];
+        };
+        /** StaffOwnShiftsOut */
+        StaffOwnShiftsOut: {
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Position */
+            position: string;
+            attendance_method: components["schemas"]["AttendanceMethod"];
+            /** Shifts */
+            shifts: components["schemas"]["StaffOwnShiftOut"][];
         };
         /** StaffVehicleIn */
         StaffVehicleIn: {
@@ -9799,6 +12618,205 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** TimesheetDayOut */
+        TimesheetDayOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Is Final */
+            is_final: boolean;
+            /** Finalized By */
+            finalized_by: string | null;
+            /** Finalized At */
+            finalized_at: string | null;
+            attendance_method: components["schemas"]["AttendanceMethod"];
+            /** Rows */
+            rows: components["schemas"]["TimesheetRowOut"][];
+        };
+        /** TimesheetExportIn */
+        TimesheetExportIn: {
+            /** Month */
+            month?: string | null;
+        };
+        /** TimesheetExportOut */
+        TimesheetExportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Month */
+            month: string;
+            /** Staff Count */
+            staff_count: number;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** File Name */
+            file_name: string;
+        };
+        /** TimesheetExportRowOut */
+        TimesheetExportRowOut: {
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /** Payroll No */
+            payroll_no: string | null;
+            /** Name */
+            name: string;
+            /** Worked Days */
+            worked_days: number;
+            /**
+             * Worked Hours
+             * @description saat, 2 ondalık metin: "6.67"
+             */
+            worked_hours: string;
+            /** Overtime Hours */
+            overtime_hours: string;
+            /** Night Hours */
+            night_hours: string;
+            /** Absent Days */
+            absent_days: number;
+            /** Leave Annual */
+            leave_annual: number;
+            /** Leave Excuse */
+            leave_excuse: number;
+            /** Leave Sick */
+            leave_sick: number;
+            /** Leave Unpaid */
+            leave_unpaid: number;
+            /**
+             * Holiday Hours
+             * @description resmî tatil takvimi (S-03) gelene kadar 0
+             */
+            holiday_hours: string;
+        };
+        /** TimesheetExportedRefOut */
+        TimesheetExportedRefOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** TimesheetFinalizeIn */
+        TimesheetFinalizeIn: {
+            /** Date */
+            date?: string | null;
+        };
+        /** TimesheetFinalizedOut */
+        TimesheetFinalizedOut: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Rows */
+            rows: number;
+        };
+        /** TimesheetFixIn */
+        TimesheetFixIn: {
+            /**
+             * Status
+             * @description worked · absent
+             */
+            status?: string | null;
+            /** Late Minutes */
+            late_minutes?: number | null;
+            /** Early Leave Minutes */
+            early_leave_minutes?: number | null;
+            /** Overtime Minutes */
+            overtime_minutes?: number | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** TimesheetPreviewOut */
+        TimesheetPreviewOut: {
+            /** Month */
+            month: string;
+            /** Rows */
+            rows: components["schemas"]["TimesheetExportRowOut"][];
+            /** Missing Days */
+            missing_days: string[];
+            /** Missing Payroll */
+            missing_payroll: string[];
+            exported: components["schemas"]["TimesheetExportedRefOut"] | null;
+        };
+        /** TimesheetRowOut */
+        TimesheetRowOut: {
+            /**
+             * Id
+             * @description vardiya ataması; izinli ve vardiyasız satırda boş
+             */
+            id: string | null;
+            /**
+             * Staff Id
+             * Format: uuid
+             */
+            staff_id: string;
+            /** Staff Name */
+            staff_name: string;
+            /** Position */
+            position: string | null;
+            /** Payroll No */
+            payroll_no: string | null;
+            /** Template */
+            template: string;
+            /**
+             * Planned Minutes
+             * @description vardiya süresi − mola
+             */
+            planned_minutes: number;
+            /**
+             * Night Minutes
+             * @description 22:00–06:00 arası
+             */
+            night_minutes: number;
+            status: components["schemas"]["TimesheetStatus"];
+            leave_type: components["schemas"]["LeaveType"] | null;
+            /** Late Minutes */
+            late_minutes: number;
+            /** Early Leave Minutes */
+            early_leave_minutes: number;
+            /** Overtime Minutes */
+            overtime_minutes: number;
+            /**
+             * Worked Minutes
+             * @description planlanan − geç − erken + fazla mesai
+             */
+            worked_minutes: number;
+            /** Reason */
+            reason: string | null;
+            /** Fixed By */
+            fixed_by: string | null;
+            /** Is Exception */
+            is_exception: boolean;
+            /**
+             * Flags
+             * @description giriş-çıkış karşılaştırmasının işaretleri
+             */
+            flags: components["schemas"]["AttendanceFlag"][];
+        };
+        /**
+         * TimesheetStatus
+         * @enum {string}
+         */
+        TimesheetStatus: "worked" | "absent" | "leave";
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -9851,6 +12869,11 @@ export interface components {
             outgoing: components["schemas"]["MovementOut"];
             incoming: components["schemas"]["MovementOut"];
         };
+        /**
+         * UnannouncedMethod
+         * @enum {string}
+         */
+        UnannouncedMethod: "info" | "approval";
         /** UnitAttributesIn */
         UnitAttributesIn: {
             /**
@@ -10258,6 +13281,113 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * ViolationNotice
+         * @enum {string}
+         */
+        ViolationNotice: "resident" | "management";
+        /** VisitGuardDecisionIn */
+        VisitGuardDecisionIn: {
+            /** Decision */
+            decision?: ("allow" | "deny") | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** VisitRequestIn */
+        VisitRequestIn: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Full Name */
+            full_name?: string | null;
+            /** @default guest */
+            kind: components["schemas"]["VisitorKind"];
+            /** Plate */
+            plate?: string | null;
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** VisitRequestOut */
+        VisitRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Full Name */
+            full_name: string;
+            kind: components["schemas"]["VisitorKind"];
+            /** Plate */
+            plate: string | null;
+            /** Gate Id */
+            gate_id: string | null;
+            method: components["schemas"]["UnannouncedMethod"];
+            status: components["schemas"]["VisitRequestStatus"];
+            /** Decided By */
+            decided_by: string | null;
+            decision_source: components["schemas"]["DecisionSource"] | null;
+            /** Reason */
+            reason: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Timed Out
+             * @description sakin süresi doldu; görevli karar verebilir
+             */
+            timed_out: boolean;
+            /** Seconds Left */
+            seconds_left: number;
+            /** Visitor Id */
+            visitor_id: string | null;
+        };
+        /**
+         * VisitRequestStatus
+         * @enum {string}
+         */
+        VisitRequestStatus: "awaiting" | "allowed" | "denied";
+        /** VisitResidentDecisionIn */
+        VisitResidentDecisionIn: {
+            /** Decision */
+            decision?: ("allow" | "deny") | null;
+        };
+        /** VisitorFieldsSchema */
+        VisitorFieldsSchema: {
+            /**
+             * Plate
+             * @default true
+             */
+            plate: boolean;
+            /**
+             * Phone
+             * @default false
+             */
+            phone: boolean;
+            /**
+             * Id Seen
+             * @description yalnız işaret; kimlik no tutulmaz
+             * @default false
+             */
+            id_seen: boolean;
+        };
         /** VisitorIn */
         VisitorIn: {
             /**
@@ -10288,6 +13418,104 @@ export interface components {
              * @default true
              */
             enter_now: boolean;
+        };
+        /** VisitorInviteIn */
+        VisitorInviteIn: {
+            /**
+             * Unit Id
+             * @description boşsa ilk bölümüm
+             */
+            unit_id?: string | null;
+            /** Visitor Name */
+            visitor_name?: string | null;
+            /**
+             * Type
+             * @description once · range · recurring
+             */
+            type?: string | null;
+            /** Date From */
+            date_from?: string | null;
+            /**
+             * Date To
+             * @description tek kullanımlıkta yok sayılır
+             */
+            date_to?: string | null;
+            /** Weekdays */
+            weekdays?: number[];
+            /** Time From */
+            time_from?: string | null;
+            /** Time To */
+            time_to?: string | null;
+            /** Plate */
+            plate?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** VisitorInviteOut */
+        VisitorInviteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+            type: components["schemas"]["InviteType"];
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Weekdays
+             * @description 0 = pazartesi (yalnız süreli kalıcı)
+             */
+            weekdays: number[];
+            /**
+             * Time From
+             * @description SS:DD
+             */
+            time_from: string | null;
+            /** Time To */
+            time_to: string | null;
+            /**
+             * Plate
+             * @description görüntü biçimi: 34 ABC 123
+             */
+            plate: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Code
+             * @description 6 haneli kod — YALNIZ oluşturma ve yeni kod yanıtında; saklanmaz
+             */
+            code: string | null;
+            status: components["schemas"]["InviteStatus"];
+            /** Valid Now */
+            valid_now: boolean;
+            /** Expired */
+            expired: boolean;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Used At */
+            used_at: string | null;
         };
         /**
          * VisitorKind
@@ -10411,6 +13639,18 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[AttendanceRecordedOut] */
+        Written_AttendanceRecordedOut_: {
+            data: components["schemas"]["AttendanceRecordedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[AttendanceSettingsOut] */
+        Written_AttendanceSettingsOut_: {
+            data: components["schemas"]["AttendanceSettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[BlockOut] */
         Written_BlockOut_: {
             data: components["schemas"]["BlockOut"];
@@ -10501,9 +13741,27 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[DocumentOut] */
+        Written_DocumentOut_: {
+            data: components["schemas"]["DocumentOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ExpenseOut] */
         Written_ExpenseOut_: {
             data: components["schemas"]["ExpenseOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[GateLogOut] */
+        Written_GateLogOut_: {
+            data: components["schemas"]["GateLogOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[GateOut] */
+        Written_GateOut_: {
+            data: components["schemas"]["GateOut"];
             /** Message */
             message: string;
         };
@@ -10546,6 +13804,18 @@ export interface components {
         /** Written[InvitationOut] */
         Written_InvitationOut_: {
             data: components["schemas"]["InvitationOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[InviteCheckInOut] */
+        Written_InviteCheckInOut_: {
+            data: components["schemas"]["InviteCheckInOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[LeaveRequestOut] */
+        Written_LeaveRequestOut_: {
+            data: components["schemas"]["LeaveRequestOut"];
             /** Message */
             message: string;
         };
@@ -10597,6 +13867,13 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[NoneType] */
+        Written_NoneType_: {
+            /** Data */
+            data: null;
+            /** Message */
+            message: string;
+        };
         /** Written[NotificationReadOut] */
         Written_NotificationReadOut_: {
             data: components["schemas"]["NotificationReadOut"];
@@ -10621,6 +13898,30 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ParcelDelegateOut] */
+        Written_ParcelDelegateOut_: {
+            data: components["schemas"]["ParcelDelegateOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingAllocationOut] */
+        Written_ParkingAllocationOut_: {
+            data: components["schemas"]["ParkingAllocationOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingSpaceOut] */
+        Written_ParkingSpaceOut_: {
+            data: components["schemas"]["ParkingSpaceOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingViolationOut] */
+        Written_ParkingViolationOut_: {
+            data: components["schemas"]["ParkingViolationOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[PartyAdded] */
         Written_PartyAdded_: {
             data: components["schemas"]["PartyAdded"];
@@ -10630,6 +13931,24 @@ export interface components {
         /** Written[PartyOut] */
         Written_PartyOut_: {
             data: components["schemas"]["PartyOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolPlanOut] */
+        Written_PatrolPlanOut_: {
+            data: components["schemas"]["PatrolPlanOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolPointOut] */
+        Written_PatrolPointOut_: {
+            data: components["schemas"]["PatrolPointOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolRunOut] */
+        Written_PatrolRunOut_: {
+            data: components["schemas"]["PatrolRunOut"];
             /** Message */
             message: string;
         };
@@ -10717,9 +14036,45 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[SecuritySettingsOut] */
+        Written_SecuritySettingsOut_: {
+            data: components["schemas"]["SecuritySettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[SetupOut] */
         Written_SetupOut_: {
             data: components["schemas"]["SetupOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftAssignedOut] */
+        Written_ShiftAssignedOut_: {
+            data: components["schemas"]["ShiftAssignedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftCopiedOut] */
+        Written_ShiftCopiedOut_: {
+            data: components["schemas"]["ShiftCopiedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftLogEntryOut] */
+        Written_ShiftLogEntryOut_: {
+            data: components["schemas"]["ShiftLogEntryOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftPublishedOut] */
+        Written_ShiftPublishedOut_: {
+            data: components["schemas"]["ShiftPublishedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftTemplateOut] */
+        Written_ShiftTemplateOut_: {
+            data: components["schemas"]["ShiftTemplateOut"];
             /** Message */
             message: string;
         };
@@ -10738,6 +14093,18 @@ export interface components {
         /** Written[StockItemOut] */
         Written_StockItemOut_: {
             data: components["schemas"]["StockItemOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[TimesheetExportOut] */
+        Written_TimesheetExportOut_: {
+            data: components["schemas"]["TimesheetExportOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[TimesheetFinalizedOut] */
+        Written_TimesheetFinalizedOut_: {
+            data: components["schemas"]["TimesheetFinalizedOut"];
             /** Message */
             message: string;
         };
@@ -10768,6 +14135,18 @@ export interface components {
         /** Written[VehicleSettingsOut] */
         Written_VehicleSettingsOut_: {
             data: components["schemas"]["VehicleSettingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VisitRequestOut] */
+        Written_VisitRequestOut_: {
+            data: components["schemas"]["VisitRequestOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VisitorInviteOut] */
+        Written_VisitorInviteOut_: {
+            data: components["schemas"]["VisitorInviteOut"];
             /** Message */
             message: string;
         };
@@ -12120,6 +15499,1637 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_LostItemOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gates_api_v1_sites__slug__gates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gate_api_v1_sites__slug__gates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_gate_api_v1_sites__slug__gates__gate_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gate_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__settings_security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecuritySettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__settings_security_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecuritySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_SecuritySettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_delegates_api_v1_sites__slug__resident_parcel_delegates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParcelDelegateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_delegate_api_v1_sites__slug__resident_parcel_delegates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParcelDelegateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParcelDelegateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_delegate_api_v1_sites__slug__resident_parcel_delegates__delegate_id__remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delegate_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParcelDelegateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unit_delegates_api_v1_sites__slug__units__unit_id__parcel_delegates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unit_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DelegateNameOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    long_waiting_api_v1_sites__slug__packages_long_waiting_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LongWaitingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_invites_api_v1_sites__slug__resident_visitor_invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitorInviteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invite_api_v1_sites__slug__resident_visitor_invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitorInviteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_invite_api_v1_sites__slug__resident_visitor_invites__invite_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reissue_code_api_v1_sites__slug__resident_visitor_invites__invite_id__new_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    expected_api_v1_sites__slug__visitor_invites_expected_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectedInviteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_api_v1_sites__slug__visitor_invites_check_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCheckInIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_InviteCheckInOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_requests_api_v1_sites__slug__visit_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["VisitRequestStatus"] | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitRequestOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_request_api_v1_sites__slug__visit_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guard_decide_api_v1_sites__slug__visit_requests__request_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitGuardDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_approvals_api_v1_sites__slug__resident_visit_approvals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitRequestOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_decide_api_v1_sites__slug__resident_visit_approvals__request_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitResidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_api_v1_sites__slug__plates_lookup_get: {
+        parameters: {
+            query: {
+                /** @description büyük/küçük harf ve boşluk duyarsız */
+                plate: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlateLookupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gate_logs_api_v1_sites__slug__gate_logs_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün */
+                date?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_GateLogOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gate_log_api_v1_sites__slug__gate_logs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateLogIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateLogOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_violations_api_v1_sites__slug__parking_violations_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingViolationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_violation_api_v1_sites__slug__parking_violations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingViolationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingViolationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_log_api_v1_sites__slug__shift_log_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftLogEntryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_api_v1_sites__slug__shift_log_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftLogEntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_addendum_api_v1_sites__slug__shift_log__entry_id__addenda_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftLogAddendumIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_api_v1_sites__slug__shift_log__entry_id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_points_api_v1_sites__slug__patrol_points_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPointOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_point_api_v1_sites__slug__patrol_points_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPointIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPointOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_point_api_v1_sites__slug__patrol_points__point_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                point_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPointIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPointOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plans_api_v1_sites__slug__patrol_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPlanOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_api_v1_sites__slug__patrol_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPlanOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_plan_api_v1_sites__slug__patrol_plans__plan_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPlanOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_api_v1_sites__slug__patrol_schedule_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün (tesis saati) */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolSlotOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_runs_api_v1_sites__slug__patrol_runs_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün (tesis saati) */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolRunOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_run_api_v1_sites__slug__patrol_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_api_v1_sites__slug__patrol_runs__run_id__scans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolScanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finish_api_v1_sites__slug__patrol_runs__run_id__finish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_spaces_api_v1_sites__slug__parking_spaces_get: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["ParkingKind"] | null;
+                /** @description kod araması */
+                q?: string | null;
+                /** @description bugün bu bölüme tahsisliler */
+                unit_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_space_api_v1_sites__slug__parking_spaces_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSpaceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_space_api_v1_sites__slug__parking_spaces__space_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSpaceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_allocations_api_v1_sites__slug__parking_allocations_get: {
+        parameters: {
+            query?: {
+                space_id?: string | null;
+                unit_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    allocate_api_v1_sites__slug__parking_spaces__space_id__allocations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingAllocationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_allocation_api_v1_sites__slug__parking_allocations__allocation_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                allocation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingAllocationEndIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_spaces_api_v1_sites__slug__resident_parking_spaces_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSpaceOut"][];
                 };
             };
             /** @description Validation Error */
@@ -16741,6 +21751,73 @@ export interface operations {
             };
         };
     };
+    my_documents_api_v1_sites__slug__resident_documents_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ResidentDocumentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_document_download_api_v1_sites__slug__resident_documents__document_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                    "image/*": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     portfolio_api_v1_portfolio_get: {
         parameters: {
             query?: never;
@@ -18493,6 +23570,37 @@ export interface operations {
             };
         };
     };
+    linkable_users_api_v1_sites__slug__staff_linkable_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkableUserOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_staff_api_v1_sites__slug__staff__staff_id__patch: {
         parameters: {
             query?: never;
@@ -18516,6 +23624,1024 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_StaffOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_items_api_v1_sites__slug__staff__staff_id__open_items_get: {
+        parameters: {
+            query?: {
+                /** @description bu günden sonraki vardiyalar; boş → bugün */
+                after?: string | null;
+            };
+            header?: never;
+            path: {
+                staff_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffOpenItemsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_sites__slug__shift_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftTemplateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_template_api_v1_sites__slug__shift_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftTemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_template_api_v1_sites__slug__shift_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftTemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_api_v1_sites__slug__shift_plans_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftPlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_assignment_api_v1_sites__slug__shift_plans_assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftAssignmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftAssignedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_assignment_api_v1_sites__slug__shift_plans_assignments__assignment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    copy_week_api_v1_sites__slug__shift_plans_copy_week_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftCopyWeekIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftCopiedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_api_v1_sites__slug__shift_plans_publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftPublishIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftPublishedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_leaves_api_v1_sites__slug__leave_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["LeaveStatus"] | null;
+                staff_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_leave_api_v1_sites__slug__leave_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_leave_api_v1_sites__slug__leave_requests__leave_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leave_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_leave_api_v1_sites__slug__leave_requests__leave_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leave_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveRejectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_leave_api_v1_sites__slug__leave_requests__leave_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leave_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leave_balances_api_v1_sites__slug__leave_balances_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveBalanceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_day_api_v1_sites__slug__timesheets_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimesheetDayOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fix_row_api_v1_sites__slug__timesheets__assignment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimesheetFixIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_NoneType_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finalize_api_v1_sites__slug__timesheets_finalize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimesheetFinalizeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TimesheetFinalizedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_preview_api_v1_sites__slug__timesheet_exports_preview_get: {
+        parameters: {
+            query?: {
+                /** @description "2026-10"; boş → geçen ay */
+                month?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimesheetPreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_exports_api_v1_sites__slug__timesheet_exports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_TimesheetExportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_export_api_v1_sites__slug__timesheet_exports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimesheetExportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TimesheetExportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_file_api_v1_sites__slug__timesheet_exports__export_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                export_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__attendance_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__attendance_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AttendanceSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rotate_code_api_v1_sites__slug__attendance_settings_rotate_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AttendanceSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    own_shifts_api_v1_sites__slug__me_shifts_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffOwnShiftsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_event_api_v1_sites__slug__me_attendance_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceEventIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AttendanceRecordedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    own_leaves_api_v1_sites__slug__me_leave_requests_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_own_leave_api_v1_sites__slug__me_leave_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffOwnLeaveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_own_leave_api_v1_sites__slug__me_leave_requests__leave_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                leave_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_LeaveRequestOut_"];
                 };
             };
             /** @description Validation Error */
@@ -19225,6 +25351,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_DelegationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_documents_api_v1_sites__slug__documents_get: {
+        parameters: {
+            query?: {
+                /** @description ad içinde arar */
+                q?: string | null;
+                kind?: components["schemas"]["DocumentKind"] | null;
+                /** @description yalnız 60 gün içinde biten ya da bitmiş (`1`/`true`) */
+                expiring?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DocumentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_document_api_v1_sites__slug__documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_sites__slug__documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DocumentOut_"];
+                };
+            };
+            /** @description `same_file` — dosya son sürümle aynı */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_version_api_v1_sites__slug__documents__document_id__versions__version__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                version: number;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                    "image/*": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    access_log_api_v1_sites__slug__documents__document_id__access_log_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                document_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DocumentAccessOut_"];
                 };
             };
             /** @description Validation Error */

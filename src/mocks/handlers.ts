@@ -4,6 +4,11 @@
 //
 // Yapı, Kişiler ve Kayıt paketi (servis istekleri 19–26, YAP-01..10) backend'de; buradan kaldırıldı.
 // Yalnız diğer sahte paketlerin kullandığı ortak alan ve araç önbelleği kaldı (aşağıda).
+// Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
+// devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
+//
+// Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
+// izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -45,7 +50,6 @@ const today = () => iso(new Date());
 const dayOf = (ts: string) => iso(new Date(ts));
 const monthStart = () => today().slice(0, 7) + "-01";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const NAME_RE = /^[A-Za-zÇĞİÖŞÜçğıöşü' -]{2,60}$/u;
 const normPhone = (v: string) => { const d = v.replace(/\D/g, "").replace(/^90/, "").replace(/^0/, ""); return d ? `+90${d}` : ""; };
 
 async function me(request: Request) {
@@ -77,9 +81,6 @@ interface CommonArea { id: string; name: string; kind: string; block_id: string 
 interface Vehicle { id: string; plate: string; plate_display: string; unit_id: string; unit_name: string; owner_name: string | null; kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive" }
 const commonAreas = loadMap<string, CommonArea[]>("commonAreas");
 const vehicles = loadMap<string, Vehicle[]>("vehicles");
-const PLATE_RE = /^(0[1-9]|[1-7]\d|8[01])[A-Z]{1,3}\d{2,5}$/;
-const normPlate = (v: string) => v.toLocaleUpperCase("en-US").replace(/[^A-Z0-9]/g, "");
-const displayPlate = (p: string) => p.replace(/^(\d{2})([A-Z]+)(\d+)$/, "$1 $2 $3");
 
 async function myUnits(request: Request, slug: string) {
   const h = await real<{ units: { unit_id: string; unit_name: string; role: string }[] }>(request, `/api/v1/sites/${slug}/resident/home`);
@@ -651,701 +652,15 @@ const finans: RequestHandler[] = [
   }),
 ];
 
-// ============================================================================================
-// İNSAN KAYNAKLARI PAKETİ (Yazılım Dokümanı IK-01..05) — servis istekleri 35–39
-// Personelin uygulamaya girişi ve kart–kullanıcı eşleşmesi K29'a bağlı: vardiyam, kendi izin talebi ve
-// QR/konumlu giriş-çıkış bu pakette yok; kayıtlar İK sorumlusu tarafından tutulur.
-// ============================================================================================
-interface StaffRow { id: string; full_name: string; position: string; employer: string; contractor_name: string | null; phone: string | null; start_date: string; end_date: string | null; is_active: boolean }
-interface ShiftTemplate { id: string; name: string; start: string; end: string; break_minutes: number; position: string | null; location: string | null; is_active: boolean }
-interface Assignment { id: string; staff_id: string; date: string; template_id: string; changed_after_publish: boolean }
-interface LeaveReq { id: string; staff_id: string; staff_name: string; type: "annual" | "excuse" | "sick" | "unpaid"; from: string; to: string; days: number; note: string | null; status: "pending" | "approved" | "rejected" | "cancelled"; created_by: string; created_at: string; decided_by: string | null; decided_at: string | null; reject_reason: string | null }
-interface TimesheetFix { status: "worked" | "absent" | "leave"; late_minutes: number; early_leave_minutes: number; overtime_minutes: number; reason: string; by: string; at: string }
-interface TsExport { id: string; month: string; rows: Record<string, string | number>[]; created_by: string; created_at: string; file_name: string }
-const payrollNos = loadMap<string, string>("payrollNos"); // staff_id → sicil no
-const shiftTemplates = loadMap<string, ShiftTemplate[]>("shiftTemplates");
-const assignments = loadMap<string, Assignment[]>("shiftAssignments");
-const publishedWeeks = loadMap<string, { week: string; at: string; by: string }[]>("publishedWeeks");
-const leaves = loadMap<string, LeaveReq[]>("leaveRequests");
-const tsFixes = loadMap<string, TimesheetFix>("timesheetFixes"); // assignment_id → düzeltme
-const tsFinal = loadMap<string, { date: string; by: string; at: string }[]>("timesheetFinal");
-const tsExports = loadMap<string, TsExport[]>("timesheetExports");
-const LEAVE_TYPES = ["annual", "excuse", "sick", "unpaid"] as const;
+// Ortak saat yardımcıları (İnsan kaynakları paketi 35–39 gerçek backend'e geçti; aşağıdaki sahte uçlar kullanıyor)
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-/** Vardiyanın başlangıç/bitişi (dakika, gün başından); gece vardiyası ertesi güne taşar. */
-const span = (t: ShiftTemplate) => { const s = toMin(t.start); let e = toMin(t.end); if (e <= s) e += 1440; return { s, e }; };
-const dayIndex = (d: string) => Math.round(new Date(d + "T00:00:00Z").getTime() / 864e5);
 const weekStart = (d: string) => { const x = new Date(d + "T00:00:00"); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); return iso(x); };
-const tplOf = (slug: string) => { if (!shiftTemplates.has(slug)) shiftTemplates.set(slug, [
-  { id: crypto.randomUUID(), name: "Sabah", start: "08:00", end: "16:00", break_minutes: 60, position: null, location: null, is_active: true },
-  { id: crypto.randomUUID(), name: "Akşam", start: "16:00", end: "00:00", break_minutes: 30, position: null, location: null, is_active: true },
-  { id: crypto.randomUUID(), name: "Gece", start: "00:00", end: "08:00", break_minutes: 30, position: null, location: null, is_active: true },
-]); return shiftTemplates.get(slug)!; };
-const nightMinutes = (t: ShiftTemplate) => { const { s, e } = span(t); let n = 0; for (let m = s; m < e; m++) { const h = (m % 1440) / 60; if (h >= 22 || h < 6) n++; } return n; };
-function leaveOn(slug: string, staffId: string, date: string) { return listOf(leaves, slug).find((l) => l.staff_id === staffId && l.status === "approved" && l.from <= date && l.to >= date) ?? null; }
-function conflictsFor(slug: string, list: Assignment[]) {
-  const tpl = new Map(tplOf(slug).map((t) => [t.id, t]));
-  const out: { assignment_id: string; kind: "overlap" | "leave" | "rest"; message: string }[] = [];
-  const byStaff = new Map<string, Assignment[]>();
-  for (const a of list) byStaff.set(a.staff_id, [...(byStaff.get(a.staff_id) ?? []), a]);
-  for (const [, as] of byStaff) {
-    const ivs = as.map((a) => { const t = tpl.get(a.template_id); if (!t) return null; const { s, e } = span(t); const base = dayIndex(a.date) * 1440; return { a, s: base + s, e: base + e }; }).filter((x): x is { a: Assignment; s: number; e: number } => !!x).sort((x, y) => x.s - y.s);
-    for (let i = 0; i < ivs.length; i++) {
-      const cur = ivs[i]!, nxt = ivs[i + 1];
-      const lv = leaveOn(slug, cur.a.staff_id, cur.a.date);
-      if (lv) out.push({ assignment_id: cur.a.id, kind: "leave", message: `Onaylı izin günü (${lv.type === "sick" ? "raporlu" : lv.type === "annual" ? "yıllık" : lv.type === "excuse" ? "mazeret" : "ücretsiz"})` });
-      if (!nxt) continue;
-      if (nxt.s < cur.e) { out.push({ assignment_id: nxt.a.id, kind: "overlap", message: "Aynı kişiye çakışan vardiya" }); continue; }
-      const rest = (nxt.s - cur.e) / 60;
-      if (rest < 11) out.push({ assignment_id: nxt.a.id, kind: "rest", message: `İki vardiya arası dinlenme ${rest.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} saat (11 saatten az)` });
-    }
-  }
-  return out;
-}
-async function staffList(request: Request, slug: string, includeLeft = false) {
-  const a = await real<StaffRow[]>(request, `/api/v1/sites/${slug}/staff?active=true`);
-  const list = [...(a.body ?? [])];
-  if (includeLeft) { const b = await real<StaffRow[]>(request, `/api/v1/sites/${slug}/staff?active=false`); list.push(...(b.body ?? [])); }
-  return list.map((s) => ({ ...s, payroll_no: payrollNos.get(s.id) ?? null }));
-}
-function timesheetRows(slug: string, staff: (StaffRow & { payroll_no: string | null })[], date: string) {
-  const tpl = new Map(tplOf(slug).map((t) => [t.id, t]));
-  const rows = listOf(assignments, slug).filter((a) => a.date === date).map((a) => {
-    const t = tpl.get(a.template_id); const s = staff.find((x) => x.id === a.staff_id);
-    const lv = leaveOn(slug, a.staff_id, date); const fix = tsFixes.get(a.id);
-    const planned = t ? (span(t).e - span(t).s - t.break_minutes) : 0;
-    const status = fix?.status ?? (lv ? "leave" : "worked");
-    const worked = status === "worked" ? Math.max(0, planned - (fix?.late_minutes ?? 0) - (fix?.early_leave_minutes ?? 0) + (fix?.overtime_minutes ?? 0)) : 0;
-    return { id: a.id, staff_id: a.staff_id, staff_name: s?.full_name ?? "—", position: s?.position ?? null, payroll_no: s?.payroll_no ?? null, template: t ? `${t.name} ${t.start}–${t.end}` : "—", planned_minutes: planned, night_minutes: status === "worked" && t ? nightMinutes(t) : 0, status, leave_type: lv?.type ?? null, late_minutes: fix?.late_minutes ?? 0, early_leave_minutes: fix?.early_leave_minutes ?? 0, overtime_minutes: fix?.overtime_minutes ?? 0, worked_minutes: worked, reason: fix?.reason ?? null, fixed_by: fix?.by ?? null, is_exception: !!fix || !!lv };
-  });
-  // Vardiyası olmayan ama izinli personel de satır olarak görünsün
-  for (const l of listOf(leaves, slug).filter((x) => x.status === "approved" && x.from <= date && x.to >= date)) {
-    if (!rows.some((r) => r.staff_id === l.staff_id)) rows.push({ id: `leave-${l.id}-${date}`, staff_id: l.staff_id, staff_name: l.staff_name, position: staff.find((x) => x.id === l.staff_id)?.position ?? null, payroll_no: payrollNos.get(l.staff_id) ?? null, template: "—", planned_minutes: 0, night_minutes: 0, status: "leave", leave_type: l.type, late_minutes: 0, early_leave_minutes: 0, overtime_minutes: 0, worked_minutes: 0, reason: null, fixed_by: null, is_exception: true });
-  }
-  return rows.sort((a, b) => a.staff_name.localeCompare(b.staff_name, "tr"));
-}
 
-async function tsPreview(request: Request, slug: string, month: string) {
-    const staff = await staffList(request, slug, true);
-    const days: string[] = []; for (let d = `${month}-01`; d.startsWith(month); d = addDays(d, 1)) days.push(d);
-    const fin = new Set(listOf(tsFinal, slug).map((d) => d.date));
-    const sum = new Map<string, Record<string, number | string>>();
-    const missing: string[] = [];
-    for (const d of days) {
-      const rows = timesheetRows(slug, staff, d);
-      if (rows.length && !fin.has(d)) missing.push(d);
-      for (const r of rows) {
-        const o = sum.get(r.staff_id) ?? { staff_id: r.staff_id, payroll_no: r.payroll_no ?? "", name: r.staff_name, worked_days: 0, worked_hours: 0, overtime_hours: 0, night_hours: 0, absent_days: 0, leave_annual: 0, leave_excuse: 0, leave_sick: 0, leave_unpaid: 0, holiday_hours: 0 };
-        if (r.status === "worked") { o.worked_days = (o.worked_days as number) + 1; o.worked_hours = (o.worked_hours as number) + r.worked_minutes / 60; o.overtime_hours = (o.overtime_hours as number) + r.overtime_minutes / 60; o.night_hours = (o.night_hours as number) + r.night_minutes / 60; }
-        else if (r.status === "absent") o.absent_days = (o.absent_days as number) + 1;
-        else if (r.leave_type) o[`leave_${r.leave_type}`] = (o[`leave_${r.leave_type}`] as number) + 1;
-        sum.set(r.staff_id, o);
-      }
-    }
-    const rows: Record<string, string | number>[] = [...sum.values()].map((o): Record<string, string | number> => ({ ...o, worked_hours: Math.round((o.worked_hours as number) * 100) / 100, overtime_hours: Math.round((o.overtime_hours as number) * 100) / 100, night_hours: Math.round((o.night_hours as number) * 100) / 100 })).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
-    const exported = listOf(tsExports, slug).find((x) => x.month === month) ?? null;
-    return { month, rows, missing_days: missing, missing_payroll: rows.filter((r) => !r.payroll_no).map((r) => r.name), exported: exported ? { id: exported.id, created_by: exported.created_by, created_at: exported.created_at } : null };
-}
-
-const ik: RequestHandler[] = [
-  // 35 — Personel kartına bordro sicil no; ayrılışta açık işler
-  http.get(`${API}/staff`, async ({ request, params }) => {
-    const r = await real<StaffRow[]>(request, `/api/v1/sites/${params.slug}/staff${new URL(request.url).search}`);
-    if (r.status !== 200 || !r.body) return HttpResponse.json(r.body, { status: r.status });
-    return HttpResponse.json(r.body.map((s) => ({ ...s, payroll_no: payrollNos.get(s.id) ?? null })));
-  }),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/staff` : `${API}/staff/:id`, async ({ request, params }) => {
-    const b = (await request.json()) as Record<string, unknown> & { payroll_no?: string | null };
-    const { payroll_no, ...rest } = b;
-    if (payroll_no != null && payroll_no !== "" && !/^[A-Za-z0-9-]{1,20}$/.test(String(payroll_no))) return err(422, "validation", VALIDATION, { payroll_no: "Sicil no harf, rakam ve tire; en fazla 20 karakter." });
-    const r = await real<{ data?: StaffRow }>(request, `/api/v1/sites/${params.slug}/staff${verb === "patch" ? `/${params.id}` : ""}`, { method: verb.toUpperCase(), body: rest });
-    if (r.status < 300 && r.body?.data && "payroll_no" in b) { if (payroll_no) payrollNos.set(r.body.data.id, String(payroll_no).trim()); else payrollNos.delete(r.body.data.id); }
-    return HttpResponse.json(r.body && r.body.data ? { ...r.body, data: { ...r.body.data, payroll_no: payrollNos.get(r.body.data.id) ?? null } } : r.body, { status: r.status });
-  })),
-  http.get(`${API}/staff/:id/open-items`, ({ params }) => {
-    const slug = String(params.slug);
-    const future = listOf(assignments, slug).filter((a) => a.staff_id === params.id && a.date >= today()).sort((a, b) => a.date.localeCompare(b.date));
-    const pend = listOf(leaves, slug).filter((l) => l.staff_id === params.id && l.status === "pending");
-    return HttpResponse.json({ future_shifts: future.length, first_shift: future[0]?.date ?? null, pending_leaves: pend.length });
-  }),
-
-  // 36 — Vardiya şablonları ve plan
-  http.get(`${API}/shift-templates`, ({ params }) => HttpResponse.json(tplOf(String(params.slug)))),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/shift-templates` : `${API}/shift-templates/:id`, async ({ request, params }) => {
-    const list = tplOf(String(params.slug));
-    const cur = verb === "patch" ? list.find((t) => t.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Vardiya şablonu bulunamadı.");
-    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<ShiftTemplate>) };
-    const f: Record<string, string> = {};
-    if (!b.name?.trim()) f.name = "Ad yazın."; else if (list.some((t) => t.id !== cur?.id && t.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla şablon var.";
-    if (!TIME_RE.test(b.start ?? "")) f.start = "Başlangıç saatini girin (SS:DD).";
-    if (!TIME_RE.test(b.end ?? "")) f.end = "Bitiş saatini girin (SS:DD).";
-    if (!(Number.isInteger(b.break_minutes) && b.break_minutes! >= 0 && b.break_minutes! <= 180)) f.break_minutes = "Mola 0–180 dakika.";
-    if (!f.start && !f.end && b.start === b.end) f.end = "Bitiş başlangıçla aynı olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const t: ShiftTemplate = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), start: b.start!, end: b.end!, break_minutes: b.break_minutes!, position: b.position?.trim() || null, location: b.location?.trim() || null, is_active: b.is_active ?? true };
-    if (cur) Object.assign(cur, t); else list.push(t);
-    return HttpResponse.json({ data: t, message: verb === "post" ? `${t.name} şablonu eklendi.` : `${t.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-  http.get(`${API}/shift-plans`, async ({ request, params }) => {
-    const slug = String(params.slug); const url = new URL(request.url);
-    const from = url.searchParams.get("from") ?? weekStart(today()); const to = url.searchParams.get("to") ?? addDays(from, 6);
-    const list = listOf(assignments, slug).filter((a) => a.date >= from && a.date <= to);
-    const staff = await staffList(request, slug);
-    const lv = listOf(leaves, slug).filter((l) => l.status === "approved" && l.to >= from && l.from <= to).map((l) => ({ staff_id: l.staff_id, from: l.from, to: l.to, type: l.type }));
-    const pub = listOf(publishedWeeks, slug).find((w) => w.week === weekStart(from)) ?? null;
-    return HttpResponse.json({ from, to, staff, templates: tplOf(slug), assignments: list, leaves: lv, conflicts: conflictsFor(slug, listOf(assignments, slug).filter((a) => a.date >= addDays(from, -1) && a.date <= addDays(to, 1))).filter((c) => list.some((a) => a.id === c.assignment_id)), published: pub, changed_after_publish: list.filter((a) => a.changed_after_publish).length });
-  }),
-  http.post(`${API}/shift-plans/assignments`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { staff_id?: string; date?: string; template_id?: string };
-    const f: Record<string, string> = {};
-    if (!b.staff_id) f.staff_id = "Personel seçin.";
-    if (!b.date || !DATE_RE.test(b.date)) f.date = "Gün seçin.";
-    if (!tplOf(slug).some((t) => t.id === b.template_id && t.is_active)) f.template_id = "Vardiya seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const list = listOf(assignments, slug);
-    if (list.some((a) => a.staff_id === b.staff_id && a.date === b.date && a.template_id === b.template_id)) return err(409, "duplicate", "Bu vardiya o gün bu kişiye zaten atanmış.");
-    const published = listOf(publishedWeeks, slug).some((w) => w.week === weekStart(b.date!));
-    const a: Assignment = { id: crypto.randomUUID(), staff_id: b.staff_id!, date: b.date!, template_id: b.template_id!, changed_after_publish: published };
-    list.push(a);
-    const c = conflictsFor(slug, list).filter((x) => x.assignment_id === a.id);
-    return HttpResponse.json({ data: { ...a, conflicts: c }, message: c.length ? `Atandı — uyarı: ${c.map((x) => x.message).join("; ")}` : "Vardiya atandı." }, { status: 201 });
-  }),
-  http.delete(`${API}/shift-plans/assignments/:id`, ({ params }) => {
-    const list = listOf(assignments, String(params.slug));
-    const i = list.findIndex((a) => a.id === params.id);
-    if (i < 0) return err(404, "not_found", "Atama bulunamadı.");
-    if (listOf(tsFinal, String(params.slug)).some((d) => d.date === list[i]!.date)) return err(409, "timesheet_final", "Bu günün puantajı kesinleşti; atama kaldırılamaz.");
-    list.splice(i, 1);
-    return HttpResponse.json({ data: null, message: "Atama kaldırıldı." });
-  }),
-  http.post(`${API}/shift-plans/copy-week`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { from_week?: string; to_week?: string };
-    if (!b.from_week || !b.to_week || weekStart(b.from_week) !== b.from_week || weekStart(b.to_week) !== b.to_week) return err(422, "validation", "Hafta başlarını (pazartesi) seçin.");
-    const list = listOf(assignments, slug);
-    const src = list.filter((a) => a.date >= b.from_week! && a.date <= addDays(b.from_week!, 6));
-    const shift = dayIndex(b.to_week) - dayIndex(b.from_week);
-    let n = 0;
-    for (const a of src) { const d = addDays(a.date, shift); if (!list.some((x) => x.staff_id === a.staff_id && x.date === d && x.template_id === a.template_id)) { list.push({ id: crypto.randomUUID(), staff_id: a.staff_id, date: d, template_id: a.template_id, changed_after_publish: false }); n++; } }
-    return HttpResponse.json({ data: { created: n }, message: `${n} atama kopyalandı.` }, { status: 201 });
-  }),
-  http.post(`${API}/shift-plans/publish`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { week?: string; acknowledge_conflicts?: boolean };
-    if (!b.week || weekStart(b.week) !== b.week) return err(422, "validation", "Hafta seçin.");
-    const wk = listOf(assignments, slug).filter((a) => a.date >= b.week! && a.date <= addDays(b.week!, 6));
-    if (wk.length === 0) return err(409, "empty_plan", "Bu haftada atama yok.");
-    const c = conflictsFor(slug, listOf(assignments, slug)).filter((x) => wk.some((a) => a.id === x.assignment_id));
-    if (c.length && !b.acknowledge_conflicts) return err(409, "conflicts", `${c.length} çakışma var. İnceleyip yine de yayınlamak için onaylayın.`);
-    const pubs = listOf(publishedWeeks, slug).filter((w) => w.week !== b.week);
-    pubs.push({ week: b.week, at: new Date().toISOString(), by: (await me(request)).name });
-    publishedWeeks.set(slug, pubs);
-    for (const a of wk) a.changed_after_publish = false;
-    return HttpResponse.json({ data: { week: b.week, assignments: wk.length }, message: `Hafta planı yayınlandı (${wk.length} vardiya). Personele bildirim, personel hesabı (K29) ve bildirim servisi (K5) gelince gidecek.` });
-  }),
-
-  // 37 — İzinler
-  http.get(`${API}/leave-requests`, ({ request, params }) => {
-    const st = new URL(request.url).searchParams.get("status");
-    return HttpResponse.json([...listOf(leaves, String(params.slug))].filter((l) => !st || l.status === st).sort((a, b) => b.created_at.localeCompare(a.created_at)));
-  }),
-  http.get(`${API}/leave-balances`, async ({ request, params }) => {
-    const slug = String(params.slug); const year = today().slice(0, 4);
-    const staff = await staffList(request, slug);
-    return HttpResponse.json(staff.map((s) => ({ staff_id: s.id, staff_name: s.full_name, used: Object.fromEntries(LEAVE_TYPES.map((t) => [t, listOf(leaves, slug).filter((l) => l.staff_id === s.id && l.type === t && l.status === "approved" && l.from.startsWith(year)).reduce((n, l) => n + l.days, 0)])) })));
-  }),
-  http.post(`${API}/leave-requests`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as Partial<LeaveReq>;
-    const f: Record<string, string> = {};
-    const staff = (await staffList(request, slug)).find((s) => s.id === b.staff_id);
-    if (!staff) f.staff_id = "Personel seçin.";
-    if (!LEAVE_TYPES.includes(b.type as never)) f.type = "İzin türünü seçin.";
-    if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihini girin.";
-    if (!b.to || !DATE_RE.test(b.to)) f.to = "Bitiş tarihini girin."; else if (b.from && b.to < b.from) f.to = "Bitiş başlangıçtan önce olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (listOf(leaves, slug).some((l) => l.staff_id === b.staff_id && (l.status === "pending" || l.status === "approved") && l.from <= b.to! && l.to >= b.from!)) return err(409, "leave_overlap", "Bu tarihlerde kişinin başka bir izni var.");
-    const days = dayIndex(b.to!) - dayIndex(b.from!) + 1;
-    const l: LeaveReq = { id: crypto.randomUUID(), staff_id: staff!.id, staff_name: staff!.full_name, type: b.type!, from: b.from!, to: b.to!, days, note: b.note?.trim() || null, status: "pending", created_by: (await me(request)).name, created_at: new Date().toISOString(), decided_by: null, decided_at: null, reject_reason: null };
-    listOf(leaves, slug).push(l);
-    const clash = listOf(assignments, slug).filter((a) => a.staff_id === l.staff_id && a.date >= l.from && a.date <= l.to).length;
-    return HttpResponse.json({ data: { ...l, clashing_shifts: clash }, message: `İzin talebi kaydedildi${clash ? `; bu tarihlerde ${clash} vardiyası var` : ""}. Onay bekliyor.` }, { status: 201 });
-  }),
-  http.post(`${API}/leave-requests/:id/:action`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    if (!["approve", "reject", "cancel"].includes(String(params.action))) return;
-    const l = listOf(leaves, slug).find((x) => x.id === params.id);
-    if (!l) return err(404, "not_found", "İzin talebi bulunamadı.");
-    const b = (await request.json().catch(() => ({}))) as { reason?: string };
-    const who = (await me(request)).name;
-    if (params.action === "cancel") {
-      if (l.status === "cancelled" || l.status === "rejected") return err(409, "invalid_status", "Bu talep zaten kapanmış.");
-      if (listOf(tsFinal, slug).some((d) => d.date >= l.from && d.date <= l.to)) return err(409, "timesheet_final", "İzin günlerinden birinin puantajı kesinleşti; iptal edilemez.");
-      Object.assign(l, { status: "cancelled", decided_by: who, decided_at: new Date().toISOString() });
-      return HttpResponse.json({ data: l, message: "İzin iptal edildi." });
-    }
-    if (l.status !== "pending") return err(409, "invalid_status", "Yalnız bekleyen talep karara bağlanır.");
-    if (params.action === "reject" && (b.reason ?? "").trim().length < 3) return err(422, "validation", VALIDATION, { reason: "Ret gerekçesi yazın." });
-    Object.assign(l, { status: params.action === "approve" ? "approved" : "rejected", decided_by: who, decided_at: new Date().toISOString(), reject_reason: params.action === "reject" ? b.reason!.trim() : null });
-    const clash = listOf(assignments, slug).filter((a) => a.staff_id === l.staff_id && a.date >= l.from && a.date <= l.to).length;
-    return HttpResponse.json({ data: l, message: params.action === "approve" ? `İzin onaylandı; vardiya planına ve puantaja yansır.${clash ? ` ${clash} vardiya "atanmalı" olarak işaretlendi.` : ""}` : "İzin reddedildi." });
-  }),
-
-  // 38 — Puantaj
-  http.get(`${API}/timesheets`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const date = new URL(request.url).searchParams.get("date") ?? addDays(today(), -1);
-    const staff = await staffList(request, slug, true);
-    const fin = listOf(tsFinal, slug).find((d) => d.date === date) ?? null;
-    return HttpResponse.json({ date, is_final: !!fin, finalized_by: fin?.by ?? null, finalized_at: fin?.at ?? null, rows: timesheetRows(slug, staff, date) });
-  }),
-  http.patch(`${API}/timesheets/:id`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const a = listOf(assignments, slug).find((x) => x.id === params.id);
-    if (!a) return err(404, "not_found", "Puantaj satırı bulunamadı.");
-    if (listOf(tsFinal, slug).some((d) => d.date === a.date)) return err(409, "timesheet_final", "Bu günün puantajı kesinleşti; düzeltme yapılamaz.");
-    const b = (await request.json()) as Partial<TimesheetFix>;
-    const f: Record<string, string> = {};
-    if (!["worked", "absent", "leave"].includes(b.status ?? "")) f.status = "Durum seçin.";
-    for (const k of ["late_minutes", "early_leave_minutes", "overtime_minutes"] as const) if (b[k] != null && !(Number.isInteger(b[k]) && b[k]! >= 0 && b[k]! <= 960)) f[k] = "0–960 dakika.";
-    if ((b.reason ?? "").trim().length < 3) f.reason = "Düzeltme gerekçesi zorunlu.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    tsFixes.set(a.id, { status: b.status!, late_minutes: b.status === "worked" ? b.late_minutes ?? 0 : 0, early_leave_minutes: b.status === "worked" ? b.early_leave_minutes ?? 0 : 0, overtime_minutes: b.status === "worked" ? b.overtime_minutes ?? 0 : 0, reason: b.reason!.trim(), by: (await me(request)).name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: null, message: "Puantaj düzeltildi; denetim kaydına yazıldı." });
-  }),
-  http.post(`${API}/timesheets/finalize`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { date?: string };
-    if (!b.date || !DATE_RE.test(b.date)) return err(422, "validation", VALIDATION, { date: "Gün seçin." });
-    if (b.date >= today()) return err(409, "day_not_ended", "Gün bitmeden puantaj kesinleşmez.");
-    const list = listOf(tsFinal, slug);
-    if (list.some((d) => d.date === b.date)) return err(409, "already_final", "Bu gün zaten kesinleşti.");
-    list.push({ date: b.date, by: (await me(request)).name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: { date: b.date }, message: `${new Date(b.date).toLocaleDateString("tr-TR")} puantajı kesinleşti.` });
-  }),
-
-  // 39 — Puantaj aktarımı
-  http.get(`${API}/timesheet-exports/preview`, async ({ request, params }) => HttpResponse.json(await tsPreview(request, String(params.slug), new URL(request.url).searchParams.get("month") ?? addMonths(monthStart(), -1).slice(0, 7)))),
-  http.get(`${API}/timesheet-exports`, ({ params }) => HttpResponse.json([...listOf(tsExports, String(params.slug))].reverse())),
-  http.post(`${API}/timesheet-exports`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { month?: string };
-    if (!b.month || !/^\d{4}-\d{2}$/.test(b.month)) return err(422, "validation", VALIDATION, { month: "Ay seçin." });
-    if (b.month >= today().slice(0, 7)) return err(409, "month_not_ended", "Ay bitmeden puantaj aktarılmaz.");
-    if (listOf(tsExports, slug).some((x) => x.month === b.month)) return err(409, "already_exported", "Bu ayın puantajı aktarıldı ve kilitli; düzeltme ayrı dönem kaydıyla yapılır.");
-    const pv = await tsPreview(request, slug, b.month);
-    if (pv.missing_days.length) return err(409, "days_not_final", `Kesinleşmemiş günler var: ${pv.missing_days.map((d) => new Date(d).toLocaleDateString("tr-TR")).join(", ")}. Aktarım başlatılamaz.`);
-    if (pv.missing_payroll.length) return err(409, "payroll_missing", `Bordro sicil no eksik: ${pv.missing_payroll.join(", ")}. Personel kartından girin.`);
-    const x: TsExport = { id: crypto.randomUUID(), month: b.month, rows: pv.rows, created_by: (await me(request)).name, created_at: new Date().toISOString(), file_name: `puantaj-${slug}-${b.month}.csv` };
-    listOf(tsExports, slug).push(x);
-    return HttpResponse.json({ data: x, message: `${b.month} puantajı ${pv.rows.length} personel için dosyaya yazıldı ve kilitlendi.` }, { status: 201 });
-  }),
-];
-
-// ============================================================================================
-// GÜVENLİK VE DEVRİYE PAKETİ (Yazılım Dokümanı GUV-01..09, OTP-02) — servis istekleri 40–46
-// Park yeri ve tahsis (OTP-01) K30'a, mal kabul (GUV-07) pilot sonrasına bırakıldı.
-// ============================================================================================
-interface Gate { id: string; name: string; kind: "vehicle" | "pedestrian" | "service"; block_ids: string[]; always_open: boolean; is_active: boolean }
-interface SecSettings { unannounced_method: "info" | "approval"; approval_timeout_seconds: number; gate_methods: Record<string, "info" | "approval">; parcel_method: "code" | "qr" | "both"; visitor_fields: { plate: boolean; phone: boolean; id_seen: boolean }; retention_months: number; parcel_long_wait_days: number; guest_parking_capacity: number }
-interface VisitorInvite { id: string; unit_id: string; unit_name: string; visitor_name: string; type: "once" | "range" | "recurring"; date_from: string; date_to: string; weekdays: number[]; time_from: string | null; time_to: string | null; plate: string | null; note: string | null; code: string; status: "active" | "used" | "cancelled"; created_by: string; created_at: string; used_at: string | null }
-interface VisitRequest { id: string; unit_id: string; unit_name: string; full_name: string; kind: string; plate: string | null; gate_id: string | null; status: "awaiting" | "allowed" | "denied"; decided_by: string | null; decision_source: "resident" | "guard" | null; reason: string | null; created_by: string; created_at: string; expires_at: string; visitor_id: string | null }
-interface GateLog { id: string; plate: string; plate_display: string; result: "registered" | "guest" | "unknown"; detail: string | null; gate_id: string | null; direction: "in" | "out"; by: string; at: string }
-interface Violation { id: string; plate: string; plate_display: string; location: string; note: string | null; result: "registered" | "guest" | "unknown"; unit_name: string | null; notified: "resident" | "management"; by: string; at: string }
-interface ParcelDelegate { id: string; unit_id: string; unit_name: string; name: string; created_by: string; created_at: string; is_active: boolean }
-interface LogEntry { id: string; kind: "note" | "event" | "handover"; text: string; gate_id: string | null; by: string; at: string; addenda: { text: string; by: string; at: string }[]; acknowledged_by: string | null; acknowledged_at: string | null }
-interface PatrolPoint { id: string; name: string; location: string | null; area: string | null; tag: "qr" | "nfc" | "both"; code: string; is_active: boolean }
-interface PatrolPlan { id: string; name: string; point_ids: string[]; ordered: boolean; start_times: string[]; allowed_minutes: number; assignee: string | null; is_active: boolean }
-interface PatrolRun { id: string; plan_id: string; plan_name: string; slot: string | null; started_by: string; started_at: string; finished_at: string | null; scans: { point_id: string; at: string; note: string | null; out_of_order: boolean }[] }
-const gates = loadMap<string, Gate[]>("gates");
-const secSettings = loadMap<string, SecSettings>("secSettings");
-const visitorInvites = loadMap<string, VisitorInvite[]>("visitorInvites");
-const visitRequests = loadMap<string, VisitRequest[]>("visitRequests");
-const gateLogs = loadMap<string, GateLog[]>("gateLogs");
-const violations = loadMap<string, Violation[]>("violations");
-const parcelDelegates = loadMap<string, ParcelDelegate[]>("parcelDelegates");
-const shiftLog = loadMap<string, LogEntry[]>("shiftLog");
-const patrolPoints = loadMap<string, PatrolPoint[]>("patrolPoints");
-const patrolPlans = loadMap<string, PatrolPlan[]>("patrolPlans");
-const patrolRuns = loadMap<string, PatrolRun[]>("patrolRuns");
-const secOf = (slug: string) => { if (!secSettings.has(slug)) secSettings.set(slug, { unannounced_method: "info", approval_timeout_seconds: 90, gate_methods: {}, parcel_method: "both", visitor_fields: { plate: true, phone: false, id_seen: false }, retention_months: 6, parcel_long_wait_days: 5, guest_parking_capacity: 10 }); return secSettings.get(slug)!; };
+// Güvenlik ve devriye paketi (servis istekleri 40–46) backend'de; aşağıdaki yardımcılar diğer
+// sahte uçlarda (rutin görev, rezervasyon, iletişim) kullanılıyor.
 const randCode = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
 const nowHm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const weekday = (d: string) => (new Date(d + "T00:00:00").getDay() + 6) % 7; // 0 = pazartesi
-function inviteValidNow(i: VisitorInvite, date = today(), time = nowHm()) {
-  if (i.status !== "active") return false;
-  if (date < i.date_from || date > i.date_to) return false;
-  if (i.type === "recurring" && !i.weekdays.includes(weekday(date))) return false;
-  if (i.time_from && i.time_to && (time < i.time_from || time > i.time_to)) return false;
-  return true;
-}
-function requestOut(r: VisitRequest) { const timed = r.status === "awaiting" && r.expires_at < new Date().toISOString(); return { ...r, timed_out: timed, seconds_left: r.status === "awaiting" ? Math.max(0, Math.round((new Date(r.expires_at).getTime() - Date.now()) / 1000)) : 0 }; }
-function plateLookup(slug: string, raw: string) {
-  const plate = normPlate(raw);
-  const v = listOf(vehicles, slug).find((x) => x.plate === plate && x.status === "active" && (x.kind === "permanent" || (x.valid_until ?? "") >= today()));
-  if (v) return { plate, plate_display: displayPlate(plate), result: "registered" as const, unit_name: v.unit_name, owner_name: v.owner_name, valid_until: v.valid_until, detail: `${v.unit_name}${v.owner_name ? ` · ${v.owner_name}` : ""}${v.kind === "guest" ? " · misafir aracı" : ""}` };
-  // Tek kullanımlık davetle bugün giren misafirin plakası gün boyu misafir sayılır (çıkışta da tanınsın)
-  const inv = listOf(visitorInvites, slug).find((i) => i.plate === plate && (inviteValidNow(i, today(), "12:00") || (i.status === "used" && !!i.used_at && dayOf(i.used_at) === today())));
-  if (inv) return { plate, plate_display: displayPlate(plate), result: "guest" as const, unit_name: inv.unit_name, owner_name: null, valid_until: inv.date_to, detail: `${inv.unit_name} misafiri (${inv.visitor_name}) · ${new Date(inv.date_to).toLocaleDateString("tr-TR")} tarihine kadar` };
-  return { plate, plate_display: PLATE_RE.test(plate) ? displayPlate(plate) : plate, result: "unknown" as const, unit_name: null, owner_name: null, valid_until: null, detail: null };
-}
-async function createRealVisitor(request: Request, slug: string, b: { unit_id: string; full_name: string; kind?: string; plate?: string | null }) {
-  return real<{ data?: { id: string }; error?: { message?: string; fields?: Record<string, string> } }>(request, `/api/v1/sites/${slug}/visitors`, { method: "POST", body: { unit_id: b.unit_id, full_name: b.full_name, kind: b.kind ?? "guest", plate_number: b.plate ? displayPlate(b.plate) : null, enter_now: true, note: null } });
-}
-function patrolReport(slug: string, run: PatrolRun) {
-  const plan = listOf(patrolPlans, slug).find((p) => p.id === run.plan_id);
-  const pts = new Map(listOf(patrolPoints, slug).map((p) => [p.id, p]));
-  const scanned = new Set(run.scans.map((s) => s.point_id));
-  const missed = (plan?.point_ids ?? []).filter((id) => !scanned.has(id)).map((id) => pts.get(id)?.name ?? "?");
-  const end = run.finished_at ?? new Date().toISOString();
-  const minutes = Math.round((new Date(end).getTime() - new Date(run.started_at).getTime()) / 60000);
-  const lateStart = run.slot ? Math.max(0, Math.round((new Date(run.started_at).getTime() - new Date(`${dayOf(run.started_at)}T${run.slot}:00`).getTime()) / 60000)) : 0;
-  return { missed, out_of_order: run.scans.filter((s) => s.out_of_order).map((s) => pts.get(s.point_id)?.name ?? "?"), duration_minutes: minutes, overtime: plan ? minutes > plan.allowed_minutes : false, late_start_minutes: lateStart, total_points: plan?.point_ids.length ?? 0, scanned_points: scanned.size, ok: missed.length === 0 && !run.scans.some((s) => s.out_of_order) && !(plan && minutes > plan.allowed_minutes) };
-}
-
-const guvenlik: RequestHandler[] = [
-  // 40 — Kapılar ve güvenlik ayarları
-  http.get(`${API}/gates`, ({ params }) => HttpResponse.json(listOf(gates, String(params.slug)))),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/gates` : `${API}/gates/:id`, async ({ request, params }) => {
-    const list = listOf(gates, String(params.slug));
-    const cur = verb === "patch" ? list.find((g) => g.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Kapı bulunamadı.");
-    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<Gate>) };
-    const f: Record<string, string> = {};
-    if (!b.name?.trim()) f.name = "Kapı adını yazın."; else if (list.some((g) => g.id !== cur?.id && g.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla kapı var.";
-    if (!["vehicle", "pedestrian", "service"].includes(b.kind ?? "")) f.kind = "Kapı tipini seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const g: Gate = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), kind: b.kind!, block_ids: b.block_ids ?? [], always_open: !!b.always_open, is_active: b.is_active ?? true };
-    if (cur) Object.assign(cur, g); else list.push(g);
-    return HttpResponse.json({ data: g, message: verb === "post" ? `${g.name} eklendi.` : `${g.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-  http.get(`${API}/settings/security`, ({ params }) => HttpResponse.json(secOf(String(params.slug)))),
-  http.put(`${API}/settings/security`, async ({ request, params }) => {
-    const s = secOf(String(params.slug));
-    const b = { ...s, ...((await request.json()) as Partial<SecSettings>) };
-    const f: Record<string, string> = {};
-    if (!["info", "approval"].includes(b.unannounced_method)) f.unannounced_method = "Yöntem seçin.";
-    if (!(Number.isInteger(b.approval_timeout_seconds) && b.approval_timeout_seconds >= 30 && b.approval_timeout_seconds <= 600)) f.approval_timeout_seconds = "30–600 saniye.";
-    if (!["code", "qr", "both"].includes(b.parcel_method)) f.parcel_method = "Teslim yöntemi seçin.";
-    if (!(Number.isInteger(b.retention_months) && b.retention_months >= 1)) f.retention_months = "En az 1 ay.";
-    else if (b.retention_months > 24) return err(422, "retention_limit", "Saklama süresi en fazla 2 yıl (24 ay) olabilir.", { retention_months: "En fazla 24 ay." });
-    if (!(Number.isInteger(b.parcel_long_wait_days) && b.parcel_long_wait_days >= 1 && b.parcel_long_wait_days <= 60)) f.parcel_long_wait_days = "1–60 gün.";
-    if (!(Number.isInteger(b.guest_parking_capacity) && b.guest_parking_capacity >= 0 && b.guest_parking_capacity <= 500)) f.guest_parking_capacity = "0–500.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    Object.assign(s, b);
-    return HttpResponse.json({ data: s, message: "Güvenlik ayarları kaydedildi; kapı ekranları hemen güncellenir." });
-  }),
-
-  // 41 — Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş
-  http.get(`${API}/resident/visitor-invites`, async ({ request, params }) => {
-    const mine = await myUnits(request, String(params.slug));
-    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const ids = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json([...listOf(visitorInvites, String(params.slug))].filter((i) => ids.has(i.unit_id)).reverse().map((i) => ({ ...i, valid_now: inviteValidNow(i), expired: i.status === "active" && i.date_to < today() })));
-  }),
-  http.post(`${API}/resident/visitor-invites`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const mine = await myUnits(request, slug);
-    const b = (await request.json()) as Partial<VisitorInvite>;
-    const unit = mine.units.find((u) => u.unit_id === b.unit_id) ?? mine.units[0];
-    if (!unit) return err(404, "not_found", "Bölümünüz bulunamadı.");
-    const f: Record<string, string> = {};
-    const name = (b.visitor_name ?? "").trim().replace(/\s+/g, " ");
-    if (!NAME_RE.test(name) || name.length < 3) f.visitor_name = "Ziyaretçinin adını yazın (yalnız harf).";
-    if (!["once", "range", "recurring"].includes(b.type ?? "")) f.type = "Davet tipini seçin.";
-    if (!b.date_from || !DATE_RE.test(b.date_from) || b.date_from < today()) f.date_from = "Tarih bugünden önce olamaz.";
-    const to = b.type === "once" ? b.date_from : b.date_to;
-    if (b.type !== "once" && (!to || !DATE_RE.test(to) || (b.date_from && to < b.date_from))) f.date_to = "Bitiş tarihini girin.";
-    if (b.type === "recurring" && !(b.weekdays?.length)) f.weekdays = "En az bir gün seçin.";
-    if ((b.time_from && !TIME_RE.test(b.time_from)) || (b.time_to && !TIME_RE.test(b.time_to)) || (b.time_from && b.time_to && b.time_to <= b.time_from)) f.time_to = "Saat aralığını kontrol edin.";
-    const plate = b.plate ? normPlate(b.plate) : null;
-    if (plate && !PLATE_RE.test(plate)) f.plate = "Plakayı 34 ABC 123 biçiminde yazın.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (plate) {
-      const cap = secOf(slug).guest_parking_capacity;
-      const active = listOf(visitorInvites, slug).filter((i) => i.plate && i.status === "active" && i.date_from <= b.date_from! && i.date_to >= b.date_from!).length;
-      if (active >= cap) return err(409, "guest_parking_full", `Misafir parkı bu tarihte dolu (${cap}). Plakasız davet oluşturabilirsiniz.`);
-    }
-    let code = randCode(6); while (listOf(visitorInvites, slug).some((i) => i.code === code && i.status === "active")) code = randCode(6);
-    const inv: VisitorInvite = { id: crypto.randomUUID(), unit_id: unit.unit_id, unit_name: unit.unit_name, visitor_name: name, type: b.type!, date_from: b.date_from!, date_to: to!, weekdays: b.type === "recurring" ? b.weekdays! : [], time_from: b.time_from || null, time_to: b.time_to || null, plate, note: b.note?.trim() || null, code, status: "active", created_by: (await me(request)).name, created_at: new Date().toISOString(), used_at: null };
-    listOf(visitorInvites, slug).push(inv);
-    return HttpResponse.json({ data: inv, message: `Davet oluşturuldu. Kod: ${code} — ziyaretçinizle paylaşın; kapıda kodu ya da QR'ı gösterir.` }, { status: 201 });
-  }),
-  http.post(`${API}/resident/visitor-invites/:id/cancel`, async ({ request, params }) => {
-    const mine = await myUnits(request, String(params.slug));
-    const i = listOf(visitorInvites, String(params.slug)).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
-    if (!i) return err(404, "not_found", "Davet bulunamadı.");
-    if (i.status !== "active") return err(409, "invalid_status", "Bu davet artık geçerli değil.");
-    i.status = "cancelled";
-    return HttpResponse.json({ data: i, message: "Davet iptal edildi." });
-  }),
-  http.get(`${API}/visitor-invites/expected`, ({ params }) => HttpResponse.json(listOf(visitorInvites, String(params.slug)).filter((i) => inviteValidNow(i, today(), "12:00") || (i.status === "active" && i.date_from <= today() && i.date_to >= today() && (i.type !== "recurring" || i.weekdays.includes(weekday(today()))))).map((i) => ({ id: i.id, unit_name: i.unit_name, visitor_name: i.visitor_name, type: i.type, time_from: i.time_from, time_to: i.time_to, plate: i.plate ? displayPlate(i.plate) : null })))),
-  http.post(`${API}/visitor-invites/check-in`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { code?: string };
-    const code = (b.code ?? "").replace(/\D/g, "");
-    if (code.length !== 6) return err(422, "validation", VALIDATION, { code: "6 haneli davet kodunu girin." });
-    const i = listOf(visitorInvites, slug).find((x) => x.code === code && x.status !== "cancelled");
-    if (!i) return err(404, "invite_not_found", "Bu kodla davet yok. Habersiz ziyaretçi olarak kaydedin.");
-    if (!inviteValidNow(i)) return err(409, "invite_not_valid", i.status === "used" ? "Bu tek kullanımlık davet kullanılmış." : "Davet şu an geçerli değil (tarih/gün/saat dışında). Habersiz ziyaretçi olarak kaydedin.");
-    const r = await createRealVisitor(request, slug, { unit_id: i.unit_id, full_name: i.visitor_name, plate: i.plate });
-    if (r.status >= 300) return HttpResponse.json(r.body, { status: r.status });
-    if (i.type === "once") Object.assign(i, { status: "used", used_at: new Date().toISOString() });
-    return HttpResponse.json({ data: { visitor_id: r.body?.data?.id, unit_name: i.unit_name, visitor_name: i.visitor_name }, message: `${i.visitor_name} (${i.unit_name}) içeri alındı.` }, { status: 201 });
-  }),
-
-  // 42 — Habersiz ziyaretçi: bilgi bildirimi ya da sakin onayı
-  http.post(`${API}/visit-requests`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { unit_id?: string; unit_name?: string; full_name?: string; kind?: string; plate?: string; gate_id?: string | null };
-    const f: Record<string, string> = {};
-    if (!b.unit_id) f.unit_id = "Ziyaret edilen bölümü seçin.";
-    if ((b.full_name ?? "").trim().length < 2) f.full_name = "Ad soyad yazın.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const s = secOf(slug);
-    const method = (b.gate_id && s.gate_methods[b.gate_id]) || s.unannounced_method;
-    const unitName = b.unit_name?.trim() || "Bölüm";
-    if (method === "info") {
-      const r = await createRealVisitor(request, slug, { unit_id: b.unit_id!, full_name: b.full_name!.trim(), kind: b.kind, plate: b.plate ? normPlate(b.plate) : null });
-      if (r.status >= 300) return HttpResponse.json(r.body, { status: r.status });
-      return HttpResponse.json({ data: { method, status: "allowed", visitor_id: r.body?.data?.id }, message: `${b.full_name} içeri alındı; ${unitName} sakinlerine bilgi bildirimi (gönderim K5 ile).` }, { status: 201 });
-    }
-    const req: VisitRequest = { id: crypto.randomUUID(), unit_id: b.unit_id!, unit_name: unitName, full_name: b.full_name!.trim(), kind: b.kind ?? "guest", plate: b.plate ? normPlate(b.plate) : null, gate_id: b.gate_id ?? null, status: "awaiting", decided_by: null, decision_source: null, reason: null, created_by: (await me(request)).name, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + s.approval_timeout_seconds * 1000).toISOString(), visitor_id: null };
-    listOf(visitRequests, slug).push(req);
-    return HttpResponse.json({ data: { ...requestOut(req), method }, message: `${unitName} sakinlerinden onay istendi; ${s.approval_timeout_seconds} sn içinde yanıt yoksa siz karar verirsiniz.` }, { status: 201 });
-  }),
-  http.get(`${API}/visit-requests`, ({ request, params }) => {
-    const st = new URL(request.url).searchParams.get("status");
-    return HttpResponse.json([...listOf(visitRequests, String(params.slug))].filter((r) => !st || r.status === st).filter((r) => dayOf(r.created_at) === today() || r.status === "awaiting").reverse().map(requestOut));
-  }),
-  http.post(`${API}/visit-requests/:id/decide`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const r = listOf(visitRequests, slug).find((x) => x.id === params.id);
-    if (!r) return err(404, "not_found", "Talep bulunamadı.");
-    if (r.status !== "awaiting") return err(409, "already_decided", "Bu talep karara bağlanmış.");
-    if (!requestOut(r).timed_out) return err(409, "awaiting_resident", "Sakin yanıtı bekleniyor; süre dolunca karar verebilirsiniz.");
-    const b = (await request.json()) as { decision?: string; reason?: string };
-    if (!["allow", "deny"].includes(b.decision ?? "")) return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
-    if ((b.reason ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { reason: "Kararınızın gerekçesini yazın (ör. diafonla ulaşıldı, sakin onayladı)." });
-    if (b.decision === "allow") { const v = await createRealVisitor(request, slug, { unit_id: r.unit_id, full_name: r.full_name, kind: r.kind, plate: r.plate }); if (v.status >= 300) return HttpResponse.json(v.body, { status: v.status }); r.visitor_id = v.body?.data?.id ?? null; }
-    Object.assign(r, { status: b.decision === "allow" ? "allowed" : "denied", decided_by: (await me(request)).name, decision_source: "guard", reason: b.reason!.trim() });
-    return HttpResponse.json({ data: requestOut(r), message: b.decision === "allow" ? `${r.full_name} içeri alındı (görevli kararı).` : `${r.full_name} girişi reddedildi; sakine bilgi.` });
-  }),
-  http.get(`${API}/resident/visit-approvals`, async ({ request, params }) => {
-    const mine = await myUnits(request, String(params.slug));
-    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const ids = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json(listOf(visitRequests, String(params.slug)).filter((r) => ids.has(r.unit_id) && dayOf(r.created_at) === today()).reverse().map(requestOut));
-  }),
-  http.post(`${API}/resident/visit-approvals/:id`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const mine = await myUnits(request, slug);
-    const r = listOf(visitRequests, slug).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
-    if (!r) return err(404, "not_found", "Talep bulunamadı.");
-    if (r.status !== "awaiting") return err(409, "already_decided", "Bu ziyaretçi için karar verilmiş.");
-    if (requestOut(r).timed_out) return err(409, "timed_out", "Süre doldu; görevli sizinle diafon/telefonla iletişime geçecek.");
-    const b = (await request.json()) as { decision?: string };
-    if (!["allow", "deny"].includes(b.decision ?? "")) return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
-    if (b.decision === "allow") { const v = await createRealVisitor(request, slug, { unit_id: r.unit_id, full_name: r.full_name, kind: r.kind, plate: r.plate }); r.visitor_id = v.body?.data?.id ?? null; }
-    Object.assign(r, { status: b.decision === "allow" ? "allowed" : "denied", decided_by: (await me(request)).name, decision_source: "resident" });
-    return HttpResponse.json({ data: requestOut(r), message: b.decision === "allow" ? "Onayladınız; ziyaretçi içeri alındı." : "Reddettiniz; görevli bilgilendirildi." });
-  }),
-
-  // 43 — Plaka sorgu, giriş kaydı, otopark ihlali
-  http.get(`${API}/plates/lookup`, ({ request, params }) => {
-    const q = new URL(request.url).searchParams.get("plate") ?? "";
-    if (normPlate(q).length < 4) return err(422, "validation", VALIDATION, { plate: "Plakayı yazın." });
-    return HttpResponse.json(plateLookup(String(params.slug), q));
-  }),
-  http.get(`${API}/gate-logs`, ({ request, params }) => {
-    const date = new URL(request.url).searchParams.get("date") ?? today();
-    return HttpResponse.json([...listOf(gateLogs, String(params.slug))].filter((l) => dayOf(l.at) === date).reverse());
-  }),
-  http.post(`${API}/gate-logs`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { plate?: string; direction?: "in" | "out"; gate_id?: string | null };
-    const lk = plateLookup(slug, b.plate ?? "");
-    if (lk.plate.length < 4) return err(422, "validation", VALIDATION, { plate: "Plakayı yazın." });
-    const l: GateLog = { id: crypto.randomUUID(), plate: lk.plate, plate_display: lk.plate_display, result: lk.result, detail: lk.detail, gate_id: b.gate_id ?? null, direction: b.direction === "out" ? "out" : "in", by: (await me(request)).name, at: new Date().toISOString() };
-    listOf(gateLogs, slug).push(l);
-    return HttpResponse.json({ data: l, message: `${l.plate_display} ${l.direction === "in" ? "girişi" : "çıkışı"} kaydedildi.` }, { status: 201 });
-  }),
-  http.get(`${API}/parking-violations`, ({ params }) => HttpResponse.json([...listOf(violations, String(params.slug))].reverse())),
-  http.post(`${API}/parking-violations`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { plate?: string; location?: string; note?: string };
-    const lk = plateLookup(slug, b.plate ?? "");
-    const f: Record<string, string> = {};
-    if (!PLATE_RE.test(lk.plate)) f.plate = "Plakayı 34 ABC 123 biçiminde yazın.";
-    if ((b.location ?? "").trim().length < 2) f.location = "Yeri yazın (ör. B blok önü, engelli park yeri).";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (lk.result !== "unknown" && !(b.note ?? "").trim()) return err(409, "plate_authorized", `${lk.plate_display} yetkili (${lk.detail}). Yine de ihlal kaydedilecekse nedenini yazın (ör. yanlış yere park).`);
-    const v: Violation = { id: crypto.randomUUID(), plate: lk.plate, plate_display: lk.plate_display, location: b.location!.trim(), note: b.note?.trim() || null, result: lk.result, unit_name: lk.unit_name, notified: lk.unit_name ? "resident" : "management", by: (await me(request)).name, at: new Date().toISOString() };
-    listOf(violations, slug).push(v);
-    return HttpResponse.json({ data: v, message: v.notified === "resident" ? `İhlal kaydedildi; ${v.unit_name} sakinine bildirim (gönderim K5 ile).` : "İhlal kaydedildi; plaka kayıtlı değil, yönetime bildirildi." }, { status: 201 });
-  }),
-
-  // 44 — Kargo: uzun bekleyenler, teslim yetkilisi
-  http.get(`${API}/packages/long-waiting`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const days = secOf(slug).parcel_long_wait_days;
-    const list = await allPages<{ id: string; unit_id: string; unit_name: string; carrier: string | null; received_at: string; status: string }>(request, `/api/v1/sites/${slug}/packages?status=waiting`);
-    const limit = Date.now() - days * 864e5;
-    return HttpResponse.json({ days, items: list.filter((p) => new Date(p.received_at).getTime() < limit).map((p) => ({ ...p, waiting_days: Math.floor((Date.now() - new Date(p.received_at).getTime()) / 864e5), delegates: listOf(parcelDelegates, slug).filter((d) => d.unit_id === p.unit_id && d.is_active).map((d) => d.name) })) });
-  }),
-  http.get(`${API}/units/:id/parcel-delegates`, ({ params }) => HttpResponse.json(listOf(parcelDelegates, String(params.slug)).filter((d) => d.unit_id === params.id && d.is_active).map((d) => ({ id: d.id, name: d.name })))),
-  http.get(`${API}/resident/parcel-delegates`, async ({ request, params }) => {
-    const mine = await myUnits(request, String(params.slug));
-    if (mine.status !== 200) return err(mine.status, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const ids = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json(listOf(parcelDelegates, String(params.slug)).filter((d) => ids.has(d.unit_id) && d.is_active));
-  }),
-  http.post(`${API}/resident/parcel-delegates`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const mine = await myUnits(request, slug);
-    const b = (await request.json()) as { name?: string; unit_id?: string };
-    const unit = mine.units.find((u) => u.unit_id === b.unit_id) ?? mine.units[0];
-    if (!unit) return err(404, "not_found", "Bölümünüz bulunamadı.");
-    const name = (b.name ?? "").trim().replace(/\s+/g, " ");
-    if (!NAME_RE.test(name) || name.length < 3) return err(422, "validation", VALIDATION, { name: "Yetkili kişinin adını yazın." });
-    const list = listOf(parcelDelegates, slug);
-    if (list.filter((d) => d.unit_id === unit.unit_id && d.is_active).length >= 3) return err(409, "delegate_limit", "En fazla 3 teslim yetkilisi tanımlanabilir.");
-    const d: ParcelDelegate = { id: crypto.randomUUID(), unit_id: unit.unit_id, unit_name: unit.unit_name, name, created_by: (await me(request)).name, created_at: new Date().toISOString(), is_active: true };
-    list.push(d);
-    return HttpResponse.json({ data: d, message: `${name} kargolarınızı teslim alabilir; kapıda sizin teslim kodunuzu söyler.` }, { status: 201 });
-  }),
-  http.post(`${API}/resident/parcel-delegates/:id/remove`, async ({ request, params }) => {
-    const mine = await myUnits(request, String(params.slug));
-    const d = listOf(parcelDelegates, String(params.slug)).find((x) => x.id === params.id && mine.units.some((u) => u.unit_id === x.unit_id));
-    if (!d) return err(404, "not_found", "Yetkili bulunamadı.");
-    d.is_active = false;
-    return HttpResponse.json({ data: d, message: `${d.name} yetkisi kaldırıldı.` });
-  }),
-
-  // 45 — Nöbet defteri ve vardiya devri
-  http.get(`${API}/shift-log`, ({ request, params }) => {
-    const date = new URL(request.url).searchParams.get("date");
-    return HttpResponse.json([...listOf(shiftLog, String(params.slug))].filter((e) => !date || dayOf(e.at) === date).reverse());
-  }),
-  http.post(`${API}/shift-log`, async ({ request, params }) => {
-    const b = (await request.json()) as { kind?: string; text?: string; gate_id?: string | null };
-    if (!["note", "event", "handover"].includes(b.kind ?? "")) return err(422, "validation", VALIDATION, { kind: "Kayıt türünü seçin." });
-    if ((b.text ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { text: "En az 5 karakter yazın." });
-    const e: LogEntry = { id: crypto.randomUUID(), kind: b.kind as LogEntry["kind"], text: b.text!.trim(), gate_id: b.gate_id ?? null, by: (await me(request)).name, at: new Date().toISOString(), addenda: [], acknowledged_by: null, acknowledged_at: null };
-    listOf(shiftLog, String(params.slug)).push(e);
-    return HttpResponse.json({ data: e, message: e.kind === "handover" ? "Devir notu yazıldı; sonraki görevli okuyup onaylayacak." : "Nöbet defterine yazıldı. Kayıt değiştirilemez; düzeltme ek notla yapılır." }, { status: 201 });
-  }),
-  http.post(`${API}/shift-log/:id/addenda`, async ({ request, params }) => {
-    const e = listOf(shiftLog, String(params.slug)).find((x) => x.id === params.id);
-    if (!e) return err(404, "not_found", "Kayıt bulunamadı.");
-    const b = (await request.json()) as { text?: string };
-    if ((b.text ?? "").trim().length < 3) return err(422, "validation", VALIDATION, { text: "Ek notu yazın." });
-    e.addenda.push({ text: b.text!.trim(), by: (await me(request)).name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: e, message: "Ek not eklendi." });
-  }),
-  http.post(`${API}/shift-log/:id/acknowledge`, async ({ request, params }) => {
-    const e = listOf(shiftLog, String(params.slug)).find((x) => x.id === params.id);
-    if (!e || e.kind !== "handover") return err(404, "not_found", "Devir notu bulunamadı.");
-    if (e.acknowledged_by) return err(409, "already_acknowledged", "Devir zaten onaylanmış.");
-    const who = (await me(request)).name;
-    if (who === e.by) return err(409, "same_person", "Devri yazan kişi kendi devrini onaylayamaz; sonraki vardiya görevlisi onaylar.");
-    Object.assign(e, { acknowledged_by: who, acknowledged_at: new Date().toISOString() });
-    return HttpResponse.json({ data: e, message: "Devir okundu olarak onaylandı." });
-  }),
-
-  // 46 — Devriye
-  http.get(`${API}/patrol-points`, ({ params }) => HttpResponse.json(listOf(patrolPoints, String(params.slug)))),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/patrol-points` : `${API}/patrol-points/:id`, async ({ request, params }) => {
-    const list = listOf(patrolPoints, String(params.slug));
-    const cur = verb === "patch" ? list.find((p) => p.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Nokta bulunamadı.");
-    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<PatrolPoint>) };
-    const f: Record<string, string> = {};
-    if (!b.name?.trim()) f.name = "Nokta adını yazın."; else if (list.some((p) => p.id !== cur?.id && p.name.toLocaleLowerCase("tr-TR") === b.name!.trim().toLocaleLowerCase("tr-TR"))) f.name = "Bu adla nokta var.";
-    if (!["qr", "nfc", "both"].includes(b.tag ?? "")) f.tag = "Etiket tipini seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    let code = cur?.code ?? randCode(6); while (!cur && list.some((p) => p.code === code)) code = randCode(6);
-    const p: PatrolPoint = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), location: b.location?.trim() || null, area: b.area?.trim() || null, tag: b.tag!, code, is_active: b.is_active ?? true };
-    if (cur) Object.assign(cur, p); else list.push(p);
-    return HttpResponse.json({ data: p, message: verb === "post" ? `${p.name} eklendi; etiket kodu ${p.code}.` : `${p.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-  http.get(`${API}/patrol-plans`, ({ params }) => HttpResponse.json(listOf(patrolPlans, String(params.slug)))),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/patrol-plans` : `${API}/patrol-plans/:id`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const list = listOf(patrolPlans, slug);
-    const cur = verb === "patch" ? list.find((p) => p.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Tur planı bulunamadı.");
-    const b = { ...(cur ?? {}), ...((await request.json()) as Partial<PatrolPlan>) };
-    const pts = new Set(listOf(patrolPoints, slug).filter((p) => p.is_active).map((p) => p.id));
-    const f: Record<string, string> = {};
-    if (!b.name?.trim()) f.name = "Tur adını yazın.";
-    if (!b.point_ids?.length || b.point_ids.some((id) => !pts.has(id))) f.point_ids = "En az bir etkin nokta seçin.";
-    if (!b.start_times?.length || b.start_times.some((t) => !TIME_RE.test(t))) f.start_times = "Başlangıç saatlerini SS:DD biçiminde girin.";
-    if (!(Number.isInteger(b.allowed_minutes) && b.allowed_minutes! >= 5 && b.allowed_minutes! <= 240)) f.allowed_minutes = "5–240 dakika.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const p: PatrolPlan = { id: cur?.id ?? crypto.randomUUID(), name: b.name!.trim(), point_ids: b.point_ids!, ordered: !!b.ordered, start_times: [...new Set(b.start_times!)].sort(), allowed_minutes: b.allowed_minutes!, assignee: b.assignee?.trim() || null, is_active: b.is_active ?? true };
-    if (cur) Object.assign(cur, p); else list.push(p);
-    return HttpResponse.json({ data: p, message: verb === "post" ? `${p.name} turu eklendi.` : `${p.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-  http.get(`${API}/patrol-schedule`, ({ request, params }) => {
-    const slug = String(params.slug);
-    const date = new URL(request.url).searchParams.get("date") ?? today();
-    const now = new Date();
-    const runs = listOf(patrolRuns, slug).filter((r) => dayOf(r.started_at) === date);
-    const slots = listOf(patrolPlans, slug).filter((p) => p.is_active).flatMap((p) => p.start_times.map((t) => {
-      const run = runs.find((r) => r.plan_id === p.id && r.slot === t);
-      const startAt = new Date(`${date}T${t}:00`);
-      const status = run ? (run.finished_at ? (patrolReport(slug, run).ok ? "done" : "done_with_deviation") : (now.getTime() - new Date(run.started_at).getTime() > p.allowed_minutes * 60000 ? "overdue" : "running")) : now < startAt ? "upcoming" : now.getTime() - startAt.getTime() > 15 * 60000 ? "not_started" : "due";
-      return { plan_id: p.id, plan_name: p.name, slot: t, status, run_id: run?.id ?? null, report: run ? patrolReport(slug, run) : null };
-    })).sort((a, b) => a.slot.localeCompare(b.slot));
-    return HttpResponse.json(slots);
-  }),
-  http.get(`${API}/patrol-runs`, ({ request, params }) => {
-    const slug = String(params.slug);
-    const date = new URL(request.url).searchParams.get("date");
-    return HttpResponse.json([...listOf(patrolRuns, slug)].filter((r) => !date || dayOf(r.started_at) === date).reverse().map((r) => ({ ...r, report: patrolReport(slug, r) })));
-  }),
-  http.post(`${API}/patrol-runs`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { plan_id?: string; slot?: string | null };
-    const plan = listOf(patrolPlans, slug).find((p) => p.id === b.plan_id && p.is_active);
-    if (!plan) return err(422, "validation", VALIDATION, { plan_id: "Tur seçin." });
-    const runs = listOf(patrolRuns, slug);
-    if (runs.some((r) => r.plan_id === plan.id && !r.finished_at)) return err(409, "run_open", "Bu turun bitmemiş bir yürütmesi var.");
-    const slot = b.slot ?? plan.start_times.filter((t) => t <= nowHm()).at(-1) ?? null;
-    const r: PatrolRun = { id: crypto.randomUUID(), plan_id: plan.id, plan_name: plan.name, slot, started_by: (await me(request)).name, started_at: new Date().toISOString(), finished_at: null, scans: [] };
-    runs.push(r);
-    return HttpResponse.json({ data: { ...r, report: patrolReport(slug, r) }, message: `${plan.name} başladı. Her noktada etiketi okutun ya da kodunu girin.` }, { status: 201 });
-  }),
-  http.post(`${API}/patrol-runs/:id/scans`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const r = listOf(patrolRuns, slug).find((x) => x.id === params.id);
-    if (!r) return err(404, "not_found", "Tur bulunamadı.");
-    if (r.finished_at) return err(409, "run_finished", "Tur bitmiş.");
-    const b = (await request.json()) as { code?: string; note?: string };
-    const plan = listOf(patrolPlans, slug).find((p) => p.id === r.plan_id)!;
-    const point = listOf(patrolPoints, slug).find((p) => p.code === (b.code ?? "").replace(/\D/g, ""));
-    if (!point) return err(422, "validation", VALIDATION, { code: "Bu kodla nokta yok." });
-    if (!plan.point_ids.includes(point.id)) return err(409, "not_in_plan", `${point.name} bu turda yok.`);
-    if (r.scans.some((s) => s.point_id === point.id)) return err(409, "already_scanned", `${point.name} zaten okutuldu.`);
-    const expected = plan.point_ids.find((id) => !r.scans.some((s) => s.point_id === id));
-    const out = plan.ordered && expected !== point.id;
-    r.scans.push({ point_id: point.id, at: new Date().toISOString(), note: b.note?.trim() || null, out_of_order: out });
-    return HttpResponse.json({ data: { ...r, report: patrolReport(slug, r) }, message: `${point.name} okutuldu${out ? " — sıra dışı" : ""}. (${r.scans.length}/${plan.point_ids.length})` });
-  }),
-  http.post(`${API}/patrol-runs/:id/finish`, async ({ params }) => {
-    const slug = String(params.slug);
-    const r = listOf(patrolRuns, slug).find((x) => x.id === params.id);
-    if (!r) return err(404, "not_found", "Tur bulunamadı.");
-    if (r.finished_at) return err(409, "run_finished", "Tur zaten bitmiş.");
-    r.finished_at = new Date().toISOString();
-    const rep = patrolReport(slug, r);
-    return HttpResponse.json({ data: { ...r, report: rep }, message: rep.ok ? "Tur sorunsuz tamamlandı." : `Tur bitti — sapma: ${[rep.missed.length && `${rep.missed.length} nokta okutulmadı`, rep.out_of_order.length && `${rep.out_of_order.length} sıra dışı`, rep.overtime && "süre aşıldı"].filter(Boolean).join(", ")}. Yöneticiye özet gider.` });
-  }),
-];
 
 // ============================================================================================
 // HİZMETLER PAKETİ (Yazılım Dokümanı HIZ-01..05) — servis istekleri 47–52
@@ -2775,7 +2090,10 @@ async function kpiActual(request: Request, slug: string, k: CKpi, period: string
     return l.length ? { actual: Math.round(l.reduce((s, x) => s + x.score, 0) / l.length), detail: `${l.length} denetim ortalaması` } : { actual: null, detail: "Bu ay denetim yok" };
   }
   if (k.source === "patrol") {
-    const l = listOf(patrolRuns, slug).filter((x) => inMonth(x.started_at, period)).map((r) => patrolReport(slug, r));
+    // Devriye backend'de (servis isteği 46): ayın günleri gerçek uçtan okunur
+    const days = daysOfMonth(period).filter((d) => d <= today());
+    const runs = await Promise.all(days.map((d) => real<{ report: { total_points: number; scanned_points: number } }[]>(request, `/api/v1/sites/${slug}/patrol-runs?date=${d}`)));
+    const l = runs.flatMap((r) => (Array.isArray(r.body) ? r.body : [])).map((r) => r.report);
     const tot = l.reduce((s, r) => s + r.total_points, 0), ok = l.reduce((s, r) => s + r.scanned_points, 0);
     return tot ? { actual: Math.round((ok / tot) * 100), detail: `${l.length} tur, ${ok}/${tot} nokta` } : { actual: null, detail: "Bu ay devriye yok" };
   }
@@ -3484,43 +2802,19 @@ const genelKurul: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// RAPORLAR, BELGELER VE KVKK (Yazılım Dokümanı RAP-01, 03, 04, 05) — servis istekleri 78–81
+// RAPORLAR VE KVKK (Yazılım Dokümanı RAP-01, 04, 05) — servis istekleri 79–81
+// (78 belge arşivi backend'de: gerçek `…/documents`; denetim paketi belgeyi oradan okur)
 // ============================================================================================
-interface DocVersion { v: number; file_name: string; mime: string; size: number; sha256: string; data: string; uploaded_by: string; at: string }
-interface Doc { id: string; title: string; kind: string; scope: "site" | "block" | "unit"; scope_id: string | null; scope_name: string | null; confidentiality: "public" | "unit" | "management" | "secret"; valid_until: string | null; versions: DocVersion[]; created_at: string; access_log: { by: string; at: string; v: number }[] }
 interface PrivacyReq { id: string; kind: "access" | "rectify" | "erase" | "object"; detail: string; user_id: string; name: string; units: string[]; snapshot: unknown; status: "open" | "answered"; created_at: string; due_on: string; response: string | null; outcome: "fulfilled" | "partial" | "rejected" | null; retained: string | null; answered_by: string | null; answered_at: string | null }
 interface Notice { version: number; text: string; published_at: string; published_by: string; summary: string }
 interface AuditPkg { id: string; title: string; from: string; to: string; created_by: string; created_at: string; decisions: { no: number; item_title: string; decision: string; date: string }[]; document_ids: string[]; status: "open" | "reviewed"; report_document_id: string | null; reviewed_by: string | null; reviewed_at: string | null; note: string | null }
-const docs = loadMap<string, Doc[]>("docs");
 const privacyReqs = loadMap<string, PrivacyReq[]>("privacyReqs");
 const notices = loadMap<string, Notice[]>("notices");
 const auditPkgs = loadMap<string, AuditPkg[]>("auditPkgs");
-const DOC_KINDS = ["plan", "rules", "insurance", "fire_report", "elevator", "contract", "minutes", "financial", "other"];
-// Furkan (25.10.2026): gider ekleriyle aynı sınır, 10 MB. Sahte servis dosyayı oturum deposunda tuttuğu için
-// tarayıcı kotasını (~5 MB) aşan dosya sayfa yenilenince kaybolur; sınır sözleşmeye uygun tutuldu.
-const MAX_DOC = 10 * 1024 * 1024;
 async function permsOf(request: Request, slug: string) {
   const m = await real<{ sites: { slug: string; permissions: string[] }[] }>(request, "/api/v1/me");
   return new Set(m.body?.sites.find((s) => s.slug === slug)?.permissions ?? []);
 }
-function sniff(dataUrl: string) {
-  const b64 = dataUrl.split(",")[1] ?? "";
-  let head = "";
-  try { head = atob(b64.slice(0, 16)); } catch { return null; }
-  if (head.startsWith("%PDF")) return "application/pdf";
-  if (head.charCodeAt(0) === 0x89 && head.slice(1, 4) === "PNG") return "image/png";
-  if (head.charCodeAt(0) === 0xff && head.charCodeAt(1) === 0xd8) return "image/jpeg";
-  if (head.startsWith("RIFF") && head.slice(8, 12) === "WEBP") return "image/webp";
-  return null;
-}
-async function sha256Hex(dataUrl: string) {
-  const bin = atob(dataUrl.split(",")[1] ?? "");
-  const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  const h = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, "0")).join("");
-}
-const docOut = (d: Doc) => { const last = d.versions.at(-1)!; const left = d.valid_until ? Math.round((new Date(d.valid_until + "T00:00:00").getTime() - new Date(today() + "T00:00:00").getTime()) / 864e5) : null; return { id: d.id, title: d.title, kind: d.kind, scope: d.scope, scope_name: d.scope_name, confidentiality: d.confidentiality, valid_until: d.valid_until, days_left: left, warning: left == null ? null : left < 0 ? "expired" : left <= 30 ? "30" : left <= 60 ? "60" : null, version: last.v, file_name: last.file_name, size: last.size, sha256: last.sha256, uploaded_by: last.uploaded_by, updated_at: last.at, versions: d.versions.map(({ data: _d, ...v }) => v) }; };
-
 const CATALOG = [
   { key: "income_expense", name: "Gelir–gider", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Gelir", "Dönemde yapılan tahsilatlar (tahakkuk değil)."], ["Gider", "Dönemde kaydedilen, ters kaydı olmayan giderler; fon/kategori bazında."]] },
   { key: "collections", name: "Tahsilat oranı ve trendi", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Tahsilat oranı", "Dönemde tahsil edilen / dönemde vadesi gelen."]] },
@@ -3537,64 +2831,6 @@ const CATALOG = [
 ];
 
 const raporlar: RequestHandler[] = [
-  // 78 — Belge arşivi
-  http.get(`${API}/documents`, ({ request, params }) => {
-    const u = new URL(request.url).searchParams; const q = (u.get("q") ?? "").toLocaleLowerCase("tr-TR"), kind = u.get("kind"), exp = u.get("expiring");
-    return HttpResponse.json(listOf(docs, String(params.slug)).map(docOut).filter((d) => (!q || d.title.toLocaleLowerCase("tr-TR").includes(q)) && (!kind || d.kind === kind) && (!exp || d.warning)).sort((a, b) => b.updated_at.localeCompare(a.updated_at)));
-  }),
-  http.post(`${API}/documents`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { title?: string; kind?: string; scope?: Doc["scope"]; scope_id?: string | null; scope_name?: string | null; confidentiality?: Doc["confidentiality"]; valid_until?: string | null; file_name?: string; data_url?: string };
-    const f: Record<string, string> = {};
-    const title = (b.title ?? "").trim();
-    if (title.length < 3) f.title = "Belge adını yazın.";
-    if (!DOC_KINDS.includes(b.kind ?? "")) f.kind = "Tür seçin.";
-    if (!["site", "block", "unit"].includes(b.scope ?? "")) f.scope = "Kapsam seçin."; else if (b.scope !== "site" && !b.scope_id) f.scope = "Blok ya da bölüm seçin.";
-    if (!["public", "unit", "management", "secret"].includes(b.confidentiality ?? "")) f.confidentiality = "Gizlilik seçin.";
-    if (b.confidentiality === "unit" && b.scope !== "unit") f.confidentiality = "Bölüme özel belge bir bölüme bağlı olmalı.";
-    if (b.valid_until && (!DATE_RE.test(b.valid_until))) f.valid_until = "Tarih seçin.";
-    const mime = b.data_url ? sniff(b.data_url) : null;
-    const size = b.data_url ? Math.floor(((b.data_url.split(",")[1] ?? "").length * 3) / 4) : 0;
-    if (!b.data_url) f.file = "Dosya seçin.";
-    else if (!mime) f.file = "Yalnız PDF, PNG, JPEG ya da WebP (dosya içeriği doğrulandı).";
-    else if (size > MAX_DOC) f.file = "Dosya en fazla 10 MB.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const who = (await me(request)).name;
-    const v: DocVersion = { v: 1, file_name: (b.file_name ?? "belge").replace(/[\\/:*?"<>|]/g, "_").slice(0, 120), mime: mime!, size, sha256: await sha256Hex(b.data_url!), data: b.data_url!, uploaded_by: who, at: new Date().toISOString() };
-    const list = listOf(docs, slug);
-    const same = list.find((d) => d.title.toLocaleLowerCase("tr-TR") === title.toLocaleLowerCase("tr-TR") && d.scope === b.scope && (d.scope_id ?? null) === (b.scope_id ?? null));
-    if (same) {
-      if (same.versions.at(-1)!.sha256 === v.sha256) return err(409, "same_file", "Bu dosya son sürümle aynı.");
-      v.v = same.versions.length + 1; same.versions.push(v); Object.assign(same, { valid_until: b.valid_until ?? same.valid_until, confidentiality: b.confidentiality, kind: b.kind });
-      return HttpResponse.json({ data: docOut(same), message: `${same.title} için ${v.v}. sürüm kaydedildi; eski sürümler korunur.` }, { status: 201 });
-    }
-    const d: Doc = { id: crypto.randomUUID(), title, kind: b.kind!, scope: b.scope!, scope_id: b.scope === "site" ? null : b.scope_id!, scope_name: b.scope === "site" ? null : b.scope_name ?? null, confidentiality: b.confidentiality!, valid_until: b.valid_until || null, versions: [v], created_at: v.at, access_log: [] };
-    list.push(d);
-    return HttpResponse.json({ data: docOut(d), message: `${d.title} arşive eklendi.` }, { status: 201 });
-  }),
-  http.get(`${API}/documents/:id/versions/:v/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const v = d?.versions.find((x) => x.v === Number(params.v));
-    if (!d || !v) return err(404, "not_found", "Belge bulunamadı.");
-    if (d.confidentiality === "secret") { const p = await permsOf(request, slug); if (!p.has("audit.read") && !p.has("members.manage")) return err(404, "not_found", "Belge bulunamadı."); d.access_log.push({ by: (await me(request)).name, at: new Date().toISOString(), v: v.v }); }
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-  http.get(`${API}/documents/:id/access-log`, ({ params }) => { const d = listOf(docs, String(params.slug)).find((x) => x.id === params.id); return d ? HttpResponse.json(d.access_log.slice().reverse()) : err(404, "not_found", "Belge bulunamadı."); }),
-  http.get(`${API}/resident/documents`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    if (mine.status !== 200) return err(403, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const unitIds = new Set(mine.units.map((u) => u.unit_id));
-    return HttpResponse.json(listOf(docs, slug).filter((d) => d.confidentiality === "public" || (d.confidentiality === "unit" && d.scope_id && unitIds.has(d.scope_id))).map(docOut).map(({ versions: _v, uploaded_by: _u, sha256: _s, ...x }) => x));
-  }),
-  http.get(`${API}/resident/documents/:id/download`, async ({ request, params }) => {
-    const slug = String(params.slug); const mine = await myUnits(request, slug);
-    const d = listOf(docs, slug).find((x) => x.id === params.id);
-    const ok = d && (d.confidentiality === "public" || (d.confidentiality === "unit" && mine.units.some((u) => u.unit_id === d.scope_id)));
-    if (!ok) return err(404, "not_found", "Belge bulunamadı.");
-    const v = d!.versions.at(-1)!;
-    return HttpResponse.json({ file_name: v.file_name, mime: v.mime, data_url: v.data });
-  }),
-
   // 79 — Rapor kataloğu ve talep/SLA raporu
   http.get(`${API}/reports/catalog`, async ({ request, params }) => {
     const p = await permsOf(request, String(params.slug));
@@ -3672,7 +2908,8 @@ const raporlar: RequestHandler[] = [
     if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihi."; if (!b.to || !DATE_RE.test(b.to) || (b.from && b.to < b.from)) f.to = "Bitiş başlangıçtan önce olamaz.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const decisions = listOf(decisionBook, slug).filter((e) => e.date >= b.from! && e.date <= b.to!).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
-    const docIds = (b.document_ids ?? []).filter((id) => listOf(docs, slug).some((d) => d.id === id));
+    const known = new Set((await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).map((d) => d.id));
+    const docIds = (b.document_ids ?? []).filter((id) => known.has(id));
     const p: AuditPkg = { id: crypto.randomUUID(), title: b.title!.trim(), from: b.from!, to: b.to!, created_by: (await me(request)).name, created_at: new Date().toISOString(), decisions, document_ids: docIds, status: "open", report_document_id: null, reviewed_by: null, reviewed_at: null, note: null };
     listOf(auditPkgs, slug).push(p);
     return HttpResponse.json({ data: p, message: `Denetim paketi hazırlandı: ${decisions.length} karar, ${docIds.length} belge.` }, { status: 201 });
@@ -3684,7 +2921,7 @@ const raporlar: RequestHandler[] = [
     const perms = await permsOf(request, slug);
     if (!perms.has("audit.read")) return err(403, "forbidden", "Denetim raporunu denetçi yükler.");
     const b = (await request.json()) as { document_id?: string; note?: string };
-    const d = listOf(docs, slug).find((x) => x.id === b.document_id);
+    const d = (await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).find((x) => x.id === b.document_id);
     if (!d) return err(422, "validation", VALIDATION, { document_id: "Denetim raporu belgesini seçin." });
     Object.assign(p, { status: "reviewed", report_document_id: d.id, reviewed_by: (await me(request)).name, reviewed_at: new Date().toISOString(), note: b.note?.trim() || null });
     return HttpResponse.json({ data: p, message: "Denetim raporu pakete eklendi; paket arşivlendi." });
@@ -3832,4 +3069,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...ik, ...guvenlik, ...hizmet, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...hizmet, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];

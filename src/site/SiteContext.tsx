@@ -37,6 +37,9 @@ export const P = {
   staffManage: "staff.manage",
   approvalRulesRead: "approvals.rules.read",
   approvalRulesManage: "approvals.rules.manage",
+  documentsRead: "documents.read",
+  documentsManage: "documents.manage",
+  documentsConfidential: "documents.confidential",
 } as const;
 
 export const M = {
