@@ -11,9 +11,10 @@ import { P, useSite } from "../../site/SiteContext";
 import Decimal from "decimal.js";
 
 type Debtors = Schemas["DebtorPage"];
-/** Servis isteği 29'daki şekiller. */
-interface Aging { as_of: string; buckets: { key: string; label: string; count: number; amount: string }[]; by_block: ({ block: string; total: string } & Record<string, string>)[] }
-type Status = Record<string, { plan_status: string | null; letter_status: string | null; last_action_at: string | null; reminder_count: number }>;
+type Aging = Schemas["AgingOut"];
+type Status = Record<string, Schemas["CollectionFollowUpOut"]>;
+/** Blok satırındaki kova tutarı ("0_30" … "90_plus"). */
+const bucketOf = (row: Aging["by_block"][number], key: string) => (row as unknown as Record<string, string>)[key] ?? "0";
 
 /** Borç takibi (FIN-12): borçlu hesaplar, yaşlandırma, takip durumu (plan, ihtarname), toplu hatırlatma. */
 export function DebtorsPage() {
@@ -54,7 +55,7 @@ export function DebtorsPage() {
           <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Blok bazında borç yaşlandırması</caption>
             <thead><tr><th scope="col">Blok</th>{aging.data.buckets.map((b) => <th key={b.key} scope="col" className="right">{b.label}</th>)}<th scope="col" className="right">Toplam</th></tr></thead>
-            <tbody>{aging.data.by_block.map((row) => <tr key={row.block}><td className="cell-main">{row.block}</td>{aging.data!.buckets.map((b) => <td key={b.key} className="right"><Money value={row[b.key] ?? "0"} /></td>)}<td className="right strong"><Money value={row.total} /></td></tr>)}</tbody>
+            <tbody>{aging.data.by_block.map((row) => <tr key={row.block}><td className="cell-main">{row.block}</td>{aging.data!.buckets.map((b) => <td key={b.key} className="right"><Money value={bucketOf(row, b.key)} /></td>)}<td className="right strong"><Money value={row.total} /></td></tr>)}</tbody>
             <tfoot><tr><td>Toplam</td>{aging.data.buckets.map((b) => <td key={b.key} className="right"><Money value={b.amount} /><div className="cell-sub">{b.count} hesap</div></td>)}<td /></tr></tfoot>
           </table></div></div>
         </details>
@@ -62,8 +63,8 @@ export function DebtorsPage() {
 
       {sum && sum.over_30_count > 0 && (
         <Alert tone="info" title="Gecikme tazminatı hakkında">
-          KMK m.20 uyarınca geciken aidat için gecikme tazminatı istenebilir. Tazminatın deftere işlenmesi henüz açık bir karar; şu an
-          bakiyelere eklenmiyor.
+          KMK m.20 uyarınca geciken aidat için gecikme tazminatı istenebilir. Site kararıyla açılır (Finans ayarları — varsayılan
+          kapalı; oran ve yöntem avukat görüşüne kadar parametre). Deftere işlenmesi sonraki sürümde; şu an bakiyelere eklenmiyor.
         </Alert>
       )}
 

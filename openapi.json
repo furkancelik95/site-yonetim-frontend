@@ -3624,6 +3624,92 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/charge-runs/preview/diff": {
+      "get": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Tahakkuk fark raporu (önizleme ↔ son kesinleşmiş dönem)",
+        "description": "Salt okuma; eşik üstü artan/azalan, yeni ve bu dönem olmayan hesaplar (FIN-05).",
+        "operationId": "preview_diff_api_v1_sites__slug__charge_runs_preview_diff_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "charge_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "önizlemeyle aynı",
+              "title": "Charge Date"
+            },
+            "description": "önizlemeyle aynı"
+          },
+          {
+            "name": "due_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "önizlemeyle aynı",
+              "title": "Due Date"
+            },
+            "description": "önizlemeyle aynı"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeDiffOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/charge-runs": {
       "get": {
         "tags": [
@@ -3981,6 +4067,1187 @@
           },
           "409": {
             "description": "Zaten ters kaydedilmiş / ters kaydedilemez"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods": {
+      "get": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Yılın dönemleri (yeniden eskiye)",
+        "description": "İçinde bulunulan yıl için bu aya kadar; en fazla 12 satır.",
+        "operationId": "list_periods_api_v1_sites__slug__fiscal_periods_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalPeriodOut"
+                  },
+                  "title": "Response List Periods Api V1 Sites  Slug  Fiscal Periods Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/close-checklist": {
+      "get": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Kapanış kontrol listesi",
+        "operationId": "close_checklist_api_v1_sites__slug__fiscal_periods__period__close_checklist_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseChecklistOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/start-close": {
+      "post": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Kapanışı başlat (Açık → Kapanışta)",
+        "description": "409: `period_not_ended`, `checklist_incomplete`, `invalid_status`.",
+        "operationId": "start_close_api_v1_sites__slug__fiscal_periods__period__start_close_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeriodStartCloseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_FiscalPeriodOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/lock": {
+      "post": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Kilitle (iki kişi kuralı)",
+        "description": "409 `four_eyes`: kapanışı başlatan kişi kilitleyemez.",
+        "operationId": "lock_api_v1_sites__slug__fiscal_periods__period__lock_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_FiscalPeriodOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/reopen": {
+      "post": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Kapanıştan açığa al",
+        "operationId": "reopen_api_v1_sites__slug__fiscal_periods__period__reopen_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_FiscalPeriodOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/unlock-requests": {
+      "post": {
+        "tags": [
+          "dönem kapanışı"
+        ],
+        "summary": "Kilidi süreli aç (onay kuralı varsa 202)",
+        "operationId": "request_unlock_api_v1_sites__slug__fiscal_periods__period__unlock_requests_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeriodUnlockIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_FiscalPeriodOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Talep onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/finance-parameters": {
+      "get": {
+        "tags": [
+          "finans ayarları"
+        ],
+        "summary": "Finans parametreleri: geçerli, varsayılan, sürümler",
+        "operationId": "get_parameters_api_v1_sites__slug__finance_parameters_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceParametersOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/finance-parameters/versions": {
+      "post": {
+        "tags": [
+          "finans ayarları"
+        ],
+        "summary": "Yeni parametre sürümü (finansal etkili + onay kuralı varsa 202)",
+        "operationId": "save_version_api_v1_sites__slug__finance_parameters_versions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceParamVersionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_FinanceParamVersionOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/ad-hoc-charges": {
+      "get": {
+        "tags": [
+          "dönem dışı ücretler"
+        ],
+        "summary": "Kaynak bazında yansıma ayarı",
+        "operationId": "get_settings_api_v1_sites__slug__settings_ad_hoc_charges_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdHocSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "dönem dışı ücretler"
+        ],
+        "summary": "Yansıma ayarını kaydet",
+        "operationId": "save_settings_api_v1_sites__slug__settings_ad_hoc_charges_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdHocSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AdHocSettingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/ad-hoc-charges": {
+      "get": {
+        "tags": [
+          "dönem dışı ücretler"
+        ],
+        "summary": "Dönem dışı ücretler (sayfalı)",
+        "operationId": "list_charges_api_v1_sites__slug__ad_hoc_charges_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "approval_pending",
+                    "posted",
+                    "waiting_next_run",
+                    "cancelled",
+                    "rejected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AdHocChargeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "dönem dışı ücretler"
+        ],
+        "summary": "Dönem dışı ücret ekle (onay kuralı varsa 202)",
+        "description": "422 `no_account` (bölümde seçilen türde açık hesap yok).",
+        "operationId": "create_charge_api_v1_sites__slug__ad_hoc_charges_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdHocChargeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AdHocChargeOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/ad-hoc-charges/{charge_id}/cancel": {
+      "post": {
+        "tags": [
+          "dönem dışı ücretler"
+        ],
+        "summary": "Ücreti iptal et (ters kayıt)",
+        "operationId": "cancel_charge_api_v1_sites__slug__ad_hoc_charges__charge_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "charge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Charge Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdHocCancelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AdHocChargeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounting/mappings": {
+      "get": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Hesap kodu eşlemesi",
+        "operationId": "get_mappings_api_v1_sites__slug__accounting_mappings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMappingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Hesap kodu eşlemesini kaydet (yeni sürüm)",
+        "description": "422 `fields.{key}.debit_account`: hesap kodu rakam ve nokta.",
+        "operationId": "save_mappings_api_v1_sites__slug__accounting_mappings_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountMappingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AccountMappingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounting/exports/preview": {
+      "get": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Aktarılmamış fiş önizlemesi",
+        "operationId": "preview_api_v1_sites__slug__accounting_exports_preview_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountingPreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounting/exports": {
+      "post": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Fiş dosyasını üret ve kilitle",
+        "description": "409 `mapping_missing`, `nothing_to_export`. Aynı fiş bir daha aktarılmaz.",
+        "operationId": "create_export_api_v1_sites__slug__accounting_exports_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountingExportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AccountingExportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Aktarım geçmişi (sayfalı)",
+        "operationId": "list_exports_api_v1_sites__slug__accounting_exports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AccountingExportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounting/exports/{export_id}/file": {
+      "get": {
+        "tags": [
+          "muhasebe aktarımı"
+        ],
+        "summary": "Dosyayı yeniden indir",
+        "operationId": "export_file_api_v1_sites__slug__accounting_exports__export_id__file_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "export_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Export Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "csv",
+                "xlsx"
+              ],
+              "type": "string",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/csv": {},
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5220,6 +6487,799 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/receivables/aging": {
+      "get": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Alacak yaşlandırması (0–30 / 31–60 / 61–90 / 90+)",
+        "operationId": "aging_api_v1_sites__slug__receivables_aging_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/collection-status": {
+      "get": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Hesap → takip özeti (kaydı olan hesaplar)",
+        "operationId": "collection_status_api_v1_sites__slug__collection_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/CollectionFollowUpOut"
+                  },
+                  "title": "Response Collection Status Api V1 Sites  Slug  Collection Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounts/{account_id}/collection-timeline": {
+      "get": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Hesabın takip geçmişi",
+        "operationId": "timeline_api_v1_sites__slug__accounts__account_id__collection_timeline_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CollectionTimelineItemOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounts/{account_id}/collection-actions": {
+      "post": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Hatırlatma / arama / not kaydı",
+        "operationId": "add_action_api_v1_sites__slug__accounts__account_id__collection_actions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionActionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CollectionActionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/collection-actions/bulk": {
+      "post": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Toplu hatırlatma kaydı",
+        "operationId": "bulk_api_v1_sites__slug__collection_actions_bulk_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkReminderIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BulkReminderOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounts/{account_id}/demand-letters": {
+      "post": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "İhtarname gönderimini kaydet (onay kuralı varsa 202)",
+        "operationId": "add_letter_api_v1_sites__slug__accounts__account_id__demand_letters_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemandLetterIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_DemandLetterOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/demand-letters/{letter_id}": {
+      "patch": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Tebliğ tarihini kaydet",
+        "operationId": "mark_served_api_v1_sites__slug__demand_letters__letter_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "letter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Letter Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterServedIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_DemandLetterOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/payment-plans": {
+      "get": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Ödeme planları (sayfalı, durum süzgeçli)",
+        "operationId": "list_plans_api_v1_sites__slug__payment_plans_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PlanStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentPlanListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/accounts/{account_id}/payment-plans": {
+      "get": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Hesabın ödeme planları",
+        "operationId": "account_plans_api_v1_sites__slug__accounts__account_id__payment_plans_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentPlanOut"
+                  },
+                  "title": "Response Account Plans Api V1 Sites  Slug  Accounts  Account Id  Payment Plans Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Ödeme planı oluştur (onay kuralı varsa 202)",
+        "description": "409 `plan_exists`; 422 `fields.amount|installment_count|first_due_date`.",
+        "operationId": "create_plan_api_v1_sites__slug__accounts__account_id__payment_plans_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentPlanIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PaymentPlanOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/payment-plans/{plan_id}/cancel": {
+      "post": {
+        "tags": [
+          "borç takibi"
+        ],
+        "summary": "Ödeme planını iptal et",
+        "operationId": "cancel_plan_api_v1_sites__slug__payment_plans__plan_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentPlanCancelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PaymentPlanOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/payment-plans": {
+      "get": {
+        "tags": [
+          "borç takibi",
+          "sakin"
+        ],
+        "summary": "Sakin: ödeme planım",
+        "description": "Yalnız oturum sahibinin hesapları; onay bekleyen/reddedilen plan gösterilmez.",
+        "operationId": "resident_plans_api_v1_sites__slug__resident_payment_plans_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResidentPaymentPlanOut"
+                  },
+                  "title": "Response Resident Plans Api V1 Sites  Slug  Resident Payment Plans Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/requests": {
       "get": {
         "tags": [
@@ -6133,6 +8193,134 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/cash-accounts/{account_id}/days": {
+      "get": {
+        "tags": [
+          "kasa ve banka"
+        ],
+        "summary": "Kasa günleri: açık günler ve sayımlar",
+        "operationId": "list_days_api_v1_sites__slug__cash_accounts__account_id__days_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashDaysOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/cash-accounts/{account_id}/days/close": {
+      "post": {
+        "tags": [
+          "kasa ve banka"
+        ],
+        "summary": "Gün sonu sayımıyla kapat",
+        "description": "409 `day_closed`, `not_cash`; 422 `difference_reason`.",
+        "operationId": "close_day_api_v1_sites__slug__cash_accounts__account_id__days_close_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CashDayCloseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CashDayOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Fark onaya gönderildi"
           },
           "422": {
             "description": "Validation Error",
@@ -14392,6 +16580,266 @@
         ],
         "title": "AccountKind"
       },
+      "AccountMappingIn": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "debit_account": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Debit Account",
+            "default": ""
+          },
+          "credit_account": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Credit Account",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "AccountMappingIn"
+      },
+      "AccountMappingOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "charge · ad_hoc_charge · payment_cash · payment_bank_transfer · payment_credit_card · payment_other · expense · refund"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "debit_account": {
+            "type": "string",
+            "title": "Debit Account"
+          },
+          "credit_account": {
+            "type": "string",
+            "title": "Credit Account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "debit_account",
+          "credit_account"
+        ],
+        "title": "AccountMappingOut"
+      },
+      "AccountMappingsIn": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AccountMappingIn"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "AccountMappingsIn"
+      },
+      "AccountMappingsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AccountMappingOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "AccountMappingsOut"
+      },
+      "AccountingExportIn": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "YYYY-MM"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period"
+        ],
+        "title": "AccountingExportIn"
+      },
+      "AccountingExportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "voucher_count": {
+            "type": "integer",
+            "title": "Voucher Count"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "period",
+          "voucher_count",
+          "total",
+          "file_name",
+          "created_by",
+          "created_at"
+        ],
+        "title": "AccountingExportOut"
+      },
+      "AccountingPreviewOut": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "vouchers": {
+            "items": {
+              "$ref": "#/components/schemas/AccountingVoucherOut"
+            },
+            "type": "array",
+            "title": "Vouchers",
+            "description": "aktarılmamış fişler (dönem içi)"
+          },
+          "already_exported": {
+            "type": "integer",
+            "title": "Already Exported"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "missing_mappings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Mappings",
+            "description": "eşlemesi eksik işlem tipleri (etiket)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "vouchers",
+          "already_exported",
+          "total",
+          "missing_mappings"
+        ],
+        "title": "AccountingPreviewOut"
+      },
+      "AccountingVoucherOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "debit_account": {
+            "type": "string",
+            "title": "Debit Account"
+          },
+          "credit_account": {
+            "type": "string",
+            "title": "Credit Account"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "source",
+          "source_id",
+          "date",
+          "description",
+          "debit_account",
+          "credit_account",
+          "amount"
+        ],
+        "title": "AccountingVoucherOut"
+      },
+      "ActionKind": {
+        "type": "string",
+        "enum": [
+          "reminder",
+          "call",
+          "note"
+        ],
+        "title": "ActionKind"
+      },
       "ActionType": {
         "type": "string",
         "enum": [
@@ -14414,7 +16862,12 @@
           "registration",
           "stock_count_difference",
           "approval_rule_change",
-          "leave_request"
+          "leave_request",
+          "period_unlock",
+          "cash_difference",
+          "ad_hoc_charge",
+          "finance_parameter",
+          "demand_letter"
         ],
         "title": "ActionType",
         "description": "Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için\ntanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir."
@@ -14450,6 +16903,341 @@
           "delegate"
         ],
         "title": "ActorType"
+      },
+      "AdHocCancelIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "AdHocCancelIn"
+      },
+      "AdHocChargeIn": {
+        "properties": {
+          "unit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "account_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Kind",
+            "description": "owner · occupant"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          }
+        },
+        "type": "object",
+        "title": "AdHocChargeIn"
+      },
+      "AdHocChargeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "account_kind": {
+            "type": "string",
+            "title": "Account Kind"
+          },
+          "reference_code": {
+            "type": "string",
+            "title": "Reference Code"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "reservation",
+              "service",
+              "renovation",
+              "penalty",
+              "other"
+            ],
+            "title": "Source"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date",
+            "description": "yazıldığı vade; bekleyende boşsa tahakkuk vadesi"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "immediate",
+              "next_period"
+            ],
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "approval_pending",
+              "posted",
+              "waiting_next_run",
+              "cancelled",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "charge_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charge Run Id"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "unit_id",
+          "unit_name",
+          "account_id",
+          "account_kind",
+          "reference_code",
+          "person_name",
+          "source",
+          "description",
+          "amount",
+          "due_date",
+          "mode",
+          "status",
+          "approval_request_id",
+          "charge_run_id",
+          "created_by",
+          "created_at",
+          "cancelled_at",
+          "cancel_reason"
+        ],
+        "title": "AdHocChargeOut"
+      },
+      "AdHocSettingsIn": {
+        "properties": {
+          "sources": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sources"
+        ],
+        "title": "AdHocSettingsIn"
+      },
+      "AdHocSettingsOut": {
+        "properties": {
+          "sources": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AdHocSourceSettingOut"
+            },
+            "propertyNames": {
+              "enum": [
+                "reservation",
+                "service",
+                "renovation",
+                "penalty",
+                "other"
+              ]
+            },
+            "type": "object",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sources"
+        ],
+        "title": "AdHocSettingsOut"
+      },
+      "AdHocSourceSettingOut": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "immediate",
+              "next_period"
+            ],
+            "title": "Mode"
+          },
+          "due_days": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Due Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "due_days"
+        ],
+        "title": "AdHocSourceSettingOut"
       },
       "AddedOut": {
         "properties": {
@@ -14569,6 +17357,143 @@
         ],
         "title": "AgendaResult"
       },
+      "AgingBlockOut": {
+        "properties": {
+          "block": {
+            "type": "string",
+            "title": "Block"
+          },
+          "0_30": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "0 30",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "31_60": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "31 60",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "61_90": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "61 90",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "90_plus": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "90 Plus",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "block",
+          "0_30",
+          "31_60",
+          "61_90",
+          "90_plus",
+          "total"
+        ],
+        "title": "AgingBlockOut"
+      },
+      "AgingBucketOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "0_30 · 31_60 · 61_90 · 90_plus"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "count",
+          "amount"
+        ],
+        "title": "AgingBucketOut"
+      },
+      "AgingOut": {
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "borçlular listesinin toplam bakiyesine eşit",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/AgingBucketOut"
+            },
+            "type": "array",
+            "title": "Buckets"
+          },
+          "by_block": {
+            "items": {
+              "$ref": "#/components/schemas/AgingBlockOut"
+            },
+            "type": "array",
+            "title": "By Block"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "total",
+          "buckets",
+          "by_block"
+        ],
+        "title": "AgingOut"
+      },
       "AllocationKind": {
         "type": "string",
         "enum": [
@@ -14582,6 +17507,14 @@
           "composite"
         ],
         "title": "AllocationKind"
+      },
+      "AllocationOrder": {
+        "type": "string",
+        "enum": [
+          "late_fee_first",
+          "principal_first"
+        ],
+        "title": "AllocationOrder"
       },
       "AllocationOut": {
         "properties": {
@@ -14723,7 +17656,7 @@
           },
           "channels": {
             "items": {
-              "$ref": "#/components/schemas/Channel"
+              "$ref": "#/components/schemas/Channel-Input"
             },
             "type": "array",
             "title": "Channels",
@@ -16473,6 +19406,14 @@
         ],
         "title": "AuthEventOut"
       },
+      "BankAutoMatch": {
+        "type": "string",
+        "enum": [
+          "high",
+          "high_medium"
+        ],
+        "title": "BankAutoMatch"
+      },
       "BlockCreate": {
         "properties": {
           "name": {
@@ -17331,6 +20272,48 @@
         ],
         "title": "BudgetStatus"
       },
+      "BulkReminderIn": {
+        "properties": {
+          "account_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Account Ids"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "app",
+              "sms"
+            ],
+            "title": "Channel",
+            "default": "app"
+          }
+        },
+        "type": "object",
+        "title": "BulkReminderIn"
+      },
+      "BulkReminderOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "delivered": {
+            "type": "boolean",
+            "title": "Delivered",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "BulkReminderOut"
+      },
       "CancelIn": {
         "properties": {
           "reason": {
@@ -17600,6 +20583,179 @@
         ],
         "title": "CashAccountsOut"
       },
+      "CashDayCloseIn": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "counted": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Counted",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "fark varsa ≥ 10 karakter"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "counted"
+        ],
+        "title": "CashDayCloseIn"
+      },
+      "CashDayOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "system_balance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "System Balance",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "counted": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Counted",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "difference": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Difference",
+            "description": "sayım − sistem (eksi: eksik)",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "closed",
+              "approval_pending",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "closed_by": {
+            "type": "string",
+            "title": "Closed By"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "system_balance",
+          "counted",
+          "difference",
+          "reason",
+          "status",
+          "approval_request_id",
+          "closed_by",
+          "closed_at"
+        ],
+        "title": "CashDayOut"
+      },
+      "CashDaysOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "cash · bank (bankada sayım yok)"
+          },
+          "open_days": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Open Days",
+            "description": "son 60 günde hareketli, sayılmamış günler"
+          },
+          "closed": {
+            "items": {
+              "$ref": "#/components/schemas/CashDayOut"
+            },
+            "type": "array",
+            "title": "Closed",
+            "description": "son 90 sayım, yeniden eskiye"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "open_days",
+          "closed"
+        ],
+        "title": "CashDaysOut"
+      },
       "CashSource": {
         "type": "string",
         "enum": [
@@ -17829,7 +20985,7 @@
         ],
         "title": "ChangePasswordRequest"
       },
-      "Channel": {
+      "Channel-Input": {
         "type": "string",
         "enum": [
           "in_app",
@@ -17838,6 +20994,181 @@
           "sms"
         ],
         "title": "Channel"
+      },
+      "Channel-Output": {
+        "type": "string",
+        "enum": [
+          "app",
+          "sms",
+          "phone"
+        ],
+        "title": "Channel"
+      },
+      "ChargeDiffCountsOut": {
+        "properties": {
+          "increase": {
+            "type": "integer",
+            "title": "Increase"
+          },
+          "decrease": {
+            "type": "integer",
+            "title": "Decrease"
+          },
+          "new": {
+            "type": "integer",
+            "title": "New"
+          },
+          "missing": {
+            "type": "integer",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "increase",
+          "decrease",
+          "new",
+          "missing"
+        ],
+        "title": "ChargeDiffCountsOut"
+      },
+      "ChargeDiffOut": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "\"11/2026\""
+          },
+          "base_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Period",
+            "description": "karşılaştırılan son kesinleşmiş dönem"
+          },
+          "threshold": {
+            "type": "integer",
+            "title": "Threshold",
+            "description": "finans parametresi `diff_threshold_percent`"
+          },
+          "compared": {
+            "type": "integer",
+            "title": "Compared",
+            "description": "önizlemedeki hesap sayısı"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ChargeDiffCountsOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ChargeDiffRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "base_period",
+          "threshold",
+          "compared",
+          "counts",
+          "rows"
+        ],
+        "title": "ChargeDiffOut"
+      },
+      "ChargeDiffRowOut": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "account_kind": {
+            "$ref": "#/components/schemas/AccountKind"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "change_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Percent",
+            "description": "yüzde, 1 ondalık (ör. 12.4)"
+          },
+          "flag": {
+            "type": "string",
+            "enum": [
+              "increase",
+              "decrease",
+              "new",
+              "missing"
+            ],
+            "title": "Flag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id",
+          "unit_name",
+          "person_name",
+          "account_kind",
+          "previous",
+          "current",
+          "change_percent",
+          "flag"
+        ],
+        "title": "ChargeDiffRowOut"
       },
       "ChargeOut": {
         "properties": {
@@ -18025,6 +21356,14 @@
         ],
         "title": "ChargeRunStatus"
       },
+      "ChargeSource": {
+        "type": "string",
+        "enum": [
+          "budget_plan",
+          "billing_rule"
+        ],
+        "title": "ChargeSource"
+      },
       "ChargeTypeOut": {
         "properties": {
           "id": {
@@ -18066,6 +21405,78 @@
         ],
         "title": "ChargeTypeOut"
       },
+      "CloseCheckItemOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link",
+            "description": "ekrandaki ilgili sayfa (frontend yolu)"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          },
+          "exception": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception",
+            "description": "kapanışta girilen gerekçeli istisna"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "ok",
+          "detail",
+          "link",
+          "required",
+          "exception"
+        ],
+        "title": "CloseCheckItemOut"
+      },
+      "CloseChecklistOut": {
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/FiscalPeriodOut"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CloseCheckItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "items"
+        ],
+        "title": "CloseChecklistOut"
+      },
       "CloseIn": {
         "properties": {
           "note": {
@@ -18083,6 +21494,164 @@
         },
         "type": "object",
         "title": "CloseIn"
+      },
+      "CollectionActionIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind",
+            "description": "reminder · call · note"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel",
+            "description": "hatırlatmada app · sms"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "CollectionActionIn"
+      },
+      "CollectionActionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActionKind"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Channel-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "delivered": {
+            "type": "boolean",
+            "title": "Delivered",
+            "description": "mesaj gönderildi mi — K5 gelene kadar her zaman false"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "account_id",
+          "kind",
+          "channel",
+          "note",
+          "by",
+          "at",
+          "delivered"
+        ],
+        "title": "CollectionActionOut"
+      },
+      "CollectionFollowUpOut": {
+        "properties": {
+          "plan_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Status",
+            "description": "active · broken · completed · cancelled …"
+          },
+          "letter_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Letter Status",
+            "description": "approval_pending · sent · served"
+          },
+          "last_action_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Action At"
+          },
+          "reminder_count": {
+            "type": "integer",
+            "title": "Reminder Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_status",
+          "letter_status",
+          "last_action_at",
+          "reminder_count"
+        ],
+        "title": "CollectionFollowUpOut"
       },
       "CollectionOut": {
         "properties": {
@@ -18142,6 +21711,101 @@
           "rate"
         ],
         "title": "CollectionOut"
+      },
+      "CollectionTimelineItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "reminder",
+              "call",
+              "note",
+              "demand_letter",
+              "payment_plan"
+            ],
+            "title": "Kind"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel",
+            "description": "app · sms · phone; ihtarnamede gönderim yöntemi"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage",
+            "description": "gece işinin kademesi (app · sms · call · demand_letter)"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "letter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DemandLetterOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimelinePlanOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "channel",
+          "note",
+          "stage",
+          "by",
+          "at"
+        ],
+        "title": "CollectionTimelineItemOut"
       },
       "CollectionsOut": {
         "properties": {
@@ -19562,6 +23226,139 @@
         ],
         "title": "DeliverIn"
       },
+      "DemandLetterIn": {
+        "properties": {
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method",
+            "description": "hand · registered_mail · notary"
+          },
+          "sent_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent On"
+          },
+          "tracking_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking No"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "DemandLetterIn"
+      },
+      "DemandLetterOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "hand",
+              "registered_mail",
+              "notary"
+            ],
+            "title": "Method"
+          },
+          "sent_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent On"
+          },
+          "tracking_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracking No"
+          },
+          "served_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Served On"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "approval_pending",
+              "sent",
+              "served",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "method",
+          "sent_on",
+          "tracking_no",
+          "served_on",
+          "status",
+          "approval_request_id"
+        ],
+        "title": "DemandLetterOut"
+      },
       "DepartmentAssignIn": {
         "properties": {
           "department_id": {
@@ -20485,6 +24282,613 @@
         ],
         "title": "FinanceOut"
       },
+      "FinanceParamVersionIn": {
+        "properties": {
+          "effective_period": {
+            "type": "string",
+            "title": "Effective Period",
+            "description": "YYYY-MM"
+          },
+          "values": {
+            "$ref": "#/components/schemas/FinanceParamsIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "effective_period",
+          "values"
+        ],
+        "title": "FinanceParamVersionIn"
+      },
+      "FinanceParamVersionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "effective_period": {
+            "type": "string",
+            "title": "Effective Period",
+            "description": "YYYY-MM"
+          },
+          "values": {
+            "$ref": "#/components/schemas/FinanceParamsOut"
+          },
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Changed"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "approval_pending",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "changed_by": {
+            "type": "string",
+            "title": "Changed By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "effective_period",
+          "values",
+          "changed",
+          "status",
+          "approval_request_id",
+          "changed_by",
+          "created_at"
+        ],
+        "title": "FinanceParamVersionOut"
+      },
+      "FinanceParametersOut": {
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/FinanceParamsOut"
+          },
+          "current_period": {
+            "type": "string",
+            "title": "Current Period"
+          },
+          "earliest_financial_period": {
+            "type": "string",
+            "title": "Earliest Financial Period",
+            "description": "finansal etkili değişiklik en erken"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/FinanceParamsOut"
+          },
+          "financial_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Financial Keys",
+            "description": "sonraki dönemden geçerli + onaya tabi alanlar"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/FinanceParamVersionOut"
+            },
+            "type": "array",
+            "title": "Versions",
+            "description": "son 100 sürüm, yeniden eskiye"
+          },
+          "scheduled": {
+            "items": {
+              "$ref": "#/components/schemas/FinanceParamVersionOut"
+            },
+            "type": "array",
+            "title": "Scheduled",
+            "description": "yürürlüğü gelecekte olan aktif sürümler"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current",
+          "current_period",
+          "earliest_financial_period",
+          "defaults",
+          "financial_keys",
+          "versions",
+          "scheduled"
+        ],
+        "title": "FinanceParametersOut"
+      },
+      "FinanceParamsIn": {
+        "properties": {
+          "reminder_days": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminder Days"
+          },
+          "demand_letter_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demand Letter Day"
+          },
+          "proration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proration"
+          },
+          "diff_threshold_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff Threshold Percent"
+          },
+          "bank_auto_match": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Auto Match"
+          },
+          "plan_tolerance_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Tolerance Days"
+          },
+          "plan_suspends_late_fee": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Suspends Late Fee"
+          },
+          "budget_warn_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Warn Percent"
+          },
+          "due_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Day"
+          },
+          "charge_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charge Source"
+          },
+          "late_fee_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Enabled"
+          },
+          "late_fee_monthly_rate_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Monthly Rate Percent"
+          },
+          "late_fee_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Method"
+          },
+          "late_fee_grace_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Grace Days"
+          },
+          "allocation_order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocation Order"
+          },
+          "debtor_restriction_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debtor Restriction Enabled"
+          },
+          "debtor_restriction_min_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debtor Restriction Min Amount"
+          },
+          "debtor_restriction_min_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debtor Restriction Min Days"
+          }
+        },
+        "type": "object",
+        "title": "FinanceParamsIn",
+        "description": "Yalnız değişen alanlar gönderilebilir; gönderilmeyen alan yürürlükteki değerini korur."
+      },
+      "FinanceParamsOut": {
+        "properties": {
+          "reminder_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Reminder Days",
+            "description": "hatırlatma kademeleri: vade +gün (3 adet)"
+          },
+          "demand_letter_day": {
+            "type": "integer",
+            "title": "Demand Letter Day",
+            "description": "ihtarname hazırlığı: vade +gün"
+          },
+          "proration": {
+            "$ref": "#/components/schemas/Proration",
+            "description": "K9 kıst: day (gün oranı) · month (ay bazlı)"
+          },
+          "diff_threshold_percent": {
+            "type": "integer",
+            "title": "Diff Threshold Percent",
+            "description": "tahakkuk fark raporu eşiği (%)"
+          },
+          "bank_auto_match": {
+            "$ref": "#/components/schemas/BankAutoMatch"
+          },
+          "plan_tolerance_days": {
+            "type": "integer",
+            "title": "Plan Tolerance Days"
+          },
+          "plan_suspends_late_fee": {
+            "type": "boolean",
+            "title": "Plan Suspends Late Fee"
+          },
+          "budget_warn_percent": {
+            "type": "integer",
+            "title": "Budget Warn Percent"
+          },
+          "due_day": {
+            "type": "integer",
+            "title": "Due Day",
+            "description": "K25 vade günü (ayın kaçı)"
+          },
+          "charge_source": {
+            "$ref": "#/components/schemas/ChargeSource",
+            "description": "K23 tahakkuk kaynağı"
+          },
+          "late_fee_enabled": {
+            "type": "boolean",
+            "title": "Late Fee Enabled",
+            "description": "K2 gecikme tazminatı — site kararı, varsayılan kapalı"
+          },
+          "late_fee_monthly_rate_percent": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Late Fee Monthly Rate Percent",
+            "description": "aylık oran (%), en fazla 5,00",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "late_fee_method": {
+            "$ref": "#/components/schemas/LateFeeMethod"
+          },
+          "late_fee_grace_days": {
+            "type": "integer",
+            "title": "Late Fee Grace Days"
+          },
+          "allocation_order": {
+            "$ref": "#/components/schemas/AllocationOrder",
+            "description": "K24 mahsup sırası"
+          },
+          "debtor_restriction_enabled": {
+            "type": "boolean",
+            "title": "Debtor Restriction Enabled",
+            "description": "K11 borçlu hizmet kısıtı (varsayılan kapalı)"
+          },
+          "debtor_restriction_min_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Debtor Restriction Min Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "debtor_restriction_min_days": {
+            "type": "integer",
+            "title": "Debtor Restriction Min Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reminder_days",
+          "demand_letter_day",
+          "proration",
+          "diff_threshold_percent",
+          "bank_auto_match",
+          "plan_tolerance_days",
+          "plan_suspends_late_fee",
+          "budget_warn_percent",
+          "due_day",
+          "charge_source",
+          "late_fee_enabled",
+          "late_fee_monthly_rate_percent",
+          "late_fee_method",
+          "late_fee_grace_days",
+          "allocation_order",
+          "debtor_restriction_enabled",
+          "debtor_restriction_min_amount",
+          "debtor_restriction_min_days"
+        ],
+        "title": "FinanceParamsOut"
+      },
+      "FiscalPeriodOut": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "description": "YYYY-MM"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "\"Eylül 2026\""
+          },
+          "status": {
+            "$ref": "#/components/schemas/PeriodStatus"
+          },
+          "is_past": {
+            "type": "boolean",
+            "title": "Is Past",
+            "description": "içinde bulunulan aydan önce (kapanışa alınabilir)"
+          },
+          "exceptions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Exceptions",
+            "description": "kontrol listesi maddesi → gerekçe"
+          },
+          "closing_started_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Started By"
+          },
+          "closing_started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Started At"
+          },
+          "locked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked By"
+          },
+          "locked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked At"
+          },
+          "unlock_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlock Until"
+          },
+          "unlock_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlock Reason"
+          },
+          "unlock_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlock Request Id",
+            "description": "onay bekleyen süreli açma talebi"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodEventOut"
+            },
+            "type": "array",
+            "title": "History"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "label",
+          "status",
+          "is_past",
+          "exceptions",
+          "closing_started_by",
+          "closing_started_at",
+          "locked_by",
+          "locked_at",
+          "unlock_until",
+          "unlock_reason",
+          "unlock_request_id",
+          "history"
+        ],
+        "title": "FiscalPeriodOut"
+      },
       "Frequency": {
         "type": "string",
         "enum": [
@@ -21386,6 +25790,14 @@
         ],
         "title": "LastRunOut"
       },
+      "LateFeeMethod": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "full_month"
+        ],
+        "title": "LateFeeMethod"
+      },
       "LeaveBalanceOut": {
         "properties": {
           "staff_id": {
@@ -21679,9 +26091,29 @@
           "transfer",
           "advance",
           "opening",
-          "refund"
+          "refund",
+          "ad_hoc_charge",
+          "payment_plan"
         ],
         "title": "LedgerSource"
+      },
+      "LetterServedIn": {
+        "properties": {
+          "served_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Served On"
+          }
+        },
+        "type": "object",
+        "title": "LetterServedIn"
       },
       "LineOut": {
         "properties": {
@@ -23534,6 +27966,68 @@
         ],
         "title": "Page[AccountOut]"
       },
+      "Page_AccountingExportOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AccountingExportOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[AccountingExportOut]"
+      },
+      "Page_AdHocChargeOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdHocChargeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[AdHocChargeOut]"
+      },
       "Page_AnnouncementOut_": {
         "properties": {
           "items": {
@@ -23719,6 +28213,37 @@
           "total"
         ],
         "title": "Page[ChargeRunOut]"
+      },
+      "Page_CollectionTimelineItemOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CollectionTimelineItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[CollectionTimelineItemOut]"
       },
       "Page_CustomerUsageOut_": {
         "properties": {
@@ -24981,6 +29506,332 @@
         ],
         "title": "PaymentOut"
       },
+      "PaymentPlanCancelIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "PaymentPlanCancelIn"
+      },
+      "PaymentPlanCountsOut": {
+        "properties": {
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "broken": {
+            "type": "integer",
+            "title": "Broken"
+          },
+          "completed": {
+            "type": "integer",
+            "title": "Completed"
+          },
+          "cancelled": {
+            "type": "integer",
+            "title": "Cancelled"
+          },
+          "approval_pending": {
+            "type": "integer",
+            "title": "Approval Pending"
+          },
+          "remaining_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Remaining Total",
+            "description": "yürürlükteki ve bozulan planlarda kalan tutar",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "broken",
+          "completed",
+          "cancelled",
+          "approval_pending",
+          "remaining_total"
+        ],
+        "title": "PaymentPlanCountsOut"
+      },
+      "PaymentPlanIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "installment_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installment Count"
+          },
+          "first_due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Due Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "PaymentPlanIn"
+      },
+      "PaymentPlanListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentPlanOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/PaymentPlanCountsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "counts"
+        ],
+        "title": "PaymentPlanListOut"
+      },
+      "PaymentPlanOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "reference_code": {
+            "type": "string",
+            "title": "Reference Code"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "installment_count": {
+            "type": "integer",
+            "title": "Installment Count"
+          },
+          "first_due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "First Due Date"
+          },
+          "tolerance_days": {
+            "type": "integer",
+            "title": "Tolerance Days"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlanStatus"
+          },
+          "paid_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Paid Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Remaining",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "installments": {
+            "items": {
+              "$ref": "#/components/schemas/PlanInstallmentOut"
+            },
+            "type": "array",
+            "title": "Installments"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "activated_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated On"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "account_id",
+          "unit_id",
+          "unit_name",
+          "person_name",
+          "reference_code",
+          "total",
+          "installment_count",
+          "first_due_date",
+          "tolerance_days",
+          "note",
+          "status",
+          "paid_total",
+          "remaining",
+          "installments",
+          "approval_request_id",
+          "created_by",
+          "created_at",
+          "activated_on",
+          "cancelled_at",
+          "cancel_reason"
+        ],
+        "title": "PaymentPlanOut"
+      },
       "PaymentResultOut": {
         "properties": {
           "payment": {
@@ -25036,6 +29887,106 @@
           "cancelled"
         ],
         "title": "PaymentStatus"
+      },
+      "PeriodEventOut": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "start_close · reopen · lock · unlock_requested · unlock · unlock_rejected · relocked"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "by",
+          "action",
+          "note"
+        ],
+        "title": "PeriodEventOut"
+      },
+      "PeriodStartCloseIn": {
+        "properties": {
+          "exceptions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exceptions",
+            "description": "eksik zorunlu madde → gerekçe (en az 10 karakter)"
+          }
+        },
+        "type": "object",
+        "title": "PeriodStartCloseIn"
+      },
+      "PeriodStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "closing",
+          "locked",
+          "temp_open"
+        ],
+        "title": "PeriodStatus",
+        "description": "Dönem kapanışı (FIN-13): Açık → Kapanışta → Kilitli; Kilitli → (istisnai) Süreli açık →\nKilitli. Kapanışta ve kilitli dönemde finansal kayıt yazılamaz (`services/periods.py`)."
+      },
+      "PeriodUnlockIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "en az 20 karakter"
+          },
+          "hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours",
+            "description": "4 · 24 · 72"
+          }
+        },
+        "type": "object",
+        "title": "PeriodUnlockIn"
       },
       "PersonCreate": {
         "properties": {
@@ -25184,6 +30135,56 @@
         "type": "object",
         "title": "PersonUpdate"
       },
+      "PlanInstallmentOut": {
+        "properties": {
+          "no": {
+            "type": "integer",
+            "title": "No"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "paid": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Paid",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "paid",
+              "partial",
+              "open",
+              "overdue"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "no",
+          "due_date",
+          "amount",
+          "paid",
+          "status"
+        ],
+        "title": "PlanInstallmentOut"
+      },
       "PlanOut": {
         "properties": {
           "id": {
@@ -25234,6 +30235,18 @@
           "allowed_modules"
         ],
         "title": "PlanOut"
+      },
+      "PlanStatus": {
+        "type": "string",
+        "enum": [
+          "approval_pending",
+          "active",
+          "broken",
+          "completed",
+          "cancelled",
+          "rejected"
+        ],
+        "title": "PlanStatus"
       },
       "PollAudience": {
         "type": "string",
@@ -25871,6 +30884,14 @@
         ],
         "title": "ProposedRuleOut",
         "description": "Kural değişikliği talebinin önerdiği kural — `RuleIn` biçiminde, forma olduğu gibi dolar."
+      },
+      "Proration": {
+        "type": "string",
+        "enum": [
+          "day",
+          "month"
+        ],
+        "title": "Proration"
       },
       "PublicSiteOut": {
         "properties": {
@@ -27546,6 +32567,67 @@
         ],
         "title": "ResidentDocumentOut",
         "description": "Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok."
+      },
+      "ResidentPaymentPlanOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "reference_code": {
+            "type": "string",
+            "title": "Reference Code"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "installment_count": {
+            "type": "integer",
+            "title": "Installment Count"
+          },
+          "paid_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Paid Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlanStatus"
+          },
+          "installments": {
+            "items": {
+              "$ref": "#/components/schemas/PlanInstallmentOut"
+            },
+            "type": "array",
+            "title": "Installments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "unit_name",
+          "reference_code",
+          "total",
+          "installment_count",
+          "paid_total",
+          "status",
+          "installments"
+        ],
+        "title": "ResidentPaymentPlanOut"
       },
       "ResidentPollOut": {
         "properties": {
@@ -30483,6 +35565,25 @@
         ],
         "title": "SuggestionOut"
       },
+      "TimelinePlanOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "TimelinePlanOut"
+      },
       "TimesheetDayOut": {
         "properties": {
           "date": {
@@ -32240,6 +37341,74 @@
         ],
         "title": "WarningOut"
       },
+      "Written_AccountMappingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AccountMappingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AccountMappingsOut]"
+      },
+      "Written_AccountingExportOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AccountingExportOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AccountingExportOut]"
+      },
+      "Written_AdHocChargeOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdHocChargeOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AdHocChargeOut]"
+      },
+      "Written_AdHocSettingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdHocSettingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AdHocSettingsOut]"
+      },
       "Written_AddedOut_": {
         "properties": {
           "data": {
@@ -32393,6 +37562,23 @@
         ],
         "title": "Written[BudgetPlanDetail]"
       },
+      "Written_BulkReminderOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BulkReminderOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[BulkReminderOut]"
+      },
       "Written_CashAccountOut_": {
         "properties": {
           "data": {
@@ -32409,6 +37595,23 @@
           "message"
         ],
         "title": "Written[CashAccountOut]"
+      },
+      "Written_CashDayOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CashDayOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[CashDayOut]"
       },
       "Written_CertificateOut_": {
         "properties": {
@@ -32443,6 +37646,23 @@
           "message"
         ],
         "title": "Written[ChargeRunOut]"
+      },
+      "Written_CollectionActionOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CollectionActionOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[CollectionActionOut]"
       },
       "Written_ConfirmOut_": {
         "properties": {
@@ -32512,6 +37732,23 @@
         ],
         "title": "Written[DelegationOut]"
       },
+      "Written_DemandLetterOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DemandLetterOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[DemandLetterOut]"
+      },
       "Written_DepartmentOut_": {
         "properties": {
           "data": {
@@ -32562,6 +37799,40 @@
           "message"
         ],
         "title": "Written[ExpenseOut]"
+      },
+      "Written_FinanceParamVersionOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FinanceParamVersionOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[FinanceParamVersionOut]"
+      },
+      "Written_FiscalPeriodOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FiscalPeriodOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[FiscalPeriodOut]"
       },
       "Written_ImportResultOut_": {
         "properties": {
@@ -32835,6 +38106,23 @@
           "message"
         ],
         "title": "Written[PartyOut]"
+      },
+      "Written_PaymentPlanOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PaymentPlanOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PaymentPlanOut]"
       },
       "Written_PaymentResultOut_": {
         "properties": {

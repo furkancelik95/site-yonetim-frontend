@@ -898,6 +898,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/charge-runs/preview/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tahakkuk fark raporu (önizleme ↔ son kesinleşmiş dönem)
+         * @description Salt okuma; eşik üstü artan/azalan, yeni ve bu dönem olmayan hesaplar (FIN-05).
+         */
+        get: operations["preview_diff_api_v1_sites__slug__charge_runs_preview_diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/charge-runs": {
         parameters: {
             query?: never;
@@ -961,6 +981,283 @@ export interface paths {
         put?: never;
         /** Koşuyu ters kayıtla iptal et */
         post: operations["reverse_run_api_v1_sites__slug__charge_runs__run_id__reverse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yılın dönemleri (yeniden eskiye)
+         * @description İçinde bulunulan yıl için bu aya kadar; en fazla 12 satır.
+         */
+        get: operations["list_periods_api_v1_sites__slug__fiscal_periods_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/close-checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kapanış kontrol listesi */
+        get: operations["close_checklist_api_v1_sites__slug__fiscal_periods__period__close_checklist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/start-close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kapanışı başlat (Açık → Kapanışta)
+         * @description 409: `period_not_ended`, `checklist_incomplete`, `invalid_status`.
+         */
+        post: operations["start_close_api_v1_sites__slug__fiscal_periods__period__start_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kilitle (iki kişi kuralı)
+         * @description 409 `four_eyes`: kapanışı başlatan kişi kilitleyemez.
+         */
+        post: operations["lock_api_v1_sites__slug__fiscal_periods__period__lock_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kapanıştan açığa al */
+        post: operations["reopen_api_v1_sites__slug__fiscal_periods__period__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/fiscal-periods/{period}/unlock-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kilidi süreli aç (onay kuralı varsa 202) */
+        post: operations["request_unlock_api_v1_sites__slug__fiscal_periods__period__unlock_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/finance-parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finans parametreleri: geçerli, varsayılan, sürümler */
+        get: operations["get_parameters_api_v1_sites__slug__finance_parameters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/finance-parameters/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yeni parametre sürümü (finansal etkili + onay kuralı varsa 202) */
+        post: operations["save_version_api_v1_sites__slug__finance_parameters_versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/ad-hoc-charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kaynak bazında yansıma ayarı */
+        get: operations["get_settings_api_v1_sites__slug__settings_ad_hoc_charges_get"];
+        /** Yansıma ayarını kaydet */
+        put: operations["save_settings_api_v1_sites__slug__settings_ad_hoc_charges_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/ad-hoc-charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dönem dışı ücretler (sayfalı) */
+        get: operations["list_charges_api_v1_sites__slug__ad_hoc_charges_get"];
+        put?: never;
+        /**
+         * Dönem dışı ücret ekle (onay kuralı varsa 202)
+         * @description 422 `no_account` (bölümde seçilen türde açık hesap yok).
+         */
+        post: operations["create_charge_api_v1_sites__slug__ad_hoc_charges_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/ad-hoc-charges/{charge_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ücreti iptal et (ters kayıt) */
+        post: operations["cancel_charge_api_v1_sites__slug__ad_hoc_charges__charge_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounting/mappings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hesap kodu eşlemesi */
+        get: operations["get_mappings_api_v1_sites__slug__accounting_mappings_get"];
+        /**
+         * Hesap kodu eşlemesini kaydet (yeni sürüm)
+         * @description 422 `fields.{key}.debit_account`: hesap kodu rakam ve nokta.
+         */
+        put: operations["save_mappings_api_v1_sites__slug__accounting_mappings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounting/exports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktarılmamış fiş önizlemesi */
+        get: operations["preview_api_v1_sites__slug__accounting_exports_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounting/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktarım geçmişi (sayfalı) */
+        get: operations["list_exports_api_v1_sites__slug__accounting_exports_get"];
+        put?: never;
+        /**
+         * Fiş dosyasını üret ve kilitle
+         * @description 409 `mapping_missing`, `nothing_to_export`. Aynı fiş bir daha aktarılmaz.
+         */
+        post: operations["create_export_api_v1_sites__slug__accounting_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounting/exports/{export_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dosyayı yeniden indir */
+        get: operations["export_file_api_v1_sites__slug__accounting_exports__export_id__file_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1249,6 +1546,200 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/receivables/aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Alacak yaşlandırması (0–30 / 31–60 / 61–90 / 90+) */
+        get: operations["aging_api_v1_sites__slug__receivables_aging_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/collection-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hesap → takip özeti (kaydı olan hesaplar) */
+        get: operations["collection_status_api_v1_sites__slug__collection_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounts/{account_id}/collection-timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hesabın takip geçmişi */
+        get: operations["timeline_api_v1_sites__slug__accounts__account_id__collection_timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounts/{account_id}/collection-actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hatırlatma / arama / not kaydı */
+        post: operations["add_action_api_v1_sites__slug__accounts__account_id__collection_actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/collection-actions/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toplu hatırlatma kaydı */
+        post: operations["bulk_api_v1_sites__slug__collection_actions_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounts/{account_id}/demand-letters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İhtarname gönderimini kaydet (onay kuralı varsa 202) */
+        post: operations["add_letter_api_v1_sites__slug__accounts__account_id__demand_letters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/demand-letters/{letter_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tebliğ tarihini kaydet */
+        patch: operations["mark_served_api_v1_sites__slug__demand_letters__letter_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/payment-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ödeme planları (sayfalı, durum süzgeçli) */
+        get: operations["list_plans_api_v1_sites__slug__payment_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/accounts/{account_id}/payment-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hesabın ödeme planları */
+        get: operations["account_plans_api_v1_sites__slug__accounts__account_id__payment_plans_get"];
+        put?: never;
+        /**
+         * Ödeme planı oluştur (onay kuralı varsa 202)
+         * @description 409 `plan_exists`; 422 `fields.amount|installment_count|first_due_date`.
+         */
+        post: operations["create_plan_api_v1_sites__slug__accounts__account_id__payment_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/payment-plans/{plan_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ödeme planını iptal et */
+        post: operations["cancel_plan_api_v1_sites__slug__payment_plans__plan_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/payment-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sakin: ödeme planım
+         * @description Yalnız oturum sahibinin hesapları; onay bekleyen/reddedilen plan gösterilmez.
+         */
+        get: operations["resident_plans_api_v1_sites__slug__resident_payment_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/requests": {
         parameters: {
             query?: never;
@@ -1433,6 +1924,43 @@ export interface paths {
         put?: never;
         /** Okundu işaretle (sakin) */
         post: operations["mark_read_api_v1_sites__slug__announcements__announcement_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/cash-accounts/{account_id}/days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kasa günleri: açık günler ve sayımlar */
+        get: operations["list_days_api_v1_sites__slug__cash_accounts__account_id__days_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/cash-accounts/{account_id}/days/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gün sonu sayımıyla kapat
+         * @description 409 `day_closed`, `not_cash`; 422 `difference_reason`.
+         */
+        post: operations["close_day_api_v1_sites__slug__cash_accounts__account_id__days_close_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3252,13 +3780,141 @@ export interface components {
          * @enum {string}
          */
         AccountKind: "owner" | "occupant";
+        /** AccountMappingIn */
+        AccountMappingIn: {
+            /** Key */
+            key: string;
+            /**
+             * Debit Account
+             * @default
+             */
+            debit_account: string;
+            /**
+             * Credit Account
+             * @default
+             */
+            credit_account: string;
+        };
+        /** AccountMappingOut */
+        AccountMappingOut: {
+            /**
+             * Key
+             * @description charge · ad_hoc_charge · payment_cash · payment_bank_transfer · payment_credit_card · payment_other · expense · refund
+             */
+            key: string;
+            /** Label */
+            label: string;
+            /** Debit Account */
+            debit_account: string;
+            /** Credit Account */
+            credit_account: string;
+        };
+        /** AccountMappingsIn */
+        AccountMappingsIn: {
+            /** Items */
+            items: components["schemas"]["AccountMappingIn"][];
+        };
+        /** AccountMappingsOut */
+        AccountMappingsOut: {
+            /** Items */
+            items: components["schemas"]["AccountMappingOut"][];
+        };
+        /** AccountingExportIn */
+        AccountingExportIn: {
+            /**
+             * Period
+             * @description YYYY-MM
+             */
+            period: string;
+        };
+        /** AccountingExportOut */
+        AccountingExportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Period */
+            period: string;
+            /** Voucher Count */
+            voucher_count: number;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /** File Name */
+            file_name: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AccountingPreviewOut */
+        AccountingPreviewOut: {
+            /** Period */
+            period: string;
+            /**
+             * Vouchers
+             * @description aktarılmamış fişler (dönem içi)
+             */
+            vouchers: components["schemas"]["AccountingVoucherOut"][];
+            /** Already Exported */
+            already_exported: number;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /**
+             * Missing Mappings
+             * @description eşlemesi eksik işlem tipleri (etiket)
+             */
+            missing_mappings: string[];
+        };
+        /** AccountingVoucherOut */
+        AccountingVoucherOut: {
+            /** Key */
+            key: string;
+            /** Source */
+            source: string;
+            /** Source Id */
+            source_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Description */
+            description: string;
+            /** Debit Account */
+            debit_account: string;
+            /** Credit Account */
+            credit_account: string;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+        };
+        /**
+         * ActionKind
+         * @enum {string}
+         */
+        ActionKind: "reminder" | "call" | "note";
         /**
          * ActionType
          * @description Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "leave_request";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "leave_request" | "period_unlock" | "cash_difference" | "ad_hoc_charge" | "finance_parameter" | "demand_letter";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -3275,6 +3931,124 @@ export interface components {
          * @enum {string}
          */
         ActorType: "user" | "system" | "delegate";
+        /** AdHocCancelIn */
+        AdHocCancelIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** AdHocChargeIn */
+        AdHocChargeIn: {
+            /** Unit Id */
+            unit_id?: string | null;
+            /**
+             * Account Kind
+             * @description owner · occupant
+             */
+            account_kind?: string | null;
+            /** Source */
+            source?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Amount */
+            amount?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+        };
+        /** AdHocChargeOut */
+        AdHocChargeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /** Account Kind */
+            account_kind: string;
+            /** Reference Code */
+            reference_code: string;
+            /** Person Name */
+            person_name: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "reservation" | "service" | "renovation" | "penalty" | "other";
+            /** Description */
+            description: string;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            /**
+             * Due Date
+             * @description yazıldığı vade; bekleyende boşsa tahakkuk vadesi
+             */
+            due_date: string | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "immediate" | "next_period";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approval_pending" | "posted" | "waiting_next_run" | "cancelled" | "rejected";
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Charge Run Id */
+            charge_run_id: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+        };
+        /** AdHocSettingsIn */
+        AdHocSettingsIn: {
+            /** Sources */
+            sources: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        /** AdHocSettingsOut */
+        AdHocSettingsOut: {
+            /** Sources */
+            sources: {
+                [key: string]: components["schemas"]["AdHocSourceSettingOut"];
+            };
+        };
+        /** AdHocSourceSettingOut */
+        AdHocSourceSettingOut: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "immediate" | "next_period";
+            /** Due Days */
+            due_days: number;
+        };
         /** AddedOut */
         AddedOut: {
             member: components["schemas"]["MemberOut"];
@@ -3310,11 +4084,87 @@ export interface components {
          * @enum {string}
          */
         AgendaResult: "accepted" | "rejected" | "postponed" | "info";
+        /** AgingBlockOut */
+        AgingBlockOut: {
+            /** Block */
+            block: string;
+            /**
+             * 0 30
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            "0_30": string;
+            /**
+             * 31 60
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            "31_60": string;
+            /**
+             * 61 90
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            "61_90": string;
+            /**
+             * 90 Plus
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            "90_plus": string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+        };
+        /** AgingBucketOut */
+        AgingBucketOut: {
+            /**
+             * Key
+             * @description 0_30 · 31_60 · 61_90 · 90_plus
+             */
+            key: string;
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+        };
+        /** AgingOut */
+        AgingOut: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /**
+             * Total
+             * @description borçlular listesinin toplam bakiyesine eşit
+             * @example 1234.56
+             */
+            total: string;
+            /** Buckets */
+            buckets: components["schemas"]["AgingBucketOut"][];
+            /** By Block */
+            by_block: components["schemas"]["AgingBlockOut"][];
+        };
         /**
          * AllocationKind
          * @enum {string}
          */
         AllocationKind: "equal" | "by_land_share" | "by_area" | "by_unit_type_weight" | "by_custom_weight" | "fixed_per_unit" | "by_meter_consumption" | "composite";
+        /**
+         * AllocationOrder
+         * @enum {string}
+         */
+        AllocationOrder: "late_fee_first" | "principal_first";
         /** AllocationOut */
         AllocationOut: {
             /**
@@ -3370,7 +4220,7 @@ export interface components {
              * Channels
              * @description uygulama içi her zaman; diğerleri kayıt (K5)
              */
-            channels?: components["schemas"]["Channel"][];
+            channels?: components["schemas"]["Channel-Input"][];
             /** Expires On */
             expires_on?: string | null;
             /**
@@ -3955,6 +4805,11 @@ export interface components {
             /** Ip */
             ip: string | null;
         };
+        /**
+         * BankAutoMatch
+         * @enum {string}
+         */
+        BankAutoMatch: "high" | "high_medium";
         /** BlockCreate */
         BlockCreate: {
             /**
@@ -4306,6 +5161,27 @@ export interface components {
          * @enum {string}
          */
         BudgetStatus: "draft" | "notified" | "finalized" | "superseded";
+        /** BulkReminderIn */
+        BulkReminderIn: {
+            /** Account Ids */
+            account_ids?: string[];
+            /**
+             * Channel
+             * @default app
+             * @enum {string}
+             */
+            channel: "app" | "sms";
+        };
+        /** BulkReminderOut */
+        BulkReminderOut: {
+            /** Count */
+            count: number;
+            /**
+             * Delivered
+             * @default false
+             */
+            delivered: boolean;
+        };
         /** CancelIn */
         CancelIn: {
             /** Reason */
@@ -4403,6 +5279,87 @@ export interface components {
              * @example 1234.56
              */
             total_balance: string;
+        };
+        /** CashDayCloseIn */
+        CashDayCloseIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Counted
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            counted: string;
+            /**
+             * Reason
+             * @description fark varsa ≥ 10 karakter
+             */
+            reason?: string | null;
+        };
+        /** CashDayOut */
+        CashDayOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * System Balance
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            system_balance: string;
+            /**
+             * Counted
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            counted: string;
+            /**
+             * Difference
+             * @description sayım − sistem (eksi: eksik)
+             * @example 1234.56
+             */
+            difference: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "closed" | "approval_pending" | "rejected";
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Closed By */
+            closed_by: string;
+            /** Closed At */
+            closed_at: string | null;
+        };
+        /** CashDaysOut */
+        CashDaysOut: {
+            /**
+             * Kind
+             * @description cash · bank (bankada sayım yok)
+             */
+            kind: string;
+            /**
+             * Open Days
+             * @description son 60 günde hareketli, sayılmamış günler
+             */
+            open_days: string[];
+            /**
+             * Closed
+             * @description son 90 sayım, yeniden eskiye
+             */
+            closed: components["schemas"]["CashDayOut"][];
         };
         /**
          * CashSource
@@ -4525,7 +5482,76 @@ export interface components {
          * Channel
          * @enum {string}
          */
-        Channel: "in_app" | "web_push" | "email" | "sms";
+        "Channel-Input": "in_app" | "web_push" | "email" | "sms";
+        /**
+         * Channel
+         * @enum {string}
+         */
+        "Channel-Output": "app" | "sms" | "phone";
+        /** ChargeDiffCountsOut */
+        ChargeDiffCountsOut: {
+            /** Increase */
+            increase: number;
+            /** Decrease */
+            decrease: number;
+            /** New */
+            new: number;
+            /** Missing */
+            missing: number;
+        };
+        /** ChargeDiffOut */
+        ChargeDiffOut: {
+            /**
+             * Period
+             * @description "11/2026"
+             */
+            period: string;
+            /**
+             * Base Period
+             * @description karşılaştırılan son kesinleşmiş dönem
+             */
+            base_period: string | null;
+            /**
+             * Threshold
+             * @description finans parametresi `diff_threshold_percent`
+             */
+            threshold: number;
+            /**
+             * Compared
+             * @description önizlemedeki hesap sayısı
+             */
+            compared: number;
+            counts: components["schemas"]["ChargeDiffCountsOut"];
+            /** Rows */
+            rows: components["schemas"]["ChargeDiffRowOut"][];
+        };
+        /** ChargeDiffRowOut */
+        ChargeDiffRowOut: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Person Name */
+            person_name: string;
+            account_kind: components["schemas"]["AccountKind"];
+            /** Previous */
+            previous: string | null;
+            /** Current */
+            current: string | null;
+            /**
+             * Change Percent
+             * @description yüzde, 1 ondalık (ör. 12.4)
+             */
+            change_percent: string | null;
+            /**
+             * Flag
+             * @enum {string}
+             */
+            flag: "increase" | "decrease" | "new" | "missing";
+        };
         /** ChargeOut */
         ChargeOut: {
             /**
@@ -4615,6 +5641,11 @@ export interface components {
          * @enum {string}
          */
         ChargeRunStatus: "draft" | "posted" | "reversed";
+        /**
+         * ChargeSource
+         * @enum {string}
+         */
+        ChargeSource: "budget_plan" | "billing_rule";
         /** ChargeTypeOut */
         ChargeTypeOut: {
             /**
@@ -4631,10 +5662,100 @@ export interface components {
             /** Is Advance */
             is_advance: boolean;
         };
+        /** CloseCheckItemOut */
+        CloseCheckItemOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Ok */
+            ok: boolean;
+            /** Detail */
+            detail: string;
+            /**
+             * Link
+             * @description ekrandaki ilgili sayfa (frontend yolu)
+             */
+            link: string;
+            /** Required */
+            required: boolean;
+            /**
+             * Exception
+             * @description kapanışta girilen gerekçeli istisna
+             */
+            exception: string | null;
+        };
+        /** CloseChecklistOut */
+        CloseChecklistOut: {
+            period: components["schemas"]["FiscalPeriodOut"];
+            /** Items */
+            items: components["schemas"]["CloseCheckItemOut"][];
+        };
         /** CloseIn */
         CloseIn: {
             /** Note */
             note?: string | null;
+        };
+        /** CollectionActionIn */
+        CollectionActionIn: {
+            /**
+             * Kind
+             * @description reminder · call · note
+             */
+            kind?: string | null;
+            /**
+             * Channel
+             * @description hatırlatmada app · sms
+             */
+            channel?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** CollectionActionOut */
+        CollectionActionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            kind: components["schemas"]["ActionKind"];
+            channel: components["schemas"]["Channel-Output"] | null;
+            /** Note */
+            note: string | null;
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Delivered
+             * @description mesaj gönderildi mi — K5 gelene kadar her zaman false
+             */
+            delivered: boolean;
+        };
+        /** CollectionFollowUpOut */
+        CollectionFollowUpOut: {
+            /**
+             * Plan Status
+             * @description active · broken · completed · cancelled …
+             */
+            plan_status: string | null;
+            /**
+             * Letter Status
+             * @description approval_pending · sent · served
+             */
+            letter_status: string | null;
+            /** Last Action At */
+            last_action_at: string | null;
+            /** Reminder Count */
+            reminder_count: number;
         };
         /** CollectionOut */
         CollectionOut: {
@@ -4667,6 +5788,40 @@ export interface components {
              * @description tahsilat oranı %, metin
              */
             rate: string;
+        };
+        /** CollectionTimelineItemOut */
+        CollectionTimelineItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "reminder" | "call" | "note" | "demand_letter" | "payment_plan";
+            /**
+             * Channel
+             * @description app · sms · phone; ihtarnamede gönderim yöntemi
+             */
+            channel: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Stage
+             * @description gece işinin kademesi (app · sms · call · demand_letter)
+             */
+            stage: string | null;
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            letter?: components["schemas"]["DemandLetterOut"] | null;
+            plan?: components["schemas"]["TimelinePlanOut"] | null;
         };
         /** CollectionsOut */
         CollectionsOut: {
@@ -5212,6 +6367,49 @@ export interface components {
             /** Delivered To */
             delivered_to: string;
         };
+        /** DemandLetterIn */
+        DemandLetterIn: {
+            /**
+             * Method
+             * @description hand · registered_mail · notary
+             */
+            method?: string | null;
+            /** Sent On */
+            sent_on?: string | null;
+            /** Tracking No */
+            tracking_no?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** DemandLetterOut */
+        DemandLetterOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "hand" | "registered_mail" | "notary";
+            /**
+             * Sent On
+             * Format: date
+             */
+            sent_on: string;
+            /** Tracking No */
+            tracking_no: string | null;
+            /** Served On */
+            served_on: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approval_pending" | "sent" | "served" | "rejected";
+            /** Approval Request Id */
+            approval_request_id: string | null;
+        };
         /** DepartmentAssignIn */
         DepartmentAssignIn: {
             /**
@@ -5623,6 +6821,222 @@ export interface components {
              */
             average_debt: string;
         };
+        /** FinanceParamVersionIn */
+        FinanceParamVersionIn: {
+            /**
+             * Effective Period
+             * @description YYYY-MM
+             */
+            effective_period: string;
+            values: components["schemas"]["FinanceParamsIn"];
+        };
+        /** FinanceParamVersionOut */
+        FinanceParamVersionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Effective Period
+             * @description YYYY-MM
+             */
+            effective_period: string;
+            values: components["schemas"]["FinanceParamsOut"];
+            /** Changed */
+            changed: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "approval_pending" | "rejected";
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Changed By */
+            changed_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** FinanceParametersOut */
+        FinanceParametersOut: {
+            current: components["schemas"]["FinanceParamsOut"];
+            /** Current Period */
+            current_period: string;
+            /**
+             * Earliest Financial Period
+             * @description finansal etkili değişiklik en erken
+             */
+            earliest_financial_period: string;
+            defaults: components["schemas"]["FinanceParamsOut"];
+            /**
+             * Financial Keys
+             * @description sonraki dönemden geçerli + onaya tabi alanlar
+             */
+            financial_keys: string[];
+            /**
+             * Versions
+             * @description son 100 sürüm, yeniden eskiye
+             */
+            versions: components["schemas"]["FinanceParamVersionOut"][];
+            /**
+             * Scheduled
+             * @description yürürlüğü gelecekte olan aktif sürümler
+             */
+            scheduled: components["schemas"]["FinanceParamVersionOut"][];
+        };
+        /**
+         * FinanceParamsIn
+         * @description Yalnız değişen alanlar gönderilebilir; gönderilmeyen alan yürürlükteki değerini korur.
+         */
+        FinanceParamsIn: {
+            /** Reminder Days */
+            reminder_days?: number[] | null;
+            /** Demand Letter Day */
+            demand_letter_day?: number | null;
+            /** Proration */
+            proration?: string | null;
+            /** Diff Threshold Percent */
+            diff_threshold_percent?: number | null;
+            /** Bank Auto Match */
+            bank_auto_match?: string | null;
+            /** Plan Tolerance Days */
+            plan_tolerance_days?: number | null;
+            /** Plan Suspends Late Fee */
+            plan_suspends_late_fee?: boolean | null;
+            /** Budget Warn Percent */
+            budget_warn_percent?: number | null;
+            /** Due Day */
+            due_day?: number | null;
+            /** Charge Source */
+            charge_source?: string | null;
+            /** Late Fee Enabled */
+            late_fee_enabled?: boolean | null;
+            /** Late Fee Monthly Rate Percent */
+            late_fee_monthly_rate_percent?: string | null;
+            /** Late Fee Method */
+            late_fee_method?: string | null;
+            /** Late Fee Grace Days */
+            late_fee_grace_days?: number | null;
+            /** Allocation Order */
+            allocation_order?: string | null;
+            /** Debtor Restriction Enabled */
+            debtor_restriction_enabled?: boolean | null;
+            /** Debtor Restriction Min Amount */
+            debtor_restriction_min_amount?: string | null;
+            /** Debtor Restriction Min Days */
+            debtor_restriction_min_days?: number | null;
+        };
+        /** FinanceParamsOut */
+        FinanceParamsOut: {
+            /**
+             * Reminder Days
+             * @description hatırlatma kademeleri: vade +gün (3 adet)
+             */
+            reminder_days: number[];
+            /**
+             * Demand Letter Day
+             * @description ihtarname hazırlığı: vade +gün
+             */
+            demand_letter_day: number;
+            /** @description K9 kıst: day (gün oranı) · month (ay bazlı) */
+            proration: components["schemas"]["Proration"];
+            /**
+             * Diff Threshold Percent
+             * @description tahakkuk fark raporu eşiği (%)
+             */
+            diff_threshold_percent: number;
+            bank_auto_match: components["schemas"]["BankAutoMatch"];
+            /** Plan Tolerance Days */
+            plan_tolerance_days: number;
+            /** Plan Suspends Late Fee */
+            plan_suspends_late_fee: boolean;
+            /** Budget Warn Percent */
+            budget_warn_percent: number;
+            /**
+             * Due Day
+             * @description K25 vade günü (ayın kaçı)
+             */
+            due_day: number;
+            /** @description K23 tahakkuk kaynağı */
+            charge_source: components["schemas"]["ChargeSource"];
+            /**
+             * Late Fee Enabled
+             * @description K2 gecikme tazminatı — site kararı, varsayılan kapalı
+             */
+            late_fee_enabled: boolean;
+            /**
+             * Late Fee Monthly Rate Percent
+             * @description aylık oran (%), en fazla 5,00
+             * @example 1234.56
+             */
+            late_fee_monthly_rate_percent: string;
+            late_fee_method: components["schemas"]["LateFeeMethod"];
+            /** Late Fee Grace Days */
+            late_fee_grace_days: number;
+            /** @description K24 mahsup sırası */
+            allocation_order: components["schemas"]["AllocationOrder"];
+            /**
+             * Debtor Restriction Enabled
+             * @description K11 borçlu hizmet kısıtı (varsayılan kapalı)
+             */
+            debtor_restriction_enabled: boolean;
+            /**
+             * Debtor Restriction Min Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            debtor_restriction_min_amount: string;
+            /** Debtor Restriction Min Days */
+            debtor_restriction_min_days: number;
+        };
+        /** FiscalPeriodOut */
+        FiscalPeriodOut: {
+            /**
+             * Period
+             * @description YYYY-MM
+             */
+            period: string;
+            /**
+             * Label
+             * @description "Eylül 2026"
+             */
+            label: string;
+            status: components["schemas"]["PeriodStatus"];
+            /**
+             * Is Past
+             * @description içinde bulunulan aydan önce (kapanışa alınabilir)
+             */
+            is_past: boolean;
+            /**
+             * Exceptions
+             * @description kontrol listesi maddesi → gerekçe
+             */
+            exceptions: {
+                [key: string]: string;
+            };
+            /** Closing Started By */
+            closing_started_by: string | null;
+            /** Closing Started At */
+            closing_started_at: string | null;
+            /** Locked By */
+            locked_by: string | null;
+            /** Locked At */
+            locked_at: string | null;
+            /** Unlock Until */
+            unlock_until: string | null;
+            /** Unlock Reason */
+            unlock_reason: string | null;
+            /**
+             * Unlock Request Id
+             * @description onay bekleyen süreli açma talebi
+             */
+            unlock_request_id: string | null;
+            /** History */
+            history: components["schemas"]["PeriodEventOut"][];
+        };
         /**
          * Frequency
          * @enum {string}
@@ -5976,6 +7390,11 @@ export interface components {
             /** Message */
             message: string | null;
         };
+        /**
+         * LateFeeMethod
+         * @enum {string}
+         */
+        LateFeeMethod: "daily" | "full_month";
         /** LeaveBalanceOut */
         LeaveBalanceOut: {
             /**
@@ -6093,7 +7512,12 @@ export interface components {
          * LedgerSource
          * @enum {string}
          */
-        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund";
+        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund" | "ad_hoc_charge" | "payment_plan";
+        /** LetterServedIn */
+        LetterServedIn: {
+            /** Served On */
+            served_on?: string | null;
+        };
         /** LineOut */
         LineOut: {
             /**
@@ -6830,6 +8254,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[AccountingExportOut] */
+        Page_AccountingExportOut_: {
+            /** Items */
+            items: components["schemas"]["AccountingExportOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[AdHocChargeOut] */
+        Page_AdHocChargeOut_: {
+            /** Items */
+            items: components["schemas"]["AdHocChargeOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[AnnouncementOut] */
         Page_AnnouncementOut_: {
             /** Items */
@@ -6889,6 +8335,17 @@ export interface components {
         Page_ChargeRunOut_: {
             /** Items */
             items: components["schemas"]["ChargeRunOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[CollectionTimelineItemOut] */
+        Page_CollectionTimelineItemOut_: {
+            /** Items */
+            items: components["schemas"]["CollectionTimelineItemOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7381,6 +8838,124 @@ export interface components {
              */
             created_at: string;
         };
+        /** PaymentPlanCancelIn */
+        PaymentPlanCancelIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** PaymentPlanCountsOut */
+        PaymentPlanCountsOut: {
+            /** Active */
+            active: number;
+            /** Broken */
+            broken: number;
+            /** Completed */
+            completed: number;
+            /** Cancelled */
+            cancelled: number;
+            /** Approval Pending */
+            approval_pending: number;
+            /**
+             * Remaining Total
+             * @description yürürlükteki ve bozulan planlarda kalan tutar
+             * @example 1234.56
+             */
+            remaining_total: string;
+        };
+        /** PaymentPlanIn */
+        PaymentPlanIn: {
+            /** Amount */
+            amount?: string | null;
+            /** Installment Count */
+            installment_count?: number | null;
+            /** First Due Date */
+            first_due_date?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** PaymentPlanListOut */
+        PaymentPlanListOut: {
+            /** Items */
+            items: components["schemas"]["PaymentPlanOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            counts: components["schemas"]["PaymentPlanCountsOut"];
+        };
+        /** PaymentPlanOut */
+        PaymentPlanOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Person Name */
+            person_name: string;
+            /** Reference Code */
+            reference_code: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /** Installment Count */
+            installment_count: number;
+            /**
+             * First Due Date
+             * Format: date
+             */
+            first_due_date: string;
+            /** Tolerance Days */
+            tolerance_days: number;
+            /** Note */
+            note: string | null;
+            status: components["schemas"]["PlanStatus"];
+            /**
+             * Paid Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            paid_total: string;
+            /**
+             * Remaining
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            remaining: string;
+            /** Installments */
+            installments: components["schemas"]["PlanInstallmentOut"][];
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Activated On */
+            activated_on: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+        };
         /** PaymentResultOut */
         PaymentResultOut: {
             payment: components["schemas"]["PaymentOut"];
@@ -7410,6 +8985,53 @@ export interface components {
          * @enum {string}
          */
         PaymentStatus: "pending" | "confirmed" | "cancelled";
+        /** PeriodEventOut */
+        PeriodEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string;
+            /**
+             * Action
+             * @description start_close · reopen · lock · unlock_requested · unlock · unlock_rejected · relocked
+             */
+            action: string;
+            /** Note */
+            note: string | null;
+        };
+        /** PeriodStartCloseIn */
+        PeriodStartCloseIn: {
+            /**
+             * Exceptions
+             * @description eksik zorunlu madde → gerekçe (en az 10 karakter)
+             */
+            exceptions?: {
+                [key: string]: string;
+            } | null;
+        };
+        /**
+         * PeriodStatus
+         * @description Dönem kapanışı (FIN-13): Açık → Kapanışta → Kilitli; Kilitli → (istisnai) Süreli açık →
+         *     Kilitli. Kapanışta ve kilitli dönemde finansal kayıt yazılamaz (`services/periods.py`).
+         * @enum {string}
+         */
+        PeriodStatus: "open" | "closing" | "locked" | "temp_open";
+        /** PeriodUnlockIn */
+        PeriodUnlockIn: {
+            /**
+             * Reason
+             * @description en az 20 karakter
+             */
+            reason?: string | null;
+            /**
+             * Hours
+             * @description 4 · 24 · 72
+             */
+            hours?: number | null;
+        };
         /** PersonCreate */
         PersonCreate: {
             /** Phone */
@@ -7456,6 +9078,33 @@ export interface components {
             /** Last Name */
             last_name?: string | null;
         };
+        /** PlanInstallmentOut */
+        PlanInstallmentOut: {
+            /** No */
+            no: number;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            /**
+             * Paid
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            paid: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "paid" | "partial" | "open" | "overdue";
+        };
         /** PlanOut */
         PlanOut: {
             /**
@@ -7472,6 +9121,11 @@ export interface components {
             /** Allowed Modules */
             allowed_modules: string[];
         };
+        /**
+         * PlanStatus
+         * @enum {string}
+         */
+        PlanStatus: "approval_pending" | "active" | "broken" | "completed" | "cancelled" | "rejected";
         /**
          * PollAudience
          * @enum {string}
@@ -7728,6 +9382,11 @@ export interface components {
              */
             basis_note?: string | null;
         };
+        /**
+         * Proration
+         * @enum {string}
+         */
+        Proration: "day" | "month";
         /** PublicSiteOut */
         PublicSiteOut: {
             /** Site Name */
@@ -8350,6 +10009,35 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ResidentPaymentPlanOut */
+        ResidentPaymentPlanOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Reference Code */
+            reference_code: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /** Installment Count */
+            installment_count: number;
+            /**
+             * Paid Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            paid_total: string;
+            status: components["schemas"]["PlanStatus"];
+            /** Installments */
+            installments: components["schemas"]["PlanInstallmentOut"][];
         };
         /** ResidentPollOut */
         ResidentPollOut: {
@@ -9449,6 +11137,16 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** TimelinePlanOut */
+        TimelinePlanOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+        };
         /** TimesheetDayOut */
         TimesheetDayOut: {
             /**
@@ -10020,6 +11718,30 @@ export interface components {
             /** Budget Item Id */
             budget_item_id: string | null;
         };
+        /** Written[AccountMappingsOut] */
+        Written_AccountMappingsOut_: {
+            data: components["schemas"]["AccountMappingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[AccountingExportOut] */
+        Written_AccountingExportOut_: {
+            data: components["schemas"]["AccountingExportOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[AdHocChargeOut] */
+        Written_AdHocChargeOut_: {
+            data: components["schemas"]["AdHocChargeOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[AdHocSettingsOut] */
+        Written_AdHocSettingsOut_: {
+            data: components["schemas"]["AdHocSettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[AddedOut] */
         Written_AddedOut_: {
             data: components["schemas"]["AddedOut"];
@@ -10074,9 +11796,21 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[BulkReminderOut] */
+        Written_BulkReminderOut_: {
+            data: components["schemas"]["BulkReminderOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[CashAccountOut] */
         Written_CashAccountOut_: {
             data: components["schemas"]["CashAccountOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[CashDayOut] */
+        Written_CashDayOut_: {
+            data: components["schemas"]["CashDayOut"];
             /** Message */
             message: string;
         };
@@ -10089,6 +11823,12 @@ export interface components {
         /** Written[ChargeRunOut] */
         Written_ChargeRunOut_: {
             data: components["schemas"]["ChargeRunOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[CollectionActionOut] */
+        Written_CollectionActionOut_: {
+            data: components["schemas"]["CollectionActionOut"];
             /** Message */
             message: string;
         };
@@ -10116,6 +11856,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[DemandLetterOut] */
+        Written_DemandLetterOut_: {
+            data: components["schemas"]["DemandLetterOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[DepartmentOut] */
         Written_DepartmentOut_: {
             data: components["schemas"]["DepartmentOut"];
@@ -10131,6 +11877,18 @@ export interface components {
         /** Written[ExpenseOut] */
         Written_ExpenseOut_: {
             data: components["schemas"]["ExpenseOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[FinanceParamVersionOut] */
+        Written_FinanceParamVersionOut_: {
+            data: components["schemas"]["FinanceParamVersionOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[FiscalPeriodOut] */
+        Written_FiscalPeriodOut_: {
+            data: components["schemas"]["FiscalPeriodOut"];
             /** Message */
             message: string;
         };
@@ -10228,6 +11986,12 @@ export interface components {
         /** Written[PartyOut] */
         Written_PartyOut_: {
             data: components["schemas"]["PartyOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PaymentPlanOut] */
+        Written_PaymentPlanOut_: {
+            data: components["schemas"]["PaymentPlanOut"];
             /** Message */
             message: string;
         };
@@ -12639,6 +14403,42 @@ export interface operations {
             };
         };
     };
+    preview_diff_api_v1_sites__slug__charge_runs_preview_diff_get: {
+        parameters: {
+            query?: {
+                /** @description önizlemeyle aynı */
+                charge_date?: string | null;
+                /** @description önizlemeyle aynı */
+                due_date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeDiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_runs_api_v1_sites__slug__charge_runs_get: {
         parameters: {
             query?: {
@@ -12819,6 +14619,672 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_periods_api_v1_sites__slug__fiscal_periods_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalPeriodOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_checklist_api_v1_sites__slug__fiscal_periods__period__close_checklist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseChecklistOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_close_api_v1_sites__slug__fiscal_periods__period__start_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeriodStartCloseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_FiscalPeriodOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lock_api_v1_sites__slug__fiscal_periods__period__lock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_FiscalPeriodOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_api_v1_sites__slug__fiscal_periods__period__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_FiscalPeriodOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_unlock_api_v1_sites__slug__fiscal_periods__period__unlock_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeriodUnlockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_FiscalPeriodOut_"];
+                };
+            };
+            /** @description Talep onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_parameters_api_v1_sites__slug__finance_parameters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceParametersOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_version_api_v1_sites__slug__finance_parameters_versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinanceParamVersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_FinanceParamVersionOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__settings_ad_hoc_charges_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdHocSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_settings_api_v1_sites__slug__settings_ad_hoc_charges_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdHocSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AdHocSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_charges_api_v1_sites__slug__ad_hoc_charges_get: {
+        parameters: {
+            query?: {
+                status?: ("approval_pending" | "posted" | "waiting_next_run" | "cancelled" | "rejected") | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AdHocChargeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_charge_api_v1_sites__slug__ad_hoc_charges_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdHocChargeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AdHocChargeOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_charge_api_v1_sites__slug__ad_hoc_charges__charge_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                charge_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdHocCancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AdHocChargeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_mappings_api_v1_sites__slug__accounting_mappings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountMappingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_mappings_api_v1_sites__slug__accounting_mappings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountMappingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AccountMappingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_sites__slug__accounting_exports_preview_get: {
+        parameters: {
+            query?: {
+                period?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountingPreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_exports_api_v1_sites__slug__accounting_exports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AccountingExportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_export_api_v1_sites__slug__accounting_exports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountingExportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AccountingExportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_file_api_v1_sites__slug__accounting_exports__export_id__file_get: {
+        parameters: {
+            query?: {
+                format?: "csv" | "xlsx";
+            };
+            header?: never;
+            path: {
+                export_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
             };
             /** @description Validation Error */
             422: {
@@ -13427,6 +15893,435 @@ export interface operations {
             };
         };
     };
+    aging_api_v1_sites__slug__receivables_aging_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    collection_status_api_v1_sites__slug__collection_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["CollectionFollowUpOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    timeline_api_v1_sites__slug__accounts__account_id__collection_timeline_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CollectionTimelineItemOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_action_api_v1_sites__slug__accounts__account_id__collection_actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CollectionActionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_api_v1_sites__slug__collection_actions_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkReminderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BulkReminderOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_letter_api_v1_sites__slug__accounts__account_id__demand_letters_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandLetterIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DemandLetterOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_served_api_v1_sites__slug__demand_letters__letter_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                letter_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LetterServedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_DemandLetterOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plans_api_v1_sites__slug__payment_plans_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PlanStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentPlanListOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    account_plans_api_v1_sites__slug__accounts__account_id__payment_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentPlanOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_api_v1_sites__slug__accounts__account_id__payment_plans_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentPlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PaymentPlanOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_plan_api_v1_sites__slug__payment_plans__plan_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentPlanCancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PaymentPlanOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_plans_api_v1_sites__slug__resident_payment_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidentPaymentPlanOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_requests_api_v1_sites__slug__requests_get: {
         parameters: {
             query?: {
@@ -13899,6 +16794,81 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReadOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_days_api_v1_sites__slug__cash_accounts__account_id__days_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashDaysOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_day_api_v1_sites__slug__cash_accounts__account_id__days_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashDayCloseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CashDayOut_"];
+                };
+            };
+            /** @description Fark onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

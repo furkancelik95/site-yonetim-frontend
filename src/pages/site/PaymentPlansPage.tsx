@@ -2,8 +2,9 @@ import { Fragment, useState } from "react";
 import { Link } from "react-router";
 import { CalendarRange } from "lucide-react";
 import { useSiteGet } from "../../api/hooks";
-import { PlanView, type PaymentPlan } from "../../components/CollectionPanel";
-import { Badge, Empty, ErrorState, Kpi, Loading, Money, PageHead } from "../../components/ui";
+import { PlanView } from "../../components/CollectionPanel";
+import type { Schemas } from "../../api/types";
+import { Badge, Empty, ErrorState, Kpi, Loading, Money, PageHead, Pager } from "../../components/ui";
 import { formatDate, formatMoney } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { planStatus, planStatusTone } from "../../lib/labels";
@@ -12,29 +13,28 @@ import { P, useSite } from "../../site/SiteContext";
 /** Ödeme planları (FIN-12): tüm yapılandırmalar; bozulan plan üstte uyarıyla. Plan cari hesap ekranından oluşturulur. */
 export function PaymentPlansPage() {
   const { site, can } = useSite();
-  const [s, set] = useUrlState({ durum: "" });
-  const q = useSiteGet<PaymentPlan[]>("/payment-plans", { status: s.durum || undefined });
-  const all = useSiteGet<PaymentPlan[]>("/payment-plans");
+  const [s, set] = useUrlState({ durum: "", page: "1" });
+  const q = useSiteGet<Schemas["PaymentPlanListOut"]>("/payment-plans", { status: s.durum || undefined, page: s.page, page_size: 50 });
   const [open, setOpen] = useState<string | null>(null);
-  const count = (st: string) => (all.data ?? []).filter((p) => p.status === st).length;
+  const counts = q.data?.counts;
   return (
     <div className="stack">
       <PageHead title="Ödeme planları" subtitle="Borcu taksitlendirilen hesaplar. Yeni plan, borçlu hesabın cari ekranındaki Borç takibi kartından oluşturulur." actions={<Link className="btn" to={`/s/${site.slug}/borclular`}>Borçlular</Link>} />
-      {all.data && (
+      {counts && (
         <div className="grid grid--kpi">
-          <Kpi label="Yürürlükte" value={count("active")} />
-          <Kpi label="Bozuldu" value={count("broken")} tone={count("broken") ? "danger" : undefined} />
-          <Kpi label="Tamamlandı" value={count("completed")} tone="ok" />
-          <Kpi label="Plandaki tutar" small value={formatMoney(String((all.data ?? []).filter((p) => p.status === "active" || p.status === "broken").reduce((t, p) => t + Number(p.total) - Number(p.paid_total), 0).toFixed(2)))} note="kalan" />
+          <Kpi label="Yürürlükte" value={counts.active} note={counts.approval_pending ? `${counts.approval_pending} onay bekliyor` : undefined} />
+          <Kpi label="Bozuldu" value={counts.broken} tone={counts.broken ? "danger" : undefined} />
+          <Kpi label="Tamamlandı" value={counts.completed} tone="ok" />
+          <Kpi label="Plandaki tutar" small value={formatMoney(counts.remaining_total)} note="kalan" />
         </div>
       )}
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="pp-st">Durum</label><select id="pp-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "broken", "completed", "cancelled"].map((k) => <option key={k} value={k}>{planStatus(k)}</option>)}</select></div></div>
+      <div className="filters"><div className="field"><label className="field__label" htmlFor="pp-st">Durum</label><select id="pp-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["approval_pending", "active", "broken", "completed", "cancelled", "rejected"].map((k) => <option key={k} value={k}>{planStatus(k)}</option>)}</select></div></div>
       <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Ödeme planı yok" icon={<CalendarRange aria-hidden="true" />}>Borçlu bir hesabın cari ekranından plan oluşturabilirsiniz.</Empty> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Ödeme planı yok" icon={<CalendarRange aria-hidden="true" />}>Borçlu bir hesabın cari ekranından plan oluşturabilirsiniz.</Empty> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Ödeme planları</caption>
             <thead><tr><th scope="col">Bölüm / kişi</th><th scope="col" className="right">Toplam</th><th scope="col" className="right">Ödenen</th><th scope="col">Sıradaki vade</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
-            <tbody>{q.data.map((p) => {
+            <tbody>{q.data.items.map((p) => {
               const next = p.installments.find((i) => i.status !== "paid");
               return (
                 <Fragment key={p.id}>
@@ -52,7 +52,7 @@ export function PaymentPlansPage() {
             })}</tbody>
           </table></div>
         )}
-      </div></div>
+      </div>{q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}</div>
     </div>
   );
 }
