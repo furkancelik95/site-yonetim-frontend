@@ -448,7 +448,7 @@ export function MetersPage() {
                   <td className="right num">{r.last?.value ? `${num(r.last.value)} ${r.meter.unit_label}` : "—"}</td>
                   <td className="right num">{r.reading?.value ? <>{num(r.reading.value)}{r.reading.consumption && <div className="cell-sub">tüketim {num(r.reading.consumption)}{r.reading.anomaly_percent != null && ` (%${r.reading.anomaly_percent})`}</div>}</> : "—"}{r.reading?.photo_id && <div><OpPhoto id={r.reading.photo_id} alt={`${r.meter.serial} sayaç fotoğrafı`} /></div>}</td>
                   <td>{r.reading ? <><Badge tone={readingTone(r.reading.status)}>{readingStatus(r.reading.status)}</Badge>{r.reading.reason && <div className="cell-sub">{r.reading.reason}</div>}</> : <Badge>Okunmadı</Badge>}</td>
-                  <td className="right nowrap">{r.reading?.status === "anomaly" ? <AnomalyActions id={r.reading.id} /> : !r.reading && <button className="btn btn--sm" type="button" aria-expanded={reading === r.meter.id} onClick={() => setReading((v) => (v === r.meter.id ? null : r.meter.id))}>Oku</button>}</td>
+                  <td className="right nowrap">{r.reading?.status === "anomaly" ? <AnomalyActions id={r.reading.id} /> : (!r.reading || r.reading.status === "unreadable") && <button className="btn btn--sm" type="button" aria-expanded={reading === r.meter.id} onClick={() => setReading((v) => (v === r.meter.id ? null : r.meter.id))}>Oku</button>}</td>
                 </tr>
                 {reading === r.meter.id && <tr><td colSpan={5}><ReadForm meter={r.meter} period={s.donem} prev={r.last?.value ?? null} onDone={() => setReading(null)} /></td></tr>}
               </Fragment>
