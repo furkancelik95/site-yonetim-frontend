@@ -8,6 +8,7 @@ import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
+import { ScheduledReports } from "./MessagingPages";
 import { requestCategory } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
@@ -152,7 +153,7 @@ function DocForm({ onDone }: { onDone: () => void }) {
 // ===================================================================== 79 Rapor kataloğu
 /** Rapor kataloğu (RAP-01): yalnız yetkili olunan raporlar; her metriğin tek tanımı. */
 export function ReportCatalogPage() {
-  const { site } = useSite();
+  const { site, can } = useSite();
   const [s, set] = useUrlState({ rapor: "", q: "" });
   const q = useSiteGet<CatalogItem[]>("/reports/catalog");
   const list = (q.data ?? []).filter((r) => !s.q || `${r.name} ${r.group}`.toLocaleLowerCase("tr-TR").includes(s.q.toLocaleLowerCase("tr-TR")));
@@ -172,7 +173,8 @@ export function ReportCatalogPage() {
           ))}</div>
         </div>
       ))}
-      <p className="xs muted">Dışa aktarma kayda geçer (PDF/Excel). Planlı rapor e-postası SMS/e-posta sağlayıcısı seçilince (K5).</p>
+      {can(P.reportsSchedule) && <ScheduledReports />}
+      <p className="xs muted">Dışa aktarma kayda geçer (PDF/Excel).</p>
     </div>
   );
 }

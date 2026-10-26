@@ -58,7 +58,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/araclar` | **Araçlar** — plaka listesi, ekle/onayla/pasif, ayarlar (YAP-05) | `units.read` / `.manage` | `vehicles`, `settings/vehicles` (istek 22) | R (sahte servis) |
 | `/s/{slug}/kayit-basvurulari` | **Sakin kaydı** — Başvurular (istek 13), Davetler, Kayıt yöntemleri (YAP-07/08) | `people.manage` | `registrations`, `invitations`, `settings/registration` (istek 23) | R (sahte servis) |
 | `/s/{slug}/kayit-afisi` | **QR kayıt afişi** — tesis/blok/bölüm, A4/A5/etiket, yazdır; `?blok=`/`?bolum=` önseçim | `people.manage` | `registration-link`, `blocks`, `units` | R |
-| `/davet/{token}` | **Davetle kayıt** (oturumsuz) — telefon doğrula, bilgilendirme, geçici parola | — | `public/invitations/{token}` (istek 23) | R (sahte servis) |
+| `/davet/{token}` | **Davetle kayıt** (oturumsuz) — telefon doğrula, bilgilendirme; sonra telefon + SMS koduyla giriş | — | `public/invitations/{token}` (istek 23) | R (sahte servis) |
 | `/s/{slug}/ayarlar/ozel-alanlar` | **Özel alanlar** — bölüm/kişi alan tanımları, KVKK kategorisi, rol görünürlüğü, arşiv (YAP-10) | `modules.manage` | `custom-fields` (istek 24) | R (sahte servis) |
 | `/s/{slug}/iceri-aktar` | **İçeri aktarım** — sekmeler: bölümler (xlsx), araçlar ve açılış bakiyeleri (csv, mutabakat); aktarım geçmişi + geri alma (YAP-06) | `units.manage` | `imports/units`, istek 25 | R (sahte servis) |
 | `/s/{slug}/kurulum` | **Kurulum ve canlıya geçiş** — adımlar, finans modu (Mod P), kontrol listesi, canlıya al (YAP-01) | `modules.manage` | `setup` (istek 26) | R (sahte servis) |

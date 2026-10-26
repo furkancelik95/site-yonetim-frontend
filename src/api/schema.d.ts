@@ -54,9 +54,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Giriş
+         * Giriş (e-posta + parola)
          * @description E-posta + parola. 5 hatalı denemede hesap 15 dakika kilitlenir (429 `account_locked`);
          *     aynı adresten pencerede çok hatalı deneme 429 `too_many_attempts` (parola denenmez).
+         *     2FA kuruluysa `mfa_required: true` döner; kod `POST /auth/mfa/verify` ile girilir.
          */
         post: operations["login_api_v1_auth_login_post"];
         delete?: never;
@@ -126,6 +127,270 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Telefonla giriş: kod iste
+         * @description Numara kayıtlı olsun olmasın **aynı yanıt** ve 6 haneli kod (PLT-01 adım 4). Sınırlar:
+         *     60 sn'de bir, günde 10 kod; 5 hatalı denemede 15 dk kilit (429).
+         */
+        post: operations["otp_request_api_v1_auth_otp_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Telefonla giriş: kodu doğrula
+         * @description Kod doğruysa oturum açılır. Hesap yoksa 404 `no_account` (kayıt başvurusuna yönlendir);
+         *     hesap kapalıysa 403 `account_disabled`. Hatalı kod 422 `invalid_code` (kalan deneme),
+         *     süresi dolmuş 422 `code_expired`, 5. hata 429 `code_locked`.
+         */
+        post: operations["otp_verify_api_v1_auth_otp_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Girişte iki adımlı kod
+         * @description Beklemedeki oturumu tamamlar (TOTP ya da yedek kod). Hatalı kod 422 `invalid_code`;
+         *     5 hatada hesap 15 dk kilitlenir (429 `account_locked`) ve oturum kapanır.
+         */
+        post: operations["mfa_verify_api_v1_auth_mfa_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * İki adımlı doğrulama kurulumunu başlat
+         * @description Yeni sır ve QR içeriği (frontend QR'ı çizer). Etkinleşmesi için `/auth/mfa/enable`.
+         */
+        post: operations["mfa_setup_api_v1_auth_mfa_setup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İlk kodla iki adımlı doğrulamayı etkinleştir */
+        post: operations["mfa_enable_api_v1_auth_mfa_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yedek kodları yenile
+         * @description Doğrulayıcı koduyla yeni 10 yedek kod; eskilerin hepsi geçersiz olur.
+         */
+        post: operations["mfa_recovery_codes_api_v1_auth_mfa_recovery_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * İki adımlı doğrulamayı kapat
+         * @description Yönetici rolünde kapatılamaz (409 `mfa_required_for_role`).
+         */
+        post: operations["mfa_disable_api_v1_auth_mfa_disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/step-up/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Step-up için SMS kodu iste
+         * @description 2FA'sı ve parolası olmayan (telefonla giren) kullanıcı için kayıtlı numaraya kod.
+         */
+        post: operations["step_up_code_api_v1_auth_step_up_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/step-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hassas işlem öncesi yeniden doğrula
+         * @description Parola, 2FA kodu ya da (2FA yoksa) `/auth/step-up/code` ile gelen SMS kodu. Başarılıysa
+         *     oturum 5 dakika boyunca hassas işlemlere açıktır (403 `step_up_required` gelmez).
+         */
+        post: operations["step_up_api_v1_auth_step_up_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Parolamı unuttum: kod iste
+         * @description Hesap olsun olmasın **aynı yanıt** (numaralandırma yok); kod yalnız kayıtlı hesaba
+         *     gider. Sınırlar SMS koduyla aynı.
+         */
+        post: operations["password_forgot_api_v1_auth_password_forgot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodla yeni parola belirle
+         * @description Kod doğruysa parola değişir, hesap kilidi ve geçici parola işareti kalkar, **bütün
+         *     oturumlar** kapanır. Kural ihlali 422 `weak_password`.
+         */
+        post: operations["password_reset_api_v1_auth_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitations/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hesap davetini göster
+         * @description Herkese açık; IP başına sınırlı. Bilinmeyen/iptal jeton 404.
+         */
+        get: operations["invitation_info_api_v1_auth_invitations__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/invitations/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Daveti kabul et: parola belirle
+         * @description Parola belirlenir ve oturum açılır. Süresi dolmuş/kullanılmış davet 410 `invitation_gone`.
+         */
+        post: operations["invitation_accept_api_v1_auth_invitations__token__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -135,7 +400,8 @@ export interface paths {
         };
         /**
          * Oturumdaki kullanıcı ve erişimleri
-         * @description Geçici paroladayken de çalışır (frontend yönlendirmeyi buradan yapar).
+         * @description Geçici paroladayken ve 2FA kurulumu beklerken de çalışır (frontend yönlendirmeyi
+         *     buradan yapar). İki adımlı kod bekleyen oturumda 401 `mfa_required`.
          */
         get: operations["me_api_v1_me_get"];
         put?: never;
@@ -190,6 +456,261 @@ export interface paths {
         };
         /** Giriş geçmişim (son 50 olay) */
         get: operations["my_security_events_api_v1_me_security_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Güvenlik ayarlarım
+         * @description 2FA kurulumu beklerken de çalışır (kurulum ekranı buradan beslenir).
+         */
+        get: operations["my_security_api_v1_me_security_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/phone-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Telefon değişikliği: yeni numaraya kod */
+        post: operations["phone_change_request_api_v1_me_phone_change_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/phone-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Telefon değişikliği: kodu doğrula */
+        post: operations["phone_change_confirm_api_v1_me_phone_change_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/communication-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sessiz saatler
+         * @description Sitedeki herkes okur (duyuru ekranı bilgi olarak gösterir).
+         */
+        get: operations["communication_settings_api_v1_sites__slug__communication_settings_get"];
+        /** Sessiz saatleri kaydet */
+        put: operations["update_communication_settings_api_v1_sites__slug__communication_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/sms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** SMS hesabı */
+        get: operations["sms_account_api_v1_sites__slug__settings_sms_get"];
+        /** SMS hesabını kaydet */
+        put: operations["update_sms_account_api_v1_sites__slug__settings_sms_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/sms/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test SMS'i gönder */
+        post: operations["send_test_sms_api_v1_sites__slug__settings_sms_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/sms/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** SMS kullanımı ve kota */
+        get: operations["sms_usage_api_v1_sites__slug__settings_sms_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notification-deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teslim kayıtları (push/SMS/e-posta) */
+        get: operations["deliveries_api_v1_sites__slug__notification_deliveries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/test-inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Test sağlayıcısının son mesajları (yalnız demo)
+         * @description Geliştirme/demo ortamında gönderilen kodları ve davet bağlantılarını görmek için.
+         *     Üretimde (ya da `TEST_INBOX_ENABLED=false`) 404 — kodlar asla dışarı verilmez.
+         */
+        get: operations["sent_test_messages_api_v1_platform_test_inbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-reports/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Planlı rapor: türler ve yetkili alıcılar */
+        get: operations["options_api_v1_sites__slug__scheduled_reports_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Planlı raporlar */
+        get: operations["list_reports_api_v1_sites__slug__scheduled_reports_get"];
+        put?: never;
+        /** Planlı rapor tanımla */
+        post: operations["create_report_api_v1_sites__slug__scheduled_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Planlı raporu güncelle */
+        put: operations["update_report_api_v1_sites__slug__scheduled_reports__report_id__put"];
+        post?: never;
+        /**
+         * Planlı raporu sil
+         * @description Tanım silinmez, pasifleşir (çalışma geçmişi korunur).
+         */
+        delete: operations["delete_report_api_v1_sites__slug__scheduled_reports__report_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Şimdi gönder */
+        post: operations["run_now_api_v1_sites__slug__scheduled_reports__report_id__run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Planlı rapor çalışma geçmişi */
+        get: operations["runs_api_v1_sites__slug__scheduled_reports__report_id__runs_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2053,6 +2574,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/members/{member_id}/resend-invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Daveti yeniden gönder (eskisi geçersiz) */
+        post: operations["resend_invitation_api_v1_sites__slug__members__member_id__resend_invitation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/members/{member_id}": {
         parameters: {
             query?: never;
@@ -3252,6 +3790,18 @@ export interface components {
          * @enum {string}
          */
         AccountKind: "owner" | "occupant";
+        /** AccountSecurityOut */
+        AccountSecurityOut: {
+            /** Email */
+            email: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Phone Changed At */
+            phone_changed_at: string | null;
+            /** Has Password */
+            has_password: boolean;
+            mfa: components["schemas"]["MfaStatusOut"];
+        };
         /**
          * ActionType
          * @description Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için
@@ -3278,11 +3828,8 @@ export interface components {
         /** AddedOut */
         AddedOut: {
             member: components["schemas"]["MemberOut"];
-            /**
-             * Temporary Password
-             * @description yalnız yeni kullanıcıda, yalnız bu yanıtta; kişiye elden iletilir (K5)
-             */
-            temporary_password: string | null;
+            /** @description yalnız yeni kullanıcıda: 72 saat geçerli davet gönderildi */
+            invitation: components["schemas"]["MemberInvitationOut"] | null;
         };
         /** AgendaItemOut */
         AgendaItemOut: {
@@ -3617,10 +4164,16 @@ export interface components {
             /** Unit Name */
             unit_name: string | null;
             /**
-             * Temporary Password
-             * @description yeni sakin giriş hesabının geçici parolası; yalnız bu yanıtta (K5'e dek elden)
+             * Login
+             * @description created: telefonla yeni giriş hesabı · linked: mevcut hesaba bağlandı
+             * @enum {string}
              */
-            temporary_password: string | null;
+            login: "created" | "linked";
+            /**
+             * Login Phone
+             * @description giriş telefonu (maskeli); sakin SMS koduyla girer
+             */
+            login_phone: string;
         };
         /** ApproverOut */
         ApproverOut: {
@@ -3939,7 +4492,7 @@ export interface components {
          * AuthEventKind
          * @enum {string}
          */
-        AuthEventKind: "login_succeeded" | "login_failed" | "account_locked" | "logout" | "password_changed" | "session_revoked" | "token_reused";
+        AuthEventKind: "login_succeeded" | "login_failed" | "account_locked" | "logout" | "password_changed" | "session_revoked" | "token_reused" | "code_sent" | "code_failed" | "code_locked" | "mfa_enabled" | "mfa_disabled" | "mfa_failed" | "recovery_code_used" | "recovery_codes_regenerated" | "password_reset" | "phone_changed" | "step_up" | "invitation_sent" | "invitation_accepted";
         /** AuthEventOut */
         AuthEventOut: {
             /**
@@ -4450,6 +5003,14 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** CategoryUsage */
+        CategoryUsage: {
+            category: components["schemas"]["NotificationCategory"];
+            /** Label */
+            label: string;
+            /** Units */
+            units: number;
+        };
         /** CertificateAccount */
         CertificateAccount: {
             /**
@@ -4636,6 +5197,29 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** CodeSentOut */
+        CodeSentOut: {
+            /**
+             * Sent To
+             * @description maskeli hedef
+             */
+            sent_to: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Resend After Seconds
+             * @description aynı hedefe yeni kod için bekleme
+             */
+            resend_after_seconds: number;
+            /**
+             * Test Code
+             * @description yalnız geliştirme/demo (test sağlayıcısı): gönderilen kod. Üretimde her zaman boş
+             */
+            test_code?: string | null;
+        };
         /** CollectionOut */
         CollectionOut: {
             /** Period */
@@ -4693,6 +5277,23 @@ export interface components {
         CommentIn: {
             /** Body */
             body: string;
+        };
+        /** CommunicationSettingsIn */
+        CommunicationSettingsIn: {
+            /** Quiet From */
+            quiet_from: string;
+            /** Quiet To */
+            quiet_to: string;
+        };
+        /** CommunicationSettingsOut */
+        CommunicationSettingsOut: {
+            /**
+             * Quiet From
+             * @description "SS:DD"; aralık gece yarısını geçebilir
+             */
+            quiet_from: string;
+            /** Quiet To */
+            quiet_to: string;
         };
         /** ComponentOut */
         ComponentOut: {
@@ -5212,6 +5813,67 @@ export interface components {
             /** Delivered To */
             delivered_to: string;
         };
+        /** DeliveryOut */
+        DeliveryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            channel: components["schemas"]["NotificationChannel"];
+            category: components["schemas"]["NotificationCategory"];
+            /** Kind */
+            kind: string;
+            /**
+             * Recipient
+             * @description maskeli adres
+             */
+            recipient: string;
+            /** Subject */
+            subject: string | null;
+            /** Body */
+            body: string;
+            status: components["schemas"]["DeliveryStatus"];
+            /** Status Label */
+            status_label: string;
+            /** Is Critical */
+            is_critical: boolean;
+            /**
+             * Deferred
+             * @description sessiz saat nedeniyle ertelendi
+             */
+            deferred: boolean;
+            /**
+             * Scheduled For
+             * Format: date-time
+             */
+            scheduled_for: string;
+            /** Sent At */
+            sent_at: string | null;
+            /** Provider */
+            provider: string | null;
+            /** Cost Units */
+            cost_units: number;
+            /** Is Overage */
+            is_overage: boolean;
+            /**
+             * Is Fallback
+             * @description kritik bildirimin SMS yedeği
+             */
+            is_fallback: boolean;
+            /** Error */
+            error: string | null;
+        };
+        /**
+         * DeliveryStatus
+         * @enum {string}
+         */
+        DeliveryStatus: "queued" | "sent" | "delivered" | "failed" | "skipped";
         /** DepartmentAssignIn */
         DepartmentAssignIn: {
             /**
@@ -5623,6 +6285,13 @@ export interface components {
              */
             average_debt: string;
         };
+        /** ForgotIn */
+        ForgotIn: {
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+        };
         /**
          * Frequency
          * @enum {string}
@@ -5919,6 +6588,37 @@ export interface components {
              * @description seçilebilir yıllar
              */
             years: number[];
+        };
+        /** InvitationAcceptIn */
+        InvitationAcceptIn: {
+            /** Password */
+            password: string;
+        };
+        /** InvitationInfoOut */
+        InvitationInfoOut: {
+            /** Full Name */
+            full_name: string;
+            /**
+             * Login
+             * @description maskeli giriş e-postası / telefonu
+             */
+            login: string;
+            /** Site Name */
+            site_name: string | null;
+            /** Role Label */
+            role_label: string | null;
+            /** Invited By Name */
+            invited_by_name: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "accepted" | "expired";
         };
         /** ItemTotalOut */
         ItemTotalOut: {
@@ -6266,6 +6966,32 @@ export interface components {
             must_change_password: boolean;
             /** Sites */
             sites: components["schemas"]["SiteAccessOut"][];
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Mfa Enabled
+             * @default false
+             */
+            mfa_enabled: boolean;
+            /**
+             * Mfa Required
+             * @description yönetici rolü: 2FA zorunlu
+             * @default false
+             */
+            mfa_required: boolean;
+            /**
+             * Mfa Setup Deadline
+             * @description zorunlu ve kurulmamış: geçiş süresinin sonu (uyarı bandı)
+             */
+            mfa_setup_deadline?: string | null;
+            /**
+             * Mfa Setup Required
+             * @description true: süre doldu — 2FA kurulum ekranına yönlendir (diğer uçlar 403 `mfa_setup_required`)
+             * @default false
+             */
+            mfa_setup_required: boolean;
         };
         /** MeetingIn */
         MeetingIn: {
@@ -6335,6 +7061,29 @@ export interface components {
             /** Role Key */
             role_key: string;
         };
+        /** MemberInvitationOut */
+        MemberInvitationOut: {
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Sent To
+             * @description maskeli e-posta / telefon
+             */
+            sent_to: string[];
+            /**
+             * Preview Url
+             * @description yalnız geliştirme/demo (test sağlayıcısı): davet bağlantısı. Üretimde boş
+             */
+            preview_url?: string | null;
+            /**
+             * Test Provider
+             * @default true
+             */
+            test_provider: boolean;
+        };
         /** MemberOut */
         MemberOut: {
             /**
@@ -6345,7 +7094,7 @@ export interface components {
             /** Full Name */
             full_name: string;
             /** Email */
-            email: string;
+            email: string | null;
             /** Role Key */
             role_key: string;
             /** Role Name */
@@ -6365,6 +7114,18 @@ export interface components {
              * Format: date-time
              */
             invited_at: string;
+            /**
+             * Invitation Pending
+             * @description parolasını henüz belirlemedi (davet bekliyor)
+             * @default false
+             */
+            invitation_pending: boolean;
+            /**
+             * Mfa Enabled
+             * @description iki adımlı doğrulama kurulu
+             * @default false
+             */
+            mfa_enabled: boolean;
         };
         /** MemberPatch */
         MemberPatch: {
@@ -6372,6 +7133,55 @@ export interface components {
             role_key?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+        };
+        /** MfaCodeIn */
+        MfaCodeIn: {
+            /**
+             * Code
+             * @description doğrulayıcıdaki 6 hane ya da yedek kod
+             */
+            code: string;
+        };
+        /** MfaSetupOut */
+        MfaSetupOut: {
+            /**
+             * Secret
+             * @description doğrulayıcıya elle girilecek anahtar (Base32)
+             */
+            secret: string;
+            /**
+             * Otpauth Uri
+             * @description QR kodun içeriği
+             */
+            otpauth_uri: string;
+            /** Account */
+            account: string;
+            /** Issuer */
+            issuer: string;
+        };
+        /** MfaStatusOut */
+        MfaStatusOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Enabled At */
+            enabled_at: string | null;
+            /**
+             * Required
+             * @description yönetici rolü: 2FA zorunlu
+             */
+            required: boolean;
+            /**
+             * Setup Deadline
+             * @description zorunlu ve kurulmamışsa geçiş süresinin sonu
+             */
+            setup_deadline: string | null;
+            /**
+             * Setup Required
+             * @description true: süre doldu, kurulmadan devam edilemez
+             */
+            setup_required: boolean;
+            /** Recovery Codes Left */
+            recovery_codes_left: number;
         };
         /**
          * ModuleKey
@@ -6749,6 +7559,21 @@ export interface components {
              */
             votes: number | null;
         };
+        /** OtpRequestIn */
+        OtpRequestIn: {
+            /**
+             * Phone
+             * @description E.164 ya da 05XX… (TR)
+             */
+            phone: string;
+        };
+        /** OtpVerifyIn */
+        OtpVerifyIn: {
+            /** Phone */
+            phone: string;
+            /** Code */
+            code: string;
+        };
         /** OverviewOut */
         OverviewOut: {
             /** Customer Count */
@@ -6900,6 +7725,17 @@ export interface components {
         Page_CustomerUsageOut_: {
             /** Items */
             items: components["schemas"]["CustomerUsageOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[DeliveryOut] */
+        Page_DeliveryOut_: {
+            /** Items */
+            items: components["schemas"]["DeliveryOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7098,6 +7934,28 @@ export interface components {
         Page_ResidentDocumentOut_: {
             /** Items */
             items: components["schemas"]["ResidentDocumentOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ScheduledReportOut] */
+        Page_ScheduledReportOut_: {
+            /** Items */
+            items: components["schemas"]["ScheduledReportOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ScheduledReportRunOut] */
+        Page_ScheduledReportRunOut_: {
+            /** Items */
+            items: components["schemas"]["ScheduledReportRunOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7456,6 +8314,29 @@ export interface components {
             /** Last Name */
             last_name?: string | null;
         };
+        /** PhoneChangeConfirmIn */
+        PhoneChangeConfirmIn: {
+            /** Phone */
+            phone: string;
+            /** Code */
+            code: string;
+        };
+        /** PhoneChangeIn */
+        PhoneChangeIn: {
+            /** Phone */
+            phone: string;
+        };
+        /** PhoneChangedOut */
+        PhoneChangedOut: {
+            /** Phone */
+            phone: string;
+            /**
+             * Step Up Until
+             * Format: date-time
+             * @description bu ana dek finansal işlemlerde ek doğrulama
+             */
+            step_up_until: string;
+        };
         /** PlanOut */
         PlanOut: {
             /**
@@ -7670,10 +8551,16 @@ export interface components {
             in_app: boolean;
             /**
              * Delivery Enabled
-             * @description false: push/SMS/e-posta gönderimi henüz yok (K5); tercih saklanır
-             * @default false
+             * @description true: push/SMS/e-posta gönderim katmanı tercihleri uygular
+             * @default true
              */
             delivery_enabled: boolean;
+            /**
+             * Test Provider
+             * @description true: sağlayıcı seçilene dek (K5) test sağlayıcısı — gönderim kayda geçer, dışarı gitmez
+             * @default true
+             */
+            test_provider: boolean;
             /** Categories */
             categories: components["schemas"]["PreferenceRow"][];
         };
@@ -7844,6 +8731,14 @@ export interface components {
              * @example 1234.56
              */
             credit: string;
+        };
+        /** RecoveryCodesOut */
+        RecoveryCodesOut: {
+            /**
+             * Codes
+             * @description yalnız bu yanıtta gösterilir; her biri bir kez
+             */
+            codes: string[];
         };
         /** RecurringIn */
         RecurringIn: {
@@ -8067,6 +8962,40 @@ export interface components {
          * @enum {string}
          */
         Relation: "owner" | "tenant";
+        /**
+         * ReportFormat
+         * @enum {string}
+         */
+        ReportFormat: "pdf" | "xlsx";
+        /**
+         * ReportFrequency
+         * @enum {string}
+         */
+        ReportFrequency: "daily" | "weekly" | "monthly";
+        /** ReportKindOut */
+        ReportKindOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** ReportRecipientOut */
+        ReportRecipientOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Has Email */
+            has_email: boolean;
+        };
+        /**
+         * ReportRunStatus
+         * @enum {string}
+         */
+        ReportRunStatus: "sent" | "failed" | "skipped";
         /**
          * RequestCategory
          * @enum {string}
@@ -8312,6 +9241,25 @@ export interface components {
             urgent: number;
             /** Total */
             total: number;
+        };
+        /** ResetIn */
+        ResetIn: {
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Code */
+            code: string;
+            /** New Password */
+            new_password: string;
+        };
+        /** ResetOut */
+        ResetOut: {
+            /**
+             * Reset
+             * @default true
+             */
+            reset: boolean;
         };
         /**
          * ResidentDocumentOut
@@ -8606,6 +9554,113 @@ export interface components {
          * @enum {string}
          */
         ScheduleRunStatus: "posted" | "skipped" | "failed";
+        /** ScheduledReportIn */
+        ScheduledReportIn: {
+            /** Name */
+            name: string;
+            /** Report Key */
+            report_key: string;
+            frequency: components["schemas"]["ReportFrequency"];
+            /** Weekday */
+            weekday?: number | null;
+            /** Day Of Month */
+            day_of_month?: number | null;
+            /**
+             * Send Time
+             * Format: time
+             */
+            send_time: string;
+            /** @default pdf */
+            format: components["schemas"]["ReportFormat"];
+            /** Recipient User Ids */
+            recipient_user_ids: string[];
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** ScheduledReportOptionsOut */
+        ScheduledReportOptionsOut: {
+            /** Kinds */
+            kinds: components["schemas"]["ReportKindOut"][];
+            /**
+             * Recipients
+             * @description rapor türü → yetkili alıcı adayları
+             */
+            recipients: {
+                [key: string]: components["schemas"]["ReportRecipientOut"][];
+            };
+        };
+        /** ScheduledReportOut */
+        ScheduledReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Report Key */
+            report_key: string;
+            /** Report Label */
+            report_label: string;
+            frequency: components["schemas"]["ReportFrequency"];
+            /** Frequency Label */
+            frequency_label: string;
+            /**
+             * Weekday
+             * @description 0 = Pazartesi
+             */
+            weekday: number | null;
+            /** Day Of Month */
+            day_of_month: number | null;
+            /**
+             * Send Time
+             * @description "SS:DD" tesis saati
+             */
+            send_time: string;
+            format: components["schemas"]["ReportFormat"];
+            /** Recipients */
+            recipients: components["schemas"]["ReportRecipientOut"][];
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Next Run At
+             * Format: date-time
+             */
+            next_run_at: string;
+            /** Last Run At */
+            last_run_at: string | null;
+            /** Created By Name */
+            created_by_name: string;
+            /**
+             * Test Provider
+             * @description e-posta test sağlayıcısıyla (K5)
+             * @default true
+             */
+            test_provider: boolean;
+        };
+        /** ScheduledReportRunOut */
+        ScheduledReportRunOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at: string;
+            /** Period Label */
+            period_label: string;
+            status: components["schemas"]["ReportRunStatus"];
+            /** Recipient Count */
+            recipient_count: number;
+            /** Error */
+            error: string | null;
+        };
         /**
          * ScopeKind
          * @enum {string}
@@ -9194,6 +10249,132 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** SmsAccountIn */
+        SmsAccountIn: {
+            mode: components["schemas"]["SmsAccountMode"];
+            /** Sender */
+            sender?: string | null;
+            /** Provider */
+            provider?: string | null;
+            /**
+             * Api Key
+             * @description boş → kayıtlı anahtar korunur
+             */
+            api_key?: string | null;
+        };
+        /**
+         * SmsAccountMode
+         * @enum {string}
+         */
+        SmsAccountMode: "platform" | "own";
+        /** SmsAccountOut */
+        SmsAccountOut: {
+            mode: components["schemas"]["SmsAccountMode"];
+            /** Sender */
+            sender: string | null;
+            /** Provider */
+            provider: string | null;
+            /**
+             * Api Key Last4
+             * @description yalnız son 4 karakter (§4.7)
+             */
+            api_key_last4: string | null;
+            /** Monthly Quota */
+            monthly_quota: number;
+            /**
+             * Quota Source
+             * @description platform: paket kotası · site: sitenin ayarı
+             */
+            quota_source: string;
+            /** Providers */
+            providers: components["schemas"]["SmsProviderOption"][];
+            /**
+             * Test Provider
+             * @description true: sağlayıcı seçilene dek (K5) gönderim kayda geçer, dışarı gitmez
+             */
+            test_provider: boolean;
+            /**
+             * Platform Sender
+             * @description platform hesabında gönderici başlığı
+             */
+            platform_sender: string;
+        };
+        /** SmsProviderOption */
+        SmsProviderOption: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+        };
+        /** SmsTestIn */
+        SmsTestIn: {
+            /**
+             * Phone
+             * @description boş → kendi numaranız
+             */
+            phone?: string | null;
+        };
+        /** SmsTestOut */
+        SmsTestOut: {
+            /**
+             * Delivery Id
+             * Format: uuid
+             */
+            delivery_id: string;
+            /** Recipient */
+            recipient: string;
+            status: components["schemas"]["DeliveryStatus"];
+            /** Segments */
+            segments: number;
+            /**
+             * Test Provider
+             * @default true
+             */
+            test_provider: boolean;
+        };
+        /** SmsUsageOut */
+        SmsUsageOut: {
+            /**
+             * Month
+             * @description YYYY-MM
+             */
+            month: string;
+            /** Quota */
+            quota: number;
+            /**
+             * Used
+             * @description bu ay gönderilen SMS adedi (uzun mesaj birden çok sayılır)
+             */
+            used: number;
+            /** Remaining */
+            remaining: number;
+            /**
+             * Overage
+             * @description kota aşımı (sonraki faturaya yansır)
+             */
+            overage: number;
+            /** Percent */
+            percent: number;
+            /**
+             * Forecast
+             * @description ay sonu tahmini (bugüne kadarki kullanımın uzatması)
+             */
+            forecast: number;
+            /** Messages */
+            messages: number;
+            /**
+             * Queued
+             * @description kuyrukta bekleyen teslim (sessiz saat dahil)
+             */
+            queued: number;
+            /** By Category */
+            by_category: components["schemas"]["CategoryUsage"][];
+            /**
+             * Warn Percents
+             * @description uyarı eşikleri (%80/%100)
+             */
+            warn_percents: number[];
+        };
         /** StaffIn */
         StaffIn: {
             /** Full Name */
@@ -9374,6 +10555,30 @@ export interface components {
              */
             required: number;
         };
+        /** StepUpIn */
+        StepUpIn: {
+            /** Password */
+            password?: string | null;
+            /**
+             * Code
+             * @description 2FA kodu, yedek kod ya da SMS kodu
+             */
+            code?: string | null;
+        };
+        /** StepUpOut */
+        StepUpOut: {
+            /**
+             * Verified At
+             * Format: date-time
+             */
+            verified_at: string;
+            /**
+             * Valid Until
+             * Format: date-time
+             * @description hassas işlemler bu ana kadar açık (5 dk)
+             */
+            valid_until: string;
+        };
         /**
          * StockDirection
          * @enum {string}
@@ -9448,6 +10653,33 @@ export interface components {
             confidence: "high" | "medium";
             /** Reason */
             reason: string;
+        };
+        /** TestInboxItemOut */
+        TestInboxItemOut: {
+            /** Id */
+            id: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Channel */
+            channel: string;
+            /** To */
+            to: string;
+            /** Subject */
+            subject: string | null;
+            /** Body */
+            body: string;
+            /** Provider Ref */
+            provider_ref: string;
+        };
+        /** TestInboxOut */
+        TestInboxOut: {
+            /** Items */
+            items: components["schemas"]["TestInboxItemOut"][];
+            /** Note */
+            note: string;
         };
         /** TimesheetDayOut */
         TimesheetDayOut: {
@@ -9668,6 +10900,17 @@ export interface components {
              * @description true: geçici parola — parola değiştirme ekranına yönlendir; değiştirilene kadar diğer uçlar 403 `password_change_required`
              */
             must_change_password: boolean;
+            /**
+             * Mfa Required
+             * @description true: iki adımlı kod bekleniyor — `POST /auth/mfa/verify`; o zamana dek her uç 401 `mfa_required`
+             * @default false
+             */
+            mfa_required: boolean;
+            /**
+             * Mfa Setup Deadline
+             * @description yönetici rolünde 2FA kurulmamış: bu tarihe kadar uyarıyla girer, sonra kurulmadan devam edilemez (403 `mfa_setup_required`)
+             */
+            mfa_setup_deadline?: string | null;
         };
         /** TransferIn */
         TransferIn: {
@@ -10092,6 +11335,18 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[CodeSentOut] */
+        Written_CodeSentOut_: {
+            data: components["schemas"]["CodeSentOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[CommunicationSettingsOut] */
+        Written_CommunicationSettingsOut_: {
+            data: components["schemas"]["CommunicationSettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ConfirmOut] */
         Written_ConfirmOut_: {
             data: components["schemas"]["ConfirmOut"];
@@ -10170,6 +11425,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[MemberInvitationOut] */
+        Written_MemberInvitationOut_: {
+            data: components["schemas"]["MemberInvitationOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[MemberOut] */
         Written_MemberOut_: {
             data: components["schemas"]["MemberOut"];
@@ -10243,6 +11504,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[PhoneChangedOut] */
+        Written_PhoneChangedOut_: {
+            data: components["schemas"]["PhoneChangedOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[PollOut] */
         Written_PollOut_: {
             data: components["schemas"]["PollOut"];
@@ -10252,6 +11519,12 @@ export interface components {
         /** Written[PreferencesOut] */
         Written_PreferencesOut_: {
             data: components["schemas"]["PreferencesOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RecoveryCodesOut] */
+        Written_RecoveryCodesOut_: {
+            data: components["schemas"]["RecoveryCodesOut"];
             /** Message */
             message: string;
         };
@@ -10285,6 +11558,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ResetOut] */
+        Written_ResetOut_: {
+            data: components["schemas"]["ResetOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[RestoreOut] */
         Written_RestoreOut_: {
             data: components["schemas"]["RestoreOut"];
@@ -10306,6 +11585,18 @@ export interface components {
         /** Written[ScheduleOut] */
         Written_ScheduleOut_: {
             data: components["schemas"]["ScheduleOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ScheduledReportOut] */
+        Written_ScheduledReportOut_: {
+            data: components["schemas"]["ScheduledReportOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ScheduledReportRunOut] */
+        Written_ScheduledReportRunOut_: {
+            data: components["schemas"]["ScheduledReportRunOut"];
             /** Message */
             message: string;
         };
@@ -10339,9 +11630,27 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[SmsAccountOut] */
+        Written_SmsAccountOut_: {
+            data: components["schemas"]["SmsAccountOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[SmsTestOut] */
+        Written_SmsTestOut_: {
+            data: components["schemas"]["SmsTestOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[StaffOut] */
         Written_StaffOut_: {
             data: components["schemas"]["StaffOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[StepUpOut] */
+        Written_StepUpOut_: {
+            data: components["schemas"]["StepUpOut"];
             /** Message */
             message: string;
         };
@@ -10794,6 +12103,407 @@ export interface operations {
             };
         };
     };
+    otp_request_api_v1_auth_otp_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CodeSentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    otp_verify_api_v1_auth_otp_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OtpVerifyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mfa_verify_api_v1_auth_mfa_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mfa_setup_api_v1_auth_mfa_setup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaSetupOut"];
+                };
+            };
+        };
+    };
+    mfa_enable_api_v1_auth_mfa_enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RecoveryCodesOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mfa_recovery_codes_api_v1_auth_mfa_recovery_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RecoveryCodesOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mfa_disable_api_v1_auth_mfa_disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MfaCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    step_up_code_api_v1_auth_step_up_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CodeSentOut_"];
+                };
+            };
+        };
+    };
+    step_up_api_v1_auth_step_up_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StepUpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_StepUpOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_forgot_api_v1_auth_password_forgot_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CodeSentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    password_reset_api_v1_auth_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ResetOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invitation_info_api_v1_auth_invitations__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationInfoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invitation_accept_api_v1_auth_invitations__token__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationAcceptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_api_v1_me_get: {
         parameters: {
             query?: never;
@@ -10911,6 +12621,590 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthEventOut"][];
+                };
+            };
+        };
+    };
+    my_security_api_v1_me_security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountSecurityOut"];
+                };
+            };
+        };
+    };
+    phone_change_request_api_v1_me_phone_change_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneChangeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CodeSentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    phone_change_confirm_api_v1_me_phone_change_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneChangeConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PhoneChangedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    communication_settings_api_v1_sites__slug__communication_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunicationSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_communication_settings_api_v1_sites__slug__communication_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunicationSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CommunicationSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sms_account_api_v1_sites__slug__settings_sms_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_sms_account_api_v1_sites__slug__settings_sms_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsAccountIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_SmsAccountOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_test_sms_api_v1_sites__slug__settings_sms_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsTestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_SmsTestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sms_usage_api_v1_sites__slug__settings_sms_usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmsUsageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deliveries_api_v1_sites__slug__notification_deliveries_get: {
+        parameters: {
+            query?: {
+                channel?: components["schemas"]["NotificationChannel"] | null;
+                status?: components["schemas"]["DeliveryStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_DeliveryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sent_test_messages_api_v1_platform_test_inbox_get: {
+        parameters: {
+            query?: {
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestInboxOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    options_api_v1_sites__slug__scheduled_reports_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledReportOptionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reports_api_v1_sites__slug__scheduled_reports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ScheduledReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_report_api_v1_sites__slug__scheduled_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduledReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScheduledReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_report_api_v1_sites__slug__scheduled_reports__report_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduledReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScheduledReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_report_api_v1_sites__slug__scheduled_reports__report_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_now_api_v1_sites__slug__scheduled_reports__report_id__run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScheduledReportRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    runs_api_v1_sites__slug__scheduled_reports__report_id__runs_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ScheduledReportRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -15299,6 +17593,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_AddedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_invitation_api_v1_sites__slug__members__member_id__resend_invitation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MemberInvitationOut_"];
                 };
             };
             /** @description Validation Error */

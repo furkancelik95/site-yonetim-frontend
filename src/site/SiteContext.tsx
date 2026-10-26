@@ -39,6 +39,8 @@ export const P = {
   documentsRead: "documents.read",
   documentsManage: "documents.manage",
   documentsConfidential: "documents.confidential",
+  notificationsManage: "notifications.manage",
+  reportsSchedule: "reports.schedule",
 } as const;
 
 export const M = {

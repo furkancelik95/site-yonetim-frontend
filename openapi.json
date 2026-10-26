@@ -57,8 +57,8 @@
         "tags": [
           "kimlik"
         ],
-        "summary": "Giriş",
-        "description": "E-posta + parola. 5 hatalı denemede hesap 15 dakika kilitlenir (429 `account_locked`);\naynı adresten pencerede çok hatalı deneme 429 `too_many_attempts` (parola denenmez).",
+        "summary": "Giriş (e-posta + parola)",
+        "description": "E-posta + parola. 5 hatalı denemede hesap 15 dakika kilitlenir (429 `account_locked`);\naynı adresten pencerede çok hatalı deneme 429 `too_many_attempts` (parola denenmez).\n2FA kuruluysa `mfa_required: true` döner; kod `POST /auth/mfa/verify` ile girilir.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
@@ -227,13 +227,558 @@
         }
       }
     },
+    "/api/v1/auth/otp/request": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Telefonla giriş: kod iste",
+        "description": "Numara kayıtlı olsun olmasın **aynı yanıt** ve 6 haneli kod (PLT-01 adım 4). Sınırlar:\n60 sn'de bir, günde 10 kod; 5 hatalı denemede 15 dk kilit (429).",
+        "operationId": "otp_request_api_v1_auth_otp_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CodeSentOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/verify": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Telefonla giriş: kodu doğrula",
+        "description": "Kod doğruysa oturum açılır. Hesap yoksa 404 `no_account` (kayıt başvurusuna yönlendir);\nhesap kapalıysa 403 `account_disabled`. Hatalı kod 422 `invalid_code` (kalan deneme),\nsüresi dolmuş 422 `code_expired`, 5. hata 429 `code_locked`.",
+        "operationId": "otp_verify_api_v1_auth_otp_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpVerifyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Girişte iki adımlı kod",
+        "description": "Beklemedeki oturumu tamamlar (TOTP ya da yedek kod). Hatalı kod 422 `invalid_code`;\n5 hatada hesap 15 dk kilitlenir (429 `account_locked`) ve oturum kapanır.",
+        "operationId": "mfa_verify_api_v1_auth_mfa_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/setup": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "İki adımlı doğrulama kurulumunu başlat",
+        "description": "Yeni sır ve QR içeriği (frontend QR'ı çizer). Etkinleşmesi için `/auth/mfa/enable`.",
+        "operationId": "mfa_setup_api_v1_auth_mfa_setup_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetupOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/enable": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "İlk kodla iki adımlı doğrulamayı etkinleştir",
+        "operationId": "mfa_enable_api_v1_auth_mfa_enable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RecoveryCodesOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/recovery-codes": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Yedek kodları yenile",
+        "description": "Doğrulayıcı koduyla yeni 10 yedek kod; eskilerin hepsi geçersiz olur.",
+        "operationId": "mfa_recovery_codes_api_v1_auth_mfa_recovery_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RecoveryCodesOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/disable": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "İki adımlı doğrulamayı kapat",
+        "description": "Yönetici rolünde kapatılamaz (409 `mfa_required_for_role`).",
+        "operationId": "mfa_disable_api_v1_auth_mfa_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/step-up/code": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Step-up için SMS kodu iste",
+        "description": "2FA'sı ve parolası olmayan (telefonla giren) kullanıcı için kayıtlı numaraya kod.",
+        "operationId": "step_up_code_api_v1_auth_step_up_code_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CodeSentOut_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/step-up": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Hassas işlem öncesi yeniden doğrula",
+        "description": "Parola, 2FA kodu ya da (2FA yoksa) `/auth/step-up/code` ile gelen SMS kodu. Başarılıysa\noturum 5 dakika boyunca hassas işlemlere açıktır (403 `step_up_required` gelmez).",
+        "operationId": "step_up_api_v1_auth_step_up_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_StepUpOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Parolamı unuttum: kod iste",
+        "description": "Hesap olsun olmasın **aynı yanıt** (numaralandırma yok); kod yalnız kayıtlı hesaba\ngider. Sınırlar SMS koduyla aynı.",
+        "operationId": "password_forgot_api_v1_auth_password_forgot_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CodeSentOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Kodla yeni parola belirle",
+        "description": "Kod doğruysa parola değişir, hesap kilidi ve geçici parola işareti kalkar, **bütün\noturumlar** kapanır. Kural ihlali 422 `weak_password`.",
+        "operationId": "password_reset_api_v1_auth_password_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ResetOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitations/{token}": {
+      "get": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Hesap davetini göster",
+        "description": "Herkese açık; IP başına sınırlı. Bilinmeyen/iptal jeton 404.",
+        "operationId": "invitation_info_api_v1_auth_invitations__token__get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationInfoOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitations/{token}/accept": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Daveti kabul et: parola belirle",
+        "description": "Parola belirlenir ve oturum açılır. Süresi dolmuş/kullanılmış davet 410 `invitation_gone`.",
+        "operationId": "invitation_accept_api_v1_auth_invitations__token__accept_post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationAcceptIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/me": {
       "get": {
         "tags": [
           "kimlik"
         ],
         "summary": "Oturumdaki kullanıcı ve erişimleri",
-        "description": "Geçici paroladayken de çalışır (frontend yönlendirmeyi buradan yapar).",
+        "description": "Geçici paroladayken ve 2FA kurulumu beklerken de çalışır (frontend yönlendirmeyi\nburadan yapar). İki adımlı kod bekleyen oturumda 401 `mfa_required`.",
         "operationId": "me_api_v1_me_get",
         "responses": {
           "200": {
@@ -401,6 +946,1017 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/me/security": {
+      "get": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Güvenlik ayarlarım",
+        "description": "2FA kurulumu beklerken de çalışır (kurulum ekranı buradan beslenir).",
+        "operationId": "my_security_api_v1_me_security_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSecurityOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/phone-change": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Telefon değişikliği: yeni numaraya kod",
+        "operationId": "phone_change_request_api_v1_me_phone_change_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CodeSentOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/phone-change/confirm": {
+      "post": {
+        "tags": [
+          "kimlik"
+        ],
+        "summary": "Telefon değişikliği: kodu doğrula",
+        "operationId": "phone_change_confirm_api_v1_me_phone_change_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneChangeConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PhoneChangedOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sites/{slug}/communication-settings": {
+      "get": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "Sessiz saatler",
+        "description": "Sitedeki herkes okur (duyuru ekranı bilgi olarak gösterir).",
+        "operationId": "communication_settings_api_v1_sites__slug__communication_settings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "Sessiz saatleri kaydet",
+        "operationId": "update_communication_settings_api_v1_sites__slug__communication_settings_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommunicationSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CommunicationSettingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/sms": {
+      "get": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "SMS hesabı",
+        "operationId": "sms_account_api_v1_sites__slug__settings_sms_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmsAccountOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "SMS hesabını kaydet",
+        "operationId": "update_sms_account_api_v1_sites__slug__settings_sms_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsAccountIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_SmsAccountOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/sms/test": {
+      "post": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "Test SMS'i gönder",
+        "operationId": "send_test_sms_api_v1_sites__slug__settings_sms_test_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsTestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_SmsTestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/sms/usage": {
+      "get": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "SMS kullanımı ve kota",
+        "operationId": "sms_usage_api_v1_sites__slug__settings_sms_usage_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmsUsageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/notification-deliveries": {
+      "get": {
+        "tags": [
+          "bildirim gönderimi"
+        ],
+        "summary": "Teslim kayıtları (push/SMS/e-posta)",
+        "operationId": "deliveries_api_v1_sites__slug__notification_deliveries_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NotificationChannel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Channel"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_DeliveryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/test-inbox": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Test sağlayıcısının son mesajları (yalnız demo)",
+        "description": "Geliştirme/demo ortamında gönderilen kodları ve davet bağlantılarını görmek için.\nÜretimde (ya da `TEST_INBOX_ENABLED=false`) 404 — kodlar asla dışarı verilmez.",
+        "operationId": "sent_test_messages_api_v1_platform_test_inbox_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 254
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestInboxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-reports/options": {
+      "get": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı rapor: türler ve yetkili alıcılar",
+        "operationId": "options_api_v1_sites__slug__scheduled_reports_options_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledReportOptionsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-reports": {
+      "get": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı raporlar",
+        "operationId": "list_reports_api_v1_sites__slug__scheduled_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ScheduledReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı rapor tanımla",
+        "operationId": "create_report_api_v1_sites__slug__scheduled_reports_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduledReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ScheduledReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}": {
+      "put": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı raporu güncelle",
+        "operationId": "update_report_api_v1_sites__slug__scheduled_reports__report_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduledReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ScheduledReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı raporu sil",
+        "description": "Tanım silinmez, pasifleşir (çalışma geçmişi korunur).",
+        "operationId": "delete_report_api_v1_sites__slug__scheduled_reports__report_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}/run": {
+      "post": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Şimdi gönder",
+        "operationId": "run_now_api_v1_sites__slug__scheduled_reports__report_id__run_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ScheduledReportRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-reports/{report_id}/runs": {
+      "get": {
+        "tags": [
+          "planlı raporlar"
+        ],
+        "summary": "Planlı rapor çalışma geçmişi",
+        "operationId": "runs_api_v1_sites__slug__scheduled_reports__report_id__runs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ScheduledReportRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/me/notifications/summary": {
@@ -8991,6 +10547,63 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/members/{member_id}/resend-invitation": {
+      "post": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Daveti yeniden gönder (eskisi geçersiz)",
+        "operationId": "resend_invitation_api_v1_sites__slug__members__member_id__resend_invitation_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MemberInvitationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/members/{member_id}": {
       "patch": {
         "tags": [
@@ -14392,6 +16005,60 @@
         ],
         "title": "AccountKind"
       },
+      "AccountSecurityOut": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "phone_changed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Changed At"
+          },
+          "has_password": {
+            "type": "boolean",
+            "title": "Has Password"
+          },
+          "mfa": {
+            "$ref": "#/components/schemas/MfaStatusOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "phone",
+          "phone_changed_at",
+          "has_password",
+          "mfa"
+        ],
+        "title": "AccountSecurityOut"
+      },
       "ActionType": {
         "type": "string",
         "enum": [
@@ -14456,23 +16123,22 @@
           "member": {
             "$ref": "#/components/schemas/MemberOut"
           },
-          "temporary_password": {
+          "invitation": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/MemberInvitationOut"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Temporary Password",
-            "description": "yalnız yeni kullanıcıda, yalnız bu yanıtta; kişiye elden iletilir (K5)"
+            "description": "yalnız yeni kullanıcıda: 72 saat geçerli davet gönderildi"
           }
         },
         "type": "object",
         "required": [
           "member",
-          "temporary_password"
+          "invitation"
         ],
         "title": "AddedOut"
       },
@@ -15404,17 +17070,19 @@
             ],
             "title": "Unit Name"
           },
-          "temporary_password": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+          "login": {
+            "type": "string",
+            "enum": [
+              "created",
+              "linked"
             ],
-            "title": "Temporary Password",
-            "description": "yeni sakin giriş hesabının geçici parolası; yalnız bu yanıtta (K5'e dek elden)"
+            "title": "Login",
+            "description": "created: telefonla yeni giriş hesabı · linked: mevcut hesaba bağlandı"
+          },
+          "login_phone": {
+            "type": "string",
+            "title": "Login Phone",
+            "description": "giriş telefonu (maskeli); sakin SMS koduyla girer"
           }
         },
         "type": "object",
@@ -15434,7 +17102,8 @@
           "decided_by",
           "reject_reason",
           "unit_name",
-          "temporary_password"
+          "login",
+          "login_phone"
         ],
         "title": "ApprovedOut"
       },
@@ -16429,7 +18098,20 @@
           "logout",
           "password_changed",
           "session_revoked",
-          "token_reused"
+          "token_reused",
+          "code_sent",
+          "code_failed",
+          "code_locked",
+          "mfa_enabled",
+          "mfa_disabled",
+          "mfa_failed",
+          "recovery_code_used",
+          "recovery_codes_regenerated",
+          "password_reset",
+          "phone_changed",
+          "step_up",
+          "invitation_sent",
+          "invitation_accepted"
         ],
         "title": "AuthEventKind"
       },
@@ -17686,6 +19368,28 @@
         ],
         "title": "CategoryTotalOut"
       },
+      "CategoryUsage": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/NotificationCategory"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "label",
+          "units"
+        ],
+        "title": "CategoryUsage"
+      },
       "CertificateAccount": {
         "properties": {
           "id": {
@@ -18084,6 +19788,44 @@
         "type": "object",
         "title": "CloseIn"
       },
+      "CodeSentOut": {
+        "properties": {
+          "sent_to": {
+            "type": "string",
+            "title": "Sent To",
+            "description": "maskeli hedef"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "resend_after_seconds": {
+            "type": "integer",
+            "title": "Resend After Seconds",
+            "description": "aynı hedefe yeni kod için bekleme"
+          },
+          "test_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Code",
+            "description": "yalnız geliştirme/demo (test sağlayıcısı): gönderilen kod. Üretimde her zaman boş"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent_to",
+          "expires_at",
+          "resend_after_seconds"
+        ],
+        "title": "CodeSentOut"
+      },
       "CollectionOut": {
         "properties": {
           "period": {
@@ -18203,6 +19945,45 @@
           "body"
         ],
         "title": "CommentIn"
+      },
+      "CommunicationSettingsIn": {
+        "properties": {
+          "quiet_from": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Quiet From"
+          },
+          "quiet_to": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Quiet To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quiet_from",
+          "quiet_to"
+        ],
+        "title": "CommunicationSettingsIn"
+      },
+      "CommunicationSettingsOut": {
+        "properties": {
+          "quiet_from": {
+            "type": "string",
+            "title": "Quiet From",
+            "description": "\"SS:DD\"; aralık gece yarısını geçebilir"
+          },
+          "quiet_to": {
+            "type": "string",
+            "title": "Quiet To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quiet_from",
+          "quiet_to"
+        ],
+        "title": "CommunicationSettingsOut"
       },
       "ComponentOut": {
         "properties": {
@@ -19562,6 +21343,152 @@
         ],
         "title": "DeliverIn"
       },
+      "DeliveryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/NotificationChannel"
+          },
+          "category": {
+            "$ref": "#/components/schemas/NotificationCategory"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient",
+            "description": "maskeli adres"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeliveryStatus"
+          },
+          "status_label": {
+            "type": "string",
+            "title": "Status Label"
+          },
+          "is_critical": {
+            "type": "boolean",
+            "title": "Is Critical"
+          },
+          "deferred": {
+            "type": "boolean",
+            "title": "Deferred",
+            "description": "sessiz saat nedeniyle ertelendi"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "cost_units": {
+            "type": "integer",
+            "title": "Cost Units"
+          },
+          "is_overage": {
+            "type": "boolean",
+            "title": "Is Overage"
+          },
+          "is_fallback": {
+            "type": "boolean",
+            "title": "Is Fallback",
+            "description": "kritik bildirimin SMS yedeği"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "channel",
+          "category",
+          "kind",
+          "recipient",
+          "subject",
+          "body",
+          "status",
+          "status_label",
+          "is_critical",
+          "deferred",
+          "scheduled_for",
+          "sent_at",
+          "provider",
+          "cost_units",
+          "is_overage",
+          "is_fallback",
+          "error"
+        ],
+        "title": "DeliveryOut"
+      },
+      "DeliveryStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "sent",
+          "delivered",
+          "failed",
+          "skipped"
+        ],
+        "title": "DeliveryStatus"
+      },
       "DepartmentAssignIn": {
         "properties": {
           "department_id": {
@@ -20485,6 +22412,36 @@
         ],
         "title": "FinanceOut"
       },
+      "ForgotIn": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "title": "ForgotIn"
+      },
       "Frequency": {
         "type": "string",
         "enum": [
@@ -21265,6 +23222,92 @@
           "years"
         ],
         "title": "IncomeExpenseOut"
+      },
+      "InvitationAcceptIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "InvitationAcceptIn"
+      },
+      "InvitationInfoOut": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "login": {
+            "type": "string",
+            "title": "Login",
+            "description": "maskeli giriş e-postası / telefonu"
+          },
+          "site_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Name"
+          },
+          "role_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Label"
+          },
+          "invited_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By Name"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "expired"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "login",
+          "site_name",
+          "role_label",
+          "invited_by_name",
+          "expires_at",
+          "status"
+        ],
+        "title": "InvitationInfoOut"
       },
       "ItemTotalOut": {
         "properties": {
@@ -22101,6 +24144,58 @@
             },
             "type": "array",
             "title": "Sites"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "mfa_enabled": {
+            "type": "boolean",
+            "title": "Mfa Enabled",
+            "default": false
+          },
+          "mfa_required": {
+            "type": "boolean",
+            "title": "Mfa Required",
+            "description": "yönetici rolü: 2FA zorunlu",
+            "default": false
+          },
+          "mfa_setup_deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfa Setup Deadline",
+            "description": "zorunlu ve kurulmamış: geçiş süresinin sonu (uyarı bandı)"
+          },
+          "mfa_setup_required": {
+            "type": "boolean",
+            "title": "Mfa Setup Required",
+            "description": "true: süre doldu — 2FA kurulum ekranına yönlendir (diğer uçlar 403 `mfa_setup_required`)",
+            "default": false
           }
         },
         "type": "object",
@@ -22327,6 +24422,46 @@
         ],
         "title": "MemberIn"
       },
+      "MemberInvitationOut": {
+        "properties": {
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "sent_to": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sent To",
+            "description": "maskeli e-posta / telefon"
+          },
+          "preview_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Url",
+            "description": "yalnız geliştirme/demo (test sağlayıcısı): davet bağlantısı. Üretimde boş"
+          },
+          "test_provider": {
+            "type": "boolean",
+            "title": "Test Provider",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "expires_at",
+          "sent_to"
+        ],
+        "title": "MemberInvitationOut"
+      },
       "MemberOut": {
         "properties": {
           "id": {
@@ -22339,7 +24474,14 @@
             "title": "Full Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
           },
           "role_key": {
@@ -22379,6 +24521,18 @@
             "type": "string",
             "format": "date-time",
             "title": "Invited At"
+          },
+          "invitation_pending": {
+            "type": "boolean",
+            "title": "Invitation Pending",
+            "description": "parolasını henüz belirlemedi (davet bekliyor)",
+            "default": false
+          },
+          "mfa_enabled": {
+            "type": "boolean",
+            "title": "Mfa Enabled",
+            "description": "iki adımlı doğrulama kurulu",
+            "default": false
           }
         },
         "type": "object",
@@ -22423,6 +24577,109 @@
         },
         "type": "object",
         "title": "MemberPatch"
+      },
+      "MfaCodeIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "description": "doğrulayıcıdaki 6 hane ya da yedek kod"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "MfaCodeIn"
+      },
+      "MfaSetupOut": {
+        "properties": {
+          "secret": {
+            "type": "string",
+            "title": "Secret",
+            "description": "doğrulayıcıya elle girilecek anahtar (Base32)"
+          },
+          "otpauth_uri": {
+            "type": "string",
+            "title": "Otpauth Uri",
+            "description": "QR kodun içeriği"
+          },
+          "account": {
+            "type": "string",
+            "title": "Account"
+          },
+          "issuer": {
+            "type": "string",
+            "title": "Issuer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "secret",
+          "otpauth_uri",
+          "account",
+          "issuer"
+        ],
+        "title": "MfaSetupOut"
+      },
+      "MfaStatusOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "enabled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled At"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "description": "yönetici rolü: 2FA zorunlu"
+          },
+          "setup_deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setup Deadline",
+            "description": "zorunlu ve kurulmamışsa geçiş süresinin sonu"
+          },
+          "setup_required": {
+            "type": "boolean",
+            "title": "Setup Required",
+            "description": "true: süre doldu, kurulmadan devam edilemez"
+          },
+          "recovery_codes_left": {
+            "type": "integer",
+            "title": "Recovery Codes Left"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "enabled_at",
+          "required",
+          "setup_deadline",
+          "setup_required",
+          "recovery_codes_left"
+        ],
+        "title": "MfaStatusOut"
       },
       "ModuleKey": {
         "type": "string",
@@ -23283,6 +25540,44 @@
         ],
         "title": "OptionOut"
       },
+      "OtpRequestIn": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 3,
+            "title": "Phone",
+            "description": "E.164 ya da 05XX… (TR)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "title": "OtpRequestIn"
+      },
+      "OtpVerifyIn": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 3,
+            "title": "Phone"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "code"
+        ],
+        "title": "OtpVerifyIn"
+      },
       "OverviewOut": {
         "properties": {
           "customer_count": {
@@ -23750,6 +26045,37 @@
           "total"
         ],
         "title": "Page[CustomerUsageOut]"
+      },
+      "Page_DeliveryOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeliveryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[DeliveryOut]"
       },
       "Page_DocumentAccessOut_": {
         "properties": {
@@ -24308,6 +26634,68 @@
           "total"
         ],
         "title": "Page[ResidentDocumentOut]"
+      },
+      "Page_ScheduledReportOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledReportOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[ScheduledReportOut]"
+      },
+      "Page_ScheduledReportRunOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledReportRunOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[ScheduledReportRunOut]"
       },
       "Page_SiteUsageOut_": {
         "properties": {
@@ -25184,6 +27572,63 @@
         "type": "object",
         "title": "PersonUpdate"
       },
+      "PhoneChangeConfirmIn": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 3,
+            "title": "Phone"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "code"
+        ],
+        "title": "PhoneChangeConfirmIn"
+      },
+      "PhoneChangeIn": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 3,
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "title": "PhoneChangeIn"
+      },
+      "PhoneChangedOut": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "step_up_until": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Step Up Until",
+            "description": "bu ana dek finansal işlemlerde ek doğrulama"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "step_up_until"
+        ],
+        "title": "PhoneChangedOut"
+      },
       "PlanOut": {
         "properties": {
           "id": {
@@ -25719,8 +28164,14 @@
           "delivery_enabled": {
             "type": "boolean",
             "title": "Delivery Enabled",
-            "description": "false: push/SMS/e-posta gönderimi henüz yok (K5); tercih saklanır",
-            "default": false
+            "description": "true: push/SMS/e-posta gönderim katmanı tercihleri uygular",
+            "default": true
+          },
+          "test_provider": {
+            "type": "boolean",
+            "title": "Test Provider",
+            "description": "true: sağlayıcı seçilene dek (K5) test sağlayıcısı — gönderim kayda geçer, dışarı gitmez",
+            "default": true
           },
           "categories": {
             "items": {
@@ -26113,6 +28564,23 @@
           "credit"
         ],
         "title": "RecentEntry"
+      },
+      "RecoveryCodesOut": {
+        "properties": {
+          "codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Codes",
+            "description": "yalnız bu yanıtta gösterilir; her biri bir kez"
+          }
+        },
+        "type": "object",
+        "required": [
+          "codes"
+        ],
+        "title": "RecoveryCodesOut"
       },
       "RecurringIn": {
         "properties": {
@@ -26660,6 +29128,74 @@
           "tenant"
         ],
         "title": "Relation"
+      },
+      "ReportFormat": {
+        "type": "string",
+        "enum": [
+          "pdf",
+          "xlsx"
+        ],
+        "title": "ReportFormat"
+      },
+      "ReportFrequency": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "monthly"
+        ],
+        "title": "ReportFrequency"
+      },
+      "ReportKindOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "ReportKindOut"
+      },
+      "ReportRecipientOut": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "has_email": {
+            "type": "boolean",
+            "title": "Has Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "full_name",
+          "has_email"
+        ],
+        "title": "ReportRecipientOut"
+      },
+      "ReportRunStatus": {
+        "type": "string",
+        "enum": [
+          "sent",
+          "failed",
+          "skipped"
+        ],
+        "title": "ReportRunStatus"
       },
       "RequestCategory": {
         "type": "string",
@@ -27436,6 +29972,63 @@
         ],
         "title": "RequestsOut"
       },
+      "ResetIn": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 1,
+            "title": "Code"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "new_password"
+        ],
+        "title": "ResetIn"
+      },
+      "ResetOut": {
+        "properties": {
+          "reset": {
+            "type": "boolean",
+            "title": "Reset",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ResetOut"
+      },
       "ResidentDocumentOut": {
         "properties": {
           "id": {
@@ -28204,6 +30797,271 @@
           "failed"
         ],
         "title": "ScheduleRunStatus"
+      },
+      "ScheduledReportIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name"
+          },
+          "report_key": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Report Key"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/ReportFrequency"
+          },
+          "weekday": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 6.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekday"
+          },
+          "day_of_month": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 28.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Of Month"
+          },
+          "send_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Send Time"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": "pdf"
+          },
+          "recipient_user_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Recipient User Ids"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "report_key",
+          "frequency",
+          "send_time",
+          "recipient_user_ids"
+        ],
+        "title": "ScheduledReportIn"
+      },
+      "ScheduledReportOptionsOut": {
+        "properties": {
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ReportKindOut"
+            },
+            "type": "array",
+            "title": "Kinds"
+          },
+          "recipients": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ReportRecipientOut"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Recipients",
+            "description": "rapor türü → yetkili alıcı adayları"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kinds",
+          "recipients"
+        ],
+        "title": "ScheduledReportOptionsOut"
+      },
+      "ScheduledReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "report_key": {
+            "type": "string",
+            "title": "Report Key"
+          },
+          "report_label": {
+            "type": "string",
+            "title": "Report Label"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/ReportFrequency"
+          },
+          "frequency_label": {
+            "type": "string",
+            "title": "Frequency Label"
+          },
+          "weekday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekday",
+            "description": "0 = Pazartesi"
+          },
+          "day_of_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Of Month"
+          },
+          "send_time": {
+            "type": "string",
+            "title": "Send Time",
+            "description": "\"SS:DD\" tesis saati"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat"
+          },
+          "recipients": {
+            "items": {
+              "$ref": "#/components/schemas/ReportRecipientOut"
+            },
+            "type": "array",
+            "title": "Recipients"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "next_run_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next Run At"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          },
+          "created_by_name": {
+            "type": "string",
+            "title": "Created By Name"
+          },
+          "test_provider": {
+            "type": "boolean",
+            "title": "Test Provider",
+            "description": "e-posta test sağlayıcısıyla (K5)",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "report_key",
+          "report_label",
+          "frequency",
+          "frequency_label",
+          "weekday",
+          "day_of_month",
+          "send_time",
+          "format",
+          "recipients",
+          "is_active",
+          "next_run_at",
+          "last_run_at",
+          "created_by_name"
+        ],
+        "title": "ScheduledReportOut"
+      },
+      "ScheduledReportRunOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "run_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Run At"
+          },
+          "period_label": {
+            "type": "string",
+            "title": "Period Label"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportRunStatus"
+          },
+          "recipient_count": {
+            "type": "integer",
+            "title": "Recipient Count"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "run_at",
+          "period_label",
+          "status",
+          "recipient_count",
+          "error"
+        ],
+        "title": "ScheduledReportRunOut"
       },
       "ScopeKind": {
         "type": "string",
@@ -29762,6 +32620,288 @@
         ],
         "title": "SkippedOut"
       },
+      "SmsAccountIn": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/SmsAccountMode"
+          },
+          "sender": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key",
+            "description": "boş → kayıtlı anahtar korunur"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "title": "SmsAccountIn"
+      },
+      "SmsAccountMode": {
+        "type": "string",
+        "enum": [
+          "platform",
+          "own"
+        ],
+        "title": "SmsAccountMode"
+      },
+      "SmsAccountOut": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/SmsAccountMode"
+          },
+          "sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "api_key_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key Last4",
+            "description": "yalnız son 4 karakter (§4.7)"
+          },
+          "monthly_quota": {
+            "type": "integer",
+            "title": "Monthly Quota"
+          },
+          "quota_source": {
+            "type": "string",
+            "title": "Quota Source",
+            "description": "platform: paket kotası · site: sitenin ayarı"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/SmsProviderOption"
+            },
+            "type": "array",
+            "title": "Providers"
+          },
+          "test_provider": {
+            "type": "boolean",
+            "title": "Test Provider",
+            "description": "true: sağlayıcı seçilene dek (K5) gönderim kayda geçer, dışarı gitmez"
+          },
+          "platform_sender": {
+            "type": "string",
+            "title": "Platform Sender",
+            "description": "platform hesabında gönderici başlığı"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "sender",
+          "provider",
+          "api_key_last4",
+          "monthly_quota",
+          "quota_source",
+          "providers",
+          "test_provider",
+          "platform_sender"
+        ],
+        "title": "SmsAccountOut"
+      },
+      "SmsProviderOption": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "SmsProviderOption"
+      },
+      "SmsTestIn": {
+        "properties": {
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "boş → kendi numaranız"
+          }
+        },
+        "type": "object",
+        "title": "SmsTestIn"
+      },
+      "SmsTestOut": {
+        "properties": {
+          "delivery_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Delivery Id"
+          },
+          "recipient": {
+            "type": "string",
+            "title": "Recipient"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeliveryStatus"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          },
+          "test_provider": {
+            "type": "boolean",
+            "title": "Test Provider",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "delivery_id",
+          "recipient",
+          "status",
+          "segments"
+        ],
+        "title": "SmsTestOut"
+      },
+      "SmsUsageOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month",
+            "description": "YYYY-MM"
+          },
+          "quota": {
+            "type": "integer",
+            "title": "Quota"
+          },
+          "used": {
+            "type": "integer",
+            "title": "Used",
+            "description": "bu ay gönderilen SMS adedi (uzun mesaj birden çok sayılır)"
+          },
+          "remaining": {
+            "type": "integer",
+            "title": "Remaining"
+          },
+          "overage": {
+            "type": "integer",
+            "title": "Overage",
+            "description": "kota aşımı (sonraki faturaya yansır)"
+          },
+          "percent": {
+            "type": "integer",
+            "title": "Percent"
+          },
+          "forecast": {
+            "type": "integer",
+            "title": "Forecast",
+            "description": "ay sonu tahmini (bugüne kadarki kullanımın uzatması)"
+          },
+          "messages": {
+            "type": "integer",
+            "title": "Messages"
+          },
+          "queued": {
+            "type": "integer",
+            "title": "Queued",
+            "description": "kuyrukta bekleyen teslim (sessiz saat dahil)"
+          },
+          "by_category": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryUsage"
+            },
+            "type": "array",
+            "title": "By Category"
+          },
+          "warn_percents": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Warn Percents",
+            "description": "uyarı eşikleri (%80/%100)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "quota",
+          "used",
+          "remaining",
+          "overage",
+          "percent",
+          "forecast",
+          "messages",
+          "queued",
+          "by_category",
+          "warn_percents"
+        ],
+        "title": "SmsUsageOut"
+      },
       "StaffIn": {
         "properties": {
           "full_name": {
@@ -30306,6 +33446,58 @@
         ],
         "title": "StepOut"
       },
+      "StepUpIn": {
+        "properties": {
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "2FA kodu, yedek kod ya da SMS kodu"
+          }
+        },
+        "type": "object",
+        "title": "StepUpIn"
+      },
+      "StepUpOut": {
+        "properties": {
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Verified At"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid Until",
+            "description": "hassas işlemler bu ana kadar açık (5 dk)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verified_at",
+          "valid_until"
+        ],
+        "title": "StepUpOut"
+      },
       "StockDirection": {
         "type": "string",
         "enum": [
@@ -30482,6 +33674,78 @@
           "reason"
         ],
         "title": "SuggestionOut"
+      },
+      "TestInboxItemOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "provider_ref": {
+            "type": "string",
+            "title": "Provider Ref"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "channel",
+          "to",
+          "subject",
+          "body",
+          "provider_ref"
+        ],
+        "title": "TestInboxItemOut"
+      },
+      "TestInboxOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TestInboxItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "note"
+        ],
+        "title": "TestInboxOut"
       },
       "TimesheetDayOut": {
         "properties": {
@@ -31039,6 +34303,25 @@
             "type": "boolean",
             "title": "Must Change Password",
             "description": "true: geçici parola — parola değiştirme ekranına yönlendir; değiştirilene kadar diğer uçlar 403 `password_change_required`"
+          },
+          "mfa_required": {
+            "type": "boolean",
+            "title": "Mfa Required",
+            "description": "true: iki adımlı kod bekleniyor — `POST /auth/mfa/verify`; o zamana dek her uç 401 `mfa_required`",
+            "default": false
+          },
+          "mfa_setup_deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mfa Setup Deadline",
+            "description": "yönetici rolünde 2FA kurulmamış: bu tarihe kadar uyarıyla girer, sonra kurulmadan devam edilemez (403 `mfa_setup_required`)"
           }
         },
         "type": "object",
@@ -32444,6 +35727,40 @@
         ],
         "title": "Written[ChargeRunOut]"
       },
+      "Written_CodeSentOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CodeSentOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[CodeSentOut]"
+      },
+      "Written_CommunicationSettingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CommunicationSettingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[CommunicationSettingsOut]"
+      },
       "Written_ConfirmOut_": {
         "properties": {
           "data": {
@@ -32665,6 +35982,23 @@
         ],
         "title": "Written[MeetingOut]"
       },
+      "Written_MemberInvitationOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MemberInvitationOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[MemberInvitationOut]"
+      },
       "Written_MemberOut_": {
         "properties": {
           "data": {
@@ -32870,6 +36204,23 @@
         ],
         "title": "Written[PersonOut]"
       },
+      "Written_PhoneChangedOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PhoneChangedOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PhoneChangedOut]"
+      },
       "Written_PollOut_": {
         "properties": {
           "data": {
@@ -32903,6 +36254,23 @@
           "message"
         ],
         "title": "Written[PreferencesOut]"
+      },
+      "Written_RecoveryCodesOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RecoveryCodesOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[RecoveryCodesOut]"
       },
       "Written_RecurringOut_": {
         "properties": {
@@ -32989,6 +36357,23 @@
         ],
         "title": "Written[RequestDetail]"
       },
+      "Written_ResetOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ResetOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ResetOut]"
+      },
       "Written_RestoreOut_": {
         "properties": {
           "data": {
@@ -33056,6 +36441,40 @@
           "message"
         ],
         "title": "Written[ScheduleOut]"
+      },
+      "Written_ScheduledReportOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ScheduledReportOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ScheduledReportOut]"
+      },
+      "Written_ScheduledReportRunOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ScheduledReportRunOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ScheduledReportRunOut]"
       },
       "Written_ShiftAssignedOut_": {
         "properties": {
@@ -33142,6 +36561,40 @@
         ],
         "title": "Written[SiteOut]"
       },
+      "Written_SmsAccountOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SmsAccountOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[SmsAccountOut]"
+      },
+      "Written_SmsTestOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SmsTestOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[SmsTestOut]"
+      },
       "Written_StaffOut_": {
         "properties": {
           "data": {
@@ -33158,6 +36611,23 @@
           "message"
         ],
         "title": "Written[StaffOut]"
+      },
+      "Written_StepUpOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StepUpOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[StepUpOut]"
       },
       "Written_StockItemOut_": {
         "properties": {

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { UserPlus, Users } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { OneTimePassword } from "../../components/OneTimePassword";
+import { InvitationNotice } from "../../components/InvitationNotice";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 
@@ -12,8 +12,8 @@ type Added = Schemas["AddedOut"];
 
 /**
  * Site kullanıcıları ve rolleri (Apsiyon "Yetkililer" / "Yetki Grupları"). Yeni personeli rolüyle
- * ekler; geçici parola bir kez gösterilir (platformdaki müşteri ekleme akışıyla aynı). Yönetim
- * şirketinden gelen erişim burada değiştirilemez.
+ * ekler; kişiye 72 saat geçerli davet bağlantısı gider, parolasını kendisi belirler (P5, PLT-09).
+ * Yönetim şirketinden gelen erişim burada değiştirilemez.
  */
 export function MembersPage() {
   const q = useSiteGet<Member[]>("/members");
@@ -62,10 +62,16 @@ export function MembersPage() {
 
 function MemberRow({ m, roles }: { m: Member; roles: Role[] }) {
   const upd = useSiteMutation<{ role_key?: string; is_active?: boolean }, Member>("PATCH", `/members/${m.id}`);
+  const resend = useSiteMutation<Record<string, never>, Schemas["MemberInvitationOut"]>("POST", `/members/${m.id}/resend-invitation`, { onSuccess: (d) => d && setInvite(d) });
+  const [invite, setInvite] = useState<Schemas["MemberInvitationOut"] | null>(null);
   const derived = m.source === "organization";
   return (
     <tr style={!m.is_active ? { opacity: 0.6 } : undefined}>
-      <td><div className="cell-main">{m.full_name}</div><div className="cell-sub mono">{m.email}</div></td>
+      <td>
+        <div className="cell-main">{m.full_name}{m.invitation_pending && <> <Badge tone="warn">Davet bekliyor</Badge></>}{m.mfa_enabled && <> <Badge tone="ok">2FA</Badge></>}</div>
+        <div className="cell-sub mono">{m.email}</div>
+        {invite && <div className="stack small mt-2" style={{ gap: 4 }}><InvitationNotice invitation={invite} /></div>}
+      </td>
       <td>
         {derived ? <span className="small">{m.role_name}</span> : (
           <select aria-label={`${m.full_name} rolü`} className="field__input" style={{ minHeight: 36, padding: "4px 8px", width: "auto" }} value={m.role_key} disabled={upd.isPending || !m.is_active} onChange={(e) => upd.mutate({ role_key: e.target.value })}>
@@ -78,6 +84,9 @@ function MemberRow({ m, roles }: { m: Member; roles: Role[] }) {
       </td>
       <td className="small nowrap">{m.last_login_at ? formatDateTime(m.last_login_at) : "Henüz girmedi"}</td>
       <td className="right">
+        {!derived && m.invitation_pending && m.is_active && (
+          <button className="btn btn--ghost btn--sm" type="button" disabled={resend.isPending} onClick={() => resend.mutate({})}>Daveti yeniden gönder</button>
+        )}
         {!derived && (m.is_active ? (
           <ConfirmButton className="btn btn--ghost btn--sm" danger title={`${m.full_name} erişimini kapat`} confirmLabel="Erişimi kapat" body="Kullanıcı bu siteye giremez, açık oturumları sonlanır. Yaptığı kayıtlar ve adı geçmişte kalır." onConfirm={() => upd.mutateAsync({ is_active: false })}>
             Erişimi kapat
@@ -100,10 +109,10 @@ function AddMember({ roles, onDone }: { roles: Role[]; onDone: () => void }) {
       <div className="card">
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <Alert tone="ok" title={`${created.member.full_name} eklendi`}>Rol: {created.member.role_name}</Alert>
-          {created.temporary_password ? (
-            <OneTimePassword email={created.member.email} password={created.temporary_password} />
+          {created.invitation ? (
+            <InvitationNotice invitation={created.invitation} />
           ) : (
-            <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut parolasıyla girer.</p>
+            <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut hesabıyla girer.</p>
           )}
         </div>
         <div className="card__foot"><button className="btn" type="button" onClick={() => { m.reset(); setCreated(null); onDone(); }}>Tamam</button></div>

@@ -5,12 +5,12 @@ import { api, get } from "../../api/client";
 import type { Written } from "../../api/types";
 import { Alert, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { isTrMobile, phoneDigits, phoneMask, toE164 } from "../../lib/input";
+import { formatPhone, isTrMobile, phoneDigits, phoneMask, toE164 } from "../../lib/input";
 import { partyRole } from "../../lib/labels";
 
 /** Servis isteği 23'teki şekil. */
 interface Invite { site_name: string; full_name: string; unit_name: string; relation: string; phone_hint: string; status: string; expires_at: string }
-interface Accepted { unit_name: string; temporary_password: string }
+interface Accepted { unit_name: string; login_phone: string }
 
 /**
  * Davetle kayıt (/davet/:token). Yönetim kişiyi bölümüyle davet etmiştir; kişi yalnız telefonunu doğrular
@@ -46,11 +46,11 @@ export function InviteAcceptPage() {
           <div className="stack mt-4" style={{ gap: "var(--s-3)" }}>
             <Alert tone="ok" title="Kaydınız tamamlandı">{m.data.message}</Alert>
             <div className="kv"><span className="kv__k">Bölüm</span><span className="kv__v">{m.data.data.unit_name}</span></div>
-            <div className="kv"><span className="kv__k">Geçici parola</span><span className="kv__v mono strong">{m.data.data.temporary_password}</span></div>
-            <p className="small muted mb-0">Bu parola yalnız bir kez gösterilir; not alın. <Link to="/giris">Giriş sayfasına git</Link></p>
+            <div className="kv"><span className="kv__k">Giriş telefonu</span><span className="kv__v mono">{formatPhone(m.data.data.login_phone)}</span></div>
+            <p className="small muted mb-0">Parola gerekmez: giriş ekranında telefon numaranızı girin, gelen SMS koduyla girin. <Link to="/giris?yontem=telefon">Giriş sayfasına git</Link></p>
           </div>
         ) : inv.data.status === "completed" ? (
-          <Alert tone="info" title="Bu davet daha önce kullanılmış">Giriş yapmayı deneyin; parolanızı unuttuysanız site yönetimine başvurun.</Alert>
+          <Alert tone="info" title="Bu davet daha önce kullanılmış"><Link to="/giris?yontem=telefon">Telefon numaranızla</Link> SMS koduyla giriş yapın.</Alert>
         ) : (
           <>
             <h1 className="mt-4">Merhaba {inv.data.full_name}</h1>

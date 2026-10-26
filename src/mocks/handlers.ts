@@ -9,7 +9,8 @@
 // ve davetler, 24 özel alanlar, 25 aktarım geçmişi (araç ve açılış bakiyesi aktarımı, geri alma),
 // 26 kurulum ve canlıya geçiş.
 //
-// Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
+// Backend'e geçti, handler'ı kaldırıldı: 71'in sessiz saat ayarı (`communication-settings`; P16c kimlik ve
+// bildirim gönderimi ile — SMS hesabı, teslim kayıtları, planlı raporlar). İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
@@ -593,7 +594,8 @@ const kayit: RequestHandler[] = [
     if (!b.kvkk_ack) f.kvkk_ack = "Devam etmek için bilgilendirme yazısını onaylayın.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     Object.assign(found.inv, { status: "completed", completed_at: new Date().toISOString() });
-    return HttpResponse.json({ data: { unit_name: found.inv.unit_name, temporary_password: `Gecici-${Math.random().toString(36).slice(2, 8)}` }, message: "Kaydınız tamamlandı. Geçici parolanızla giriş yapın; ilk girişte parolanızı belirleyeceksiniz." }, { status: 201 });
+    // P5: sakin telefon + SMS koduyla girer; geçici parola yok (backend P16c)
+    return HttpResponse.json({ data: { unit_name: found.inv.unit_name, login_phone: found.inv.phone }, message: "Kaydınız tamamlandı. Giriş ekranında telefon numaranızla, SMS koduyla girebilirsiniz." }, { status: 201 });
   }),
   // Herkese açık kayıt formu: gerçek yanıta blok/bölüm listesi ve yöntem ayarları eklenir (kişi adı yok — KVKK)
   http.get("/api/v1/public/registration/:code", async ({ request, params }) => {
@@ -835,7 +837,7 @@ async function checklist(request: Request, slug: string) {
     { key: "charge_rule", label: "Aidat kuralı ve otomatik tahakkuk tanımlı", ok: !!sched.body?.enabled, detail: sched.body?.enabled ? "Otomatik aylık tahakkuk açık" : "İşletme projesi kesinleştirilip otomatik tahakkuk açılmalı", link: "tahakkuk", required: true },
     { key: "opening", label: "Açılış bakiyesi mutabakatı yapıldı", ok: imports.some((b) => b.type === "opening_balances" && b.status === "imported") || setupOf(slug).opening_reconciled, detail: "Eski sistemdeki bakiyeler aktarılıp toplam tutturuldu", link: "iceri-aktar", required: true },
     { key: "manager", label: "En az bir etkin site yöneticisi", ok: (members.body ?? []).some((m) => m.role_key === "manager" && m.is_active), detail: `${(members.body ?? []).filter((m) => m.is_active).length} etkin kullanıcı`, link: "kullanicilar", required: true },
-    { key: "mfa", label: "Site yöneticisi iki adımlı doğrulama kurdu", ok: false, detail: "İki adımlı doğrulama henüz yok (açık karar); pilot öncesi eklenecek", link: null, required: false },
+    { key: "mfa", label: "Site yöneticisi iki adımlı doğrulama kurdu", ok: false, detail: "İki adımlı doğrulama hazır (P5): yönetici rollerinde zorunlu; kurulum durumu Kullanıcılar ekranında (2FA rozeti)", link: "kullanicilar", required: false },
     { key: "kvkk", label: "KVKK aydınlatma metni yayında", ok: reg.kvkk_published, detail: reg.kvkk_published ? "Yayında" : "Hukuk onayı bekliyor (K8); Ayarlar › Kayıt yöntemleri'nden işaretlenir", link: "kayit-basvurulari", required: true },
     { key: "approvals", label: "Onay kuralları gözden geçirildi", ok: (rules.body ?? []).some((r) => r.is_active), detail: `${(rules.body ?? []).filter((r) => r.is_active).length} yürürlükte kural`, link: "onay-kurallari", required: false },
     { key: "registration", label: "Kayıt yöntemleri ayarlandı", ok: reg.invite_enabled || reg.qr_enabled || reg.code_enabled, detail: [reg.invite_enabled && "davet", reg.qr_enabled && "QR", reg.code_enabled && "site kodu"].filter(Boolean).join(", ") || "Hiçbir yöntem açık değil", link: "kayit-basvurulari", required: false },
@@ -3532,16 +3534,8 @@ function boardOf(e: Emergency, units: UnitLite[]) {
 
 const iletisim: RequestHandler[] = [
   // 71 — Okuma onayı, zamanlama, sessiz saat
-  http.get(`${API}/communication-settings`, ({ params }) => HttpResponse.json(commOf(String(params.slug)))),
-  http.put(`${API}/communication-settings`, async ({ request, params }) => {
-    const b = (await request.json()) as Partial<CommSettings>;
-    const f: Record<string, string> = {};
-    if (!TIME_RE.test(b.quiet_from ?? "")) f.quiet_from = "SS:DD"; if (!TIME_RE.test(b.quiet_to ?? "")) f.quiet_to = "SS:DD";
-    if (!f.quiet_from && !f.quiet_to && b.quiet_from === b.quiet_to) f.quiet_to = "Başlangıç ve bitiş aynı olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    commSettings.set(String(params.slug), { quiet_from: b.quiet_from!, quiet_to: b.quiet_to! });
-    return HttpResponse.json({ data: commOf(String(params.slug)), message: "Sessiz saatler kaydedildi." });
-  }),
+  // 71 — sessiz saatler (`communication-settings`) backend'de (P16c); aşağıdaki zamanlama sahtesi
+  // varsayılan 22:00–08:00 ile kaydırır.
   http.post(`${API}/announcements`, async ({ request, params }) => {
     const slug = String(params.slug);
     const raw = (await request.json()) as Record<string, unknown> & { publish_at?: string | null; requires_ack?: boolean; ack_hours?: number; sms_fallback?: boolean };

@@ -24,6 +24,7 @@ export class ApiError extends Error {
 
 let accessToken: string | null = null;
 let onSessionLost: (() => void) | null = null;
+let onMfaRequired: (() => void) | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -36,6 +37,11 @@ export function hasAccessToken() {
 /** Yenileme de başarısız olursa çağrılır (oturum düştü → giriş ekranı). */
 export function setSessionLostHandler(handler: (() => void) | null) {
   onSessionLost = handler;
+}
+
+/** Oturum iki adımlı kod bekliyor (401 `mfa_required`): kod ekranına geçilir, yenileme denenmez. */
+export function setMfaRequiredHandler(handler: (() => void) | null) {
+  onMfaRequired = handler;
 }
 
 type Query = Record<string, string | number | boolean | null | undefined>;
@@ -88,6 +94,15 @@ function defaultMessage(status: number) {
   return "İstek tamamlanamadı.";
 }
 
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const body = await res.clone().json();
+    return body?.error?.code ?? null;
+  } catch {
+    return null;
+  }
+}
+
 let refreshing: Promise<boolean> | null = null;
 
 /** Çerezdeki yenileme jetonuyla yeni erişim jetonu alır. Aynı anda tek istek gider. */
@@ -138,6 +153,10 @@ async function send(method: string, path: string, opts: RequestOptions): Promise
 
 async function request(method: string, path: string, opts: RequestOptions = {}): Promise<Response> {
   let res = await send(method, path, opts);
+  if (res.status === 401 && (await errorCode(res)) === "mfa_required") {
+    onMfaRequired?.();
+    throw await toError(res);
+  }
   if (res.status === 401 && !path.startsWith("/auth/")) {
     if (await refreshSession()) {
       res = await send(method, path, opts);

@@ -200,7 +200,7 @@ function QuietForm({ c }: { c: Comm }) {
           <Field label="Başlangıç" error={fieldError(m.error, "quiet_from")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_from} onChange={(e) => setF((x) => ({ ...x, quiet_from: e.target.value }))} />}</Field>
           <Field label="Bitiş" error={fieldError(m.error, "quiet_to")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_to} onChange={(e) => setF((x) => ({ ...x, quiet_to: e.target.value }))} />}</Field>
         </div>
-        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı ve kota ayarı sağlayıcı seçilince eklenecek (K5).</p>
+        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı, kota ve teslim kayıtları "SMS Hesabı ve Gönderim" ekranında.</p>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
     </form>
