@@ -254,6 +254,36 @@
         ]
       }
     },
+    "/api/v1/permissions": {
+      "get": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "İzin ağacı (grup → izin, hassasiyet)",
+        "operationId": "list_permissions_api_v1_permissions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionGroupOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Permissions Api V1 Permissions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/me/sessions": {
       "get": {
         "tags": [
@@ -8839,7 +8869,7 @@
         "tags": [
           "kullanıcılar"
         ],
-        "summary": "Sabit roller (ad + kısa açıklama)",
+        "summary": "Roller: hazır şablonlar ve siteye özel roller (sakin hariç)",
         "operationId": "list_roles_api_v1_sites__slug__roles_get",
         "security": [
           {
@@ -8854,6 +8884,16 @@
             "schema": {
               "type": "string",
               "title": "Slug"
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
             }
           }
         ],
@@ -8883,6 +8923,127 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Kopyala ve özelleştir",
+        "operationId": "create_role_api_v1_sites__slug__roles_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RoleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/roles/{role_key}": {
+      "patch": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Özel rolü düzenle; hazır şablonda yalnız düzey (K20)",
+        "operationId": "update_role_api_v1_sites__slug__roles__role_key__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Key"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RoleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/sites/{slug}/members": {
@@ -8890,7 +9051,7 @@
         "tags": [
           "kullanıcılar"
         ],
-        "summary": "Siteye erişen personel",
+        "summary": "Siteye erişen personel ve rolleri",
         "operationId": "list_members_api_v1_sites__slug__members_get",
         "security": [
           {
@@ -8996,7 +9157,7 @@
         "tags": [
           "kullanıcılar"
         ],
-        "summary": "Rolü değiştir, erişimi kapat/aç",
+        "summary": "Ana rolü değiştir, erişimi kapat/aç",
         "operationId": "update_member_api_v1_sites__slug__members__member_id__patch",
         "security": [
           {
@@ -9041,6 +9202,227 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Written_MemberOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/members/{member_id}/role-assignments": {
+      "post": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Kişiye rol ata (kapsam ve süre isteğe bağlı)",
+        "operationId": "add_role_assignment_api_v1_sites__slug__members__member_id__role_assignments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MemberOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/members/{member_id}/role-assignments/{assignment_id}": {
+      "delete": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Rolü kaldır (atama bitiş zamanıyla kapanır; geçmiş kalır)",
+        "operationId": "end_role_assignment_api_v1_sites__slug__members__member_id__role_assignments__assignment_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          },
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MemberOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/role-assignments": {
+      "get": {
+        "tags": [
+          "kullanıcılar"
+        ],
+        "summary": "Rol atama geçmişi (kim, kime, hangi rol, ne zaman)",
+        "operationId": "role_assignment_history_api_v1_sites__slug__role_assignments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RoleAssignmentHistoryOut_"
                 }
               }
             }
@@ -13326,6 +13708,68 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/approval-rules/escalation-suggestion": {
+      "get": {
+        "tags": [
+          "onay"
+        ],
+        "summary": "Eskalasyon hedefi önerisi (rol sırasından)",
+        "operationId": "escalation_suggestion_api_v1_sites__slug__approval_rules_escalation_suggestion_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "roles",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 30,
+              "description": "adımlardaki rol adları",
+              "title": "Roles"
+            },
+            "description": "adımlardaki rol adları"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EscalationSuggestionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/approval-rules/simulate": {
       "post": {
         "tags": [
@@ -13961,7 +14405,7 @@
         "tags": [
           "onay"
         ],
-        "summary": "Yetkimi devredebileceğim kişiler (aynı rol)",
+        "summary": "Yetkimi devredebileceğim kişiler (aynı ya da üst rol)",
         "operationId": "delegation_candidates_api_v1_sites__slug__delegations_candidates_get",
         "security": [
           {
@@ -13985,11 +14429,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CandidateOut"
-                  },
-                  "title": "Response Delegation Candidates Api V1 Sites  Slug  Delegations Candidates Get"
+                  "$ref": "#/components/schemas/DelegationCandidatesOut"
                 }
               }
             }
@@ -17361,14 +17801,34 @@
             "title": "Name"
           },
           "role": {
-            "$ref": "#/components/schemas/SiteRole"
+            "type": "string",
+            "title": "Role",
+            "description": "adayın ana (en üst) rolü"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles",
+            "description": "adayın bütün etkin rolleri"
+          },
+          "can_take": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Can Take",
+            "description": "devredebileceğiniz rollerinizden bu kişinin alabildikleri (aynı ya da üst rol — ONY-03, K20)"
           }
         },
         "type": "object",
         "required": [
           "user_id",
           "name",
-          "role"
+          "role",
+          "roles",
+          "can_take"
         ],
         "title": "CandidateOut"
       },
@@ -19391,6 +19851,31 @@
         "type": "object",
         "title": "DecisionsIn"
       },
+      "DelegationCandidatesOut": {
+        "properties": {
+          "my_roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "My Roles",
+            "description": "devredebileceğiniz rolleriniz (ana rol önce)"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateOut"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "my_roles",
+          "candidates"
+        ],
+        "title": "DelegationCandidatesOut"
+      },
       "DelegationIn": {
         "properties": {
           "to_user_id": {
@@ -19400,12 +19885,15 @@
           },
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string",
+              "maxLength": 100,
+              "minLength": 1
             },
             "type": "array",
-            "maxItems": 1,
+            "maxItems": 6,
             "minItems": 1,
-            "title": "Roles"
+            "title": "Roles",
+            "description": "devredilen kendi rolleriniz (ad)"
           },
           "starts_at": {
             "type": "string",
@@ -19466,7 +19954,7 @@
           },
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string"
             },
             "type": "array",
             "title": "Roles"
@@ -20015,6 +20503,27 @@
           "running_balance"
         ],
         "title": "EntryOut"
+      },
+      "EscalationSuggestionOut": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role",
+            "description": "adımlardaki en üst rolün hemen üstündeki düzeyden rol (K20); yoksa null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "EscalationSuggestionOut"
       },
       "EventOut": {
         "properties": {
@@ -22303,6 +22812,50 @@
       },
       "MemberIn": {
         "properties": {
+          "scope_kind": {
+            "$ref": "#/components/schemas/RoleScope",
+            "description": "site (tesis geneli) · block (kapı: GUV-08 ile)",
+            "default": "site"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id",
+            "description": "yalnız scope_kind=block"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At",
+            "description": "boşsa hemen"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At",
+            "description": "boşsa süresiz"
+          },
           "full_name": {
             "type": "string",
             "maxLength": 200,
@@ -22343,12 +22896,35 @@
             "title": "Email"
           },
           "role_key": {
-            "type": "string",
-            "title": "Role Key"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Key",
+            "description": "ana rol (geriye uyum); rolü yoksa boş"
           },
           "role_name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Role Name"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/MemberRoleOut"
+            },
+            "type": "array",
+            "title": "Roles",
+            "description": "bitmemiş bütün roller, ana rol önce"
           },
           "is_active": {
             "type": "boolean",
@@ -22388,6 +22964,7 @@
           "email",
           "role_key",
           "role_name",
+          "roles",
           "is_active",
           "source",
           "last_login_at",
@@ -22407,7 +22984,8 @@
                 "type": "null"
               }
             ],
-            "title": "Role Key"
+            "title": "Role Key",
+            "description": "ana rolü değiştir (diğer tesis rolleri kapanır)"
           },
           "is_active": {
             "anyOf": [
@@ -22423,6 +23001,104 @@
         },
         "type": "object",
         "title": "MemberPatch"
+      },
+      "MemberRoleOut": {
+        "properties": {
+          "assignment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id",
+            "description": "şirketten gelen rolde boş"
+          },
+          "role_key": {
+            "type": "string",
+            "title": "Role Key"
+          },
+          "role_name": {
+            "type": "string",
+            "title": "Role Name"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          },
+          "scope_kind": {
+            "$ref": "#/components/schemas/RoleScope"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id"
+          },
+          "block_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Name"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "is_current": {
+            "type": "boolean",
+            "title": "Is Current",
+            "description": "false: ileri tarihte başlayacak"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assignment_id",
+          "role_key",
+          "role_name",
+          "level",
+          "scope_kind",
+          "block_id",
+          "block_name",
+          "starts_at",
+          "ends_at",
+          "is_current"
+        ],
+        "title": "MemberRoleOut"
       },
       "ModuleKey": {
         "type": "string",
@@ -24309,6 +24985,37 @@
         ],
         "title": "Page[ResidentDocumentOut]"
       },
+      "Page_RoleAssignmentHistoryOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RoleAssignmentHistoryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[RoleAssignmentHistoryOut]"
+      },
       "Page_SiteUsageOut_": {
         "properties": {
           "items": {
@@ -25036,6 +25743,50 @@
           "cancelled"
         ],
         "title": "PaymentStatus"
+      },
+      "PermissionGroupOut": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/PermissionItemOut"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group",
+          "permissions"
+        ],
+        "title": "PermissionGroupOut"
+      },
+      "PermissionItemOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/Sensitivity",
+            "description": "normal · sensitive (hassas) · critical (kritik)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "description",
+          "sensitivity"
+        ],
+        "title": "PermissionItemOut"
       },
       "PersonCreate": {
         "properties": {
@@ -25834,13 +26585,16 @@
           "escalation_role": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/SiteRole"
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
               },
               {
                 "type": "null"
               }
             ],
-            "description": "boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20)"
+            "title": "Escalation Role",
+            "description": "boşsa yalnız hatırlatma; öneri: `…/approval-rules/escalation-suggestion`"
           },
           "effective_from": {
             "type": "string",
@@ -27331,7 +28085,7 @@
           },
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string"
             },
             "type": "array",
             "title": "Roles"
@@ -27728,6 +28482,311 @@
         ],
         "title": "RevokedOut"
       },
+      "RoleAssignmentHistoryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name"
+          },
+          "role_key": {
+            "type": "string",
+            "title": "Role Key"
+          },
+          "role_name": {
+            "type": "string",
+            "title": "Role Name"
+          },
+          "scope_kind": {
+            "$ref": "#/components/schemas/RoleScope"
+          },
+          "block_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Name"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Assigned At"
+          },
+          "removed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed By"
+          },
+          "removed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "user_name",
+          "role_key",
+          "role_name",
+          "scope_kind",
+          "block_name",
+          "starts_at",
+          "ends_at",
+          "assigned_by",
+          "assigned_at",
+          "removed_by",
+          "removed_at"
+        ],
+        "title": "RoleAssignmentHistoryOut"
+      },
+      "RoleAssignmentIn": {
+        "properties": {
+          "scope_kind": {
+            "$ref": "#/components/schemas/RoleScope",
+            "description": "site (tesis geneli) · block (kapı: GUV-08 ile)",
+            "default": "site"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id",
+            "description": "yalnız scope_kind=block"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At",
+            "description": "boşsa hemen"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At",
+            "description": "boşsa süresiz"
+          },
+          "role_key": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Role Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_key"
+        ],
+        "title": "RoleAssignmentIn"
+      },
+      "RoleGrantOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "description": "rol sırası: 1 en üst (K20)"
+          },
+          "scope_kind": {
+            "$ref": "#/components/schemas/RoleScope",
+            "description": "site (tesis geneli) · block · gate"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At",
+            "description": "süreli atamada bitiş"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "level",
+          "scope_kind",
+          "block_id",
+          "ends_at"
+        ],
+        "title": "RoleGrantOut",
+        "description": "Kullanıcının bu sitede şu an etkin bir rolü (P18: birden çok rol, izinler birleşir)."
+      },
+      "RoleIn": {
+        "properties": {
+          "base_key": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Base Key",
+            "description": "kopyalanacak rol (şablon ya da özel)"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Name",
+            "description": "değiştirilemez; onay kurallarında rolü tanıtır"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions",
+            "description": "boşsa kopyalanan rolün izinleri"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level",
+            "description": "boşsa kopyalanan rolün düzeyi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_key",
+          "name"
+        ],
+        "title": "RoleIn"
+      },
+      "RoleKind": {
+        "type": "string",
+        "enum": [
+          "system",
+          "custom"
+        ],
+        "title": "RoleKind"
+      },
       "RoleOut": {
         "properties": {
           "key": {
@@ -27741,15 +28800,130 @@
           "description": {
             "type": "string",
             "title": "Description"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RoleKind",
+            "description": "system: hazır şablon (salt okunur) · custom: siteye özel"
+          },
+          "base_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Key",
+            "description": "özel rolün kopyalandığı rol"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "description": "rol sırası: 1 en üst (K20); devir ve eskalasyon buna bakar"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "false: arşivlenmiş özel rol (atanamaz)"
+          },
+          "is_critical": {
+            "type": "boolean",
+            "title": "Is Critical",
+            "description": "kritik izin içerir (atanması onaydan geçecek: P16b)"
+          },
+          "holder_count": {
+            "type": "integer",
+            "title": "Holder Count",
+            "description": "bu roldeki etkin (tesis kapsamlı) kullanıcı sayısı"
           }
         },
         "type": "object",
         "required": [
           "key",
           "name",
-          "description"
+          "description",
+          "kind",
+          "base_key",
+          "level",
+          "permissions",
+          "is_active",
+          "is_critical",
+          "holder_count"
         ],
         "title": "RoleOut"
+      },
+      "RolePatch": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "permissions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permissions"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "özel rolü arşivle / geri al"
+          }
+        },
+        "type": "object",
+        "title": "RolePatch"
+      },
+      "RoleScope": {
+        "type": "string",
+        "enum": [
+          "site",
+          "block",
+          "gate"
+        ],
+        "title": "RoleScope"
       },
       "RowOut": {
         "properties": {
@@ -27967,13 +29141,16 @@
           "escalation_role": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/SiteRole"
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
               },
               {
                 "type": "null"
               }
             ],
-            "description": "boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20)"
+            "title": "Escalation Role",
+            "description": "boşsa yalnız hatırlatma; öneri: `…/approval-rules/escalation-suggestion`"
           },
           "effective_from": {
             "type": "string",
@@ -28215,6 +29392,29 @@
         ],
         "title": "ScopeKind"
       },
+      "ScopedPermissionOut": {
+        "properties": {
+          "permission": {
+            "type": "string",
+            "title": "Permission"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Block Ids",
+            "description": "izin yalnız bu bloklarda geçerli"
+          }
+        },
+        "type": "object",
+        "required": [
+          "permission",
+          "block_ids"
+        ],
+        "title": "ScopedPermissionOut"
+      },
       "SelectionIn": {
         "properties": {
           "row_number": {
@@ -28234,6 +29434,15 @@
           "ledger_account_id"
         ],
         "title": "SelectionIn"
+      },
+      "Sensitivity": {
+        "type": "string",
+        "enum": [
+          "normal",
+          "sensitive",
+          "critical"
+        ],
+        "title": "Sensitivity"
       },
       "SessionOut": {
         "properties": {
@@ -28984,7 +30193,7 @@
         "properties": {
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string"
             },
             "type": "array",
             "title": "Roles"
@@ -29031,14 +30240,31 @@
           },
           "role": {
             "type": "string",
-            "title": "Role"
+            "title": "Role",
+            "description": "ana rol (en üst düzey) — geriye uyum; tüm roller `roles`"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleGrantOut"
+            },
+            "type": "array",
+            "title": "Roles"
           },
           "permissions": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Permissions"
+            "title": "Permissions",
+            "description": "kullanılabilir izinler (tesis geneli + blokla sınırlı, birleşim)"
+          },
+          "scoped_permissions": {
+            "items": {
+              "$ref": "#/components/schemas/ScopedPermissionOut"
+            },
+            "type": "array",
+            "title": "Scoped Permissions",
+            "description": "yalnız belirli bloklarda geçerli izinler (blok kapsamlı rol ataması)"
           },
           "person_id": {
             "anyOf": [
@@ -29086,7 +30312,9 @@
           "name",
           "slug",
           "role",
+          "roles",
           "permissions",
+          "scoped_permissions",
           "person_id",
           "is_derived",
           "organization_id",
@@ -29599,14 +30827,31 @@
           },
           "role": {
             "type": "string",
-            "title": "Role"
+            "title": "Role",
+            "description": "ana rol (en üst düzey) — geriye uyum"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleGrantOut"
+            },
+            "type": "array",
+            "title": "Roles",
+            "description": "şu an etkin bütün roller (P18)"
           },
           "permissions": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Permissions"
+            "title": "Permissions",
+            "description": "tesis geneli + blokla sınırlı izinler (birleşim)"
+          },
+          "scoped_permissions": {
+            "items": {
+              "$ref": "#/components/schemas/ScopedPermissionOut"
+            },
+            "type": "array",
+            "title": "Scoped Permissions"
           },
           "modules": {
             "items": {
@@ -29625,24 +30870,12 @@
           "city",
           "district",
           "role",
+          "roles",
           "permissions",
+          "scoped_permissions",
           "modules"
         ],
         "title": "SiteResponse"
-      },
-      "SiteRole": {
-        "type": "string",
-        "enum": [
-          "Yönetici",
-          "Yönetim Kurulu Üyesi",
-          "Denetçi",
-          "Muhasebe",
-          "Güvenlik",
-          "Teknik Personel",
-          "Sakin"
-        ],
-        "title": "SiteRole",
-        "description": "Site rol şablonları. Adlar Türkçe saklanır (docs/05 §3)."
       },
       "SiteUnreadOut": {
         "properties": {
@@ -30221,12 +31454,15 @@
         "properties": {
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string",
+              "maxLength": 100,
+              "minLength": 1
             },
             "type": "array",
             "maxItems": 6,
             "minItems": 1,
-            "title": "Roles"
+            "title": "Roles",
+            "description": "rol adları (`GET /roles`): şablon ya da özel rol"
           },
           "quorum": {
             "$ref": "#/components/schemas/QuorumKind",
@@ -30266,7 +31502,7 @@
         "properties": {
           "roles": {
             "items": {
-              "$ref": "#/components/schemas/SiteRole"
+              "type": "string"
             },
             "type": "array",
             "title": "Roles"
@@ -31834,12 +33070,13 @@
           "escalation_role": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/SiteRole"
+                "type": "string"
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Escalation Role"
           },
           "steps": {
             "items": {
@@ -33022,6 +34259,23 @@
           "message"
         ],
         "title": "Written[RevokedOut]"
+      },
+      "Written_RoleOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RoleOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[RoleOut]"
       },
       "Written_RuleWriteOut_": {
         "properties": {

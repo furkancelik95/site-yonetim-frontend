@@ -62,6 +62,7 @@ const siteScreens: [string, string][] = [
   ["moduller", "ModulesPage"],
   ["denetim", "AuditPage"],
   ["kullanicilar", "MembersPage"],
+  ["roller", "RolesPage"],
   ["kayit-basvurulari", "RegistrationsPage"],
   ["toplantilar", "MeetingsPage"],
   ["toplantilar/:meetingId", "MeetingDetailPage"],

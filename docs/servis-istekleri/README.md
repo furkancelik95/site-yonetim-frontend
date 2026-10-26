@@ -27,7 +27,7 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [09](09-olay-kaydi.md) | Güvenlik olay kaydı | `GET/POST …/incidents`, `POST …/incidents/{id}/close` | Güvenlik → Olaylar | **Backend'de** (#37) — izin `security.incidents` |
 | [10](10-kayip-esya.md) | Kayıp eşya | `GET/POST …/lost-items`, `POST …/lost-items/{id}/return` | Güvenlik → Kayıp eşya | **Backend'de** (#38) — izin `security.incidents` |
 | [11](11-talep-departmanlari.md) | Talep departmanları | `…/departments`, `POST …/requests/{id}/department`, talep yanıtına alan | Talepler, pano, talep ayrıntısı | **Backend'de** (#39) |
-| [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Backend'de** (#40) |
+| [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Backend'de** (#40); çoklu rol, siteye özel rol, kapsam ve süre (P18/K20): `POST/PATCH …/roles`, `…/members/{id}/role-assignments`, `GET …/role-assignments`, `GET /permissions` — ekranlar `/kullanicilar`, `/roller` (P16a) |
 | [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Backend'de** (#41) — onayda sakine giriş hesabı açılır, geçici parola bir kez gösterilir |
 | [14](14-toplantilar.md) | Toplantılar ve genel kurul | `…/meetings`, `…/meetings/{id}/decisions`, `…/cancel` | `/toplantilar` | **Backend'de** (#42) — modül `general-assembly` |
 | [15](15-anket.md) | Anket | `…/polls`, `…/resident/polls/{id}/vote` | `/anketler`, sakin Duyurular | **Backend'de** (#43) — modül `surveys` |

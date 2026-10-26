@@ -146,6 +146,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** İzin ağacı (grup → izin, hassasiyet) */
+        get: operations["list_permissions_api_v1_permissions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/sessions": {
         parameters: {
             query?: never;
@@ -2025,14 +2042,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Sabit roller (ad + kısa açıklama) */
+        /** Roller: hazır şablonlar ve siteye özel roller (sakin hariç) */
         get: operations["list_roles_api_v1_sites__slug__roles_get"];
+        put?: never;
+        /** Kopyala ve özelleştir */
+        post: operations["create_role_api_v1_sites__slug__roles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/roles/{role_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Özel rolü düzenle; hazır şablonda yalnız düzey (K20) */
+        patch: operations["update_role_api_v1_sites__slug__roles__role_key__patch"];
         trace?: never;
     };
     "/api/v1/sites/{slug}/members": {
@@ -2042,7 +2077,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Siteye erişen personel */
+        /** Siteye erişen personel ve rolleri */
         get: operations["list_members_api_v1_sites__slug__members_get"];
         put?: never;
         /** Kullanıcı ekle */
@@ -2066,8 +2101,59 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Rolü değiştir, erişimi kapat/aç */
+        /** Ana rolü değiştir, erişimi kapat/aç */
         patch: operations["update_member_api_v1_sites__slug__members__member_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/members/{member_id}/role-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kişiye rol ata (kapsam ve süre isteğe bağlı) */
+        post: operations["add_role_assignment_api_v1_sites__slug__members__member_id__role_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/members/{member_id}/role-assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Rolü kaldır (atama bitiş zamanıyla kapanır; geçmiş kalır) */
+        delete: operations["end_role_assignment_api_v1_sites__slug__members__member_id__role_assignments__assignment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/role-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rol atama geçmişi (kim, kime, hangi rol, ne zaman) */
+        get: operations["role_assignment_history_api_v1_sites__slug__role_assignments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sites/{slug}/registration-link": {
@@ -3003,6 +3089,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/approval-rules/escalation-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Eskalasyon hedefi önerisi (rol sırasından) */
+        get: operations["escalation_suggestion_api_v1_sites__slug__approval_rules_escalation_suggestion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/approval-rules/simulate": {
         parameters: {
             query?: never;
@@ -3164,7 +3267,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yetkimi devredebileceğim kişiler (aynı rol) */
+        /** Yetkimi devredebileceğim kişiler (aynı ya da üst rol) */
         get: operations["delegation_candidates_api_v1_sites__slug__delegations_candidates_get"];
         put?: never;
         post?: never;
@@ -4320,7 +4423,21 @@ export interface components {
             user_id: string;
             /** Name */
             name: string;
-            role: components["schemas"]["SiteRole"];
+            /**
+             * Role
+             * @description adayın ana (en üst) rolü
+             */
+            role: string;
+            /**
+             * Roles
+             * @description adayın bütün etkin rolleri
+             */
+            roles: string[];
+            /**
+             * Can Take
+             * @description devredebileceğiniz rollerinizden bu kişinin alabildikleri (aynı ya da üst rol — ONY-03, K20)
+             */
+            can_take: string[];
         };
         /** CashAccountIn */
         CashAccountIn: {
@@ -5135,6 +5252,16 @@ export interface components {
             /** Items */
             items?: components["schemas"]["DecisionIn"][];
         };
+        /** DelegationCandidatesOut */
+        DelegationCandidatesOut: {
+            /**
+             * My Roles
+             * @description devredebileceğiniz rolleriniz (ana rol önce)
+             */
+            my_roles: string[];
+            /** Candidates */
+            candidates: components["schemas"]["CandidateOut"][];
+        };
         /** DelegationIn */
         DelegationIn: {
             /**
@@ -5142,8 +5269,11 @@ export interface components {
              * Format: uuid
              */
             to_user_id: string;
-            /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            /**
+             * Roles
+             * @description devredilen kendi rolleriniz (ad)
+             */
+            roles: string[];
             /**
              * Starts At
              * Format: date-time
@@ -5179,7 +5309,7 @@ export interface components {
             /** To Name */
             to_name: string;
             /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            roles: string[];
             /**
              * Starts At
              * Format: date-time
@@ -5406,6 +5536,14 @@ export interface components {
              * @example 1234.56
              */
             running_balance: string;
+        };
+        /** EscalationSuggestionOut */
+        EscalationSuggestionOut: {
+            /**
+             * Role
+             * @description adımlardaki en üst rolün hemen üstündeki düzeyden rol (K20); yoksa null
+             */
+            role: string | null;
         };
         /** EventOut */
         EventOut: {
@@ -6328,6 +6466,26 @@ export interface components {
         MeetingStatus: "planned" | "held" | "cancelled";
         /** MemberIn */
         MemberIn: {
+            /**
+             * @description site (tesis geneli) · block (kapı: GUV-08 ile)
+             * @default site
+             */
+            scope_kind: components["schemas"]["RoleScope"];
+            /**
+             * Block Id
+             * @description yalnız scope_kind=block
+             */
+            block_id?: string | null;
+            /**
+             * Starts At
+             * @description boşsa hemen
+             */
+            starts_at?: string | null;
+            /**
+             * Ends At
+             * @description boşsa süresiz
+             */
+            ends_at?: string | null;
             /** Full Name */
             full_name: string;
             /** Email */
@@ -6346,10 +6504,18 @@ export interface components {
             full_name: string;
             /** Email */
             email: string;
-            /** Role Key */
-            role_key: string;
+            /**
+             * Role Key
+             * @description ana rol (geriye uyum); rolü yoksa boş
+             */
+            role_key: string | null;
             /** Role Name */
-            role_name: string;
+            role_name: string | null;
+            /**
+             * Roles
+             * @description bitmemiş bütün roller, ana rol önce
+             */
+            roles: components["schemas"]["MemberRoleOut"][];
             /** Is Active */
             is_active: boolean;
             /**
@@ -6368,10 +6534,41 @@ export interface components {
         };
         /** MemberPatch */
         MemberPatch: {
-            /** Role Key */
+            /**
+             * Role Key
+             * @description ana rolü değiştir (diğer tesis rolleri kapanır)
+             */
             role_key?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+        };
+        /** MemberRoleOut */
+        MemberRoleOut: {
+            /**
+             * Assignment Id
+             * @description şirketten gelen rolde boş
+             */
+            assignment_id: string | null;
+            /** Role Key */
+            role_key: string;
+            /** Role Name */
+            role_name: string;
+            /** Level */
+            level: number;
+            scope_kind: components["schemas"]["RoleScope"];
+            /** Block Id */
+            block_id: string | null;
+            /** Block Name */
+            block_name: string | null;
+            /** Starts At */
+            starts_at: string | null;
+            /** Ends At */
+            ends_at: string | null;
+            /**
+             * Is Current
+             * @description false: ileri tarihte başlayacak
+             */
+            is_current: boolean;
         };
         /**
          * ModuleKey
@@ -7105,6 +7302,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[RoleAssignmentHistoryOut] */
+        Page_RoleAssignmentHistoryOut_: {
+            /** Items */
+            items: components["schemas"]["RoleAssignmentHistoryOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[SiteUsageOut] */
         Page_SiteUsageOut_: {
             /** Items */
@@ -7410,6 +7618,22 @@ export interface components {
          * @enum {string}
          */
         PaymentStatus: "pending" | "confirmed" | "cancelled";
+        /** PermissionGroupOut */
+        PermissionGroupOut: {
+            /** Group */
+            group: string;
+            /** Permissions */
+            permissions: components["schemas"]["PermissionItemOut"][];
+        };
+        /** PermissionItemOut */
+        PermissionItemOut: {
+            /** Key */
+            key: string;
+            /** Description */
+            description: string;
+            /** @description normal · sensitive (hassas) · critical (kritik) */
+            sensitivity: components["schemas"]["Sensitivity"];
+        };
         /** PersonCreate */
         PersonCreate: {
             /** Phone */
@@ -7715,8 +7939,11 @@ export interface components {
             escalate_after_days: number;
             /** @default calendar */
             day_basis: components["schemas"]["DayBasis"];
-            /** @description boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20) */
-            escalation_role?: components["schemas"]["SiteRole"] | null;
+            /**
+             * Escalation Role
+             * @description boşsa yalnız hatırlatma; öneri: `…/approval-rules/escalation-suggestion`
+             */
+            escalation_role?: string | null;
             /**
              * Effective From
              * Format: date
@@ -8278,7 +8505,7 @@ export interface components {
             /** Index */
             index: number;
             /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            roles: string[];
             /** Required */
             required: number | null;
             /** Eligible */
@@ -8415,6 +8642,122 @@ export interface components {
              */
             current_revoked: boolean;
         };
+        /** RoleAssignmentHistoryOut */
+        RoleAssignmentHistoryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** User Name */
+            user_name: string;
+            /** Role Key */
+            role_key: string;
+            /** Role Name */
+            role_name: string;
+            scope_kind: components["schemas"]["RoleScope"];
+            /** Block Name */
+            block_name: string | null;
+            /** Starts At */
+            starts_at: string | null;
+            /** Ends At */
+            ends_at: string | null;
+            /** Assigned By */
+            assigned_by: string | null;
+            /**
+             * Assigned At
+             * Format: date-time
+             */
+            assigned_at: string;
+            /** Removed By */
+            removed_by: string | null;
+            /** Removed At */
+            removed_at: string | null;
+        };
+        /** RoleAssignmentIn */
+        RoleAssignmentIn: {
+            /**
+             * @description site (tesis geneli) · block (kapı: GUV-08 ile)
+             * @default site
+             */
+            scope_kind: components["schemas"]["RoleScope"];
+            /**
+             * Block Id
+             * @description yalnız scope_kind=block
+             */
+            block_id?: string | null;
+            /**
+             * Starts At
+             * @description boşsa hemen
+             */
+            starts_at?: string | null;
+            /**
+             * Ends At
+             * @description boşsa süresiz
+             */
+            ends_at?: string | null;
+            /** Role Key */
+            role_key: string;
+        };
+        /**
+         * RoleGrantOut
+         * @description Kullanıcının bu sitede şu an etkin bir rolü (P18: birden çok rol, izinler birleşir).
+         */
+        RoleGrantOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /**
+             * Level
+             * @description rol sırası: 1 en üst (K20)
+             */
+            level: number;
+            /** @description site (tesis geneli) · block · gate */
+            scope_kind: components["schemas"]["RoleScope"];
+            /** Block Id */
+            block_id: string | null;
+            /**
+             * Ends At
+             * @description süreli atamada bitiş
+             */
+            ends_at: string | null;
+        };
+        /** RoleIn */
+        RoleIn: {
+            /**
+             * Base Key
+             * @description kopyalanacak rol (şablon ya da özel)
+             */
+            base_key: string;
+            /**
+             * Name
+             * @description değiştirilemez; onay kurallarında rolü tanıtır
+             */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Permissions
+             * @description boşsa kopyalanan rolün izinleri
+             */
+            permissions?: string[] | null;
+            /**
+             * Level
+             * @description boşsa kopyalanan rolün düzeyi
+             */
+            level?: number | null;
+        };
+        /**
+         * RoleKind
+         * @enum {string}
+         */
+        RoleKind: "system" | "custom";
         /** RoleOut */
         RoleOut: {
             /** Key */
@@ -8423,7 +8766,55 @@ export interface components {
             name: string;
             /** Description */
             description: string;
+            /** @description system: hazır şablon (salt okunur) · custom: siteye özel */
+            kind: components["schemas"]["RoleKind"];
+            /**
+             * Base Key
+             * @description özel rolün kopyalandığı rol
+             */
+            base_key: string | null;
+            /**
+             * Level
+             * @description rol sırası: 1 en üst (K20); devir ve eskalasyon buna bakar
+             */
+            level: number;
+            /** Permissions */
+            permissions: string[];
+            /**
+             * Is Active
+             * @description false: arşivlenmiş özel rol (atanamaz)
+             */
+            is_active: boolean;
+            /**
+             * Is Critical
+             * @description kritik izin içerir (atanması onaydan geçecek: P16b)
+             */
+            is_critical: boolean;
+            /**
+             * Holder Count
+             * @description bu roldeki etkin (tesis kapsamlı) kullanıcı sayısı
+             */
+            holder_count: number;
         };
+        /** RolePatch */
+        RolePatch: {
+            /** Description */
+            description?: string | null;
+            /** Permissions */
+            permissions?: string[] | null;
+            /** Level */
+            level?: number | null;
+            /**
+             * Is Active
+             * @description özel rolü arşivle / geri al
+             */
+            is_active?: boolean | null;
+        };
+        /**
+         * RoleScope
+         * @enum {string}
+         */
+        RoleScope: "site" | "block" | "gate";
         /** RowOut */
         RowOut: {
             /** Row Number */
@@ -8502,8 +8893,11 @@ export interface components {
             escalate_after_days: number;
             /** @default calendar */
             day_basis: components["schemas"]["DayBasis"];
-            /** @description boşsa yalnız hatırlatma gider (rol sırası tanımsız: K20) */
-            escalation_role?: components["schemas"]["SiteRole"] | null;
+            /**
+             * Escalation Role
+             * @description boşsa yalnız hatırlatma; öneri: `…/approval-rules/escalation-suggestion`
+             */
+            escalation_role?: string | null;
             /**
              * Effective From
              * Format: date
@@ -8611,6 +9005,16 @@ export interface components {
          * @enum {string}
          */
         ScopeKind: "whole_site" | "blocks" | "unit_types" | "usage";
+        /** ScopedPermissionOut */
+        ScopedPermissionOut: {
+            /** Permission */
+            permission: string;
+            /**
+             * Block Ids
+             * @description izin yalnız bu bloklarda geçerli
+             */
+            block_ids: string[];
+        };
         /** SelectionIn */
         SelectionIn: {
             /** Row Number */
@@ -8621,6 +9025,11 @@ export interface components {
              */
             ledger_account_id: string;
         };
+        /**
+         * Sensitivity
+         * @enum {string}
+         */
+        Sensitivity: "normal" | "sensitive" | "critical";
         /** SessionOut */
         SessionOut: {
             /**
@@ -8926,7 +9335,7 @@ export interface components {
         /** SimulatedStep */
         SimulatedStep: {
             /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            roles: string[];
             /** Required */
             required: number;
             /** Eligible */
@@ -8945,10 +9354,23 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
-            /** Role */
+            /**
+             * Role
+             * @description ana rol (en üst düzey) — geriye uyum; tüm roller `roles`
+             */
             role: string;
-            /** Permissions */
+            /** Roles */
+            roles: components["schemas"]["RoleGrantOut"][];
+            /**
+             * Permissions
+             * @description kullanılabilir izinler (tesis geneli + blokla sınırlı, birleşim)
+             */
             permissions: string[];
+            /**
+             * Scoped Permissions
+             * @description yalnız belirli bloklarda geçerli izinler (blok kapsamlı rol ataması)
+             */
+            scoped_permissions: components["schemas"]["ScopedPermissionOut"][];
             /** Person Id */
             person_id: string | null;
             /** Is Derived */
@@ -9135,19 +9557,26 @@ export interface components {
             city: string | null;
             /** District */
             district: string | null;
-            /** Role */
+            /**
+             * Role
+             * @description ana rol (en üst düzey) — geriye uyum
+             */
             role: string;
-            /** Permissions */
+            /**
+             * Roles
+             * @description şu an etkin bütün roller (P18)
+             */
+            roles: components["schemas"]["RoleGrantOut"][];
+            /**
+             * Permissions
+             * @description tesis geneli + blokla sınırlı izinler (birleşim)
+             */
             permissions: string[];
+            /** Scoped Permissions */
+            scoped_permissions: components["schemas"]["ScopedPermissionOut"][];
             /** Modules */
             modules: string[];
         };
-        /**
-         * SiteRole
-         * @description Site rol şablonları. Adlar Türkçe saklanır (docs/05 §3).
-         * @enum {string}
-         */
-        SiteRole: "Yönetici" | "Yönetim Kurulu Üyesi" | "Denetçi" | "Muhasebe" | "Güvenlik" | "Teknik Personel" | "Sakin";
         /** SiteUnreadOut */
         SiteUnreadOut: {
             /**
@@ -9341,8 +9770,11 @@ export interface components {
         };
         /** StepIn */
         StepIn: {
-            /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            /**
+             * Roles
+             * @description rol adları (`GET /roles`): şablon ya da özel rol
+             */
+            roles: string[];
             /** @description any (1/N) · all (N/N) · majority · count (M) */
             quorum: components["schemas"]["QuorumKind"];
             /**
@@ -9359,7 +9791,7 @@ export interface components {
         /** StepOut */
         StepOut: {
             /** Roles */
-            roles: components["schemas"]["SiteRole"][];
+            roles: string[];
             quorum: components["schemas"]["QuorumKind"];
             /** Count */
             count: number | null;
@@ -9890,7 +10322,8 @@ export interface components {
             /** Escalate After Days */
             escalate_after_days: number;
             day_basis: components["schemas"]["DayBasis"];
-            escalation_role: components["schemas"]["SiteRole"] | null;
+            /** Escalation Role */
+            escalation_role: string | null;
             /** Steps */
             steps: components["schemas"]["StepOut"][];
             /** Basis Note */
@@ -10294,6 +10727,12 @@ export interface components {
         /** Written[RevokedOut] */
         Written_RevokedOut_: {
             data: components["schemas"]["RevokedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RoleOut] */
+        Written_RoleOut_: {
+            data: components["schemas"]["RoleOut"];
             /** Message */
             message: string;
         };
@@ -10810,6 +11249,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    list_permissions_api_v1_permissions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionGroupOut"][];
                 };
             };
         };
@@ -15217,7 +15676,9 @@ export interface operations {
     };
     list_roles_api_v1_sites__slug__roles_get: {
         parameters: {
-            query?: never;
+            query?: {
+                include_archived?: boolean;
+            };
             header?: never;
             path: {
                 slug: string;
@@ -15233,6 +15694,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_role_api_v1_sites__slug__roles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RoleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_role_api_v1_sites__slug__roles__role_key__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_key: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RoleOut_"];
                 };
             };
             /** @description Validation Error */
@@ -15335,6 +15867,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_MemberOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_role_assignment_api_v1_sites__slug__members__member_id__role_assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleAssignmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MemberOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_role_assignment_api_v1_sites__slug__members__member_id__role_assignments__assignment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: string;
+                assignment_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MemberOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    role_assignment_history_api_v1_sites__slug__role_assignments_get: {
+        parameters: {
+            query?: {
+                user_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RoleAssignmentHistoryOut_"];
                 };
             };
             /** @description Validation Error */
@@ -17696,6 +18332,40 @@ export interface operations {
             };
         };
     };
+    escalation_suggestion_api_v1_sites__slug__approval_rules_escalation_suggestion_get: {
+        parameters: {
+            query: {
+                /** @description adımlardaki rol adları */
+                roles: string[];
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalationSuggestionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     simulate_api_v1_sites__slug__approval_rules_simulate_post: {
         parameters: {
             query?: never;
@@ -18057,7 +18727,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CandidateOut"][];
+                    "application/json": components["schemas"]["DelegationCandidatesOut"];
                 };
             };
             /** @description Validation Error */
