@@ -549,6 +549,630 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/gates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kapılar */
+        get: operations["list_gates_api_v1_sites__slug__gates_get"];
+        put?: never;
+        /** Kapı ekle */
+        post: operations["create_gate_api_v1_sites__slug__gates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/gates/{gate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Kapıyı düzenle */
+        patch: operations["update_gate_api_v1_sites__slug__gates__gate_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Güvenlik ayarları */
+        get: operations["get_settings_api_v1_sites__slug__settings_security_get"];
+        /** Güvenlik ayarlarını kaydet (sürüm artar) */
+        put: operations["put_settings_api_v1_sites__slug__settings_security_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parcel-delegates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kargo teslim yetkililerim */
+        get: operations["my_delegates_api_v1_sites__slug__resident_parcel_delegates_get"];
+        put?: never;
+        /** Yetkili ekle */
+        post: operations["add_delegate_api_v1_sites__slug__resident_parcel_delegates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parcel-delegates/{delegate_id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yetkiyi kaldır */
+        post: operations["remove_delegate_api_v1_sites__slug__resident_parcel_delegates__delegate_id__remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/units/{unit_id}/parcel-delegates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bölümün teslim yetkilileri (görevli) */
+        get: operations["unit_delegates_api_v1_sites__slug__units__unit_id__parcel_delegates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/packages/long-waiting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Uzun bekleyen kargolar */
+        get: operations["long_waiting_api_v1_sites__slug__packages_long_waiting_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ziyaretçi davetlerim */
+        get: operations["my_invites_api_v1_sites__slug__resident_visitor_invites_get"];
+        put?: never;
+        /** Ziyaretçi davet et */
+        post: operations["create_invite_api_v1_sites__slug__resident_visitor_invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Daveti iptal et */
+        post: operations["cancel_invite_api_v1_sites__slug__resident_visitor_invites__invite_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitor-invites/{invite_id}/new-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yeni davet kodu üret */
+        post: operations["reissue_code_api_v1_sites__slug__resident_visitor_invites__invite_id__new_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visitor-invites/expected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugün beklenen davetliler */
+        get: operations["expected_api_v1_sites__slug__visitor_invites_expected_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visitor-invites/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kodla içeri al */
+        post: operations["check_in_api_v1_sites__slug__visitor_invites_check_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visit-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bugünkü ve bekleyen habersiz ziyaretçiler */
+        get: operations["list_requests_api_v1_sites__slug__visit_requests_get"];
+        put?: never;
+        /** Habersiz ziyaretçi kaydı */
+        post: operations["create_request_api_v1_sites__slug__visit_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/visit-requests/{request_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Görevli kararı (süre dolunca) */
+        post: operations["guard_decide_api_v1_sites__slug__visit_requests__request_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visit-approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kapıda bekleyen ziyaretçilerim */
+        get: operations["my_approvals_api_v1_sites__slug__resident_visit_approvals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visit-approvals/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ziyaretçiyi onayla / reddet */
+        post: operations["resident_decide_api_v1_sites__slug__resident_visit_approvals__request_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/plates/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plaka sorgula */
+        get: operations["lookup_api_v1_sites__slug__plates_lookup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/gate-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plaka giriş-çıkış kayıtları (gün; yeni üstte) */
+        get: operations["list_gate_logs_api_v1_sites__slug__gate_logs_get"];
+        put?: never;
+        /** Plaka giriş/çıkış kaydı */
+        post: operations["create_gate_log_api_v1_sites__slug__gate_logs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-violations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Otopark ihlalleri (yeni üstte) */
+        get: operations["list_violations_api_v1_sites__slug__parking_violations_get"];
+        put?: never;
+        /** Otopark ihlali kaydet */
+        post: operations["create_violation_api_v1_sites__slug__parking_violations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nöbet defteri (gün, tesis saatiyle; yeni üstte) */
+        get: operations["list_log_api_v1_sites__slug__shift_log_get"];
+        put?: never;
+        /** Deftere yaz */
+        post: operations["write_api_v1_sites__slug__shift_log_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log/{entry_id}/addenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ek not */
+        post: operations["add_addendum_api_v1_sites__slug__shift_log__entry_id__addenda_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/shift-log/{entry_id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Devri onayla (Okudum, devraldım) */
+        post: operations["acknowledge_api_v1_sites__slug__shift_log__entry_id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kontrol noktaları */
+        get: operations["list_points_api_v1_sites__slug__patrol_points_get"];
+        put?: never;
+        /** Nokta ekle */
+        post: operations["create_point_api_v1_sites__slug__patrol_points_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-points/{point_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Noktayı düzenle */
+        patch: operations["update_point_api_v1_sites__slug__patrol_points__point_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tur planları */
+        get: operations["list_plans_api_v1_sites__slug__patrol_plans_get"];
+        put?: never;
+        /** Tur planı ekle */
+        post: operations["create_plan_api_v1_sites__slug__patrol_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tur planını düzenle */
+        patch: operations["update_plan_api_v1_sites__slug__patrol_plans__plan_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Günün devriye takvimi */
+        get: operations["schedule_api_v1_sites__slug__patrol_schedule_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yürütülen turlar (gün; yeni üstte) */
+        get: operations["list_runs_api_v1_sites__slug__patrol_runs_get"];
+        put?: never;
+        /** Turu başlat */
+        post: operations["start_run_api_v1_sites__slug__patrol_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs/{run_id}/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nokta okut */
+        post: operations["scan_api_v1_sites__slug__patrol_runs__run_id__scans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/patrol-runs/{run_id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turu bitir (sapma raporu) */
+        post: operations["finish_api_v1_sites__slug__patrol_runs__run_id__finish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Park yerleri (koda göre) */
+        get: operations["list_spaces_api_v1_sites__slug__parking_spaces_get"];
+        put?: never;
+        /** Park yeri ekle */
+        post: operations["create_space_api_v1_sites__slug__parking_spaces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces/{space_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Park yerini düzenle */
+        patch: operations["update_space_api_v1_sites__slug__parking_spaces__space_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tahsis geçmişi (yeni üstte) */
+        get: operations["list_allocations_api_v1_sites__slug__parking_allocations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-spaces/{space_id}/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Park yerini bölüme tahsis et */
+        post: operations["allocate_api_v1_sites__slug__parking_spaces__space_id__allocations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/parking-allocations/{allocation_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tahsisi bitir */
+        post: operations["end_allocation_api_v1_sites__slug__parking_allocations__allocation_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/parking-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Park yerim (bugünkü tahsisler) */
+        get: operations["my_spaces_api_v1_sites__slug__resident_parking_spaces_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/blocks": {
         parameters: {
             query?: never;
@@ -5128,12 +5752,27 @@ export interface components {
              */
             at: string;
         };
+        /**
+         * DecisionSource
+         * @enum {string}
+         */
+        DecisionSource: "resident" | "guard";
         /** DecisionsIn */
         DecisionsIn: {
             /** Attendance Note */
             attendance_note?: string | null;
             /** Items */
             items?: components["schemas"]["DecisionIn"][];
+        };
+        /** DelegateNameOut */
+        DelegateNameOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** DelegationIn */
         DelegationIn: {
@@ -5427,6 +6066,28 @@ export interface components {
             created_at: string;
         };
         /**
+         * ExpectedInviteOut
+         * @description Görevlinin gördüğü: ad, bölüm, tip, saat, plaka — kod ve not yok.
+         */
+        ExpectedInviteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+            type: components["schemas"]["InviteType"];
+            /** Time From */
+            time_from: string | null;
+            /** Time To */
+            time_to: string | null;
+            /** Plate */
+            plate: string | null;
+        };
+        /**
          * ExpenseCategoryKind
          * @enum {string}
          */
@@ -5628,6 +6289,101 @@ export interface components {
          * @enum {string}
          */
         Frequency: "monthly" | "quarterly" | "yearly" | "one_time";
+        /**
+         * GateDirection
+         * @enum {string}
+         */
+        GateDirection: "in" | "out";
+        /** GateIn */
+        GateIn: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Kind
+             * @description vehicle · pedestrian · service
+             */
+            kind?: string | null;
+            /**
+             * Block Ids
+             * @description boş: tüm bloklar
+             */
+            block_ids?: string[];
+            /**
+             * Always Open
+             * @default true
+             */
+            always_open: boolean;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /**
+         * GateKind
+         * @enum {string}
+         */
+        GateKind: "vehicle" | "pedestrian" | "service";
+        /** GateLogIn */
+        GateLogIn: {
+            /** Plate */
+            plate?: string | null;
+            /**
+             * Direction
+             * @default in
+             * @enum {string}
+             */
+            direction: "in" | "out";
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** GateLogOut */
+        GateLogOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Plate
+             * @description saklama süresi dolunca boş
+             */
+            plate: string | null;
+            /** Plate Display */
+            plate_display: string;
+            result: components["schemas"]["PlateResult"];
+            /** Detail */
+            detail: string | null;
+            /** Unit Name */
+            unit_name: string | null;
+            /** Gate Id */
+            gate_id: string | null;
+            direction: components["schemas"]["GateDirection"];
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** GateOut */
+        GateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            kind: components["schemas"]["GateKind"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Always Open */
+            always_open: boolean;
+            /** Is Active */
+            is_active: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -5920,6 +6676,38 @@ export interface components {
              */
             years: number[];
         };
+        /** InviteCheckInIn */
+        InviteCheckInIn: {
+            /** Code */
+            code?: string | null;
+        };
+        /** InviteCheckInOut */
+        InviteCheckInOut: {
+            /**
+             * Visitor Id
+             * Format: uuid
+             */
+            visitor_id: string;
+            /**
+             * Invite Id
+             * Format: uuid
+             */
+            invite_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+        };
+        /**
+         * InviteStatus
+         * @enum {string}
+         */
+        InviteStatus: "active" | "used" | "cancelled";
+        /**
+         * InviteType
+         * @enum {string}
+         */
+        InviteType: "once" | "range" | "recurring";
         /** ItemTotalOut */
         ItemTotalOut: {
             /**
@@ -6171,6 +6959,45 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** LongWaitingItem */
+        LongWaitingItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Carrier */
+            carrier: string | null;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Waiting Days */
+            waiting_days: number;
+            /** Delegates */
+            delegates: string[];
+        };
+        /** LongWaitingOut */
+        LongWaitingOut: {
+            /**
+             * Days
+             * @description ayardaki uzun bekleme günü
+             */
+            days: number;
+            /**
+             * Items
+             * @description en eski üstte; en fazla 200
+             */
+            items: components["schemas"]["LongWaitingItem"][];
         };
         /** LookupOut */
         LookupOut: {
@@ -6940,6 +7767,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[GateLogOut] */
+        Page_GateLogOut_: {
+            /** Items */
+            items: components["schemas"]["GateLogOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[IncidentOut] */
         Page_IncidentOut_: {
             /** Items */
@@ -6999,6 +7837,39 @@ export interface components {
         Page_PackageOut_: {
             /** Items */
             items: components["schemas"]["PackageOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingAllocationOut] */
+        Page_ParkingAllocationOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingAllocationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingSpaceOut] */
+        Page_ParkingSpaceOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingSpaceOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ParkingViolationOut] */
+        Page_ParkingViolationOut_: {
+            /** Items */
+            items: components["schemas"]["ParkingViolationOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -7160,6 +8031,216 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ParcelDelegateIn */
+        ParcelDelegateIn: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Unit Id
+             * @description boşsa ilk bölümüm
+             */
+            unit_id?: string | null;
+        };
+        /** ParcelDelegateOut */
+        ParcelDelegateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Name */
+            name: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /**
+         * ParcelMethod
+         * @enum {string}
+         */
+        ParcelMethod: "code" | "qr" | "both";
+        /** ParkingAllocationEndIn */
+        ParkingAllocationEndIn: {
+            /** End Date */
+            end_date?: string | null;
+        };
+        /** ParkingAllocationIn */
+        ParkingAllocationIn: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * End Date
+             * @description boşsa süresiz
+             */
+            end_date?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingAllocationOut */
+        ParkingAllocationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Space Id
+             * Format: uuid
+             */
+            space_id: string;
+            /** Space Code */
+            space_code: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+            /** Is Current */
+            is_current: boolean;
+            /** Note */
+            note: string | null;
+            /** Created By */
+            created_by: string;
+            /** Ended By */
+            ended_by: string | null;
+        };
+        /** ParkingHolderOut */
+        ParkingHolderOut: {
+            /**
+             * Allocation Id
+             * Format: uuid
+             */
+            allocation_id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+        };
+        /**
+         * ParkingKind
+         * @enum {string}
+         */
+        ParkingKind: "standard" | "disabled" | "ev" | "guest";
+        /** ParkingSpaceIn */
+        ParkingSpaceIn: {
+            /** Code */
+            code?: string | null;
+            /**
+             * Kind
+             * @description standard · disabled · ev · guest
+             */
+            kind?: string | null;
+            /** Location */
+            location?: string | null;
+            /**
+             * Is Paid
+             * @default false
+             */
+            is_paid: boolean;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingSpaceOut */
+        ParkingSpaceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            kind: components["schemas"]["ParkingKind"];
+            /** Location */
+            location: string | null;
+            /** Is Paid */
+            is_paid: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Note */
+            note: string | null;
+            /** @description bugünkü tahsis (yoksa boş) */
+            current: components["schemas"]["ParkingHolderOut"] | null;
+        };
+        /** ParkingViolationIn */
+        ParkingViolationIn: {
+            /** Plate */
+            plate?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ParkingViolationOut */
+        ParkingViolationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Plate */
+            plate: string | null;
+            /** Plate Display */
+            plate_display: string;
+            /** Location */
+            location: string;
+            /** Note */
+            note: string | null;
+            result: components["schemas"]["PlateResult"];
+            /** Detail */
+            detail: string | null;
+            /** Unit Name */
+            unit_name: string | null;
+            notified: components["schemas"]["ViolationNotice"];
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** PartyAdded */
         PartyAdded: {
             party: components["schemas"]["PartyOut"];
@@ -7222,6 +8303,218 @@ export interface components {
          * @enum {string}
          */
         PartyRole: "owner" | "tenant" | "resident" | "proxy";
+        /** PatrolPlanIn */
+        PatrolPlanIn: {
+            /** Name */
+            name?: string | null;
+            /** Point Ids */
+            point_ids?: string[];
+            /**
+             * Ordered
+             * @default true
+             */
+            ordered: boolean;
+            /** Start Times */
+            start_times?: string[];
+            /** Allowed Minutes */
+            allowed_minutes?: number | null;
+            /** Assignee */
+            assignee?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** PatrolPlanOut */
+        PatrolPlanOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Point Ids
+             * @description sırayla
+             */
+            point_ids: string[];
+            /** Ordered */
+            ordered: boolean;
+            /**
+             * Start Times
+             * @description SS:DD, sıralı
+             */
+            start_times: string[];
+            /** Allowed Minutes */
+            allowed_minutes: number;
+            /** Assignee */
+            assignee: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** PatrolPointIn */
+        PatrolPointIn: {
+            /** Name */
+            name?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Area */
+            area?: string | null;
+            /**
+             * Tag
+             * @description qr · nfc · both
+             */
+            tag?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /** PatrolPointOut */
+        PatrolPointOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Location */
+            location: string | null;
+            /** Area */
+            area: string | null;
+            tag: components["schemas"]["PatrolTag"];
+            /**
+             * Code
+             * @description 6 hane; QR içeriği SY-DEVRIYE:{kod}
+             */
+            code: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** PatrolReportOut */
+        PatrolReportOut: {
+            /**
+             * Missed
+             * @description okutulmayan nokta adları
+             */
+            missed: string[];
+            /** Out Of Order */
+            out_of_order: string[];
+            /** Duration Minutes */
+            duration_minutes: number;
+            /** Overtime */
+            overtime: boolean;
+            /** Late Start Minutes */
+            late_start_minutes: number;
+            /** Total Points */
+            total_points: number;
+            /** Scanned Points */
+            scanned_points: number;
+            /** Ok */
+            ok: boolean;
+        };
+        /** PatrolRunIn */
+        PatrolRunIn: {
+            /** Plan Id */
+            plan_id?: string | null;
+            /**
+             * Slot
+             * @description SS:DD; boşsa şu andan önceki son saat
+             */
+            slot?: string | null;
+        };
+        /** PatrolRunOut */
+        PatrolRunOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan Name */
+            plan_name: string;
+            /**
+             * Point Ids
+             * @description başlatıldığı andaki plan noktaları
+             */
+            point_ids: string[];
+            /** Ordered */
+            ordered: boolean;
+            /** Allowed Minutes */
+            allowed_minutes: number;
+            /** Slot */
+            slot: string | null;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Scans */
+            scans: components["schemas"]["PatrolScanOut"][];
+            report: components["schemas"]["PatrolReportOut"];
+        };
+        /** PatrolScanIn */
+        PatrolScanIn: {
+            /**
+             * Code
+             * @description etiketteki 6 haneli kod
+             */
+            code?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** PatrolScanOut */
+        PatrolScanOut: {
+            /**
+             * Point Id
+             * Format: uuid
+             */
+            point_id: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string | null;
+            /** Out Of Order */
+            out_of_order: boolean;
+            /** By */
+            by: string;
+        };
+        /** PatrolSlotOut */
+        PatrolSlotOut: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan Name */
+            plan_name: string;
+            /** Slot */
+            slot: string;
+            status: components["schemas"]["SlotStatus"];
+            /** Run Id */
+            run_id: string | null;
+            report: components["schemas"]["PatrolReportOut"] | null;
+        };
+        /**
+         * PatrolTag
+         * @enum {string}
+         */
+        PatrolTag: "qr" | "nfc" | "both";
         /** PayIn */
         PayIn: {
             /**
@@ -7472,6 +8765,33 @@ export interface components {
             /** Allowed Modules */
             allowed_modules: string[];
         };
+        /** PlateLookupOut */
+        PlateLookupOut: {
+            /**
+             * Plate
+             * @description normalize: 34ABC123
+             */
+            plate: string;
+            /**
+             * Plate Display
+             * @description 34 ABC 123
+             */
+            plate_display: string;
+            result: components["schemas"]["PlateResult"];
+            /** Unit Name */
+            unit_name: string | null;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Valid Until */
+            valid_until: string | null;
+            /** Detail */
+            detail: string | null;
+        };
+        /**
+         * PlateResult
+         * @enum {string}
+         */
+        PlateResult: "registered" | "guest" | "unknown";
         /**
          * PollAudience
          * @enum {string}
@@ -8611,6 +9931,69 @@ export interface components {
          * @enum {string}
          */
         ScopeKind: "whole_site" | "blocks" | "unit_types" | "usage";
+        /** SecuritySettingsIn */
+        SecuritySettingsIn: {
+            /** Unannounced Method */
+            unannounced_method?: string | null;
+            /** Approval Timeout Seconds */
+            approval_timeout_seconds?: number | null;
+            /** Gate Methods */
+            gate_methods?: {
+                [key: string]: string;
+            };
+            /** Parcel Method */
+            parcel_method?: string | null;
+            visitor_fields?: components["schemas"]["VisitorFieldsSchema"];
+            /** Retention Months */
+            retention_months?: number | null;
+            /**
+             * Auto Anonymize
+             * @default false
+             */
+            auto_anonymize: boolean;
+            /** Parcel Long Wait Days */
+            parcel_long_wait_days?: number | null;
+            /** Guest Parking Capacity */
+            guest_parking_capacity?: number | null;
+        };
+        /** SecuritySettingsOut */
+        SecuritySettingsOut: {
+            unannounced_method: components["schemas"]["UnannouncedMethod"];
+            /** Approval Timeout Seconds */
+            approval_timeout_seconds: number;
+            /**
+             * Gate Methods
+             * @description kapı kimliği → yöntem
+             */
+            gate_methods: {
+                [key: string]: components["schemas"]["UnannouncedMethod"];
+            };
+            parcel_method: components["schemas"]["ParcelMethod"];
+            visitor_fields: components["schemas"]["VisitorFieldsSchema"];
+            /**
+             * Retention Months
+             * @description ziyaretçi ve plaka kayıtları (K8; en fazla 24)
+             */
+            retention_months: number;
+            /**
+             * Auto Anonymize
+             * @description süre dolanları gece anonimleştir — hukuk onayına kadar varsayılan kapalı
+             */
+            auto_anonymize: boolean;
+            /** Parcel Long Wait Days */
+            parcel_long_wait_days: number;
+            /** Guest Parking Capacity */
+            guest_parking_capacity: number;
+            /**
+             * Version
+             * @description 0: hiç kaydedilmedi (varsayılanlar)
+             */
+            version: number;
+            /** Updated At */
+            updated_at: string | null;
+            /** Updated By */
+            updated_by: string | null;
+        };
         /** SelectionIn */
         SelectionIn: {
             /** Row Number */
@@ -8754,6 +10137,71 @@ export interface components {
             /** To Week */
             to_week?: string | null;
         };
+        /** ShiftLogAddendumIn */
+        ShiftLogAddendumIn: {
+            /** Text */
+            text?: string | null;
+        };
+        /** ShiftLogAddendumOut */
+        ShiftLogAddendumOut: {
+            /** Text */
+            text: string;
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ShiftLogEntryIn */
+        ShiftLogEntryIn: {
+            /**
+             * Kind
+             * @description note · event · handover
+             */
+            kind?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** ShiftLogEntryOut */
+        ShiftLogEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["ShiftLogKind"];
+            /** Text */
+            text: string;
+            /** Gate Id */
+            gate_id: string | null;
+            /** By */
+            by: string;
+            /**
+             * By Me
+             * @description kayıt bu kullanıcının mı (kendi devrini onaylayamaz)
+             */
+            by_me: boolean;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Addenda */
+            addenda: components["schemas"]["ShiftLogAddendumOut"][];
+            /** Acknowledged By */
+            acknowledged_by: string | null;
+            /** Acknowledged At */
+            acknowledged_at: string | null;
+        };
+        /**
+         * ShiftLogKind
+         * @enum {string}
+         */
+        ShiftLogKind: "note" | "event" | "handover";
         /** ShiftPlanLeaveOut */
         ShiftPlanLeaveOut: {
             /**
@@ -9194,6 +10642,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * SlotStatus
+         * @enum {string}
+         */
+        SlotStatus: "upcoming" | "due" | "not_started" | "running" | "overdue" | "done" | "done_with_deviation";
         /** StaffIn */
         StaffIn: {
             /** Full Name */
@@ -9700,6 +11153,11 @@ export interface components {
             outgoing: components["schemas"]["MovementOut"];
             incoming: components["schemas"]["MovementOut"];
         };
+        /**
+         * UnannouncedMethod
+         * @enum {string}
+         */
+        UnannouncedMethod: "info" | "approval";
         /** UnitCreate */
         UnitCreate: {
             /** Number */
@@ -9903,6 +11361,113 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * ViolationNotice
+         * @enum {string}
+         */
+        ViolationNotice: "resident" | "management";
+        /** VisitGuardDecisionIn */
+        VisitGuardDecisionIn: {
+            /** Decision */
+            decision?: ("allow" | "deny") | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** VisitRequestIn */
+        VisitRequestIn: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Full Name */
+            full_name?: string | null;
+            /** @default guest */
+            kind: components["schemas"]["VisitorKind"];
+            /** Plate */
+            plate?: string | null;
+            /** Gate Id */
+            gate_id?: string | null;
+        };
+        /** VisitRequestOut */
+        VisitRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Full Name */
+            full_name: string;
+            kind: components["schemas"]["VisitorKind"];
+            /** Plate */
+            plate: string | null;
+            /** Gate Id */
+            gate_id: string | null;
+            method: components["schemas"]["UnannouncedMethod"];
+            status: components["schemas"]["VisitRequestStatus"];
+            /** Decided By */
+            decided_by: string | null;
+            decision_source: components["schemas"]["DecisionSource"] | null;
+            /** Reason */
+            reason: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Timed Out
+             * @description sakin süresi doldu; görevli karar verebilir
+             */
+            timed_out: boolean;
+            /** Seconds Left */
+            seconds_left: number;
+            /** Visitor Id */
+            visitor_id: string | null;
+        };
+        /**
+         * VisitRequestStatus
+         * @enum {string}
+         */
+        VisitRequestStatus: "awaiting" | "allowed" | "denied";
+        /** VisitResidentDecisionIn */
+        VisitResidentDecisionIn: {
+            /** Decision */
+            decision?: ("allow" | "deny") | null;
+        };
+        /** VisitorFieldsSchema */
+        VisitorFieldsSchema: {
+            /**
+             * Plate
+             * @default true
+             */
+            plate: boolean;
+            /**
+             * Phone
+             * @default false
+             */
+            phone: boolean;
+            /**
+             * Id Seen
+             * @description yalnız işaret; kimlik no tutulmaz
+             * @default false
+             */
+            id_seen: boolean;
+        };
         /** VisitorIn */
         VisitorIn: {
             /**
@@ -9933,6 +11498,104 @@ export interface components {
              * @default true
              */
             enter_now: boolean;
+        };
+        /** VisitorInviteIn */
+        VisitorInviteIn: {
+            /**
+             * Unit Id
+             * @description boşsa ilk bölümüm
+             */
+            unit_id?: string | null;
+            /** Visitor Name */
+            visitor_name?: string | null;
+            /**
+             * Type
+             * @description once · range · recurring
+             */
+            type?: string | null;
+            /** Date From */
+            date_from?: string | null;
+            /**
+             * Date To
+             * @description tek kullanımlıkta yok sayılır
+             */
+            date_to?: string | null;
+            /** Weekdays */
+            weekdays?: number[];
+            /** Time From */
+            time_from?: string | null;
+            /** Time To */
+            time_to?: string | null;
+            /** Plate */
+            plate?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** VisitorInviteOut */
+        VisitorInviteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Visitor Name */
+            visitor_name: string;
+            type: components["schemas"]["InviteType"];
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Weekdays
+             * @description 0 = pazartesi (yalnız süreli kalıcı)
+             */
+            weekdays: number[];
+            /**
+             * Time From
+             * @description SS:DD
+             */
+            time_from: string | null;
+            /** Time To */
+            time_to: string | null;
+            /**
+             * Plate
+             * @description görüntü biçimi: 34 ABC 123
+             */
+            plate: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Code
+             * @description 6 haneli kod — YALNIZ oluşturma ve yeni kod yanıtında; saklanmaz
+             */
+            code: string | null;
+            status: components["schemas"]["InviteStatus"];
+            /** Valid Now */
+            valid_now: boolean;
+            /** Expired */
+            expired: boolean;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Used At */
+            used_at: string | null;
         };
         /**
          * VisitorKind
@@ -10134,6 +11797,18 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[GateLogOut] */
+        Written_GateLogOut_: {
+            data: components["schemas"]["GateLogOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[GateOut] */
+        Written_GateOut_: {
+            data: components["schemas"]["GateOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ImportResultOut] */
         Written_ImportResultOut_: {
             data: components["schemas"]["ImportResultOut"];
@@ -10143,6 +11818,12 @@ export interface components {
         /** Written[IncidentOut] */
         Written_IncidentOut_: {
             data: components["schemas"]["IncidentOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[InviteCheckInOut] */
+        Written_InviteCheckInOut_: {
+            data: components["schemas"]["InviteCheckInOut"];
             /** Message */
             message: string;
         };
@@ -10219,6 +11900,30 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ParcelDelegateOut] */
+        Written_ParcelDelegateOut_: {
+            data: components["schemas"]["ParcelDelegateOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingAllocationOut] */
+        Written_ParkingAllocationOut_: {
+            data: components["schemas"]["ParkingAllocationOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingSpaceOut] */
+        Written_ParkingSpaceOut_: {
+            data: components["schemas"]["ParkingSpaceOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ParkingViolationOut] */
+        Written_ParkingViolationOut_: {
+            data: components["schemas"]["ParkingViolationOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[PartyAdded] */
         Written_PartyAdded_: {
             data: components["schemas"]["PartyAdded"];
@@ -10228,6 +11933,24 @@ export interface components {
         /** Written[PartyOut] */
         Written_PartyOut_: {
             data: components["schemas"]["PartyOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolPlanOut] */
+        Written_PatrolPlanOut_: {
+            data: components["schemas"]["PatrolPlanOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolPointOut] */
+        Written_PatrolPointOut_: {
+            data: components["schemas"]["PatrolPointOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PatrolRunOut] */
+        Written_PatrolRunOut_: {
+            data: components["schemas"]["PatrolRunOut"];
             /** Message */
             message: string;
         };
@@ -10309,6 +12032,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[SecuritySettingsOut] */
+        Written_SecuritySettingsOut_: {
+            data: components["schemas"]["SecuritySettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ShiftAssignedOut] */
         Written_ShiftAssignedOut_: {
             data: components["schemas"]["ShiftAssignedOut"];
@@ -10318,6 +12047,12 @@ export interface components {
         /** Written[ShiftCopiedOut] */
         Written_ShiftCopiedOut_: {
             data: components["schemas"]["ShiftCopiedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ShiftLogEntryOut] */
+        Written_ShiftLogEntryOut_: {
+            data: components["schemas"]["ShiftLogEntryOut"];
             /** Message */
             message: string;
         };
@@ -10372,6 +12107,18 @@ export interface components {
         /** Written[UnitDetail] */
         Written_UnitDetail_: {
             data: components["schemas"]["UnitDetail"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VisitRequestOut] */
+        Written_VisitRequestOut_: {
+            data: components["schemas"]["VisitRequestOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VisitorInviteOut] */
+        Written_VisitorInviteOut_: {
+            data: components["schemas"]["VisitorInviteOut"];
             /** Message */
             message: string;
         };
@@ -11722,6 +13469,1637 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_LostItemOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gates_api_v1_sites__slug__gates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gate_api_v1_sites__slug__gates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_gate_api_v1_sites__slug__gates__gate_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gate_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__settings_security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecuritySettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__settings_security_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecuritySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_SecuritySettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_delegates_api_v1_sites__slug__resident_parcel_delegates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParcelDelegateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_delegate_api_v1_sites__slug__resident_parcel_delegates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParcelDelegateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParcelDelegateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_delegate_api_v1_sites__slug__resident_parcel_delegates__delegate_id__remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delegate_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParcelDelegateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unit_delegates_api_v1_sites__slug__units__unit_id__parcel_delegates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unit_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DelegateNameOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    long_waiting_api_v1_sites__slug__packages_long_waiting_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LongWaitingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_invites_api_v1_sites__slug__resident_visitor_invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitorInviteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invite_api_v1_sites__slug__resident_visitor_invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitorInviteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_invite_api_v1_sites__slug__resident_visitor_invites__invite_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reissue_code_api_v1_sites__slug__resident_visitor_invites__invite_id__new_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    expected_api_v1_sites__slug__visitor_invites_expected_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectedInviteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_api_v1_sites__slug__visitor_invites_check_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCheckInIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_InviteCheckInOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_requests_api_v1_sites__slug__visit_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["VisitRequestStatus"] | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitRequestOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_request_api_v1_sites__slug__visit_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guard_decide_api_v1_sites__slug__visit_requests__request_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitGuardDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_approvals_api_v1_sites__slug__resident_visit_approvals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VisitRequestOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_decide_api_v1_sites__slug__resident_visit_approvals__request_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VisitResidentDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VisitRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_api_v1_sites__slug__plates_lookup_get: {
+        parameters: {
+            query: {
+                /** @description büyük/küçük harf ve boşluk duyarsız */
+                plate: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlateLookupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gate_logs_api_v1_sites__slug__gate_logs_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün */
+                date?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_GateLogOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gate_log_api_v1_sites__slug__gate_logs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateLogIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_GateLogOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_violations_api_v1_sites__slug__parking_violations_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingViolationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_violation_api_v1_sites__slug__parking_violations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingViolationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingViolationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_log_api_v1_sites__slug__shift_log_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftLogEntryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_api_v1_sites__slug__shift_log_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftLogEntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_addendum_api_v1_sites__slug__shift_log__entry_id__addenda_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftLogAddendumIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_api_v1_sites__slug__shift_log__entry_id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ShiftLogEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_points_api_v1_sites__slug__patrol_points_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPointOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_point_api_v1_sites__slug__patrol_points_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPointIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPointOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_point_api_v1_sites__slug__patrol_points__point_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                point_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPointIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPointOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plans_api_v1_sites__slug__patrol_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPlanOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_api_v1_sites__slug__patrol_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPlanOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_plan_api_v1_sites__slug__patrol_plans__plan_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolPlanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolPlanOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_api_v1_sites__slug__patrol_schedule_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün (tesis saati) */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolSlotOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_runs_api_v1_sites__slug__patrol_runs_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bugün (tesis saati) */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolRunOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_run_api_v1_sites__slug__patrol_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolRunIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_api_v1_sites__slug__patrol_runs__run_id__scans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatrolScanIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finish_api_v1_sites__slug__patrol_runs__run_id__finish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PatrolRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_spaces_api_v1_sites__slug__parking_spaces_get: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["ParkingKind"] | null;
+                /** @description kod araması */
+                q?: string | null;
+                /** @description bugün bu bölüme tahsisliler */
+                unit_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_space_api_v1_sites__slug__parking_spaces_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSpaceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_space_api_v1_sites__slug__parking_spaces__space_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSpaceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingSpaceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_allocations_api_v1_sites__slug__parking_allocations_get: {
+        parameters: {
+            query?: {
+                space_id?: string | null;
+                unit_id?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    allocate_api_v1_sites__slug__parking_spaces__space_id__allocations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingAllocationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_allocation_api_v1_sites__slug__parking_allocations__allocation_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                allocation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingAllocationEndIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ParkingAllocationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_spaces_api_v1_sites__slug__resident_parking_spaces_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSpaceOut"][];
                 };
             };
             /** @description Validation Error */

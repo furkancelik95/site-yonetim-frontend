@@ -2,27 +2,25 @@ import { useState, type FormEvent } from "react";
 import { BookOpen, Car, CheckCircle2, KeyRound, LogIn, LogOut, PackageX, Route, ShieldAlert, UserRoundPlus } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Loading, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso } from "../../lib/format";
 import { plateInput } from "../../lib/input";
 import { inviteType, logKind, patrolSlotStatus, patrolSlotTone, plateResult, plateResultTone, unannouncedMethod, visitRequestStatus, visitorKind } from "../../lib/labels";
-import { useMe } from "../../auth/AuthContext";
 
-/** Servis isteği 40–46'daki şekiller (görevli tarafı). */
-interface Settings { unannounced_method: "info" | "approval"; approval_timeout_seconds: number; gate_methods: Record<string, string>; parcel_long_wait_days: number }
-interface Gate { id: string; name: string; kind: string; is_active: boolean }
-interface Expected { id: string; unit_name: string; visitor_name: string; type: string; time_from: string | null; time_to: string | null; plate: string | null }
-interface VisitReq { id: string; unit_name: string; full_name: string; kind: string; plate: string | null; status: string; timed_out: boolean; seconds_left: number; decided_by: string | null; decision_source: string | null; reason: string | null; created_at: string }
-interface Lookup { plate: string; plate_display: string; result: "registered" | "guest" | "unknown"; detail: string | null }
-interface GateLog { id: string; plate_display: string; result: string; detail: string | null; direction: "in" | "out"; by: string; at: string }
-interface LongWait { days: number; items: { id: string; unit_name: string; carrier: string | null; received_at: string; waiting_days: number; delegates: string[] }[] }
-interface LogEntry { id: string; kind: "note" | "event" | "handover"; text: string; by: string; at: string; addenda: { text: string; by: string; at: string }[]; acknowledged_by: string | null; acknowledged_at: string | null }
-interface Plan { id: string; name: string; point_ids: string[]; ordered: boolean; start_times: string[]; allowed_minutes: number; is_active: boolean }
-interface Point { id: string; name: string; location: string | null; code: string }
-interface Report { missed: string[]; out_of_order: string[]; duration_minutes: number; overtime: boolean; total_points: number; scanned_points: number; ok: boolean }
-interface Run { id: string; plan_id: string; plan_name: string; started_at: string; finished_at: string | null; scans: { point_id: string; at: string; out_of_order: boolean }[]; report: Report }
-interface Slot { plan_id: string; plan_name: string; slot: string; status: string; run_id: string | null; report: Report | null }
+type Settings = Schemas["SecuritySettingsOut"];
+type Gate = Schemas["GateOut"];
+type Expected = Schemas["ExpectedInviteOut"];
+type VisitReq = Schemas["VisitRequestOut"];
+type Lookup = Schemas["PlateLookupOut"];
+type GateLog = Schemas["GateLogOut"];
+type LongWait = Schemas["LongWaitingOut"];
+type LogEntry = Schemas["ShiftLogEntryOut"];
+type Plan = Schemas["PatrolPlanOut"];
+type Point = Schemas["PatrolPointOut"];
+type Run = Schemas["PatrolRunOut"];
+type Slot = Schemas["PatrolSlotOut"];
 
 /**
  * Kapı ekranı (GUV-01): görevlinin günlük işleri tek ekranda — davetli ziyaretçi koduyla giriş, habersiz ziyaretçi
@@ -55,7 +53,7 @@ export function GateDesk() {
 function InviteCheckIn() {
   const exp = useSiteGet<Expected[]>("/visitor-invites/expected");
   const [code, setCode] = useState("");
-  const m = useSiteMutation<{ code: string }, { visitor_name: string }>("POST", "/visitor-invites/check-in", { onSuccess: () => setCode("") });
+  const m = useSiteMutation<{ code: string }, Schemas["InviteCheckInOut"]>("POST", "/visitor-invites/check-in", { onSuccess: () => setCode("") });
   return (
     <div className="card">
       <div className="card__head"><span className="card__icon card__icon--ok"><KeyRound aria-hidden="true" /></span><span className="card__title">Davetli ziyaretçi</span><span className="card__meta ml-auto">{exp.data?.length ?? 0} beklenen</span></div>
@@ -77,8 +75,8 @@ function Unannounced({ gate, method }: { gate: string; method: string | null }) 
   const reqs = useSiteGet<VisitReq[]>("/visit-requests", undefined, { refetchInterval: 5000 });
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [f, setF] = useState({ full_name: "", kind: "guest", plate: "" });
-  const m = useSiteMutation<Record<string, unknown>, unknown>("POST", "/visit-requests", { onSuccess: () => { setUnit(null); setF({ full_name: "", kind: "guest", plate: "" }); } });
-  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ unit_id: unit?.id, unit_name: unit?.name, full_name: f.full_name.trim(), kind: f.kind, plate: f.plate.replace(/\s/g, "") || null, gate_id: gate || null }); }
+  const m = useSiteMutation<Record<string, unknown>, VisitReq>("POST", "/visit-requests", { onSuccess: () => { setUnit(null); setF({ full_name: "", kind: "guest", plate: "" }); } });
+  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ unit_id: unit?.id, full_name: f.full_name.trim(), kind: f.kind, plate: f.plate.replace(/\s/g, "") || null, gate_id: gate || null }); }
   const awaiting = (reqs.data ?? []).filter((r) => r.status === "awaiting");
   return (
     <div className="card">
@@ -104,7 +102,7 @@ function Unannounced({ gate, method }: { gate: string; method: string | null }) 
 function RequestRow({ r }: { r: VisitReq }) {
   const [reason, setReason] = useState("");
   const [decision, setDecision] = useState<"allow" | "deny">("allow");
-  const m = useSiteMutation<{ decision: string; reason: string }, unknown>("POST", `/visit-requests/${r.id}/decide`);
+  const m = useSiteMutation<{ decision: string; reason: string }, VisitReq>("POST", `/visit-requests/${r.id}/decide`);
   return (
     <div className="row row--between" style={{ gap: "var(--s-2)", borderBottom: "1px solid var(--line)", paddingBottom: "var(--s-2)" }}>
       <div>
@@ -132,9 +130,9 @@ function PlateDesk({ gate }: { gate: string }) {
   const [plate, setPlate] = useState("");
   const [res, setRes] = useState<Lookup | null>(null);
   const [lookErr, setLookErr] = useState<string>();
-  const logs = useSiteGet<GateLog[]>("/gate-logs");
+  const logs = useSiteGet<Page<GateLog>>("/gate-logs", { page_size: 8 });
   const log = useSiteMutation<{ plate: string; direction: string; gate_id: string | null }, GateLog>("POST", "/gate-logs", { onSuccess: () => { setPlate(""); setRes(null); } });
-  const viol = useSiteMutation<{ plate: string; location: string; note: string }, unknown>("POST", "/parking-violations");
+  const viol = useSiteMutation<{ plate: string; location: string; note: string }, Schemas["ParkingViolationOut"]>("POST", "/parking-violations");
   const [loc, setLoc] = useState("");
   const [note, setNote] = useState("");
   const look = useSiteGet<Lookup>("/plates/lookup", { plate: plate.replace(/\s/g, "") }, { enabled: false });
@@ -146,7 +144,7 @@ function PlateDesk({ gate }: { gate: string }) {
   }
   return (
     <div className="card">
-      <div className="card__head"><span className="card__icon card__icon--accent"><Car aria-hidden="true" /></span><span className="card__title">Plaka</span><span className="card__meta ml-auto">{logs.data?.length ?? 0} kayıt bugün</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Car aria-hidden="true" /></span><span className="card__title">Plaka</span><span className="card__meta ml-auto">{logs.data?.total ?? 0} kayıt bugün</span></div>
       <form className="card__body stack" style={{ gap: "var(--s-3)", borderBottom: "1px solid var(--line)" }} noValidate onSubmit={search}>
         <Field label="Plaka" error={lookErr}>{(p) => <input {...p} className="field__input mono" style={{ fontSize: "1.25rem" }} autoComplete="off" placeholder="34 ABC 123" value={plate} onChange={(e) => { setPlate(plateInput(e.target.value)); setRes(null); }} />}</Field>
         <div><SubmitButton busy={look.isFetching} disabled={plate.replace(/\s/g, "").length < 4} className="btn">Sorgula</SubmitButton></div>
@@ -167,8 +165,8 @@ function PlateDesk({ gate }: { gate: string }) {
         )}
       </form>
       <div className="card__body">
-        {!logs.data || logs.data.length === 0 ? <p className="small muted mb-0">Bugün plaka kaydı yok.</p> : (
-          <ul className="stack" style={{ gap: "var(--s-1)", listStyle: "none", margin: 0, padding: 0 }}>{logs.data.slice(0, 8).map((l) => <li key={l.id} className="small">{new Date(l.at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} · <span className="mono">{l.plate_display}</span> {l.direction === "in" ? "giriş" : "çıkış"} · <Badge tone={plateResultTone(l.result)}>{plateResult(l.result)}</Badge></li>)}</ul>
+        {!logs.data || logs.data.items.length === 0 ? <p className="small muted mb-0">Bugün plaka kaydı yok.</p> : (
+          <ul className="stack" style={{ gap: "var(--s-1)", listStyle: "none", margin: 0, padding: 0 }}>{logs.data.items.map((l) => <li key={l.id} className="small">{new Date(l.at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} · <span className="mono">{l.plate_display}</span> {l.direction === "in" ? "giriş" : "çıkış"} · <Badge tone={plateResultTone(l.result)}>{plateResult(l.result)}</Badge></li>)}</ul>
         )}
       </div>
     </div>
@@ -191,7 +189,6 @@ function LongWaiting() {
 
 /** Nöbet defteri (GUV-06): değiştirilemez kayıtlar, ek not, vardiya devri ve sonraki görevlinin onayı. */
 export function ShiftLogCard() {
-  const me = useMe();
   const q = useSiteGet<LogEntry[]>("/shift-log");
   const [f, setF] = useState({ kind: "note", text: "" });
   const m = useSiteMutation<{ kind: string; text: string }, LogEntry>("POST", "/shift-log", { onSuccess: () => setF((x) => ({ ...x, text: "" })) });
@@ -206,14 +203,14 @@ export function ShiftLogCard() {
       </form>
       <div className="card__body">
         {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Defter boş" /> : (
-          <ol className="timeline">{q.data.map((e) => <LogItem key={e.id} e={e} me={me.full_name} />)}</ol>
+          <ol className="timeline">{q.data.map((e) => <LogItem key={e.id} e={e} />)}</ol>
         )}
       </div>
     </div>
   );
 }
 
-function LogItem({ e, me }: { e: LogEntry; me: string }) {
+function LogItem({ e }: { e: LogEntry }) {
   const [text, setText] = useState("");
   const add = useSiteMutation<{ text: string }, LogEntry>("POST", `/shift-log/${e.id}/addenda`);
   const ack = useSiteMutation<Record<string, never>, LogEntry>("POST", `/shift-log/${e.id}/acknowledge`);
@@ -224,7 +221,7 @@ function LogItem({ e, me }: { e: LogEntry; me: string }) {
       <div className="small" style={{ whiteSpace: "pre-wrap" }}>{e.text}</div>
       {e.addenda.map((a, i) => <div key={i} className="small" style={{ borderLeft: "2px solid var(--line)", paddingLeft: "var(--s-2)", marginTop: 4 }}>Ek not: {a.text} <span className="xs muted">· {a.by}, {formatDateTime(a.at)}</span></div>)}
       <div className="row" style={{ gap: "var(--s-2)", marginTop: 4 }}>
-        {e.kind === "handover" && !e.acknowledged_by && e.by !== me && <button className="btn btn--sm btn--primary" type="button" disabled={ack.isPending} onClick={() => ack.mutate({})}><CheckCircle2 aria-hidden="true" /> Okudum, devraldım</button>}
+        {e.kind === "handover" && !e.acknowledged_by && !e.by_me && <button className="btn btn--sm btn--primary" type="button" disabled={ack.isPending} onClick={() => ack.mutate({})}><CheckCircle2 aria-hidden="true" /> Okudum, devraldım</button>}
         <ConfirmButton className="btn btn--ghost btn--sm" title="Ek not" confirmLabel="Ekle" body={<div className="field"><label className="field__label" htmlFor={`ad-${e.id}`}>Ek not</label><input id={`ad-${e.id}`} className="field__input" value={text} onChange={(x) => setText(x.target.value)} /></div>} onConfirm={() => add.mutateAsync({ text })}>Ek not</ConfirmButton>
       </div>
     </li>
@@ -247,7 +244,7 @@ export function PatrolRunner() {
     <div className="grid grid--2" style={{ alignItems: "start" }}>
       <div className="card">
         <div className="card__head"><span className="card__icon card__icon--accent"><Route aria-hidden="true" /></span><span className="card__title">{open ? `${open.plan_name} sürüyor` : "Devriye başlat"}</span></div>
-        {open ? <RunView run={open} plan={active.find((p) => p.id === open.plan_id)} points={points.data ?? []} /> : (
+        {open ? <RunView run={open} points={points.data ?? []} /> : (
           <form className="card__body stack" style={{ gap: "var(--s-3)" }} noValidate onSubmit={(e) => { e.preventDefault(); start.mutate({ plan_id: planId || active[0]!.id }); }}>
             <FormError error={start.error} />
             <Field label="Tur">{(p) => <select {...p} className="field__input" value={planId || active[0]!.id} onChange={(e) => setPlanId(e.target.value)}>{active.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.point_ids.length} nokta · {p.allowed_minutes} dk</option>)}</select>}</Field>
@@ -268,7 +265,7 @@ export function PatrolRunner() {
   );
 }
 
-function RunView({ run, plan, points }: { run: Run; plan: Plan | undefined; points: Point[] }) {
+function RunView({ run, points }: { run: Run; points: Point[] }) {
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const scan = useSiteMutation<{ code: string; note: string }, Run>("POST", `/patrol-runs/${run.id}/scans`, { onSuccess: () => { setCode(""); setNote(""); } });
@@ -277,18 +274,18 @@ function RunView({ run, plan, points }: { run: Run; plan: Plan | undefined; poin
   const done = new Set(run.scans.map((s) => s.point_id));
   return (
     <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
-      <div className="small muted">Başladı {formatDateTime(run.started_at)} · {run.scans.length}/{plan?.point_ids.length ?? 0} nokta{plan?.ordered && " · sıralı tur"}</div>
-      <ol className="patrol-points">{(plan?.point_ids ?? []).map((id) => { const p = byId.get(id); const s = run.scans.find((x) => x.point_id === id); return <li key={id} className={done.has(id) ? "is-done" : undefined}>{done.has(id) ? <CheckCircle2 aria-hidden="true" /> : <span className="patrol-points__dot" aria-hidden="true" />}<span>{p?.name ?? "?"}{p?.location && <span className="muted"> · {p.location}</span>}{s?.out_of_order && <> <Badge tone="warn">sıra dışı</Badge></>}</span><span className="visually-hidden">{done.has(id) ? "okutuldu" : "bekliyor"}</span></li>; })}</ol>
+      <div className="small muted">Başladı {formatDateTime(run.started_at)} · {run.scans.length}/{run.point_ids.length} nokta{run.ordered && " · sıralı tur"}</div>
+      <ol className="patrol-points">{run.point_ids.map((id) => { const p = byId.get(id); const s = run.scans.find((x) => x.point_id === id); return <li key={id} className={done.has(id) ? "is-done" : undefined}>{done.has(id) ? <CheckCircle2 aria-hidden="true" /> : <span className="patrol-points__dot" aria-hidden="true" />}<span>{p?.name ?? "?"}{p?.location && <span className="muted"> · {p.location}</span>}{s?.out_of_order && <> <Badge tone="warn">sıra dışı</Badge></>}</span><span className="visually-hidden">{done.has(id) ? "okutuldu" : "bekliyor"}</span></li>; })}</ol>
       <form className="stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); scan.mutate({ code, note }); }}>
         <FormError error={scan.error} />
         <Field label="Nokta kodu" hint="Etiketteki 6 haneli kod" error={fieldError(scan.error, "code")}>{(p) => <input {...p} className="field__input mono" style={{ fontSize: "1.25rem", letterSpacing: ".2em" }} inputMode="numeric" autoComplete="off" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />}</Field>
         <Field label="Not" hint="İsteğe bağlı; sorun varsa Olaylar'dan olay kaydı açın">{(p) => <input {...p} className="field__input" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
         <div className="row" style={{ gap: "var(--s-2)" }}>
           <SubmitButton busy={scan.isPending} disabled={code.length !== 6}>Okut</SubmitButton>
-          <ConfirmButton className="btn btn--ghost" title="Turu bitir" confirmLabel="Bitir" body={done.size < (plan?.point_ids.length ?? 0) ? `${(plan?.point_ids.length ?? 0) - done.size} nokta okutulmadı; sapma raporuna girer ve yöneticiye özet gider.` : "Tüm noktalar okutuldu."} onConfirm={() => finish.mutateAsync({})}>Turu bitir</ConfirmButton>
+          <ConfirmButton className="btn btn--ghost" title="Turu bitir" confirmLabel="Bitir" body={done.size < run.point_ids.length ? `${run.point_ids.length - done.size} nokta okutulmadı; sapma raporuna girer ve yöneticiye özet gider.` : "Tüm noktalar okutuldu."} onConfirm={() => finish.mutateAsync({})}>Turu bitir</ConfirmButton>
         </div>
       </form>
-      {run.report.overtime && <Alert tone="warn">İzin verilen süre ({plan?.allowed_minutes} dk) aşıldı.</Alert>}
+      {run.report.overtime && <Alert tone="warn">İzin verilen süre ({run.allowed_minutes} dk) aşıldı.</Alert>}
     </div>
   );
 }
