@@ -60,3 +60,13 @@ Bekleme: `{ id, area_id, area_name, date, start, end, unit_id, unit_name, person
 
 ## Yetki
 Personel: sakin adına, onay, iptal `requests.assign`. Sakin: oturum sahibi, kendi bölümü.
+
+## Backend'de (27.10.2026) — sözleşmeden farklar
+- `GET …/reservations` ve `GET …/waitlist` sayfalı (`{items, total, page, page_size}`; ekran `page_size=200`).
+- Oluşturma yanıtı `{status: approved|pending|approval_pending|waitlisted, reservation, waitlist, position, approval_request_id}`;
+  "Rezervasyon" onay kuralı tanımlıysa **202** ve karar Onaylar ekranından (onay bekleyen listesinde "Onay sürecinde").
+- Personel çıktısında giriş kodu (`code`) yok; yalnız sakinin kendi listesinde.
+- Kullanım raporunda `occupancy` metin (`"12.5"`), para gibi oranlar da metin döner.
+- Madde 9 yerine PM kararı K11: site ayarı (varsayılan kapalı) `GET/PUT …/reservation-settings`; açıkken eşik aşan bölüme 409 `debt_restricted`;
+  sakin saat durumunda `debt_block` gerekçesi.
+- Ücret cari deftere `reservation` kaynağıyla yazılır (dönem dışı ücret servisi gelince oraya taşınacak).

@@ -2894,6 +2894,315 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/reservable-areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rezerve edilebilir alanlar ve kuralları */
+        get: operations["list_areas_api_v1_sites__slug__reservable_areas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservable-areas/{area_id}/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Alan kurallarını kaydet */
+        put: operations["put_rules_api_v1_sites__slug__reservable_areas__area_id__rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rezervasyon ayarı (K11 borçlu bölüm kısıtı) */
+        get: operations["get_settings_api_v1_sites__slug__reservation_settings_get"];
+        /** Rezervasyon ayarını kaydet (K11) */
+        put: operations["put_settings_api_v1_sites__slug__reservation_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservable-areas/{area_id}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Günün saat durumu (personel) */
+        get: operations["staff_availability_api_v1_sites__slug__reservable_areas__area_id__availability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rezervasyonlar (günlük liste, onay bekleyen) */
+        get: operations["list_reservations_api_v1_sites__slug__reservations_get"];
+        put?: never;
+        /** Sakin adına rezervasyon (onay kuralı varsa 202) */
+        post: operations["create_for_resident_api_v1_sites__slug__reservations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rezervasyonu onayla */
+        post: operations["approve_reservation_api_v1_sites__slug__reservations__reservation_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rezervasyonu reddet (gerekçeli) */
+        post: operations["reject_reservation_api_v1_sites__slug__reservations__reservation_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rezervasyonu iptal et (yönetim) */
+        post: operations["cancel_reservation_api_v1_sites__slug__reservations__reservation_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Listeden giriş (geldi) */
+        post: operations["check_in_api_v1_sites__slug__reservations__reservation_id__check_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/check-in-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kodla doğrula ve giriş kaydet */
+        post: operations["check_in_code_api_v1_sites__slug__reservations_check_in_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bekleme listesi (sırada ve teklif gitmiş) */
+        get: operations["list_waitlist_api_v1_sites__slug__waitlist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reservations/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanım raporu (son 30 gün, alan bazında) */
+        get: operations["usage_report_api_v1_sites__slug__reservations_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/reservable-areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rezervasyona açık alanlar (sakin) */
+        get: operations["resident_areas_api_v1_sites__slug__resident_reservable_areas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/reservable-areas/{area_id}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Günün saat durumu (sakin) */
+        get: operations["resident_availability_api_v1_sites__slug__resident_reservable_areas__area_id__availability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rezervasyonlarım ve bekleme listem */
+        get: operations["my_reservations_api_v1_sites__slug__resident_reservations_get"];
+        put?: never;
+        /** Rezervasyon yap / bekleme listesine gir (onay kuralı varsa 202) */
+        post: operations["resident_create_api_v1_sites__slug__resident_reservations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/reservations/{reservation_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rezervasyonumu iptal et */
+        post: operations["resident_cancel_api_v1_sites__slug__resident_reservations__reservation_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/waitlist/{entry_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleme listesi teklifini kabul et */
+        post: operations["resident_accept_api_v1_sites__slug__resident_waitlist__entry_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/waitlist/{entry_id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleme listesinden çık */
+        post: operations["resident_leave_api_v1_sites__slug__resident_waitlist__entry_id__leave_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/announcements": {
         parameters: {
             query?: never;
@@ -5328,6 +5637,11 @@ export interface components {
             /** Comment */
             comment?: string | null;
         };
+        /**
+         * ApprovalMode
+         * @enum {string}
+         */
+        ApprovalMode: "auto" | "manual";
         /** ApprovalReasonIn */
         ApprovalReasonIn: {
             /**
@@ -6030,6 +6344,28 @@ export interface components {
              */
             file: string;
         };
+        /**
+         * BookingChannel
+         * @enum {string}
+         */
+        BookingChannel: "resident" | "staff";
+        /** BookingOut */
+        BookingOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "pending" | "approval_pending" | "waitlisted";
+            reservation: components["schemas"]["ReservationOut"] | null;
+            waitlist: components["schemas"]["WaitlistEntryOut"] | null;
+            /**
+             * Position
+             * @description bekleme listesindeki sıra
+             */
+            position: number | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+        };
         /** BudgetItemIn */
         BudgetItemIn: {
             /** Name */
@@ -6501,6 +6837,11 @@ export interface components {
          * @enum {string}
          */
         Channel: "in_app" | "web_push" | "email" | "sms";
+        /**
+         * ChannelRule
+         * @enum {string}
+         */
+        ChannelRule: "resident" | "staff" | "both";
         /** ChargeOut */
         ChargeOut: {
             /**
@@ -6605,6 +6946,14 @@ export interface components {
             legal_basis: string | null;
             /** Is Advance */
             is_advance: boolean;
+        };
+        /** CheckInCodeIn */
+        CheckInCodeIn: {
+            /**
+             * Code
+             * @description 6 hane; QR içeriği `SY-REZ:123456` de kabul
+             */
+            code: string;
         };
         /** ChecklistItem */
         ChecklistItem: {
@@ -7775,6 +8124,11 @@ export interface components {
          * @enum {string}
          */
         ExpiryWarning: "60" | "30" | "expired";
+        /**
+         * FeeType
+         * @enum {string}
+         */
+        FeeType: "free" | "fixed" | "hourly" | "per_guest";
         /** FinanceOut */
         FinanceOut: {
             /**
@@ -8724,7 +9078,7 @@ export interface components {
          * LedgerSource
          * @enum {string}
          */
-        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund" | "service" | "deposit";
+        LedgerSource: "charge" | "payment" | "late_fee" | "adjustment" | "transfer" | "advance" | "opening" | "refund" | "service" | "deposit" | "reservation";
         /** LineOut */
         LineOut: {
             /**
@@ -9327,6 +9681,40 @@ export interface components {
             person?: components["schemas"]["PersonCreate"] | null;
             /** Share Percent */
             share_percent: number | string;
+        };
+        /** NoShowRuleIn */
+        NoShowRuleIn: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Months
+             * @default 3
+             */
+            months: number | null;
+            /**
+             * Count
+             * @default 2
+             */
+            count: number | null;
+            /**
+             * Block Days
+             * @default 14
+             */
+            block_days: number | null;
+        };
+        /** NoShowRuleOut */
+        NoShowRuleOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Months */
+            months: number;
+            /** Count */
+            count: number;
+            /** Block Days */
+            block_days: number;
         };
         /**
          * NotificationCategory
@@ -10071,6 +10459,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[ReservationOut] */
+        Page_ReservationOut_: {
+            /** Items */
+            items: components["schemas"]["ReservationOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[ResidentDocumentOut] */
         Page_ResidentDocumentOut_: {
             /** Items */
@@ -10141,6 +10540,17 @@ export interface components {
         Page_VisitorOut_: {
             /** Items */
             items: components["schemas"]["VisitorOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[WaitlistEntryOut] */
+        Page_WaitlistEntryOut_: {
+            /** Items */
+            items: components["schemas"]["WaitlistEntryOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -12344,6 +12754,263 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ReservableAreaOut */
+        ReservableAreaOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Kind */
+            kind: string;
+            /** Block Name */
+            block_name: string | null;
+            rules: components["schemas"]["ReservationRulesOut"];
+        };
+        /** ReservationOut */
+        ReservationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** Area Name */
+            area_name: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Person Name */
+            person_name: string;
+            /** People */
+            people: number;
+            /** Guests */
+            guests: number;
+            status: components["schemas"]["ReservationStatus"];
+            /** @description staff: yönetim sakin adına açtı */
+            channel: components["schemas"]["BookingChannel"];
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Fee
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            fee: string;
+            /**
+             * Charge Id
+             * @description cari defterdeki ücret kaydı
+             */
+            charge_id: string | null;
+            /**
+             * Fee Refunded
+             * @description ücret ters kayıtla kapandı
+             */
+            fee_refunded: boolean;
+            /**
+             * Approval Request Id
+             * @description onay kuralı varsa açılan talep
+             */
+            approval_request_id: string | null;
+            approval_status: components["schemas"]["ApprovalStatus"] | null;
+            /** Reject Reason */
+            reject_reason: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+            /** Cancelled Late */
+            cancelled_late: boolean;
+            /** Checked In At */
+            checked_in_at: string | null;
+            /** Checked In By */
+            checked_in_by: string | null;
+            /** Decided By */
+            decided_by: string | null;
+        };
+        /** ReservationReasonIn */
+        ReservationReasonIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** ReservationRulesIn */
+        ReservationRulesIn: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Open From */
+            open_from: string;
+            /** Open To */
+            open_to: string;
+            /** Slot Minutes */
+            slot_minutes: number;
+            /** Capacity */
+            capacity: number;
+            /** Max People */
+            max_people: number;
+            /** Max Guests */
+            max_guests: number;
+            /** Weekly Limit */
+            weekly_limit: number;
+            /** Cancel Hours */
+            cancel_hours: number;
+            /**
+             * Late Cancel Refund
+             * @default false
+             */
+            late_cancel_refund: boolean;
+            /** @default free */
+            fee_type: components["schemas"]["FeeType"];
+            /** Fee Amount */
+            fee_amount?: string | null;
+            /** @default both */
+            channel: components["schemas"]["ChannelRule"];
+            /** @default auto */
+            approval: components["schemas"]["ApprovalMode"];
+            /** @default code */
+            verify: components["schemas"]["VerifyMethod"];
+            /**
+             * Waitlist
+             * @default false
+             */
+            waitlist: boolean;
+            /**
+             * Waitlist Minutes
+             * @default 30
+             */
+            waitlist_minutes: number | null;
+            noshow?: components["schemas"]["NoShowRuleIn"];
+        };
+        /** ReservationRulesOut */
+        ReservationRulesOut: {
+            /** Enabled */
+            enabled: boolean;
+            /**
+             * Open From
+             * @description SS:DD
+             */
+            open_from: string;
+            /** Open To */
+            open_to: string;
+            /**
+             * Slot Minutes
+             * @description 30/60/90/120/180/240
+             */
+            slot_minutes: number;
+            /**
+             * Capacity
+             * @description aynı saatte kaç rezervasyon
+             */
+            capacity: number;
+            /** Max People */
+            max_people: number;
+            /** Max Guests */
+            max_guests: number;
+            /**
+             * Weekly Limit
+             * @description bölüm başına haftalık sınır; 0 = sınırsız
+             */
+            weekly_limit: number;
+            /**
+             * Cancel Hours
+             * @description başlangıçtan kaç saat öncesine kadar iadeli iptal
+             */
+            cancel_hours: number;
+            /** Late Cancel Refund */
+            late_cancel_refund: boolean;
+            fee_type: components["schemas"]["FeeType"];
+            /**
+             * Fee Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            fee_amount: string;
+            channel: components["schemas"]["ChannelRule"];
+            approval: components["schemas"]["ApprovalMode"];
+            verify: components["schemas"]["VerifyMethod"];
+            /** Waitlist */
+            waitlist: boolean;
+            /**
+             * Waitlist Minutes
+             * @description bekleme listesi teklif süresi (dakika)
+             */
+            waitlist_minutes: number;
+            noshow: components["schemas"]["NoShowRuleOut"];
+        };
+        /** ReservationSettingsIn */
+        ReservationSettingsIn: {
+            /**
+             * Debt Block Enabled
+             * @default false
+             */
+            debt_block_enabled: boolean;
+            /** Debt Min Amount */
+            debt_min_amount?: string | null;
+            /** Debt Min Days */
+            debt_min_days?: number | null;
+        };
+        /** ReservationSettingsOut */
+        ReservationSettingsOut: {
+            /**
+             * Debt Block Enabled
+             * @description K11: borçlu bölüme rezervasyon kısıtı (site kararı, varsayılan kapalı)
+             */
+            debt_block_enabled: boolean;
+            /**
+             * Debt Min Amount
+             * @description bu tutar ve üstü borç
+             */
+            debt_min_amount: string | null;
+            /**
+             * Debt Min Days
+             * @description en eski açık borcun gecikme günü (en az)
+             */
+            debt_min_days: number | null;
+        };
+        /**
+         * ReservationStatus
+         * @enum {string}
+         */
+        ReservationStatus: "pending" | "approved" | "rejected" | "cancelled" | "checked_in" | "no_show" | "completed";
+        /** ResidentAvailabilityOut */
+        ResidentAvailabilityOut: {
+            /** Slots */
+            slots: components["schemas"]["SlotOut"][];
+            /**
+             * Blocked Until
+             * @description no-show kısıtı bitiş tarihi
+             */
+            blocked_until: string | null;
+            /**
+             * Debt Block
+             * @description K11 açık ve eşik aşılmışsa gerekçe
+             */
+            debt_block: string | null;
+        };
         /**
          * ResidentDocumentOut
          * @description Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok.
@@ -12419,6 +13086,147 @@ export interface components {
              * @description oy verebileceğim bölümler
              */
             my_votes: components["schemas"]["MyVote"][];
+        };
+        /** ResidentReservationIn */
+        ResidentReservationIn: {
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Start
+             * @description SS:DD
+             */
+            start: string;
+            /**
+             * People
+             * @default 1
+             */
+            people: number;
+            /**
+             * Guests
+             * @default 0
+             */
+            guests: number;
+            /**
+             * Waitlist
+             * @description saat doluysa bekleme listesine gir
+             * @default false
+             */
+            waitlist: boolean;
+            /**
+             * Unit Id
+             * @description boş: ilk bölümü
+             */
+            unit_id?: string | null;
+        };
+        /** ResidentReservationOut */
+        ResidentReservationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** Area Name */
+            area_name: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Person Name */
+            person_name: string;
+            /** People */
+            people: number;
+            /** Guests */
+            guests: number;
+            status: components["schemas"]["ReservationStatus"];
+            /** @description staff: yönetim sakin adına açtı */
+            channel: components["schemas"]["BookingChannel"];
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Fee
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            fee: string;
+            /**
+             * Charge Id
+             * @description cari defterdeki ücret kaydı
+             */
+            charge_id: string | null;
+            /**
+             * Fee Refunded
+             * @description ücret ters kayıtla kapandı
+             */
+            fee_refunded: boolean;
+            /**
+             * Approval Request Id
+             * @description onay kuralı varsa açılan talep
+             */
+            approval_request_id: string | null;
+            approval_status: components["schemas"]["ApprovalStatus"] | null;
+            /** Reject Reason */
+            reject_reason: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+            /** Cancelled Late */
+            cancelled_late: boolean;
+            /** Checked In At */
+            checked_in_at: string | null;
+            /** Checked In By */
+            checked_in_by: string | null;
+            /** Decided By */
+            decided_by: string | null;
+            /**
+             * Code
+             * @description 6 haneli giriş kodu; QR içeriği `SY-REZ:{code}`
+             */
+            code: string;
+            verify: components["schemas"]["VerifyMethod"];
+            /** Cancel Hours */
+            cancel_hours: number;
+        };
+        /** ResidentReservationsOut */
+        ResidentReservationsOut: {
+            /**
+             * Reservations
+             * @description son 30, yeniden eskiye
+             */
+            reservations: components["schemas"]["ResidentReservationOut"][];
+            /**
+             * Waitlist
+             * @description açık bekleme kayıtları
+             */
+            waitlist: components["schemas"]["WaitlistEntryOut"][];
         };
         /** ResidentVehiclesOut */
         ResidentVehiclesOut: {
@@ -13522,6 +14330,32 @@ export interface components {
          * @enum {string}
          */
         SlaState: "ok" | "warning" | "breached" | "met" | "missed";
+        /** SlotOut */
+        SlotOut: {
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Taken
+             * @description canlı rezervasyon + süresi geçmemiş bekleme teklifi
+             */
+            taken: number;
+            /** Past */
+            past: boolean;
+            /**
+             * Mine
+             * @description sakinin bölümünün bu saatte rezervasyonu var
+             */
+            mine: boolean;
+            /**
+             * Waiting
+             * @description bu saat için sırada bekleyen
+             */
+            waiting: number;
+        };
         /**
          * SlotStatus
          * @enum {string}
@@ -13662,6 +14496,44 @@ export interface components {
             attendance_method: components["schemas"]["AttendanceMethod"];
             /** Shifts */
             shifts: components["schemas"]["StaffOwnShiftOut"][];
+        };
+        /** StaffReservationIn */
+        StaffReservationIn: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /**
+             * Person Name
+             * @description boş: hesap sahibi
+             */
+            person_name?: string | null;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Start
+             * @description SS:DD
+             */
+            start: string;
+            /**
+             * People
+             * @default 1
+             */
+            people: number;
+            /**
+             * Guests
+             * @default 0
+             */
+            guests: number;
         };
         /** StaffVehicleIn */
         StaffVehicleIn: {
@@ -14317,6 +15189,55 @@ export interface components {
          * @enum {string}
          */
         UnitUsage: "residential" | "commercial" | "storage" | "parking";
+        /** UsageReportOut */
+        UsageReportOut: {
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Rows */
+            rows: components["schemas"]["UsageReportRow"][];
+        };
+        /** UsageReportRow */
+        UsageReportRow: {
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** Area Name */
+            area_name: string;
+            /** Total */
+            total: number;
+            /** Cancelled */
+            cancelled: number;
+            /** Checked In */
+            checked_in: number;
+            /** No Show */
+            no_show: number;
+            /**
+             * No Show Rate
+             * @description doğrulama yöntemi 'yok' olan alanda null
+             */
+            no_show_rate: number | null;
+            /**
+             * Occupancy
+             * @description doluluk yüzdesi, metin, bir ondalık (`12.5`)
+             */
+            occupancy: string;
+            /**
+             * Revenue
+             * @description borca yansımış, iade edilmemiş ücret
+             * @example 1234.56
+             */
+            revenue: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -14473,6 +15394,11 @@ export interface components {
          * @enum {string}
          */
         VehicleStatus: "active" | "pending" | "inactive";
+        /**
+         * VerifyMethod
+         * @enum {string}
+         */
+        VerifyMethod: "none" | "qr" | "code" | "staff";
         /** VersionOut */
         VersionOut: {
             /** Version */
@@ -14815,6 +15741,59 @@ export interface components {
              */
             option_id: string;
         };
+        /** WaitlistEntryOut */
+        WaitlistEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Area Id
+             * Format: uuid
+             */
+            area_id: string;
+            /** Area Name */
+            area_name: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Person Name */
+            person_name: string;
+            /** People */
+            people: number;
+            /** Guests */
+            guests: number;
+            status: components["schemas"]["WaitlistStatus"];
+            /**
+             * Offered Until
+             * @description teklif gittiyse son kabul zamanı
+             */
+            offered_until: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * WaitlistStatus
+         * @enum {string}
+         */
+        WaitlistStatus: "waiting" | "offered" | "accepted" | "expired" | "left";
         /**
          * WarningKind
          * @enum {string}
@@ -14881,6 +15860,12 @@ export interface components {
         /** Written[BlockOut] */
         Written_BlockOut_: {
             data: components["schemas"]["BlockOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[BookingOut] */
+        Written_BookingOut_: {
+            data: components["schemas"]["BookingOut"];
             /** Message */
             message: string;
         };
@@ -15287,6 +16272,24 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ReservableAreaOut] */
+        Written_ReservableAreaOut_: {
+            data: components["schemas"]["ReservableAreaOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ReservationOut] */
+        Written_ReservationOut_: {
+            data: components["schemas"]["ReservationOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ReservationSettingsOut] */
+        Written_ReservationSettingsOut_: {
+            data: components["schemas"]["ReservationSettingsOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[RestoreOut] */
         Written_RestoreOut_: {
             data: components["schemas"]["RestoreOut"];
@@ -15446,6 +16449,12 @@ export interface components {
         /** Written[VoteOut] */
         Written_VoteOut_: {
             data: components["schemas"]["VoteOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[WaitlistEntryOut] */
+        Written_WaitlistEntryOut_: {
+            data: components["schemas"]["WaitlistEntryOut"];
             /** Message */
             message: string;
         };
@@ -22648,6 +23657,720 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_PermitOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_areas_api_v1_sites__slug__reservable_areas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservableAreaOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_rules_api_v1_sites__slug__reservable_areas__area_id__rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                area_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationRulesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservableAreaOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__reservation_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__reservation_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    staff_availability_api_v1_sites__slug__reservable_areas__area_id__availability_get: {
+        parameters: {
+            query?: {
+                /** @description boş: bugün */
+                date?: string | null;
+            };
+            header?: never;
+            path: {
+                area_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reservations_api_v1_sites__slug__reservations_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+                area_id?: string | null;
+                status?: components["schemas"]["ReservationStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_for_resident_api_v1_sites__slug__reservations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffReservationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BookingOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_reservation_api_v1_sites__slug__reservations__reservation_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_reservation_api_v1_sites__slug__reservations__reservation_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationReasonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_reservation_api_v1_sites__slug__reservations__reservation_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationReasonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_api_v1_sites__slug__reservations__reservation_id__check_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_code_api_v1_sites__slug__reservations_check_in_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_waitlist_api_v1_sites__slug__waitlist_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_WaitlistEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    usage_report_api_v1_sites__slug__reservations_report_get: {
+        parameters: {
+            query?: {
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_areas_api_v1_sites__slug__resident_reservable_areas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservableAreaOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_availability_api_v1_sites__slug__resident_reservable_areas__area_id__availability_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+                /** @description boş: ilk bölümü */
+                unit_id?: string | null;
+            };
+            header?: never;
+            path: {
+                area_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidentAvailabilityOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_reservations_api_v1_sites__slug__resident_reservations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidentReservationsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_create_api_v1_sites__slug__resident_reservations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResidentReservationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BookingOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_cancel_api_v1_sites__slug__resident_reservations__reservation_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ReservationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_accept_api_v1_sites__slug__resident_waitlist__entry_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BookingOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resident_leave_api_v1_sites__slug__resident_waitlist__entry_id__leave_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_WaitlistEntryOut_"];
                 };
             };
             /** @description Validation Error */

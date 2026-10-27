@@ -12823,6 +12823,1390 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/reservable-areas": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezerve edilebilir alanlar ve kuralları",
+        "operationId": "list_areas_api_v1_sites__slug__reservable_areas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservableAreaOut"
+                  },
+                  "title": "Response List Areas Api V1 Sites  Slug  Reservable Areas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservable-areas/{area_id}/rules": {
+      "put": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Alan kurallarını kaydet",
+        "operationId": "put_rules_api_v1_sites__slug__reservable_areas__area_id__rules_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "area_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Area Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationRulesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservableAreaOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservation-settings": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyon ayarı (K11 borçlu bölüm kısıtı)",
+        "operationId": "get_settings_api_v1_sites__slug__reservation_settings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyon ayarını kaydet (K11)",
+        "operationId": "put_settings_api_v1_sites__slug__reservation_settings_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationSettingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservable-areas/{area_id}/availability": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Günün saat durumu (personel)",
+        "operationId": "staff_availability_api_v1_sites__slug__reservable_areas__area_id__availability_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "area_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Area Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boş: bugün",
+              "title": "Date"
+            },
+            "description": "boş: bugün"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotOut"
+                  },
+                  "title": "Response Staff Availability Api V1 Sites  Slug  Reservable Areas  Area Id  Availability Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyonlar (günlük liste, onay bekleyen)",
+        "operationId": "list_reservations_api_v1_sites__slug__reservations_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          },
+          {
+            "name": "area_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Area Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ReservationStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Sakin adına rezervasyon (onay kuralı varsa 202)",
+        "operationId": "create_for_resident_api_v1_sites__slug__reservations_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffReservationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BookingOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/approve": {
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyonu onayla",
+        "operationId": "approve_reservation_api_v1_sites__slug__reservations__reservation_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/reject": {
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyonu reddet (gerekçeli)",
+        "operationId": "reject_reservation_api_v1_sites__slug__reservations__reservation_id__reject_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationReasonIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/cancel": {
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Rezervasyonu iptal et (yönetim)",
+        "operationId": "cancel_reservation_api_v1_sites__slug__reservations__reservation_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationReasonIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/{reservation_id}/check-in": {
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Listeden giriş (geldi)",
+        "operationId": "check_in_api_v1_sites__slug__reservations__reservation_id__check_in_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/check-in-code": {
+      "post": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Kodla doğrula ve giriş kaydet",
+        "operationId": "check_in_code_api_v1_sites__slug__reservations_check_in_code_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInCodeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/waitlist": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Bekleme listesi (sırada ve teklif gitmiş)",
+        "operationId": "list_waitlist_api_v1_sites__slug__waitlist_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_WaitlistEntryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reservations/report": {
+      "get": {
+        "tags": [
+          "rezervasyon"
+        ],
+        "summary": "Kullanım raporu (son 30 gün, alan bazında)",
+        "operationId": "usage_report_api_v1_sites__slug__reservations_report_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/reservable-areas": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Rezervasyona açık alanlar (sakin)",
+        "operationId": "resident_areas_api_v1_sites__slug__resident_reservable_areas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservableAreaOut"
+                  },
+                  "title": "Response Resident Areas Api V1 Sites  Slug  Resident Reservable Areas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/reservable-areas/{area_id}/availability": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Günün saat durumu (sakin)",
+        "operationId": "resident_availability_api_v1_sites__slug__resident_reservable_areas__area_id__availability_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "area_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Area Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          },
+          {
+            "name": "unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boş: ilk bölümü",
+              "title": "Unit Id"
+            },
+            "description": "boş: ilk bölümü"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResidentAvailabilityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/reservations": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Rezervasyonlarım ve bekleme listem",
+        "operationId": "my_reservations_api_v1_sites__slug__resident_reservations_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResidentReservationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Rezervasyon yap / bekleme listesine gir (onay kuralı varsa 202)",
+        "operationId": "resident_create_api_v1_sites__slug__resident_reservations_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResidentReservationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BookingOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/reservations/{reservation_id}/cancel": {
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Rezervasyonumu iptal et",
+        "operationId": "resident_cancel_api_v1_sites__slug__resident_reservations__reservation_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ReservationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/waitlist/{entry_id}/accept": {
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Bekleme listesi teklifini kabul et",
+        "operationId": "resident_accept_api_v1_sites__slug__resident_waitlist__entry_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BookingOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/waitlist/{entry_id}/leave": {
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Bekleme listesinden çık",
+        "operationId": "resident_leave_api_v1_sites__slug__resident_waitlist__entry_id__leave_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_WaitlistEntryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/announcements": {
       "get": {
         "tags": [
@@ -23343,6 +24727,14 @@
         "type": "object",
         "title": "ApprovalCommentIn"
       },
+      "ApprovalMode": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "manual"
+        ],
+        "title": "ApprovalMode"
+      },
       "ApprovalReasonIn": {
         "properties": {
           "comment": {
@@ -25307,6 +26699,81 @@
         ],
         "title": "Body_upload_vehicles_api_v1_sites__slug__imports_vehicles_post"
       },
+      "BookingChannel": {
+        "type": "string",
+        "enum": [
+          "resident",
+          "staff"
+        ],
+        "title": "BookingChannel"
+      },
+      "BookingOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "pending",
+              "approval_pending",
+              "waitlisted"
+            ],
+            "title": "Status"
+          },
+          "reservation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReservationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waitlist": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistEntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position",
+            "description": "bekleme listesindeki sıra"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "reservation",
+          "waitlist",
+          "position",
+          "approval_request_id"
+        ],
+        "title": "BookingOut"
+      },
       "BudgetItemIn": {
         "properties": {
           "name": {
@@ -26425,6 +27892,15 @@
         ],
         "title": "Channel"
       },
+      "ChannelRule": {
+        "type": "string",
+        "enum": [
+          "resident",
+          "staff",
+          "both"
+        ],
+        "title": "ChannelRule"
+      },
       "ChargeOut": {
         "properties": {
           "unit_id": {
@@ -26651,6 +28127,21 @@
           "is_advance"
         ],
         "title": "ChargeTypeOut"
+      },
+      "CheckInCodeIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Code",
+            "description": "6 hane; QR içeriği `SY-REZ:123456` de kabul"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "CheckInCodeIn"
       },
       "ChecklistItem": {
         "properties": {
@@ -29673,6 +31164,16 @@
         ],
         "title": "ExpiryWarning"
       },
+      "FeeType": {
+        "type": "string",
+        "enum": [
+          "free",
+          "fixed",
+          "hourly",
+          "per_guest"
+        ],
+        "title": "FeeType"
+      },
       "FinanceOut": {
         "properties": {
           "total_charged": {
@@ -32041,7 +33542,8 @@
           "opening",
           "refund",
           "service",
-          "deposit"
+          "deposit",
+          "reservation"
         ],
         "title": "LedgerSource"
       },
@@ -33559,6 +35061,87 @@
           "share_percent"
         ],
         "title": "NewOwnerIn"
+      },
+      "NoShowRuleIn": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "months": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Months",
+            "default": 3
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count",
+            "default": 2
+          },
+          "block_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Days",
+            "default": 14
+          }
+        },
+        "type": "object",
+        "title": "NoShowRuleIn"
+      },
+      "NoShowRuleOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "months": {
+            "type": "integer",
+            "title": "Months"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "block_days": {
+            "type": "integer",
+            "title": "Block Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "months",
+          "count",
+          "block_days"
+        ],
+        "title": "NoShowRuleOut"
       },
       "NotificationCategory": {
         "type": "string",
@@ -35552,6 +37135,37 @@
         ],
         "title": "Page[RequestOut]"
       },
+      "Page_ReservationOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReservationOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[ReservationOut]"
+      },
       "Page_ResidentDocumentOut_": {
         "properties": {
           "items": {
@@ -35768,6 +37382,37 @@
           "total"
         ],
         "title": "Page[VisitorOut]"
+      },
+      "Page_WaitlistEntryOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WaitlistEntryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[WaitlistEntryOut]"
       },
       "ParcelDelegateIn": {
         "properties": {
@@ -41415,6 +43060,643 @@
         ],
         "title": "RequestsOut"
       },
+      "ReservableAreaOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "block_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Name"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/ReservationRulesOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "block_name",
+          "rules"
+        ],
+        "title": "ReservableAreaOut"
+      },
+      "ReservationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "people": {
+            "type": "integer",
+            "title": "People"
+          },
+          "guests": {
+            "type": "integer",
+            "title": "Guests"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/BookingChannel",
+            "description": "staff: yönetim sakin adına açtı"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "fee": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Fee",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "charge_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charge Id",
+            "description": "cari defterdeki ücret kaydı"
+          },
+          "fee_refunded": {
+            "type": "boolean",
+            "title": "Fee Refunded",
+            "description": "ücret ters kayıtla kapandı"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id",
+            "description": "onay kuralı varsa açılan talep"
+          },
+          "approval_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "cancelled_late": {
+            "type": "boolean",
+            "title": "Cancelled Late"
+          },
+          "checked_in_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked In At"
+          },
+          "checked_in_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked In By"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "area_id",
+          "area_name",
+          "date",
+          "start",
+          "end",
+          "unit_id",
+          "unit_name",
+          "person_name",
+          "people",
+          "guests",
+          "status",
+          "channel",
+          "created_by",
+          "created_at",
+          "fee",
+          "charge_id",
+          "fee_refunded",
+          "approval_request_id",
+          "approval_status",
+          "reject_reason",
+          "cancel_reason",
+          "cancelled_late",
+          "checked_in_at",
+          "checked_in_by",
+          "decided_by"
+        ],
+        "title": "ReservationOut"
+      },
+      "ReservationReasonIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "ReservationReasonIn"
+      },
+      "ReservationRulesIn": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "open_from": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Open From"
+          },
+          "open_to": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Open To"
+          },
+          "slot_minutes": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Slot Minutes"
+          },
+          "capacity": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Capacity"
+          },
+          "max_people": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Max People"
+          },
+          "max_guests": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Max Guests"
+          },
+          "weekly_limit": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Weekly Limit"
+          },
+          "cancel_hours": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Cancel Hours"
+          },
+          "late_cancel_refund": {
+            "type": "boolean",
+            "title": "Late Cancel Refund",
+            "default": false
+          },
+          "fee_type": {
+            "$ref": "#/components/schemas/FeeType",
+            "default": "free"
+          },
+          "fee_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Amount"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelRule",
+            "default": "both"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/ApprovalMode",
+            "default": "auto"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/VerifyMethod",
+            "default": "code"
+          },
+          "waitlist": {
+            "type": "boolean",
+            "title": "Waitlist",
+            "default": false
+          },
+          "waitlist_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waitlist Minutes",
+            "default": 30
+          },
+          "noshow": {
+            "$ref": "#/components/schemas/NoShowRuleIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "open_from",
+          "open_to",
+          "slot_minutes",
+          "capacity",
+          "max_people",
+          "max_guests",
+          "weekly_limit",
+          "cancel_hours"
+        ],
+        "title": "ReservationRulesIn"
+      },
+      "ReservationRulesOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "open_from": {
+            "type": "string",
+            "title": "Open From",
+            "description": "SS:DD"
+          },
+          "open_to": {
+            "type": "string",
+            "title": "Open To"
+          },
+          "slot_minutes": {
+            "type": "integer",
+            "title": "Slot Minutes",
+            "description": "30/60/90/120/180/240"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity",
+            "description": "aynı saatte kaç rezervasyon"
+          },
+          "max_people": {
+            "type": "integer",
+            "title": "Max People"
+          },
+          "max_guests": {
+            "type": "integer",
+            "title": "Max Guests"
+          },
+          "weekly_limit": {
+            "type": "integer",
+            "title": "Weekly Limit",
+            "description": "bölüm başına haftalık sınır; 0 = sınırsız"
+          },
+          "cancel_hours": {
+            "type": "integer",
+            "title": "Cancel Hours",
+            "description": "başlangıçtan kaç saat öncesine kadar iadeli iptal"
+          },
+          "late_cancel_refund": {
+            "type": "boolean",
+            "title": "Late Cancel Refund"
+          },
+          "fee_type": {
+            "$ref": "#/components/schemas/FeeType"
+          },
+          "fee_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Fee Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelRule"
+          },
+          "approval": {
+            "$ref": "#/components/schemas/ApprovalMode"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/VerifyMethod"
+          },
+          "waitlist": {
+            "type": "boolean",
+            "title": "Waitlist"
+          },
+          "waitlist_minutes": {
+            "type": "integer",
+            "title": "Waitlist Minutes",
+            "description": "bekleme listesi teklif süresi (dakika)"
+          },
+          "noshow": {
+            "$ref": "#/components/schemas/NoShowRuleOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "open_from",
+          "open_to",
+          "slot_minutes",
+          "capacity",
+          "max_people",
+          "max_guests",
+          "weekly_limit",
+          "cancel_hours",
+          "late_cancel_refund",
+          "fee_type",
+          "fee_amount",
+          "channel",
+          "approval",
+          "verify",
+          "waitlist",
+          "waitlist_minutes",
+          "noshow"
+        ],
+        "title": "ReservationRulesOut"
+      },
+      "ReservationSettingsIn": {
+        "properties": {
+          "debt_block_enabled": {
+            "type": "boolean",
+            "title": "Debt Block Enabled",
+            "default": false
+          },
+          "debt_min_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Min Amount"
+          },
+          "debt_min_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Min Days"
+          }
+        },
+        "type": "object",
+        "title": "ReservationSettingsIn"
+      },
+      "ReservationSettingsOut": {
+        "properties": {
+          "debt_block_enabled": {
+            "type": "boolean",
+            "title": "Debt Block Enabled",
+            "description": "K11: borçlu bölüme rezervasyon kısıtı (site kararı, varsayılan kapalı)"
+          },
+          "debt_min_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Min Amount",
+            "description": "bu tutar ve üstü borç"
+          },
+          "debt_min_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Min Days",
+            "description": "en eski açık borcun gecikme günü (en az)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "debt_block_enabled",
+          "debt_min_amount",
+          "debt_min_days"
+        ],
+        "title": "ReservationSettingsOut"
+      },
+      "ReservationStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "cancelled",
+          "checked_in",
+          "no_show",
+          "completed"
+        ],
+        "title": "ReservationStatus"
+      },
+      "ResidentAvailabilityOut": {
+        "properties": {
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/SlotOut"
+            },
+            "type": "array",
+            "title": "Slots"
+          },
+          "blocked_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Until",
+            "description": "no-show kısıtı bitiş tarihi"
+          },
+          "debt_block": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debt Block",
+            "description": "K11 açık ve eşik aşılmışsa gerekçe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slots",
+          "blocked_until",
+          "debt_block"
+        ],
+        "title": "ResidentAvailabilityOut"
+      },
       "ResidentDocumentOut": {
         "properties": {
           "id": {
@@ -41618,6 +43900,315 @@
           "my_votes"
         ],
         "title": "ResidentPollOut"
+      },
+      "ResidentReservationIn": {
+        "properties": {
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Start",
+            "description": "SS:DD"
+          },
+          "people": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "People",
+            "default": 1
+          },
+          "guests": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Guests",
+            "default": 0
+          },
+          "waitlist": {
+            "type": "boolean",
+            "title": "Waitlist",
+            "description": "saat doluysa bekleme listesine gir",
+            "default": false
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id",
+            "description": "boş: ilk bölümü"
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_id",
+          "date",
+          "start"
+        ],
+        "title": "ResidentReservationIn"
+      },
+      "ResidentReservationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "people": {
+            "type": "integer",
+            "title": "People"
+          },
+          "guests": {
+            "type": "integer",
+            "title": "Guests"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/BookingChannel",
+            "description": "staff: yönetim sakin adına açtı"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "fee": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Fee",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "charge_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charge Id",
+            "description": "cari defterdeki ücret kaydı"
+          },
+          "fee_refunded": {
+            "type": "boolean",
+            "title": "Fee Refunded",
+            "description": "ücret ters kayıtla kapandı"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id",
+            "description": "onay kuralı varsa açılan talep"
+          },
+          "approval_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "cancelled_late": {
+            "type": "boolean",
+            "title": "Cancelled Late"
+          },
+          "checked_in_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked In At"
+          },
+          "checked_in_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked In By"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "6 haneli giriş kodu; QR içeriği `SY-REZ:{code}`"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/VerifyMethod"
+          },
+          "cancel_hours": {
+            "type": "integer",
+            "title": "Cancel Hours"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "area_id",
+          "area_name",
+          "date",
+          "start",
+          "end",
+          "unit_id",
+          "unit_name",
+          "person_name",
+          "people",
+          "guests",
+          "status",
+          "channel",
+          "created_by",
+          "created_at",
+          "fee",
+          "charge_id",
+          "fee_refunded",
+          "approval_request_id",
+          "approval_status",
+          "reject_reason",
+          "cancel_reason",
+          "cancelled_late",
+          "checked_in_at",
+          "checked_in_by",
+          "decided_by",
+          "code",
+          "verify",
+          "cancel_hours"
+        ],
+        "title": "ResidentReservationOut"
+      },
+      "ResidentReservationsOut": {
+        "properties": {
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/ResidentReservationOut"
+            },
+            "type": "array",
+            "title": "Reservations",
+            "description": "son 30, yeniden eskiye"
+          },
+          "waitlist": {
+            "items": {
+              "$ref": "#/components/schemas/WaitlistEntryOut"
+            },
+            "type": "array",
+            "title": "Waitlist",
+            "description": "açık bekleme kayıtları"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservations",
+          "waitlist"
+        ],
+        "title": "ResidentReservationsOut"
       },
       "ResidentVehiclesOut": {
         "properties": {
@@ -44495,6 +47086,52 @@
         ],
         "title": "SlaState"
       },
+      "SlotOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "taken": {
+            "type": "integer",
+            "title": "Taken",
+            "description": "canlı rezervasyon + süresi geçmemiş bekleme teklifi"
+          },
+          "past": {
+            "type": "boolean",
+            "title": "Past"
+          },
+          "mine": {
+            "type": "boolean",
+            "title": "Mine",
+            "description": "sakinin bölümünün bu saatte rezervasyonu var"
+          },
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting",
+            "description": "bu saat için sırada bekleyen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "capacity",
+          "taken",
+          "past",
+          "mine",
+          "waiting"
+        ],
+        "title": "SlotOut"
+      },
       "SlotStatus": {
         "type": "string",
         "enum": [
@@ -44937,6 +47574,66 @@
           "shifts"
         ],
         "title": "StaffOwnShiftsOut"
+      },
+      "StaffReservationIn": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "person_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Name",
+            "description": "boş: hesap sahibi"
+          },
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Start",
+            "description": "SS:DD"
+          },
+          "people": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "People",
+            "default": 1
+          },
+          "guests": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Guests",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "area_id",
+          "date",
+          "start"
+        ],
+        "title": "StaffReservationIn"
       },
       "StaffVehicleIn": {
         "properties": {
@@ -46884,6 +49581,102 @@
         ],
         "title": "UnitUsage"
       },
+      "UsageReportOut": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "title": "To"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/UsageReportRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "rows"
+        ],
+        "title": "UsageReportOut"
+      },
+      "UsageReportRow": {
+        "properties": {
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "cancelled": {
+            "type": "integer",
+            "title": "Cancelled"
+          },
+          "checked_in": {
+            "type": "integer",
+            "title": "Checked In"
+          },
+          "no_show": {
+            "type": "integer",
+            "title": "No Show"
+          },
+          "no_show_rate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Show Rate",
+            "description": "doğrulama yöntemi 'yok' olan alanda null"
+          },
+          "occupancy": {
+            "type": "string",
+            "title": "Occupancy",
+            "description": "doluluk yüzdesi, metin, bir ondalık (`12.5`)"
+          },
+          "revenue": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Revenue",
+            "description": "borca yansımış, iade edilmemiş ücret",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_id",
+          "area_name",
+          "total",
+          "cancelled",
+          "checked_in",
+          "no_show",
+          "no_show_rate",
+          "occupancy",
+          "revenue"
+        ],
+        "title": "UsageReportRow"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -47363,6 +50156,16 @@
           "inactive"
         ],
         "title": "VehicleStatus"
+      },
+      "VerifyMethod": {
+        "type": "string",
+        "enum": [
+          "none",
+          "qr",
+          "code",
+          "staff"
+        ],
+        "title": "VerifyMethod"
       },
       "VersionOut": {
         "properties": {
@@ -48360,6 +51163,108 @@
         ],
         "title": "VoteOut"
       },
+      "WaitlistEntryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "area_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Area Id"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "people": {
+            "type": "integer",
+            "title": "People"
+          },
+          "guests": {
+            "type": "integer",
+            "title": "Guests"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WaitlistStatus"
+          },
+          "offered_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Until",
+            "description": "teklif gittiyse son kabul zamanı"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "area_id",
+          "area_name",
+          "date",
+          "start",
+          "end",
+          "unit_id",
+          "unit_name",
+          "person_name",
+          "people",
+          "guests",
+          "status",
+          "offered_until",
+          "created_at"
+        ],
+        "title": "WaitlistEntryOut"
+      },
+      "WaitlistStatus": {
+        "type": "string",
+        "enum": [
+          "waiting",
+          "offered",
+          "accepted",
+          "expired",
+          "left"
+        ],
+        "title": "WaitlistStatus"
+      },
       "WarningKind": {
         "type": "string",
         "enum": [
@@ -48566,6 +51471,23 @@
           "message"
         ],
         "title": "Written[BlockOut]"
+      },
+      "Written_BookingOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BookingOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[BookingOut]"
       },
       "Written_BudgetPlanDetail_": {
         "properties": {
@@ -49707,6 +52629,57 @@
         ],
         "title": "Written[RequestSettingsOut]"
       },
+      "Written_ReservableAreaOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReservableAreaOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ReservableAreaOut]"
+      },
+      "Written_ReservationOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReservationOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ReservationOut]"
+      },
+      "Written_ReservationSettingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReservationSettingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ReservationSettingsOut]"
+      },
       "Written_RestoreOut_": {
         "properties": {
           "data": {
@@ -50165,6 +53138,23 @@
           "message"
         ],
         "title": "Written[VoteOut]"
+      },
+      "Written_WaitlistEntryOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WaitlistEntryOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[WaitlistEntryOut]"
       },
       "site_yonetim__api__v1__bank_imports__PreviewOut": {
         "properties": {
