@@ -7,6 +7,8 @@
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
 //
+// Backend'e geçti, handler'ı kaldırıldı: Sözleşme performansı 68–70 (KPI, ceza ve artış kuralı,
+// aylık karne ve ceza kesintisi, endeksli artış ve platform endeks değerleri; 27.10.2026).
 // Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
@@ -662,8 +664,8 @@ const randCode = (n: number) => Array.from({ length: n }, () => Math.floor(Math.
 const nowHm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const weekday = (d: string) => (new Date(d + "T00:00:00").getDay() + 6) % 7; // 0 = pazartesi
 
-// Hizmetler paketi (servis istekleri 47–52) backend'de; aşağıdaki sahte uçlar (69 hizmet karnesi,
-// 79 talep/SLA raporu) gerçek talep satırındaki `sla` ve `feedback` alanlarını kullanır.
+// Hizmetler paketi (servis istekleri 47–52) backend'de; aşağıdaki sahte uç (79 talep/SLA
+// raporu) gerçek talep satırındaki `sla` ve `feedback` alanlarını kullanır.
 interface ReqRow { id: string; category: string; status: string; created_at: string; resolved_at: string | null; sla: { state: string } | null; feedback: { solved: boolean; score: number | null } | null }
 
 // ============================================================================================
@@ -1696,264 +1698,6 @@ function findLink(token: string) { for (const [slug, list] of quoteLinks) { cons
 const orderOut = (slug: string, o: PurchaseOrder) => ({ ...o, receipts: listOf(receipts, slug).filter((r) => r.order_id === o.id), invoices: listOf(vendorInvoices, slug).filter((i) => i.order_id === o.id) });
 
 // ============================================================================================
-// SÖZLEŞME PERFORMANSI (Yazılım Dokümanı SAT-06, 15.3) — servis istekleri 68–70
-// ============================================================================================
-interface CKpi { id: string; name: string; source: "inspection" | "patrol" | "tasks" | "sla" | "manual"; target: number; weight: number; request_category: string | null }
-interface CPenalty { id: string; kpi_id: string; below_percent: number; cut_kind: "percent" | "fixed"; cut_value: string }
-interface CEscalation { kind: "none" | "tufe" | "ufe" | "avg" | "fixed"; fixed_rate: number | null; period: "yearly" | "semiannual"; cap: number | null }
-interface CEscRecord { date: string; old_amount: string; new_amount: string; rate: number; decision: "approve" | "reject"; note: string | null; by: string; at: string }
-interface ContractExt { vendor_id: string | null; kpis: CKpi[]; penalties: CPenalty[]; escalation: CEscalation; escalations: CEscRecord[] }
-interface ScoreRow { kpi_id: string; name: string; source: CKpi["source"]; target: number; weight: number; actual: number | null; score: number | null; detail: string | null }
-interface Scorecard {
-  id: string; contract_id: string; period: string; rows: ScoreRow[]; total: number | null; comment: string | null; status: "draft" | "finalized";
-  penalty: { amount: string; reasons: string[]; status: "none" | "pending" | "approved" | "rejected"; decided_by: string | null; note: string | null } | null;
-  monthly_amount: string | null; finalized_by: string | null; finalized_by_id: string | null; finalized_at: string | null;
-}
-interface IndexValue { period: string; tufe: number; ufe: number; entered_by: string; entered_at: string }
-const contractExt = loadMap<string, Record<string, ContractExt>>("contractExt");
-const scorecards = loadMap<string, Scorecard[]>("scorecards");
-const indexValues = loadMap<string, IndexValue[]>("indexValues"); // "platform" → değerler (tüm tesisler ortak)
-const extOf = (slug: string, id: string) => { if (!contractExt.has(slug)) contractExt.set(slug, {}); const m = contractExt.get(slug)!; if (!m[id]) m[id] = { vendor_id: null, kpis: [], penalties: [], escalation: { kind: "none", fixed_rate: null, period: "yearly", cap: null }, escalations: [] }; return m[id]!; };
-type RealContract = { id: string; vendor: string; subject: string; category: string; start_date: string; end_date: string; amount: string | null; period: "monthly" | "yearly" | "once" | null };
-const monthlyOf = (c: RealContract) => (!c.amount ? null : c.period === "yearly" ? Math.round(cents(c.amount) / 12) : c.period === "monthly" ? cents(c.amount) : null);
-const inMonth = (iso: string, period: string) => dayOf(iso).slice(0, 7) === period;
-const daysOfMonth = (period: string) => { const [y, m] = period.split("-").map(Number); const n = new Date(y!, m!, 0).getDate(); return Array.from({ length: n }, (_, i) => `${period}-${String(i + 1).padStart(2, "0")}`); };
-
-/** KPI gerçekleşeni: kaynak modülün o ayki verisinden; veri yoksa null (elle girilir). */
-async function kpiActual(request: Request, slug: string, k: CKpi, period: string): Promise<{ actual: number | null; detail: string | null }> {
-  if (k.source === "inspection") {
-    const l = listOf(inspections, slug).filter((x) => inMonth(x.at, period));
-    return l.length ? { actual: Math.round(l.reduce((s, x) => s + x.score, 0) / l.length), detail: `${l.length} denetim ortalaması` } : { actual: null, detail: "Bu ay denetim yok" };
-  }
-  if (k.source === "patrol") {
-    // Devriye backend'de (servis isteği 46): ayın günleri gerçek uçtan okunur
-    const days = daysOfMonth(period).filter((d) => d <= today());
-    const runs = await Promise.all(days.map((d) => real<{ report: { total_points: number; scanned_points: number } }[]>(request, `/api/v1/sites/${slug}/patrol-runs?date=${d}`)));
-    const l = runs.flatMap((r) => (Array.isArray(r.body) ? r.body : [])).map((r) => r.report);
-    const tot = l.reduce((s, r) => s + r.total_points, 0), ok = l.reduce((s, r) => s + r.scanned_points, 0);
-    return tot ? { actual: Math.round((ok / tot) * 100), detail: `${l.length} tur, ${ok}/${tot} nokta` } : { actual: null, detail: "Bu ay devriye yok" };
-  }
-  if (k.source === "tasks") {
-    const days = daysOfMonth(period).filter((d) => d < today());
-    let exp = 0, done = 0;
-    for (const d of days) for (const t of tasksForDate(slug, d)) { exp++; if (listOf(taskDone, slug).some((x) => x.template_id === t.id && x.date === d && x.status === "done")) done++; }
-    return exp ? { actual: Math.round((done / exp) * 100), detail: `${done}/${exp} görev` } : { actual: null, detail: "Bu ay görev yok" };
-  }
-  if (k.source === "sla") {
-    const rows = await allPages<ReqRow>(request, `/api/v1/sites/${slug}/requests`);
-    const l = rows.filter((r) => inMonth(r.created_at, period) && (!k.request_category || r.category === k.request_category) && ["resolved", "closed"].includes(r.status));
-    const met = l.filter((r) => r.sla?.state === "met").length;
-    return l.length ? { actual: Math.round((met / l.length) * 100), detail: `${met}/${l.length} talep SLA içinde` } : { actual: null, detail: "Bu ay kapanan talep yok" };
-  }
-  return { actual: null, detail: "Elle girilir" };
-}
-function scoreCard(sc: Scorecard) {
-  for (const r of sc.rows) r.score = r.actual == null ? null : Math.min(100, Math.round((r.actual / r.target) * 100));
-  const w = sc.rows.reduce((s, r) => s + r.weight, 0);
-  sc.total = sc.rows.every((r) => r.score != null) && w ? Math.round(sc.rows.reduce((s, r) => s + r.score! * r.weight, 0) / w) : null;
-}
-function penaltyOf(ext: ContractExt, sc: Scorecard) {
-  const reasons: string[] = []; let amount = 0;
-  const monthly = sc.monthly_amount ? cents(sc.monthly_amount) : 0;
-  for (const p of ext.penalties) {
-    const r = sc.rows.find((x) => x.kpi_id === p.kpi_id);
-    if (!r || r.actual == null) continue;
-    const limit = r.target * (1 - p.below_percent / 100);
-    if (r.actual < limit) {
-      const cut = p.cut_kind === "percent" ? Math.round(monthly * Number(p.cut_value) / 100) : cents(p.cut_value);
-      amount += cut;
-      reasons.push(`${r.name}: gerçekleşen ${r.actual}, hedef ${r.target} (sınır ${(Math.round(limit * 10) / 10).toLocaleString("tr-TR")}) → ${p.cut_kind === "percent" ? `%${Number(p.cut_value).toLocaleString("tr-TR")}` : `${Number(p.cut_value).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺`} kesinti`);
-    }
-  }
-  return { amount, reasons };
-}
-const addMonthsIso = (d: string, n: number) => addMonths(d, n);
-function nextEscalationDate(c: RealContract, e: CEscalation) {
-  const step = e.period === "yearly" ? 12 : 6;
-  let d = addMonthsIso(c.start_date, step);
-  for (let i = 0; i < 100 && d <= today(); i++) d = addMonthsIso(d, step);
-  return d <= c.end_date ? d : null;
-}
-function escalationPreview(c: RealContract, ext: ContractExt) {
-  const e = ext.escalation;
-  if (e.kind === "none" || !c.amount) return { status: "none" as const };
-  const date = nextEscalationDate(c, e);
-  if (!date) return { status: "none" as const };
-  const days = Math.round((new Date(date + "T00:00:00").getTime() - new Date(today() + "T00:00:00").getTime()) / 864e5);
-  const done = ext.escalations.find((x) => x.date === date);
-  if (done) { const perY = c.period === "monthly" ? 12 : c.period === "yearly" ? 1 : 0; return { status: done.decision === "approve" ? "approved" as const : "rejected" as const, date, days_left: days, index_period: addMonthsIso(date, -1).slice(0, 7), rate: done.rate, capped_rate: done.rate, old_amount: done.old_amount, new_amount: done.new_amount, annual_effect: tl((cents(done.new_amount) - cents(done.old_amount)) * perY), record: done }; }
-  const idxPeriod = addMonthsIso(date, -1).slice(0, 7);
-  let rate: number | null = e.kind === "fixed" ? e.fixed_rate : null;
-  let index: IndexValue | null = null;
-  if (e.kind !== "fixed") {
-    index = [...listOf(indexValues, "platform")].filter((v) => v.period <= idxPeriod).sort((a, b) => b.period.localeCompare(a.period))[0] ?? null;
-    if (index && index.period === idxPeriod) rate = e.kind === "tufe" ? index.tufe : e.kind === "ufe" ? index.ufe : Math.round(((index.tufe + index.ufe) / 2) * 100) / 100;
-    else index = null;
-  }
-  const capped = rate != null && e.cap != null ? Math.min(rate, e.cap) : rate;
-  const newAmount = capped != null ? Math.round(cents(c.amount) * (1 + capped / 100)) : null;
-  const perYear = c.period === "monthly" ? 12 : c.period === "yearly" ? 1 : 0;
-  return {
-    status: days > 30 ? "not_due" as const : rate == null ? "missing_index" as const : "due" as const,
-    date, days_left: days, index_period: idxPeriod, rate, capped_rate: capped, old_amount: c.amount, new_amount: newAmount != null ? tl(newAmount) : null,
-    annual_effect: newAmount != null ? tl((newAmount - cents(c.amount)) * perYear) : null, record: done ?? null,
-  };
-}
-async function contractOf(request: Request, slug: string, id: string) {
-  const r = await real<RealContract>(request, `/api/v1/sites/${slug}/contracts/${id}`);
-  if (r.status === 200 && r.body) return r.body;
-  const l = await real<RealContract[]>(request, `/api/v1/sites/${slug}/contracts`);
-  return (l.body ?? []).find((c) => c.id === id) ?? null;
-}
-
-const sozlesme: RequestHandler[] = [
-  // 68 — Sözleşme performans tanımları
-  http.get(`${API}/contracts/:id/performance`, async ({ request, params }) => {
-    const slug = String(params.slug); const c = await contractOf(request, slug, String(params.id));
-    if (!c) return err(404, "not_found", "Sözleşme bulunamadı.");
-    const ext = extOf(slug, c.id);
-    const v = ext.vendor_id ? listOf(vendors, slug).find((x) => x.id === ext.vendor_id) : null;
-    const cards = listOf(scorecards, slug).filter((s) => s.contract_id === c.id).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 12);
-    return HttpResponse.json({ ...ext, vendor: v ? { id: v.id, name: v.name, ...ratingOf(slug, v.id) } : null, monthly_amount: monthlyOf(c) != null ? tl(monthlyOf(c)!) : null, escalation_preview: escalationPreview(c, ext), last_scorecards: cards.map((s) => ({ period: s.period, total: s.total, status: s.status, penalty: s.penalty?.status === "approved" ? s.penalty.amount : null })) });
-  }),
-  http.put(`${API}/contracts/:id/performance`, async ({ request, params }) => {
-    const slug = String(params.slug); const c = await contractOf(request, slug, String(params.id));
-    if (!c) return err(404, "not_found", "Sözleşme bulunamadı.");
-    const b = (await request.json()) as Partial<ContractExt>;
-    const f: Record<string, string> = {};
-    const kpis = (b.kpis ?? []).map((k) => ({ id: k.id || crypto.randomUUID(), name: (k.name ?? "").trim(), source: k.source, target: Number(k.target), weight: Number(k.weight), request_category: k.request_category || null }));
-    kpis.forEach((k, i) => {
-      if (k.name.length < 2) f[`kpis.${i}.name`] = "KPI adı yazın.";
-      if (!["inspection", "patrol", "tasks", "sla", "manual"].includes(k.source)) f[`kpis.${i}.source`] = "Kaynak seçin.";
-      if (!(k.target > 0 && k.target <= 100)) f[`kpis.${i}.target`] = "Hedef 1–100.";
-      if (!(k.weight > 0 && k.weight <= 100)) f[`kpis.${i}.weight`] = "Ağırlık 1–100.";
-    });
-    if (kpis.length && kpis.reduce((s, k) => s + k.weight, 0) !== 100) f.kpis = "Ağırlıkların toplamı 100 olmalı.";
-    const ids = new Set(kpis.map((k) => k.id));
-    const pens = (b.penalties ?? []).map((p) => ({ id: p.id || crypto.randomUUID(), kpi_id: p.kpi_id, below_percent: Number(p.below_percent), cut_kind: p.cut_kind, cut_value: tl(cents(p.cut_value)) }));
-    pens.forEach((p, i) => {
-      if (!ids.has(p.kpi_id)) f[`penalties.${i}.kpi_id`] = "KPI seçin.";
-      if (!(p.below_percent >= 0 && p.below_percent < 100)) f[`penalties.${i}.below_percent`] = "%0–99.";
-      if (!["percent", "fixed"].includes(p.cut_kind)) f[`penalties.${i}.cut_kind`] = "Kesinti tipi seçin.";
-      if (!(cents(p.cut_value) > 0) || (p.cut_kind === "percent" && Number(p.cut_value) > 100)) f[`penalties.${i}.cut_value`] = p.cut_kind === "percent" ? "%1–100." : "Tutar > 0.";
-    });
-    if (pens.some((p) => p.cut_kind === "percent") && monthlyOf(c) == null) f.penalties = "Yüzde kesinti için sözleşmede aylık ya da yıllık bedel olmalı.";
-    const e = { ...extOf(slug, c.id).escalation, ...(b.escalation ?? {}) } as CEscalation;
-    if (!["none", "tufe", "ufe", "avg", "fixed"].includes(e.kind)) f["escalation.kind"] = "Artış kuralı seçin.";
-    if (e.kind === "fixed" && !(Number(e.fixed_rate) > 0 && Number(e.fixed_rate) <= 200)) f["escalation.fixed_rate"] = "Oran %0,01–200.";
-    if (e.cap != null && !(Number(e.cap) > 0)) f["escalation.cap"] = "Tavan > 0 ya da boş.";
-    if (e.kind !== "none" && !c.amount) f["escalation.kind"] = "Artış için sözleşmede bedel olmalı.";
-    let vendorId = b.vendor_id === undefined ? extOf(slug, c.id).vendor_id : b.vendor_id;
-    if (vendorId && !listOf(vendors, slug).some((v) => v.id === vendorId)) f.vendor_id = "Tedarikçi bulunamadı."; if (!vendorId) vendorId = null;
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const ext = extOf(slug, c.id);
-    Object.assign(ext, { vendor_id: vendorId, kpis, penalties: pens, escalation: { kind: e.kind, fixed_rate: e.kind === "fixed" ? Number(e.fixed_rate) : null, period: e.period === "semiannual" ? "semiannual" : "yearly", cap: e.cap == null || (e.cap as unknown) === "" ? null : Number(e.cap) } });
-    return HttpResponse.json({ data: ext, message: "Sözleşme performans kuralları kaydedildi." });
-  }),
-  // 69 — Aylık hizmet karnesi ve ceza kesintisi
-  http.get(`${API}/contracts/:id/scorecards/:period`, async ({ request, params }) => {
-    const slug = String(params.slug); const period = String(params.period);
-    if (!/^\d{4}-\d{2}$/.test(period)) return err(422, "validation", VALIDATION, { period: "Dönem seçin." });
-    const c = await contractOf(request, slug, String(params.id));
-    if (!c) return err(404, "not_found", "Sözleşme bulunamadı.");
-    const ext = extOf(slug, c.id);
-    let sc = listOf(scorecards, slug).find((s) => s.contract_id === c.id && s.period === period);
-    if (!sc) sc = { id: crypto.randomUUID(), contract_id: c.id, period, rows: [], total: null, comment: null, status: "draft", penalty: null, monthly_amount: monthlyOf(c) != null ? tl(monthlyOf(c)!) : null, finalized_by: null, finalized_by_id: null, finalized_at: null };
-    if (sc.status === "draft") {
-      const prev = sc.rows;
-      sc.rows = [];
-      for (const k of ext.kpis) {
-        const a = await kpiActual(request, slug, k, period);
-        const keepManual = prev.find((r) => r.kpi_id === k.id && (k.source === "manual" || a.actual == null));
-        sc.rows.push({ kpi_id: k.id, name: k.name, source: k.source, target: k.target, weight: k.weight, actual: a.actual ?? keepManual?.actual ?? null, score: null, detail: a.detail });
-      }
-      scoreCard(sc);
-      const pn = penaltyOf(ext, sc);
-      sc.penalty = pn.reasons.length ? { amount: tl(pn.amount), reasons: pn.reasons, status: "none", decided_by: null, note: null } : null;
-      if (!listOf(scorecards, slug).includes(sc) && ext.kpis.length) listOf(scorecards, slug).push(sc);
-    }
-    return HttpResponse.json({ ...sc, expected_invoice: sc.monthly_amount ? tl(cents(sc.monthly_amount) - (sc.penalty?.status === "approved" ? cents(sc.penalty.amount) : 0)) : null });
-  }),
-  http.patch(`${API}/contracts/:id/scorecards/:period`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const sc = listOf(scorecards, slug).find((s) => s.contract_id === params.id && s.period === params.period);
-    if (!sc) return err(404, "not_found", "Karne bulunamadı; önce dönemi açın.");
-    if (sc.status !== "draft") return err(409, "finalized", "Kesinleşmiş karne değiştirilemez.");
-    const b = (await request.json()) as { values?: Record<string, number | null>; comment?: string };
-    const f: Record<string, string> = {};
-    for (const [kid, v] of Object.entries(b.values ?? {})) {
-      const r = sc.rows.find((x) => x.kpi_id === kid);
-      if (!r) continue;
-      if (v != null && !(Number(v) >= 0 && Number(v) <= 100)) { f[`values.${kid}`] = "0–100."; continue; }
-      r.actual = v == null ? null : Number(v);
-    }
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (b.comment !== undefined) sc.comment = b.comment.trim() || null;
-    scoreCard(sc);
-    const pn = penaltyOf(extOf(slug, sc.contract_id), sc);
-    sc.penalty = pn.reasons.length ? { amount: tl(pn.amount), reasons: pn.reasons, status: "none", decided_by: null, note: null } : null;
-    return HttpResponse.json({ data: sc, message: "Karne güncellendi." });
-  }),
-  http.post(`${API}/contracts/:id/scorecards/:period/finalize`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const sc = listOf(scorecards, slug).find((s) => s.contract_id === params.id && s.period === params.period);
-    if (!sc) return err(404, "not_found", "Karne bulunamadı.");
-    if (sc.status !== "draft") return err(409, "finalized", "Karne zaten kesinleşti.");
-    if (sc.period >= today().slice(0, 7)) return err(409, "period_open", "Dönem bitmeden karne kesinleşmez.");
-    const missing = sc.rows.filter((r) => r.actual == null).map((r) => r.name);
-    if (missing.length) return err(422, "missing_values", `Gerçekleşeni eksik KPI: ${missing.join(", ")}.`);
-    const who = await me(request);
-    Object.assign(sc, { status: "finalized", finalized_by: who.name, finalized_by_id: who.id, finalized_at: new Date().toISOString() });
-    if (sc.penalty) sc.penalty.status = "pending";
-    return HttpResponse.json({ data: sc, message: sc.penalty ? `Karne kesinleşti; ${Number(sc.penalty.amount).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ ceza kesintisi onaya düştü.` : "Karne kesinleşti; ceza kuralı tetiklenmedi." });
-  }),
-  http.post(`${API}/contracts/:id/scorecards/:period/penalty`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const sc = listOf(scorecards, slug).find((s) => s.contract_id === params.id && s.period === params.period);
-    if (!sc || !sc.penalty) return err(404, "not_found", "Ceza kesintisi bulunamadı.");
-    if (sc.penalty.status !== "pending") return err(409, "invalid_status", "Onay bekleyen kesinti yok.");
-    const who = await me(request);
-    if (sc.finalized_by_id === who.id) return err(403, "self_approval", "Karneyi kesinleştiren kişi kesintiyi onaylayamaz.");
-    const b = (await request.json()) as { decision?: string; note?: string };
-    if (b.decision === "reject" && (b.note ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { note: "Ret gerekçesi yazın." });
-    Object.assign(sc.penalty, { status: b.decision === "approve" ? "approved" : "rejected", decided_by: who.name, note: b.note?.trim() || null });
-    return HttpResponse.json({ data: sc, message: b.decision === "approve" ? "Ceza kesintisi onaylandı; dönem faturasının beklenen tutarı düştü, tedarikçiye bildirim taslağı hazır." : "Ceza kesintisi reddedildi." });
-  }),
-  // 70 — Endeksli artış
-  http.post(`${API}/contracts/:id/escalation`, async ({ request, params }) => {
-    const slug = String(params.slug); const c = await contractOf(request, slug, String(params.id));
-    if (!c) return err(404, "not_found", "Sözleşme bulunamadı.");
-    const ext = extOf(slug, c.id); const p = escalationPreview(c, ext);
-    if (p.status !== "due") return err(409, "not_due", p.status === "missing_index" ? "Endeks değeri girilmemiş; platform yöneticisine bildirildi." : "Onay bekleyen artış yok (artış tarihinden 30 gün önce açılır).");
-    const b = (await request.json()) as { decision?: string; note?: string };
-    if (b.decision === "reject" && (b.note ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { note: "Tedarikçiyle görüşme notunu yazın." });
-    const who = await me(request);
-    if (b.decision === "approve") {
-      const r = await real(request, `/api/v1/sites/${slug}/contracts/${c.id}`, { method: "PATCH", body: { amount: p.new_amount } });
-      if (r.status >= 300) return err(r.status, "contract_update_failed", "Sözleşme bedeli güncellenemedi.");
-    }
-    ext.escalations.push({ date: p.date!, old_amount: p.old_amount!, new_amount: b.decision === "approve" ? p.new_amount! : p.old_amount!, rate: p.capped_rate!, decision: b.decision === "approve" ? "approve" : "reject", note: b.note?.trim() || null, by: who.name, at: new Date().toISOString() });
-    return HttpResponse.json({ data: escalationPreview(c, ext), message: b.decision === "approve" ? `Yeni bedel ${Number(p.new_amount).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺, ${p.date!.split("-").reverse().join(".")} tarihinden itibaren geçerli.` : "Bedel değişmedi; görüşme notu kaydedildi." });
-  }),
-  http.get("/api/v1/platform/index-values", () => HttpResponse.json([...listOf(indexValues, "platform")].sort((a, b) => b.period.localeCompare(a.period)))),
-  http.put("/api/v1/platform/index-values/:period", async ({ request, params }) => {
-    const m = await real<{ is_platform_admin: boolean; full_name: string }>(request, "/api/v1/me");
-    if (!m.body?.is_platform_admin) return err(404, "not_found", "Bulunamadı.");
-    const period = String(params.period);
-    const b = (await request.json()) as { tufe?: number; ufe?: number };
-    const f: Record<string, string> = {};
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period) || period > today().slice(0, 7)) f.period = "Geçmiş ya da bu ay olmalı.";
-    if (!(Number(b.tufe) > -50 && Number(b.tufe) < 500)) f.tufe = "Yıllık TÜFE (%) girin.";
-    if (!(Number(b.ufe) > -50 && Number(b.ufe) < 500)) f.ufe = "Yıllık ÜFE (%) girin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const l = listOf(indexValues, "platform");
-    const v: IndexValue = { period, tufe: Math.round(Number(b.tufe) * 100) / 100, ufe: Math.round(Number(b.ufe) * 100) / 100, entered_by: m.body.full_name, entered_at: new Date().toISOString() };
-    const i = l.findIndex((x) => x.period === period); if (i >= 0) l[i] = v; else l.push(v);
-    return HttpResponse.json({ data: v, message: `${period} endeks değerleri kaydedildi; tüm tesislerde artış hesaplarında kullanılır.` });
-  }),
-];
-
-// ============================================================================================
 // İLETİŞİM VE ACİL DURUM (Yazılım Dokümanı ILT-01, 02, 04, 06) — servis istekleri 71–74
 // ============================================================================================
 interface CommSettings { quiet_from: string; quiet_to: string }
@@ -2704,4 +2448,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];

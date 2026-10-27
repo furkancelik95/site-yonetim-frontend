@@ -304,24 +304,30 @@ export function NewSitePage() {
   );
 }
 
-/** Servis isteği 70'teki şekil. */
-interface IndexValue { period: string; tufe: number; ufe: number; entered_by: string; entered_at: string }
+/** Servis isteği 70 — backend şeması; oranlar ondalık metin ("33.50"). */
+type IndexValueRow = Schemas["IndexValueOut"];
+type IndexValue = Omit<IndexValueRow, "tufe" | "ufe"> & { tufe: number; ufe: number };
 
 /** Endeks değerleri (SAT-06, 15.3): TÜFE/ÜFE yıllık değişim oranı aylık girilir; tüm tesislerde sözleşme artışında kullanılır. */
 export function IndexValuesPage() {
   const qc = useQueryClient();
   const toast = useToast();
-  const q = useQuery({ queryKey: ["platform", "index-values"], queryFn: () => get<IndexValue[]>("/platform/index-values") });
+  const q = useQuery({
+    queryKey: ["platform", "index-values"],
+    queryFn: async () => (await get<Page<IndexValueRow>>("/platform/index-values", { page_size: 200 })).items.map((v): IndexValue => ({ ...v, tufe: Number(v.tufe), ufe: Number(v.ufe) })),
+  });
+  const missing = useQuery({ queryKey: ["platform", "index-values", "missing"], queryFn: () => get<Schemas["IndexMissingOut"][]>("/platform/index-values/missing") });
   const now = new Date();
   const [f, setF] = useState({ period: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`, tufe: "", ufe: "" });
   const m = useMutation({
-    mutationFn: () => api<Written<IndexValue>>("PUT", `/platform/index-values/${f.period}`, { body: { tufe: Number(f.tufe.replace(",", ".")), ufe: Number(f.ufe.replace(",", ".")) } }),
+    mutationFn: () => api<Written<IndexValueRow>>("PUT", `/platform/index-values/${f.period}`, { body: { tufe: f.tufe.replace(",", ".").trim() || null, ufe: f.ufe.replace(",", ".").trim() || null } }),
     onSuccess: (r) => { toast(r.message); setF((x) => ({ ...x, tufe: "", ufe: "" })); qc.invalidateQueries({ queryKey: ["platform", "index-values"] }); },
   });
   function submit(e: FormEvent) { e.preventDefault(); m.mutate(); }
   return (
     <div className="stack">
       <PageHead title="Endeks değerleri" subtitle="Sözleşmelerdeki TÜFE / ÜFE artış kuralları bu tablodan hesaplanır. Değer, TÜİK'in açıkladığı yıllık değişim oranıdır (%). TÜİK'ten otomatik çekme Faz 2." />
+      {missing.data && missing.data.length > 0 && <Alert tone="warn" title="Endeks değeri eksik">{missing.data.map((m) => `${m.period}: ${m.contracts} sözleşme (${m.sites} tesis)`).join(" · ")} — 30 gün içindeki artışlar bu dönemin değerini bekliyor.</Alert>}
       {q.isError ? null : !q.data ? (
         <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
       ) : (() => {

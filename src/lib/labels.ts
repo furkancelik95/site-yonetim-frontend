@@ -314,5 +314,5 @@ export const invoiceStatus = label({ matched: "Eşleşti — ödenecek", diff_pe
 export const invoiceTone = (v: string): Tone => (v === "paid" ? "ok" : v === "matched" ? "info" : v === "disputed" ? "danger" : "warn");
 
 // Sözleşme performansı (servis istekleri 68-70)
-export const kpiSource = label({ inspection: "Denetim listesi puanı", patrol: "Devriye tamamlama oranı", tasks: "Görev tamamlama oranı", sla: "Talep SLA uyumu", manual: "Elle giriş" });
+export const kpiSource = label({ inspection: "Denetim listesi puanı", patrol: "Devriye tamamlama oranı", tasks: "Görev tamamlama oranı", sla: "Talep SLA uyumu", asset_inspection: "Teknik varlık muayenesi", manual: "Elle giriş" });
 export const escalationKind = label({ none: "Artış yok", tufe: "TÜFE", ufe: "ÜFE", avg: "TÜFE+ÜFE ortalaması", fixed: "Sabit oran" });

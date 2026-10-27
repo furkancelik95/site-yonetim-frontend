@@ -4136,7 +4136,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Sözleşme ayrıntısı (bedel geçmişiyle) */
+        get: operations["get_contract_api_v1_sites__slug__contracts__contract_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5076,6 +5077,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sözleşme performansı: KPI, ceza, artış kuralı ve önizleme */
+        get: operations["get_performance_api_v1_sites__slug__contracts__contract_id__performance_get"];
+        /**
+         * Performans kurallarını kaydet (KPI, ceza, artış)
+         * @description 422 `fields.kpis.{i}.*`, `fields.kpis` (ağırlık toplamı), `fields.penalties.{i}.*`,
+         *     `fields.escalation.*`.
+         */
+        put: operations["put_performance_api_v1_sites__slug__contracts__contract_id__performance_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/scorecards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Karneler (yeniden eskiye, sayfalı) */
+        get: operations["list_scorecards_api_v1_sites__slug__contracts__contract_id__scorecards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/scorecards/{period}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aylık hizmet karnesi (taslak kaynaklardan hesaplanır) */
+        get: operations["get_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Elle değerleri ve yorumu kaydet (taslak)
+         * @description 409 `finalized`; 422 `fields.values.{kpi_id}`.
+         */
+        patch: operations["patch_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/scorecards/{period}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Karneyi kesinleştir
+         * @description 409 `finalized`, `period_open`, `no_kpis`; 422 `missing_values`. Ceza tetiklenirse kesinti
+         *     onaya düşer ("Ceza kesintisi" kuralı varsa onay mekanizmasına).
+         */
+        post: operations["finalize_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__finalize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/scorecards/{period}/penalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ceza kesintisini onayla / reddet
+         * @description 403 `self_approval` (karneyi kesinleştiren), `forbidden`; 404; 409 `invalid_status`,
+         *     `period_locked`; 422 `fields.note` (retde gerekçe).
+         */
+        post: operations["decide_penalty_api_v1_sites__slug__contracts__contract_id__scorecards__period__penalty_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/contracts/{contract_id}/escalation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sıradaki artışa karar ver (yeni bedel / bedel değişmesin)
+         * @description 409 `not_due` (30 günden fazla var / endeks eksik), `period_locked`; 422 `fields.note`.
+         */
+        post: operations["decide_escalation_api_v1_sites__slug__contracts__contract_id__escalation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/index-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Endeks değerleri (dönem başına geçerli değer, yeniden eskiye) */
+        get: operations["list_index_values_api_v1_platform_index_values_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/index-values/missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Eksik endeks uyarısı (30 gün içindeki artışlar) */
+        get: operations["missing_index_values_api_v1_platform_index_values_missing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/index-values/{period}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Dönemin endeks değerini gir / düzelt
+         * @description 422 `fields.period` (geçmiş ya da bu ay), `fields.tufe`, `fields.ufe`.
+         */
+        put: operations["put_index_value_api_v1_platform_index_values__period__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5118,7 +5295,7 @@ export interface components {
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request" | "period_unlock" | "cash_difference" | "ad_hoc_charge" | "finance_parameter" | "demand_letter" | "penalty_deduction" | "contract_escalation";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -15676,6 +15853,578 @@ export interface components {
             /** Is Closed */
             is_closed: boolean;
         };
+        /** IndexMissingOut */
+        IndexMissingOut: {
+            /**
+             * Period
+             * @description girilmesi gereken endeks dönemi
+             */
+            period: string;
+            /**
+             * Contracts
+             * @description 30 gün içinde artışı bu döneme bağlı sözleşme sayısı
+             */
+            contracts: number;
+            /** Sites */
+            sites: number;
+        };
+        /** ContractDetailOut */
+        ContractDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Vendor */
+            vendor: string;
+            /** Subject */
+            subject: string;
+            category: components["schemas"]["ContractCategory"];
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /** Amount */
+            amount: string | null;
+            period: components["schemas"]["ContractPeriod"] | null;
+            /** Notice Days */
+            notice_days: number;
+            /** Auto Renew */
+            auto_renew: boolean;
+            /** Note */
+            note: string | null;
+            /** Is Archived */
+            is_archived: boolean;
+            /**
+             * Days Left
+             * @description bugünden bitişe gün; geçmişse eksi
+             */
+            days_left: number;
+            state: components["schemas"]["ContractState"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Latest Amount
+             * @description en son yazılan bedel (ileri tarihli olabilir)
+             */
+            latest_amount: string | null;
+            /**
+             * Amount History
+             * @description bedel geçmişi, eskiden yeniye
+             */
+            amount_history: components["schemas"]["ContractAmountOut"][];
+        };
+        /** EscalationDecisionIn */
+        EscalationDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+        };
+        /** IndexValueIn */
+        IndexValueIn: {
+            /** Tufe */
+            tufe?: number | string | null;
+            /** Ufe */
+            ufe?: number | string | null;
+        };
+        /** ContractAmountOut */
+        ContractAmountOut: {
+            /** Amount */
+            amount: string | null;
+            period: components["schemas"]["ContractPeriod"] | null;
+            /**
+             * Effective From
+             * Format: date
+             */
+            effective_from: string;
+            source: components["schemas"]["AmountSource"];
+            /** Note */
+            note: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * AmountSource
+         * @enum {string}
+         */
+        AmountSource: "initial" | "edit" | "escalation";
+        /** Written[ContractPerformanceOut] */
+        Written_ContractPerformanceOut_: {
+            data: components["schemas"]["ContractPerformanceOut"];
+            /** Message */
+            message: string;
+        };
+        /** ScorecardPatchIn */
+        ScorecardPatchIn: {
+            /**
+             * Values
+             * @description {kpi_id: 0–100 | null} — yalnız elle girilebilen KPI'lar
+             */
+            values?: {
+                [key: string]: number | string | null;
+            } | null;
+            /** Comment */
+            comment?: string | null;
+        };
+        /** ContractPerformanceIn */
+        ContractPerformanceIn: {
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /** Kpis */
+            kpis?: components["schemas"]["ContractKpiIn"][] | null;
+            /** Penalties */
+            penalties?: components["schemas"]["ContractPenaltyRuleIn"][] | null;
+            escalation?: components["schemas"]["ContractEscalationRuleIn"] | null;
+        };
+        /** Page[ScorecardSummaryOut] */
+        Page_ScorecardSummaryOut_: {
+            /** Items */
+            items: components["schemas"]["ScorecardSummaryOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Written[EscalationPreviewOut] */
+        Written_EscalationPreviewOut_: {
+            data: components["schemas"]["EscalationPreviewOut"];
+            /** Message */
+            message: string;
+        };
+        /** Page[IndexValueOut] */
+        Page_IndexValueOut_: {
+            /** Items */
+            items: components["schemas"]["IndexValueOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Written[IndexValueOut] */
+        Written_IndexValueOut_: {
+            data: components["schemas"]["IndexValueOut"];
+            /** Message */
+            message: string;
+        };
+        /** ScorecardOut */
+        ScorecardOut: {
+            /**
+             * Id
+             * @description henüz kaydedilmemiş taslakta boş
+             */
+            id: string | null;
+            /**
+             * Contract Id
+             * Format: uuid
+             */
+            contract_id: string;
+            /** Period */
+            period: string;
+            /** Rows */
+            rows: components["schemas"]["ScorecardRowOut"][];
+            /** Total */
+            total: number | null;
+            /** Comment */
+            comment: string | null;
+            status: components["schemas"]["ScorecardStatus"];
+            penalty: components["schemas"]["ScorecardPenaltyOut"] | null;
+            /**
+             * Monthly Amount
+             * @description dönemin ilk günü geçerli aylık bedel
+             */
+            monthly_amount: string | null;
+            /**
+             * Expected Invoice
+             * @description aylık bedel − onaylanan kesinti
+             */
+            expected_invoice: string | null;
+            /** Finalized By */
+            finalized_by: string | null;
+            /** Finalized By Id */
+            finalized_by_id: string | null;
+            /** Finalized At */
+            finalized_at: string | null;
+        };
+        /** ContractKpiIn */
+        ContractKpiIn: {
+            /**
+             * Id
+             * @description mevcut KPI ya da geçici kimlik
+             */
+            id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Source */
+            source?: string | null;
+            /** Target */
+            target?: number | string | null;
+            /** Weight */
+            weight?: number | null;
+            /** Request Category */
+            request_category?: string | null;
+        };
+        /** ContractPerformanceOut */
+        ContractPerformanceOut: {
+            /**
+             * Vendor Id
+             * @description tedarikçi kartı (P10); kart bilgisi satın alma paketiyle gelecek
+             */
+            vendor_id: string | null;
+            vendor: components["schemas"]["ContractVendorOut"] | null;
+            /** Kpis */
+            kpis: components["schemas"]["ContractKpiOut"][];
+            /** Penalties */
+            penalties: components["schemas"]["ContractPenaltyRuleOut"][];
+            escalation: components["schemas"]["ContractEscalationRuleOut"];
+            /**
+             * Escalations
+             * @description artış geçmişi
+             */
+            escalations: components["schemas"]["ContractEscalationRecordOut"][];
+            /**
+             * Monthly Amount
+             * @description bugün geçerli aylık bedel
+             */
+            monthly_amount: string | null;
+            escalation_preview: components["schemas"]["EscalationPreviewOut"];
+            /**
+             * Last Scorecards
+             * @description son 12 karne, yeniden eskiye
+             */
+            last_scorecards: components["schemas"]["ScorecardSummaryOut"][];
+        };
+        /** Written[ScorecardOut] */
+        Written_ScorecardOut_: {
+            data: components["schemas"]["ScorecardOut"];
+            /** Message */
+            message: string;
+        };
+        /** ContractPenaltyRuleIn */
+        ContractPenaltyRuleIn: {
+            /** Id */
+            id?: string | null;
+            /** Kpi Id */
+            kpi_id?: string | null;
+            /** Below Percent */
+            below_percent?: number | string | null;
+            /** Cut Kind */
+            cut_kind?: string | null;
+            /** Cut Value */
+            cut_value?: string | null;
+        };
+        /** ContractKpiOut */
+        ContractKpiOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            source: components["schemas"]["KpiSource"];
+            /**
+             * Target
+             * @description hedef %, 1–100
+             */
+            target: string;
+            /** Weight */
+            weight: number;
+            /** Request Category */
+            request_category: string | null;
+        };
+        /** EscalationPreviewOut */
+        EscalationPreviewOut: {
+            status: components["schemas"]["PreviewStatus"];
+            /** Date */
+            date: string | null;
+            /** Days Left */
+            days_left: number | null;
+            /** Index Period */
+            index_period: string | null;
+            /** Rate */
+            rate: string | null;
+            /** Capped Rate */
+            capped_rate: string | null;
+            /** Old Amount */
+            old_amount: string | null;
+            /** New Amount */
+            new_amount: string | null;
+            /**
+             * Annual Effect
+             * @description (yeni − eski) × yıllık dönem sayısı
+             */
+            annual_effect: string | null;
+            record: components["schemas"]["ContractEscalationRecordOut"] | null;
+        };
+        /** ContractEscalationRuleIn */
+        ContractEscalationRuleIn: {
+            /** Kind */
+            kind?: string | null;
+            /** Fixed Rate */
+            fixed_rate?: number | string | null;
+            /** Period */
+            period?: string | null;
+            /** Cap */
+            cap?: number | string | null;
+        };
+        /** PenaltyDecisionIn */
+        PenaltyDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+        };
+        /** ContractPenaltyRuleOut */
+        ContractPenaltyRuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kpi Id
+             * Format: uuid
+             */
+            kpi_id: string;
+            /**
+             * Below Percent
+             * @description hedefin bu yüzdesinden fazla altındaysa (0–99)
+             */
+            below_percent: string;
+            cut_kind: components["schemas"]["CutKind"];
+            /**
+             * Cut Value
+             * @description percent: oran (1–100) · fixed: TL
+             * @example 1234.56
+             */
+            cut_value: string;
+        };
+        /**
+         * CutKind
+         * @enum {string}
+         */
+        CutKind: "percent" | "fixed";
+        /** ScorecardPenaltyOut */
+        ScorecardPenaltyOut: {
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Status
+             * @description none: taslakta hesaplandı, kesinleşince onaya düşer
+             * @enum {string}
+             */
+            status: "none" | "pending" | "approved" | "rejected";
+            /** Decided By */
+            decided_by: string | null;
+            /** Note */
+            note: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /**
+             * Notice
+             * @description onaydan sonra tedarikçi bildirim taslağı
+             */
+            notice: string | null;
+        };
+        /** ContractEscalationRuleOut */
+        ContractEscalationRuleOut: {
+            kind: components["schemas"]["EscalationKind"];
+            /** Fixed Rate */
+            fixed_rate: string | null;
+            period: components["schemas"]["EscalationPeriod"];
+            /** Cap */
+            cap: string | null;
+        };
+        /** ScorecardSummaryOut */
+        ScorecardSummaryOut: {
+            /** Period */
+            period: string;
+            /** Total */
+            total: number | null;
+            status: components["schemas"]["ScorecardStatus"];
+            /**
+             * Penalty
+             * @description onaylanan kesinti
+             */
+            penalty: string | null;
+            penalty_status: components["schemas"]["PenaltyStatus"] | null;
+        };
+        /** ContractEscalationRecordOut */
+        ContractEscalationRecordOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             * @description artış tarihi (yeni bedel bu günden geçerli)
+             */
+            date: string;
+            kind: components["schemas"]["EscalationKind"];
+            /** Index Period */
+            index_period: string | null;
+            /** Rate */
+            rate: string;
+            /** Capped Rate */
+            capped_rate: string;
+            /**
+             * Old Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            old_amount: string;
+            /**
+             * New Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            new_amount: string;
+            status: components["schemas"]["EscalationStatus"];
+            /** Note */
+            note: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Requested By */
+            requested_by: string;
+            /**
+             * By
+             * @description karar veren(ler)
+             */
+            by: string | null;
+            /** At */
+            at: string | null;
+        };
+        /**
+         * ScorecardStatus
+         * @enum {string}
+         */
+        ScorecardStatus: "draft" | "finalized";
+        /** IndexValueOut */
+        IndexValueOut: {
+            /** Period */
+            period: string;
+            /**
+             * Tufe
+             * @description yıllık TÜFE değişimi (%)
+             */
+            tufe: string;
+            /**
+             * Ufe
+             * @description yıllık ÜFE değişimi (%)
+             */
+            ufe: string;
+            /** Entered By */
+            entered_by: string;
+            /**
+             * Entered At
+             * Format: date-time
+             */
+            entered_at: string;
+        };
+        /**
+         * PreviewStatus
+         * @enum {string}
+         */
+        PreviewStatus: "none" | "not_due" | "missing_index" | "due" | "pending" | "approved" | "rejected";
+        /** ContractVendorOut */
+        ContractVendorOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Rating Avg */
+            rating_avg: string | null;
+            /** Rating Count */
+            rating_count: number;
+        };
+        /** ScorecardRowOut */
+        ScorecardRowOut: {
+            /** Kpi Id */
+            kpi_id: string;
+            /** Name */
+            name: string;
+            source: components["schemas"]["KpiSource"];
+            /** Target */
+            target: string;
+            /** Weight */
+            weight: number;
+            /** Actual */
+            actual: string | null;
+            /** Score */
+            score: number | null;
+            /**
+             * Detail
+             * @description kaynak açıklaması, ör. '3 denetim ortalaması'
+             */
+            detail: string | null;
+            /**
+             * Editable
+             * @description elle girilir (elle KPI, kaynak kapalı ya da veri yok)
+             */
+            editable: boolean;
+        };
+        /**
+         * EscalationPeriod
+         * @enum {string}
+         */
+        EscalationPeriod: "yearly" | "semiannual";
+        /**
+         * PenaltyStatus
+         * @description Kayıtlı kesinti. API'de ayrıca `none`: taslak karnede hesaplanan, henüz onaya düşmemiş.
+         * @enum {string}
+         */
+        PenaltyStatus: "pending" | "approved" | "rejected";
+        /**
+         * KpiSource
+         * @enum {string}
+         */
+        KpiSource: "inspection" | "patrol" | "tasks" | "sla" | "asset_inspection" | "manual";
+        /**
+         * EscalationStatus
+         * @enum {string}
+         */
+        EscalationStatus: "pending" | "approved" | "rejected" | "withdrawn";
+        /**
+         * EscalationKind
+         * @enum {string}
+         */
+        EscalationKind: "none" | "tufe" | "ufe" | "avg" | "fixed";
     };
     responses: never;
     parameters: never;
@@ -25617,6 +26366,38 @@ export interface operations {
             };
         };
     };
+    get_contract_api_v1_sites__slug__contracts__contract_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_contract_api_v1_sites__slug__contracts__contract_id__patch: {
         parameters: {
             query?: never;
@@ -27894,6 +28675,379 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_DocumentAccessOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_performance_api_v1_sites__slug__contracts__contract_id__performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractPerformanceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_performance_api_v1_sites__slug__contracts__contract_id__performance_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractPerformanceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ContractPerformanceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scorecards_api_v1_sites__slug__contracts__contract_id__scorecards_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                contract_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ScorecardSummaryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScorecardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScorecardPatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScorecardOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finalize_scorecard_api_v1_sites__slug__contracts__contract_id__scorecards__period__finalize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScorecardOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_penalty_api_v1_sites__slug__contracts__contract_id__scorecards__period__penalty_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                period: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PenaltyDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScorecardOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_escalation_api_v1_sites__slug__contracts__contract_id__escalation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EscalationDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EscalationPreviewOut_"];
+                };
+            };
+            /** @description Sözleşme artışı onay kuralına gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_index_values_api_v1_platform_index_values_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_IndexValueOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    missing_index_values_api_v1_platform_index_values_missing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexMissingOut"][];
+                };
+            };
+        };
+    };
+    put_index_value_api_v1_platform_index_values__period__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                period: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndexValueIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_IndexValueOut_"];
                 };
             };
             /** @description Validation Error */

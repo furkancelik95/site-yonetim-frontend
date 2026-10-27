@@ -83,9 +83,9 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [65](65-siparis-kabul.md) | Sipariş ve mal/hizmet kabul | `…/purchase-orders`, `…/purchase-orders/{id}/receipts` | `/satin-alma/siparis/{id}` | Sahte servis |
 | [66](66-tedarikci-faturasi-uclu-eslesme.md) | Tedarikçi faturası ve üçlü eşleşme | `…/vendor-invoices`, `…/vendor-invoices/{id}/decide` | sipariş ayrıntısı, `/satin-alma?sekme=fatura` | Sahte servis |
 | [67](67-odenecekler.md) | Ödenecekler ve "ödendi" | `…/payables`, `…/vendor-invoices/{id}/mark-paid` | `/satin-alma?sekme=odenecek` | Sahte servis |
-| [68](68-sozlesme-kpi-ceza-kurallari.md) | Sözleşme performans tanımları: KPI, ceza, artış kuralı | `…/contracts/{id}/performance` | `/sozlesmeler/{id}` | Sahte servis |
-| [69](69-aylik-hizmet-karnesi.md) | Aylık hizmet karnesi ve ceza kesintisi | `…/contracts/{id}/scorecards/{period}` (+`/finalize`, `/penalty`) | `/sozlesmeler/{id}?sekme=karne` | Sahte servis — onay türü "Ceza kesintisi" |
-| [70](70-endeksli-artis.md) | Endeksli fiyat artışı ve endeks değerleri | `…/contracts/{id}/escalation`, `/api/v1/platform/index-values` | `/sozlesmeler/{id}?sekme=artis`, `/yonetim/endeksler` | Sahte servis |
+| [68](68-sozlesme-kpi-ceza-kurallari.md) | Sözleşme performans tanımları: KPI, ceza, artış kuralı | `…/contracts/{id}/performance` | `/sozlesmeler/{id}` | **Backend'de** (backend #84) |
+| [69](69-aylik-hizmet-karnesi.md) | Aylık hizmet karnesi ve ceza kesintisi | `…/contracts/{id}/scorecards/{period}` (+`/finalize`, `/penalty`) | `/sozlesmeler/{id}?sekme=karne` | **Backend'de** (backend #84) — onay türü "Ceza kesintisi" |
+| [70](70-endeksli-artis.md) | Endeksli fiyat artışı ve endeks değerleri | `…/contracts/{id}/escalation`, `/api/v1/platform/index-values` | `/sozlesmeler/{id}?sekme=artis`, `/yonetim/endeksler` | **Backend'de** (backend #84) |
 | [71](71-okuma-onayi-zamanlama.md) | Duyuruda okuma onayı, okuma raporu, zamanlama, sessiz saatler | `…/announcements` (+alanlar), `…/scheduled-announcements`, `…/communication-settings`, `…/read-report`, `…/resident/announcements/{id}/acknowledge` | `/duyurular`, `/duyurular/{id}/okuma-raporu`, sakin ana sayfa ve duyurular | Sahte servis — K5 |
 | [72](72-bildirim-sablonlari.md) | Bildirim ve duyuru şablonları | `…/notification-templates` | `/bildirim-sablonlari` | Sahte servis |
 | [73](73-acil-durum-modu.md) | Acil durum modu, pano, toplanma yoklaması | `…/emergencies`, `…/emergencies/active`, `…/muster-checks`, `…/end`, `…/resident/emergency` | `/acil-durum`, sakin `/acil-durum` | Sahte servis — K5, A-04 |
