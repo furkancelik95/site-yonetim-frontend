@@ -121,7 +121,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/ekstre` | Kendi cari ekstresi | R |
 | `/sakin/{slug}/duyurular` | Duyurular | R |
 | `/sakin/{slug}/talepler` | Talepler + yeni talep | R |
-| `/sakin/{slug}/giderler` | **Sitenin gider dökümü + fatura görüntüsü** — şeffaflık vaadinin karşılığı | **Y** |
+| `/sakin/{slug}/seffaflik` | **Şeffaflık raporu** (RAP-02, K32): yönetimin onayladığı aylık gelir–gider özeti; kişi/bölüm yok. Eski gider dökümü ve fatura görüntüsü kaldırıldı (`/giderler` buraya yönlenir) | **Y** |
 | `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
 | `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
