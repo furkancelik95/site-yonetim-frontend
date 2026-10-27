@@ -97,9 +97,9 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [79](79-rapor-katalogu-sla.md) | Rapor kataloğu, metrik sözlüğü, talep/SLA raporu | `…/reports/catalog`, `…/reports/requests-sla` | `/rapor-katalogu` | Sahte servis |
 | [80](80-kvkk-basvuru-aydinlatma.md) | KVKK başvurusu ve aydınlatma sürümleri | `…/privacy-requests`, `…/resident/privacy-requests`, `…/privacy-notices` | `/kvkk`, sakin `/kvkk` | Sahte servis — K8, hukuk 2.1 |
 | [81](81-denetim-kurulu-paketi.md) | Denetim kurulu paketi | `…/audit-packages`, `…/report` | `/denetim-paketi` | Sahte servis — planlı rapor K5 |
-| [82](82-destek-biletleri.md) | Destek biletleri | `…/support-tickets`, `/api/v1/platform/support-tickets` | `/destek`, `/yonetim/destek` | Sahte servis — paket SLA (soru 1.9) |
-| [83](83-bilgi-bankasi.md) | Bilgi bankası ve yardım | `/api/v1/knowledge-articles`, `/api/v1/platform/knowledge-articles` | `/yardim`, `/yonetim/bilgi-bankasi` | Sahte servis |
-| [84](84-destek-oturumu.md) | Destek oturumu (müşteri onaylı) | `/api/v1/platform/support-sessions`, `…/support-sessions` | `/destek?sekme=oturum`, `/yonetim/destek`, tüm ekranlarda bant | Sahte servis |
+| [82](82-destek-biletleri.md) | Destek biletleri | `…/support-tickets`, `/api/v1/platform/support-tickets` | `/destek`, `/yonetim/destek` | **Backend'de** (#85) — paket SLA (soru 1.9) |
+| [83](83-bilgi-bankasi.md) | Bilgi bankası ve yardım | `/api/v1/knowledge-articles`, `/api/v1/platform/knowledge-articles` | `/yardim`, `/yonetim/bilgi-bankasi` | **Backend'de** (#85) |
+| [84](84-destek-oturumu.md) | Destek oturumu (müşteri onaylı) | `/api/v1/platform/support-sessions`, `…/support-sessions` | `/destek?sekme=oturum`, `/yonetim/destek`, tüm ekranlarda bant | **Backend'de** (#85) |
 
 Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 
