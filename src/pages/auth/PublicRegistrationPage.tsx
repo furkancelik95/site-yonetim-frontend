@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, get } from "../../api/client";
-import type { Written } from "../../api/types";
+import type { Schemas, Written } from "../../api/types";
 import { Alert, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { trUpper } from "../../lib/format";
 
@@ -22,8 +22,8 @@ const digits = (v: string) => v.replace(/\D/g, "").replace(/^90/, "").replace(/^
 const maskPhone = (d: string) => [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean).join(" ");
 const capitalize = (s: string) => s.trim().split(/\s+/).map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1).toLocaleLowerCase("tr-TR")).join(" ");
 
-/** Gerçek yanıt + servis isteği 23 ekleri: blok/bölüm listesi (yalnız ad, kişi yok) ve belge zorunluluğu. */
-interface PublicSite { site_name: string; site_slug: string; blocks?: { id: string; name: string; units: { id: string; name: string }[] }[]; document_required?: boolean }
+/** Site adı + blok/bölüm listesi (yalnız ad, kişi yok — KVKK) ve belge zorunluluğu (istek 23). */
+type PublicSite = Schemas["PublicSiteOut"];
 
 /** Herkese açık sakin kayıt formu (/kayit/:code). Oturum gerekmez; başvuru yönetim onayına düşer. Servis isteği 13 + 23. */
 export function PublicRegistrationPage() {
@@ -73,6 +73,7 @@ export function PublicRegistrationPage() {
       phone: `+90${digits(f.phone)}`,
       email: f.email.trim().toLocaleLowerCase("tr-TR") || null,
       unit_text: selectedUnit?.name ?? f.unit_text.trim(),
+      unit_id: selectedUnit?.id ?? undefined,
       relation: f.relation,
       explicit_consent: f.explicit_consent,
       kvkk_ack: f.kvkk_ack,

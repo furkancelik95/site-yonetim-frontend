@@ -281,7 +281,7 @@ function DeliverButton({ p }: { p: Pkg }) {
   const [code, setCode] = useState("");
   const [to, setTo] = useState("");
   const m = useSiteMutation<{ pickup_code: string; delivered_to: string }, Pkg>("POST", `/packages/${p.id}/deliver`);
-  const dg = useSiteGet<{ id: string; name: string }[]>(`/units/${p.unit_id}/parcel-delegates`);
+  const dg = useSiteGet<Schemas["DelegateNameOut"][]>(`/units/${p.unit_id}/parcel-delegates`);
   return (
     <ConfirmButton
       className="btn btn--sm"

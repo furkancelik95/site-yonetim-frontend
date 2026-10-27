@@ -11,8 +11,7 @@ import { P, useSite } from "../../site/SiteContext";
 import type { StructureSummary } from "./YapiPage";
 
 type Person = Schemas["PersonOut"];
-/** Servis isteği 21'deki şekil. */
-interface DuplicateGroup { key: string; kind: "phone" | "email"; people: Person[] }
+type DuplicateGroup = Schemas["DuplicateGroupOut"];
 
 /** Kişiler (YAP-04): arama, düzenleme, mükerrer kayıt önerisi ve birleştirme. İletişim bilgisi maskeli. */
 export function PeoplePage() {
@@ -59,7 +58,7 @@ export function PeoplePage() {
             {list.data && <div className="card__meta">{list.data.total} kayıt</div>}
           </div>
           <div className="card__tools">
-            <div className="field"><label className="field__label" htmlFor="p-q">Ara</label><input id="p-q" className="field__input" type="search" placeholder="Ad, soyad, telefon, e-posta" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+            <div className="field"><label className="field__label" htmlFor="p-q">Ara</label><input id="p-q" className="field__input" type="search" placeholder="Ad soyad" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           </div>
         </div>
         <div className="card__body card__body--flush">
@@ -84,11 +83,15 @@ export function PeoplePage() {
 }
 
 function PersonForm({ p, onDone }: { p: Person; onDone: () => void }) {
-  const [f, setF] = useState({ first_name: p.first_name, last_name: p.last_name, phone: p.phone ?? "", email: p.email ?? "" });
+  // İletişim maskeli gelir; alan boş bırakılırsa değişmez, yalnız yazılan yeni değer gönderilir.
+  const [f, setF] = useState({ first_name: p.first_name, last_name: p.last_name, phone: "", email: "" });
   const m = useSiteMutation<Record<string, unknown>, Person>("PATCH", `/people/${p.id}`, { onSuccess: onDone });
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ first_name: f.first_name.trim(), last_name: f.last_name.trim(), phone: f.phone.trim() || null, email: f.email.trim().toLocaleLowerCase("tr-TR") || null });
+    const body: Record<string, unknown> = { first_name: f.first_name.trim(), last_name: f.last_name.trim() };
+    if (f.phone.trim()) body.phone = f.phone.trim();
+    if (f.email.trim()) body.email = f.email.trim().toLocaleLowerCase("tr-TR");
+    m.mutate(body);
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
@@ -98,8 +101,8 @@ function PersonForm({ p, onDone }: { p: Person; onDone: () => void }) {
         <div className="grid grid--kpi">
           <Field label="Ad" required error={fieldError(m.error, "first_name")}>{(x) => <input {...x} className="field__input" value={f.first_name} onChange={(e) => setF((v) => ({ ...v, first_name: e.target.value }))} />}</Field>
           <Field label="Soyad" required error={fieldError(m.error, "last_name")}>{(x) => <input {...x} className="field__input" value={f.last_name} onChange={(e) => setF((v) => ({ ...v, last_name: e.target.value }))} />}</Field>
-          <Field label="Telefon" error={fieldError(m.error, "phone")}>{(x) => <input {...x} className="field__input" type="tel" inputMode="tel" placeholder="+90 5XX XXX XX XX" value={f.phone} onChange={(e) => setF((v) => ({ ...v, phone: e.target.value }))} />}</Field>
-          <Field label="E-posta" error={fieldError(m.error, "email")}>{(x) => <input {...x} className="field__input" type="email" inputMode="email" value={f.email} onChange={(e) => setF((v) => ({ ...v, email: e.target.value }))} />}</Field>
+          <Field label="Telefon" hint={p.phone ? `Kayıtlı: ${p.phone} — değiştirmek için yazın` : undefined} error={fieldError(m.error, "phone")}>{(x) => <input {...x} className="field__input" type="tel" inputMode="tel" placeholder="+90 5XX XXX XX XX" value={f.phone} onChange={(e) => setF((v) => ({ ...v, phone: e.target.value }))} />}</Field>
+          <Field label="E-posta" hint={p.email ? `Kayıtlı: ${p.email} — değiştirmek için yazın` : undefined} error={fieldError(m.error, "email")}>{(x) => <input {...x} className="field__input" type="email" inputMode="email" value={f.email} onChange={(e) => setF((v) => ({ ...v, email: e.target.value }))} />}</Field>
         </div>
         <CustomValuesCard entity="person" id={p.id} />
       </div>

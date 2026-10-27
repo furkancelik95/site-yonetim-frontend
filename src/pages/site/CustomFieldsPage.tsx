@@ -86,12 +86,13 @@ function FieldForm({ f, entity, onDone }: { f: CustomField | null; entity: "unit
     view_roles: f?.view_roles ?? ["Yönetici"], edit_roles: f?.edit_roles ?? ["Yönetici"], resident_can_view: f?.resident_can_view ?? false, resident_can_edit: f?.resident_can_edit ?? false, sort_order: String(f?.sort_order ?? ""),
   });
   const [ack, setAck] = useState(false);
+  const [reason, setReason] = useState("");
   const m = useSiteMutation<Record<string, unknown>, CustomField>(f ? "PATCH" : "POST", f ? `/custom-fields/${f.id}` : "/custom-fields", { onSuccess: onDone });
   const sensitive = m.error instanceof ApiError && m.error.code === "sensitive_label";
   const toggle = (k: "view_roles" | "edit_roles", role: string, on: boolean) => setD((x) => ({ ...x, [k]: on ? [...x[k], role] : x[k].filter((r) => r !== role) }));
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ ...d, options: d.options.split("\n").map((o) => o.trim()).filter(Boolean), sort_order: d.sort_order === "" ? undefined : Number(d.sort_order), acknowledge_sensitive: ack });
+    m.mutate({ ...d, options: d.options.split("\n").map((o) => o.trim()).filter(Boolean), sort_order: d.sort_order === "" ? undefined : Number(d.sort_order), acknowledge_sensitive: ack, sensitive_reason: ack ? reason.trim() || undefined : undefined });
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
@@ -99,11 +100,12 @@ function FieldForm({ f, entity, onDone }: { f: CustomField | null; entity: "unit
       <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
         <FormError error={m.error} />
         {sensitive && <label className="check check--rich"><input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} /><span><span className="strong">Gerekçeyle devam et</span><br /><span className="small muted">Bu alanın özel nitelikli kişisel veri içermediğini teyit ediyorum. Tercih edilen yol etiketi değiştirmektir.</span></span></label>}
+        {sensitive && ack && <Field label="Gerekçe" hint="Denetim kaydına yazılır">{(p) => <input {...p} className="field__input" maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>}
         <div className="grid grid--kpi">
           <Field label="Nesne" required>{(p) => <select {...p} className="field__input" disabled={!!f} value={d.entity} onChange={(e) => setD((x) => ({ ...x, entity: e.target.value as "unit" | "person" }))}><option value="unit">Bölüm</option><option value="person">Kişi</option></select>}</Field>
           <Field label="Etiket" required error={fieldError(m.error, "label")}>{(p) => <input {...p} className="field__input" maxLength={60} placeholder="ör. Evcil hayvan" value={d.label} onChange={(e) => setD((x) => ({ ...x, label: e.target.value }))} />}</Field>
           <Field label="Tip" required hint={f ? "Tip sonradan değiştirilemez" : undefined} error={fieldError(m.error, "type")}>{(p) => <select {...p} className="field__input" disabled={!!f} value={d.type} onChange={(e) => setD((x) => ({ ...x, type: e.target.value as CustomField["type"] }))}>{TYPES.map((t) => <option key={t} value={t}>{customFieldType(t)}</option>)}</select>}</Field>
-          <Field label="KVKK kategorisi" required error={fieldError(m.error, "kvkk_category")}>{(p) => <select {...p} className="field__input" value={d.kvkk_category} onChange={(e) => setD((x) => ({ ...x, kvkk_category: e.target.value }))}>{KVKK.map((k) => <option key={k} value={k}>{kvkkCategory(k)}</option>)}</select>}</Field>
+          <Field label="KVKK kategorisi" required error={fieldError(m.error, "kvkk_category")}>{(p) => <select {...p} className="field__input" value={d.kvkk_category} onChange={(e) => setD((x) => ({ ...x, kvkk_category: e.target.value as CustomField["kvkk_category"] }))}>{KVKK.map((k) => <option key={k} value={k}>{kvkkCategory(k)}</option>)}</select>}</Field>
           <Field label="Sıra">{(p) => <input {...p} className="field__input" inputMode="numeric" value={d.sort_order} onChange={(e) => setD((x) => ({ ...x, sort_order: e.target.value.replace(/\D/g, "").slice(0, 3) }))} />}</Field>
         </div>
         {d.type === "select" && <Field label="Seçenekler" required hint="Her satıra bir seçenek" error={fieldError(m.error, "options")}>{(p) => <textarea {...p} className="field__input" rows={4} value={d.options} onChange={(e) => setD((x) => ({ ...x, options: e.target.value }))} />}</Field>}

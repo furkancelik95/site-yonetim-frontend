@@ -9,7 +9,7 @@ import { actorType, auditAction } from "../../lib/labels";
 
 type Audit = Schemas["AuditOut"];
 
-const ACTIONS = ["create", "update", "delete", "import", "download", "export"];
+const ACTIONS = ["create", "update", "delete", "import", "download", "export", "contact_view"];
 const ACTORS = ["user", "system", "delegate"];
 
 /** Süzgeçten bağımsız sayılar: toplam, son 7 gün, bugün, silme (yalnız `total` okunur, page_size 1). */

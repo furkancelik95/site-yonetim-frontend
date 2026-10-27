@@ -2,18 +2,18 @@ import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
 import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, CheckCircle2, MapPin, Pencil, Plus, Printer, Route } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Schemas } from "../../api/types";
 import { Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { patrolSlotStatus, patrolSlotTone, tagType } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
-/** Servis isteği 46'daki şekiller. */
-interface Point { id: string; name: string; location: string | null; area: string | null; tag: "qr" | "nfc" | "both"; code: string; is_active: boolean }
-interface Plan { id: string; name: string; point_ids: string[]; ordered: boolean; start_times: string[]; allowed_minutes: number; assignee: string | null; is_active: boolean }
-interface Report { missed: string[]; out_of_order: string[]; duration_minutes: number; overtime: boolean; late_start_minutes: number; total_points: number; scanned_points: number; ok: boolean }
-interface Slot { plan_id: string; plan_name: string; slot: string; status: string; report: Report | null }
-interface Run { id: string; plan_name: string; slot: string | null; started_by: string; started_at: string; finished_at: string | null; report: Report }
+type Point = Schemas["PatrolPointOut"];
+type Plan = Schemas["PatrolPlanOut"];
+type Report = Schemas["PatrolReportOut"];
+type Slot = Schemas["PatrolSlotOut"];
+type Run = Schemas["PatrolRunOut"];
 
 /**
  * Devriye (GUV-09, yönetim): kontrol noktaları ve QR etiketleri, tur planları (sıra, saatler, süre), bugünkü takvim

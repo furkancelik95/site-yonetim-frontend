@@ -118,7 +118,7 @@ export const moduleName = label({
   portfolio: "Portföy",
 });
 
-export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme", export: "Dışa aktarma" });
+export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme", export: "Dışa aktarma", contact_view: "Kişisel veri görüntüleme" });
 export const actorType = label({ user: "Kullanıcı", system: "Sistem", delegate: "Vekâleten" });
 
 export const warningKind = label({
@@ -240,6 +240,7 @@ export const plateResult = label({ registered: "Kayıtlı", guest: "Misafir", un
 export const plateResultTone = (v: string): Tone => (v === "registered" ? "ok" : v === "guest" ? "info" : "danger");
 export const logKind = label({ note: "Not", event: "Olay", handover: "Vardiya devri" });
 export const tagType = label({ qr: "QR", nfc: "NFC", both: "QR + NFC" });
+export const parkingKind = label({ standard: "Standart", disabled: "Engelli", ev: "Elektrikli araç", guest: "Misafir" });
 export const patrolSlotStatus = label({ upcoming: "Sırada", due: "Başlamalı", running: "Sürüyor", overdue: "Süre aşıldı", done: "Tamamlandı", done_with_deviation: "Sapmalı tamamlandı", not_started: "Başlamadı" });
 export const patrolSlotTone = (v: string): Tone => (v === "done" ? "ok" : v === "running" || v === "upcoming" ? "info" : v === "due" || v === "done_with_deviation" ? "warn" : "danger");
 export const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];

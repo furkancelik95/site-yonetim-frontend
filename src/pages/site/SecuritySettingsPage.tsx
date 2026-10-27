@@ -5,9 +5,8 @@ import type { Page, Schemas } from "../../api/types";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { gateKind, parcelMethod, unannouncedMethod } from "../../lib/labels";
 
-/** Servis isteği 40'taki şekiller. */
-interface Gate { id: string; name: string; kind: "vehicle" | "pedestrian" | "service"; block_ids: string[]; always_open: boolean; is_active: boolean }
-interface Settings { unannounced_method: "info" | "approval"; approval_timeout_seconds: number; gate_methods: Record<string, "info" | "approval">; parcel_method: "code" | "qr" | "both"; visitor_fields: { plate: boolean; phone: boolean; id_seen: boolean }; retention_months: number; parcel_long_wait_days: number; guest_parking_capacity: number }
+type Gate = Schemas["GateOut"];
+type Settings = Schemas["SecuritySettingsOut"];
 
 /** Kapılar ve güvenlik ayarları (GUV-08): kapı tanımları, habersiz ziyaretçi yöntemi, kargo teslimi, saklama süresi. */
 export function SecuritySettingsPage() {
@@ -116,8 +115,10 @@ function SettingsForm({ gates }: { gates: Gate[] }) {
             <div className="row" style={{ gap: "var(--s-2) var(--s-4)" }}>
               {([["plate", "Plaka"], ["phone", "Telefon"], ["id_seen", "\"Kimlik görüldü\" işareti"]] as const).map(([k, l]) => <label key={k} className="check"><input type="checkbox" checked={s.visitor_fields[k]} onChange={(e) => setS({ ...s, visitor_fields: { ...s.visitor_fields, [k]: e.target.checked } })} /><span>{l}</span></label>)}
             </div>
-            <span className="field__hint">Tam T.C. kimlik no hiçbir seçenekte tutulmaz. Saklama süreleri hukuk onayı bekliyor (K8).</span>
+            <span className="field__hint">Tam T.C. kimlik no hiçbir seçenekte tutulmaz; kapalı alan kaydedilmez.</span>
           </fieldset>
+          <label className="check check--rich"><input type="checkbox" checked={s.auto_anonymize} onChange={(e) => setS({ ...s, auto_anonymize: e.target.checked })} /><span><span className="strong">Süresi dolan kayıtları gece anonimleştir</span><br /><span className="small muted">Ziyaretçi adı, plaka ve notlar saklama süresi dolunca silinir. Saklama süreleri hukuk onayı bekliyor (K8); onay gelene kadar kapalı tutun.</span></span></label>
+          {s.version > 0 && <p className="xs muted mb-0">Sürüm {s.version}{s.updated_by && ` · ${s.updated_by}`}</p>}
         </div>
       </div>
       {s.retention_months > 24 && <Alert tone="danger">Saklama süresi en fazla 24 ay olabilir.</Alert>}
