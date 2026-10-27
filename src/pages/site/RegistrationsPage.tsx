@@ -15,7 +15,8 @@ import { invitationStatus, invitationStatusTone, partyRole } from "../../lib/lab
 import { useSite } from "../../site/SiteContext";
 
 type RegLink = Schemas["LinkOut"];
-type Registration = Schemas["RegistrationOut"];
+// `approval_request_id`: kayıt onayı kuralı (K21) varsa açık onay talebi; şema yenilenince kalkar
+type Registration = Schemas["RegistrationOut"] & { approval_request_id?: string | null };
 type Approved = Schemas["ApprovedOut"];
 
 type RegSettings = Schemas["RegistrationSettingsOut"];
@@ -155,12 +156,14 @@ function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Appro
   const reject = useSiteMutation<{ reason: string }, Registration>("POST", `/registrations/${r.id}/reject`);
   // Hisse dolu (409) gelince hisse alanı açılır; daha düşük oranla yeniden denenebilir
   const sharesFull = approve.error instanceof ApiError && approve.error.code === "owner_shares_exceed";
+  const inApproval = !!r.approval_request_id;
   return (
     <article className="stack subcard" aria-label={`${r.first_name} ${r.last_name} başvurusu`} style={{ gap: "var(--s-3)" }}>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <div className="cell-person"><Avatar name={`${r.first_name} ${r.last_name}`} soft /><div><div className="cell-main">{r.first_name} {r.last_name}</div><div className="cell-sub">{partyRole(r.relation)} · <span className="mono">{r.reference}</span>{r.explicit_consent ? " · açık rıza verdi" : ""}</div></div></div>
-        <span className="small muted nowrap">{formatDateTime(r.created_at)}</span>
+        <span className="small muted nowrap">{inApproval && <Badge tone="warn">Onayda</Badge>} {formatDateTime(r.created_at)}</span>
       </div>
+      {inApproval && <Alert tone="info" title="Onay talebi açık">Bu başvuru onay kuralına takıldı; talep sonuçlanana kadar işlem yapılamaz. Durumu Onaylar ekranından izleyebilirsiniz.</Alert>}
       <div className="grid grid--kpi">
         <div className="kv" style={{ margin: 0 }}><span className="kv__k">Yazdığı bölüm</span><span className="kv__v">{r.unit_text}{r.requested_unit_name && r.requested_unit_name !== r.unit_text ? ` (listeden: ${r.requested_unit_name})` : ""}</span></div>
         <div className="kv" style={{ margin: 0 }}><span className="kv__k">Telefon</span><span className="kv__v">{formatPhone(r.phone)}</span></div>
@@ -177,8 +180,8 @@ function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Appro
         )}
       </div>
       <div className="row" style={{ gap: "var(--s-2)" }}>
-        <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso(), ...(r.relation === "owner" && share.trim() ? { share_percent: share.trim().replace(",", ".") } : {}) })}>Onayla</button>
-        <ConfirmButton className="btn btn--ghost btn--sm" danger title="Başvuruyu reddet" confirmLabel="Reddet"
+        <button className="btn btn--sm btn--primary" type="button" disabled={!unit || approve.isPending || inApproval} aria-busy={approve.isPending || undefined} onClick={() => unit && approve.mutate({ unit_id: unit.id, start_date: todayIso(), ...(r.relation === "owner" && share.trim() ? { share_percent: share.trim().replace(",", ".") } : {}) })}>Onayla</button>
+        <ConfirmButton className="btn btn--ghost btn--sm" danger disabled={inApproval} title="Başvuruyu reddet" confirmLabel="Reddet"
           body={<div className="field"><label className="field__label" htmlFor={`rej-${r.id}`}>Gerekçe *</label><input id={`rej-${r.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="ör. Bu bölümde kayıtlı değil" /></div>}
           onConfirm={() => { if (!reason.trim()) throw new Error("Gerekçe zorunlu."); return reject.mutateAsync({ reason: reason.trim() }); }}>
           Reddet
