@@ -4217,6 +4217,403 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/vendors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tedarikçiler (unvana göre; sayfalı) */
+        get: operations["list_vendors_api_v1_sites__slug__vendors_get"];
+        put?: never;
+        /** Tedarikçi ekle */
+        post: operations["create_vendor_api_v1_sites__slug__vendors_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/vendors/{vendor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tedarikçiyi düzenle (boş IBAN korunur) */
+        patch: operations["update_vendor_api_v1_sites__slug__vendors__vendor_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Satın alma ayarları (yoksa varsayılan) */
+        get: operations["get_settings_api_v1_sites__slug__purchase_settings_get"];
+        /** Satın alma ayarlarını kaydet */
+        put: operations["put_settings_api_v1_sites__slug__purchase_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kategorinin kalan bütçesi */
+        get: operations["purchase_budget_api_v1_sites__slug__purchase_budget_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Satın alma talepleri (yeni üstte; sayfalı) */
+        get: operations["list_requests_api_v1_sites__slug__purchase_requests_get"];
+        put?: never;
+        /** Satın alma talebi aç */
+        post: operations["create_request_api_v1_sites__slug__purchase_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Talep: kalemler, teklifler, linkler, kararlar */
+        get: operations["get_request_api_v1_sites__slug__purchase_requests__pr_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Teklifi personel girer */
+        post: operations["add_quote_api_v1_sites__slug__purchase_requests__pr_id__quotes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/quote-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tedarikçiye tek kullanımlık teklif linki */
+        post: operations["create_link_api_v1_sites__slug__purchase_requests__pr_id__quote_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/select-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Teklifi seç ve onaya gönder */
+        post: operations["select_quote_api_v1_sites__slug__purchase_requests__pr_id__select_quote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** İstisna / satın alma kararı */
+        post: operations["decide_request_api_v1_sites__slug__purchase_requests__pr_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Talebi iptal et (açık linkler kapanır) */
+        post: operations["cancel_request_api_v1_sites__slug__purchase_requests__pr_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Siparişler (yeni üstte; sayfalı) */
+        get: operations["list_orders_api_v1_sites__slug__purchase_orders_get"];
+        put?: never;
+        /** Onaylı talepten sipariş ("Sipariş" onay kuralı varsa 202) */
+        post: operations["create_order_api_v1_sites__slug__purchase_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sipariş: kalemler, kabuller, faturalar */
+        get: operations["get_order_api_v1_sites__slug__purchase_orders__order_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-orders/{order_id}/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mal/hizmet kabul (stoklu kalem sistem adına stoğa girer) */
+        post: operations["receive_api_v1_sites__slug__purchase_orders__order_id__receipts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/vendor-invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tedarikçi faturaları (yeni üstte; sayfalı) */
+        get: operations["list_invoices_api_v1_sites__slug__vendor_invoices_get"];
+        put?: never;
+        /** Tedarikçi faturası: sipariş + kabul + fatura eşleşmesi */
+        post: operations["create_invoice_api_v1_sites__slug__vendor_invoices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fatura farkını onayla / itiraz et */
+        post: operations["decide_invoice_api_v1_sites__slug__vendor_invoices__invoice_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/payables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ödenecekler: eşleşmiş faturalar + siparişsiz gider özeti */
+        get: operations["payables_api_v1_sites__slug__payables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ödendi: gider + kasa çıkışı aynı işlemde (Idempotency-Key) */
+        post: operations["mark_paid_api_v1_sites__slug__vendor_invoices__invoice_id__mark_paid_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-quotes/{quote_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Teklif belgesi ekle (multipart, bir kez) */
+        post: operations["attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/purchase-receipts/{receipt_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kabul fotoğrafı / irsaliye ekle (multipart, bir kez) */
+        post: operations["attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fatura görüntüsü ekle (multipart, bir kez; ödenince gidere bağlanır) */
+        post: operations["attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/quote-links/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tedarikçi teklif formu (oturumsuz, tek kullanımlık) */
+        get: operations["public_link_api_v1_public_quote_links__token__get"];
+        put?: never;
+        /** Tedarikçi teklifini gönderir */
+        post: operations["public_submit_api_v1_public_quote_links__token__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/quote-links/{token}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gönderilen teklife belge ekle (gönderimden sonra 1 saat, bir kez) */
+        post: operations["public_file_api_v1_public_quote_links__token__file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/staff": {
         parameters: {
             query?: never;
@@ -5118,7 +5515,7 @@ export interface components {
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request" | "invoice_difference";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -5910,6 +6307,30 @@ export interface components {
             /** Sort Order */
             sort_order?: number | null;
         };
+        /** Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post */
+        Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post: {
+            /**
+             * File
+             * @description PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
+        };
+        /** Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post */
+        Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post: {
+            /**
+             * File
+             * @description PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
+        };
+        /** Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post */
+        Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post: {
+            /**
+             * File
+             * @description PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
+        };
         /** Body_create_expense_api_v1_sites__slug__expenses_post */
         Body_create_expense_api_v1_sites__slug__expenses_post: {
             /**
@@ -5952,6 +6373,14 @@ export interface components {
              * @description PDF, JPG, PNG, WEBP · ≤ 10 MB
              */
             document?: string | null;
+        };
+        /** Body_public_file_api_v1_public_quote_links__token__file_post */
+        Body_public_file_api_v1_public_quote_links__token__file_post: {
+            /**
+             * File
+             * @description PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)
+             */
+            file?: string | null;
         };
         /** Body_upload_api_v1_sites__slug__bank_imports_post */
         Body_upload_api_v1_sites__slug__bank_imports_post: {
@@ -7259,6 +7688,11 @@ export interface components {
             /** Votes Abstain */
             votes_abstain?: number | null;
         };
+        /**
+         * DecisionKind
+         * @enum {string}
+         */
+        DecisionKind: "approve" | "reject" | "withdraw";
         /** DecisionOut */
         DecisionOut: {
             /** Revision */
@@ -7286,6 +7720,11 @@ export interface components {
          * @enum {string}
          */
         DecisionSource: "resident" | "guard";
+        /**
+         * DecisionStage
+         * @enum {string}
+         */
+        DecisionStage: "exception" | "purchase" | "order";
         /** DecisionsIn */
         DecisionsIn: {
             /** Attendance Note */
@@ -7416,6 +7855,17 @@ export interface components {
             name?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+        };
+        /** DirectExpensesOut */
+        DirectExpensesOut: {
+            /** Count */
+            count: number;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
         };
         /**
          * Direction
@@ -8546,6 +8996,18 @@ export interface components {
          * @enum {string}
          */
         InviteType: "once" | "range" | "recurring";
+        /** InvoiceDecideIn */
+        InvoiceDecideIn: {
+            /** Decision */
+            decision?: ("approve" | "reject") | null;
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * InvoiceStatus
+         * @enum {string}
+         */
+        InvoiceStatus: "matched" | "diff_pending" | "disputed" | "paid";
         /** ItemTotalOut */
         ItemTotalOut: {
             /**
@@ -8777,6 +9239,11 @@ export interface components {
             /** Is Enabled */
             is_enabled: boolean;
         };
+        /**
+         * LinkState
+         * @enum {string}
+         */
+        LinkState: "open" | "used" | "expired";
         /** LinkableUserOut */
         LinkableUserOut: {
             /**
@@ -8909,6 +9376,19 @@ export interface components {
          * @enum {string}
          */
         LostItemStatus: "waiting" | "returned" | "disposed";
+        /** MarkPaidIn */
+        MarkPaidIn: {
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /**
+             * Cash Account Id
+             * Format: uuid
+             */
+            cash_account_id: string;
+        };
         /**
          * MatchStatus
          * @enum {string}
@@ -9543,6 +10023,11 @@ export interface components {
              */
             votes: number | null;
         };
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "sent" | "partial" | "received" | "closed";
         /** OutageIn */
         OutageIn: {
             /** Title */
@@ -10038,6 +10523,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[PurchaseOrderRow] */
+        Page_PurchaseOrderRow_: {
+            /** Items */
+            items: components["schemas"]["PurchaseOrderRow"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[PurchaseRequestRow] */
+        Page_PurchaseRequestRow_: {
+            /** Items */
+            items: components["schemas"]["PurchaseRequestRow"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[RegistrationOut] */
         Page_RegistrationOut_: {
             /** Items */
@@ -10130,6 +10637,28 @@ export interface components {
         Page_VehicleOut_: {
             /** Items */
             items: components["schemas"]["VehicleOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[VendorInvoiceOut] */
+        Page_VendorInvoiceOut_: {
+            /** Items */
+            items: components["schemas"]["VendorInvoiceOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[VendorOut] */
+        Page_VendorOut_: {
+            /** Items */
+            items: components["schemas"]["VendorOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -10644,6 +11173,22 @@ export interface components {
              * Format: date
              */
             paid_on: string;
+        };
+        /** PayablesOut */
+        PayablesOut: {
+            /**
+             * Invoices
+             * @description eşleşmiş, ödenmemiş; vadeye göre
+             */
+            invoices: components["schemas"]["VendorInvoiceOut"][];
+            /** @description siparişsiz ödenmemiş giderler */
+            direct_expenses: components["schemas"]["DirectExpensesOut"];
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
         };
         /**
          * PayerRule
@@ -11369,6 +11914,63 @@ export interface components {
              */
             email_required: boolean;
         };
+        /** PublicQuoteIn */
+        PublicQuoteIn: {
+            /** Lines */
+            lines?: components["schemas"]["PurchaseQuotePriceIn"][];
+            /** Delivery Days */
+            delivery_days?: number | null;
+            /** Payment Terms */
+            payment_terms?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Terms Ack
+             * @default false
+             */
+            terms_ack: boolean;
+        };
+        /** PublicQuoteItemOut */
+        PublicQuoteItemOut: {
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: string;
+            /** Unit */
+            unit: string;
+        };
+        /** PublicQuoteLinkOut */
+        PublicQuoteLinkOut: {
+            /** Site Name */
+            site_name: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Number */
+            number: string;
+            /** Title */
+            title: string;
+            /**
+             * Items
+             * @description yalnız açıklama, miktar, birim — tahmini fiyat, bütçe, diğer teklifler yok
+             */
+            items: components["schemas"]["PublicQuoteItemOut"][];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** PublicQuoteResult */
+        PublicQuoteResult: {
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+        };
         /** PublicSiteOut */
         PublicSiteOut: {
             /** Site Name */
@@ -11397,6 +11999,578 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+        };
+        /** PurchaseApprovalRef */
+        PurchaseApprovalRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /** Action Type */
+            action_type: string;
+            status: components["schemas"]["ApprovalStatus"];
+        };
+        /** PurchaseBudgetOut */
+        PurchaseBudgetOut: {
+            /**
+             * Has Budget
+             * @description false → kategoride işletme projesi kalemi yok
+             */
+            has_budget: boolean;
+            /**
+             * Annual
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            annual: string;
+            /**
+             * Spent
+             * @description bu yılın gerçekleşen gideri
+             * @example 1234.56
+             */
+            spent: string;
+            /**
+             * Committed
+             * @description onay bekleyen/onaylı talepler + açık siparişler
+             * @example 1234.56
+             */
+            committed: string;
+            /**
+             * Remaining
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            remaining: string;
+        };
+        /** PurchaseBudgetSnapshot */
+        PurchaseBudgetSnapshot: {
+            /**
+             * Annual
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            annual: string;
+            /**
+             * Spent
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            spent: string;
+            /**
+             * Committed
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            committed: string;
+            /**
+             * Remaining
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            remaining: string;
+        };
+        /** PurchaseDecideIn */
+        PurchaseDecideIn: {
+            /** Decision */
+            decision?: ("approve" | "reject") | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** PurchaseDecisionOut */
+        PurchaseDecisionOut: {
+            stage: components["schemas"]["DecisionStage"];
+            decision: components["schemas"]["DecisionKind"];
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string | null;
+        };
+        /** PurchaseFileOut */
+        PurchaseFileOut: {
+            /**
+             * Id
+             * Format: uuid
+             * @description indirme: GET …/files/{id}
+             */
+            id: string;
+            /** File Name */
+            file_name: string;
+        };
+        /** PurchaseItemIn */
+        PurchaseItemIn: {
+            /** Description */
+            description?: string | null;
+            /**
+             * Qty
+             * @description miktar (en çok 3 ondalık)
+             */
+            qty: number | string;
+            /** Unit */
+            unit?: string | null;
+            /** Est Unit Price */
+            est_unit_price?: string | null;
+            /**
+             * Stock Item Id
+             * @description stoklu kalem: kabulde stoğa girer
+             */
+            stock_item_id?: string | null;
+        };
+        /** PurchaseItemOut */
+        PurchaseItemOut: {
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Est Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            est_unit_price: string;
+            /** Stock Item Id */
+            stock_item_id: string | null;
+            /** Stock Item Name */
+            stock_item_name: string | null;
+        };
+        /** PurchaseOrderIn */
+        PurchaseOrderIn: {
+            /**
+             * Pr Id
+             * Format: uuid
+             */
+            pr_id: string;
+        };
+        /** PurchaseOrderLineOut */
+        PurchaseOrderLineOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Description */
+            description: string;
+            /** Qty */
+            qty: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            unit_price: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /** Stock Item Id */
+            stock_item_id: string | null;
+            /** Received */
+            received: string;
+            /**
+             * Invoiced
+             * @description itiraz edilmemiş faturalardaki miktar
+             */
+            invoiced: string;
+        };
+        /** PurchaseOrderOut */
+        PurchaseOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Pr Id
+             * Format: uuid
+             */
+            pr_id: string;
+            /** Pr Number */
+            pr_number: string;
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Lines */
+            lines: components["schemas"]["PurchaseOrderLineOut"][];
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            status: components["schemas"]["OrderStatus"];
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Receipts */
+            receipts: components["schemas"]["PurchaseReceiptOut"][];
+            /** Invoices */
+            invoices: components["schemas"]["VendorInvoiceOut"][];
+        };
+        /** PurchaseOrderRow */
+        PurchaseOrderRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Pr Id
+             * Format: uuid
+             */
+            pr_id: string;
+            /** Pr Number */
+            pr_number: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            status: components["schemas"]["OrderStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PurchaseOrderWriteOut */
+        PurchaseOrderWriteOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "created" | "approval_pending";
+            order: components["schemas"]["PurchaseOrderOut"] | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+        };
+        /** PurchaseQuoteIn */
+        PurchaseQuoteIn: {
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /** Lines */
+            lines?: components["schemas"]["PurchaseQuotePriceIn"][];
+            /** Delivery Days */
+            delivery_days?: number | null;
+            /** Payment Terms */
+            payment_terms?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** PurchaseQuoteOut */
+        PurchaseQuoteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Lines */
+            lines: components["schemas"]["PurchaseUnitPrice"][];
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /** Delivery Days */
+            delivery_days: number;
+            /** Payment Terms */
+            payment_terms: string;
+            /**
+             * Valid Until
+             * Format: date
+             */
+            valid_until: string;
+            /** Note */
+            note: string | null;
+            /**
+             * File Id
+             * @description belge: GET …/files/{id}
+             */
+            file_id: string | null;
+            /** File Name */
+            file_name: string | null;
+            /** @description vendor_link → "Tedarikçi girdi" */
+            source: components["schemas"]["QuoteSource"];
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Rating Avg */
+            rating_avg: string | null;
+            /** Rating Count */
+            rating_count: number;
+        };
+        /** PurchaseQuotePriceIn */
+        PurchaseQuotePriceIn: {
+            /** Unit Price */
+            unit_price?: string | null;
+        };
+        /** PurchaseReceiptIn */
+        PurchaseReceiptIn: {
+            /** Lines */
+            lines?: components["schemas"]["PurchaseReceiptQtyIn"][];
+            /** Note */
+            note?: string | null;
+            /** Rating */
+            rating?: number | null;
+        };
+        /** PurchaseReceiptOut */
+        PurchaseReceiptOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lines */
+            lines: components["schemas"]["PurchaseReceiptQty"][];
+            /** Note */
+            note: string | null;
+            /** Rating */
+            rating: number | null;
+            /** File Id */
+            file_id: string | null;
+            /** File Name */
+            file_name: string | null;
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** PurchaseReceiptQty */
+        PurchaseReceiptQty: {
+            /** Qty */
+            qty: string;
+        };
+        /** PurchaseReceiptQtyIn */
+        PurchaseReceiptQtyIn: {
+            /**
+             * Qty
+             * @default 0
+             */
+            qty: number | string;
+        };
+        /** PurchaseRequestIn */
+        PurchaseRequestIn: {
+            /** Title */
+            title?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /** Items */
+            items?: components["schemas"]["PurchaseItemIn"][];
+        };
+        /** PurchaseRequestOut */
+        PurchaseRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Title */
+            title: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Category Name */
+            category_name: string;
+            /** Items */
+            items: components["schemas"]["PurchaseItemOut"][];
+            /**
+             * Estimated Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            estimated_total: string;
+            /** @description talep anındaki bütçe görüntüsü */
+            budget: components["schemas"]["PurchaseBudgetSnapshot"] | null;
+            /** Over Budget */
+            over_budget: boolean;
+            /** Required Quotes */
+            required_quotes: number;
+            status: components["schemas"]["PurchaseStatus"];
+            /** Selected Quote Id */
+            selected_quote_id: string | null;
+            /** Exception Reason */
+            exception_reason: string | null;
+            /** Decisions */
+            decisions: components["schemas"]["PurchaseDecisionOut"][];
+            /** Reject Reason */
+            reject_reason: string | null;
+            /** Created By */
+            created_by: string;
+            /** Created By Id */
+            created_by_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Quotes */
+            quotes: components["schemas"]["PurchaseQuoteOut"][];
+            /** Quote Count */
+            quote_count: number;
+            /** Links */
+            links: components["schemas"]["QuoteLinkOut"][];
+            /** Order Id */
+            order_id: string | null;
+            /** Order Number */
+            order_number: string | null;
+            /** @description açık onay talebi (onay kuralı varsa) — karar Onaylar ekranından da verilir */
+            approval: components["schemas"]["PurchaseApprovalRef"] | null;
+        };
+        /** PurchaseRequestRow */
+        PurchaseRequestRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Title */
+            title: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /** Category Name */
+            category_name: string;
+            /** Over Budget */
+            over_budget: boolean;
+            /**
+             * Estimated Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            estimated_total: string;
+            /** Quote Count */
+            quote_count: number;
+            /** Required Quotes */
+            required_quotes: number;
+            status: components["schemas"]["PurchaseStatus"];
+            /** Order Id */
+            order_id: string | null;
+            /** Order Number */
+            order_number: string | null;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PurchaseSettingsIn */
+        PurchaseSettingsIn: {
+            /** Thresholds */
+            thresholds: components["schemas"]["PurchaseThreshold"][];
+            /** Above Quotes */
+            above_quotes: number;
+            /** Tolerance Percent */
+            tolerance_percent: number | string;
+            /** Link Days */
+            link_days: number;
+        };
+        /** PurchaseSettingsOut */
+        PurchaseSettingsOut: {
+            /** Thresholds */
+            thresholds: components["schemas"]["PurchaseThreshold"][];
+            /**
+             * Above Quotes
+             * @description son eşiğin üstünde gereken teklif
+             */
+            above_quotes: number;
+            /**
+             * Tolerance Percent
+             * @description fatura toplam toleransı, yüzde (`1.00`)
+             */
+            tolerance_percent: string;
+            /**
+             * Link Days
+             * @description tedarikçi teklif linki geçerliliği (gün)
+             */
+            link_days: number;
+        };
+        /**
+         * PurchaseStatus
+         * @enum {string}
+         */
+        PurchaseStatus: "quoting" | "exception_pending" | "approval_pending" | "approved" | "rejected" | "ordered" | "cancelled";
+        /** PurchaseThreshold */
+        PurchaseThreshold: {
+            /**
+             * Max
+             * @description bu tutarın altındaysa
+             * @example 1234.56
+             */
+            max: string;
+            /** Quotes */
+            quotes: number;
+        };
+        /** PurchaseUnitPrice */
+        PurchaseUnitPrice: {
+            /**
+             * Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            unit_price: string;
         };
         /**
          * PushPlatform
@@ -11480,6 +12654,52 @@ export interface components {
              */
             total: string;
         };
+        /** QuoteLinkCreated */
+        QuoteLinkCreated: {
+            /**
+             * Token
+             * @description yalnız bu yanıtta; tedarikçiye /teklif/{token} iletilir
+             */
+            token: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Vendor Email */
+            vendor_email: string | null;
+        };
+        /** QuoteLinkIn */
+        QuoteLinkIn: {
+            /** Vendor Id */
+            vendor_id?: string | null;
+        };
+        /** QuoteLinkOut */
+        QuoteLinkOut: {
+            /**
+             * Id
+             * Format: uuid
+             * @description belirteç yalnız oluşturulurken bir kez döner
+             */
+            id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Used At */
+            used_at: string | null;
+            state: components["schemas"]["LinkState"];
+        };
+        /**
+         * QuoteSource
+         * @enum {string}
+         */
+        QuoteSource: "staff" | "vendor_link";
         /**
          * QuoteStatus
          * @enum {string}
@@ -12727,6 +13947,13 @@ export interface components {
             updated_at: string | null;
             /** Updated By */
             updated_by: string | null;
+        };
+        /** SelectQuoteIn */
+        SelectQuoteIn: {
+            /** Quote Id */
+            quote_id?: string | null;
+            /** Exception Reason */
+            exception_reason?: string | null;
         };
         /** SelectionIn */
         SelectionIn: {
@@ -14473,6 +15700,206 @@ export interface components {
          * @enum {string}
          */
         VehicleStatus: "active" | "pending" | "inactive";
+        /** VendorIn */
+        VendorIn: {
+            /** Name */
+            name?: string | null;
+            /** Tax No */
+            tax_no?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Email */
+            email?: string | null;
+            /**
+             * Iban
+             * @description düzenlemede boş/gönderilmezse mevcut korunur
+             */
+            iban?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** VendorInvoiceDecisionOut */
+        VendorInvoiceDecisionOut: {
+            /** By */
+            by: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string | null;
+        };
+        /** VendorInvoiceIn */
+        VendorInvoiceIn: {
+            /** Order Id */
+            order_id?: string | null;
+            /** Number */
+            number?: string | null;
+            /** Date */
+            date?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Lines */
+            lines?: components["schemas"]["VendorInvoiceLineIn"][];
+        };
+        /** VendorInvoiceLineIn */
+        VendorInvoiceLineIn: {
+            /**
+             * Qty
+             * @default 0
+             */
+            qty: number | string;
+            /** Unit Price */
+            unit_price?: string | null;
+        };
+        /** VendorInvoiceLineOut */
+        VendorInvoiceLineOut: {
+            /** Qty */
+            qty: string;
+            /**
+             * Unit Price
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            unit_price: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+        };
+        /** VendorInvoiceOut */
+        VendorInvoiceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Order Number */
+            order_number: string;
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
+            /** Number */
+            number: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Lines */
+            lines: components["schemas"]["VendorInvoiceLineOut"][];
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+            /**
+             * Expected Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            expected_total: string;
+            /** Diffs */
+            diffs: string[];
+            status: components["schemas"]["InvoiceStatus"];
+            decision: components["schemas"]["VendorInvoiceDecisionOut"] | null;
+            /**
+             * Approval Request Id
+             * @description fark onay kuralına düştüyse
+             */
+            approval_request_id: string | null;
+            /** File Id */
+            file_id: string | null;
+            /** File Name */
+            file_name: string | null;
+            /** Paid On */
+            paid_on: string | null;
+            /** Cash Account Id */
+            cash_account_id: string | null;
+            /**
+             * Expense Id
+             * @description "ödendi" ile yazılan gider
+             */
+            expense_id: string | null;
+            /** Overdue */
+            overdue: boolean;
+            /** Created By */
+            created_by: string;
+            /** Created By Id */
+            created_by_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** VendorOut */
+        VendorOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Tax No */
+            tax_no: string;
+            /** Phone */
+            phone: string | null;
+            /** Email */
+            email: string | null;
+            /**
+             * Iban Masked
+             * @description IBAN hiçbir okumada açık dönmez
+             */
+            iban_masked: string | null;
+            /** Category */
+            category: string | null;
+            status: components["schemas"]["VendorStatus"];
+            /** Note */
+            note: string | null;
+            /**
+             * Rating Avg
+             * @description kabuldeki 1–5 puanların ortalaması (`4.5`)
+             */
+            rating_avg: string | null;
+            /** Rating Count */
+            rating_count: number;
+            /** Order Count */
+            order_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * VendorStatus
+         * @enum {string}
+         */
+        VendorStatus: "active" | "passive" | "blacklist";
         /** VersionOut */
         VersionOut: {
             /** Version */
@@ -15233,6 +16660,54 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[PublicQuoteResult] */
+        Written_PublicQuoteResult_: {
+            data: components["schemas"]["PublicQuoteResult"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseFileOut] */
+        Written_PurchaseFileOut_: {
+            data: components["schemas"]["PurchaseFileOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseOrderOut] */
+        Written_PurchaseOrderOut_: {
+            data: components["schemas"]["PurchaseOrderOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseOrderWriteOut] */
+        Written_PurchaseOrderWriteOut_: {
+            data: components["schemas"]["PurchaseOrderWriteOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseQuoteOut] */
+        Written_PurchaseQuoteOut_: {
+            data: components["schemas"]["PurchaseQuoteOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseRequestOut] */
+        Written_PurchaseRequestOut_: {
+            data: components["schemas"]["PurchaseRequestOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PurchaseSettingsOut] */
+        Written_PurchaseSettingsOut_: {
+            data: components["schemas"]["PurchaseSettingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[QuoteLinkCreated] */
+        Written_QuoteLinkCreated_: {
+            data: components["schemas"]["QuoteLinkCreated"];
+            /** Message */
+            message: string;
+        };
         /** Written[RecurringOut] */
         Written_RecurringOut_: {
             data: components["schemas"]["RecurringOut"];
@@ -15422,6 +16897,18 @@ export interface components {
         /** Written[VehicleSettingsOut] */
         Written_VehicleSettingsOut_: {
             data: components["schemas"]["VehicleSettingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VendorInvoiceOut] */
+        Written_VendorInvoiceOut_: {
+            data: components["schemas"]["VendorInvoiceOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[VendorOut] */
+        Written_VendorOut_: {
+            data: components["schemas"]["VendorOut"];
             /** Message */
             message: string;
         };
@@ -25881,6 +27368,1014 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_MovedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_vendors_api_v1_sites__slug__vendors_get: {
+        parameters: {
+            query?: {
+                /** @description unvan ya da vergi no */
+                q?: string | null;
+                status?: components["schemas"]["VendorStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_VendorOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_vendor_api_v1_sites__slug__vendors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VendorOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_vendor_api_v1_sites__slug__vendors__vendor_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VendorOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_sites__slug__purchase_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_sites__slug__purchase_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseSettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purchase_budget_api_v1_sites__slug__purchase_budget_get: {
+        parameters: {
+            query?: {
+                category_id?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseBudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_requests_api_v1_sites__slug__purchase_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PurchaseStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PurchaseRequestRow_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_request_api_v1_sites__slug__purchase_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_request_api_v1_sites__slug__purchase_requests__pr_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_quote_api_v1_sites__slug__purchase_requests__pr_id__quotes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseQuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseQuoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_link_api_v1_sites__slug__purchase_requests__pr_id__quote_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_QuoteLinkCreated_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    select_quote_api_v1_sites__slug__purchase_requests__pr_id__select_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectQuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_request_api_v1_sites__slug__purchase_requests__pr_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseDecideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_request_api_v1_sites__slug__purchase_requests__pr_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pr_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_sites__slug__purchase_orders_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["OrderStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PurchaseOrderRow_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_order_api_v1_sites__slug__purchase_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseOrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseOrderWriteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_sites__slug__purchase_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseOrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receive_api_v1_sites__slug__purchase_orders__order_id__receipts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseReceiptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseOrderOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invoices_api_v1_sites__slug__vendor_invoices_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["InvoiceStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_VendorInvoiceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_invoice_api_v1_sites__slug__vendor_invoices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorInvoiceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VendorInvoiceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_invoice_api_v1_sites__slug__vendor_invoices__invoice_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceDecideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VendorInvoiceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    payables_api_v1_sites__slug__payables_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayablesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_paid_api_v1_sites__slug__vendor_invoices__invoice_id__mark_paid_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                invoice_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkPaidIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_VendorInvoiceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quote_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseFileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receipt_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseFileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseFileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_link_api_v1_public_quote_links__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicQuoteLinkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_submit_api_v1_public_quote_links__token__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicQuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PublicQuoteResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_file_api_v1_public_quote_links__token__file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_public_file_api_v1_public_quote_links__token__file_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PurchaseFileOut_"];
                 };
             };
             /** @description Validation Error */

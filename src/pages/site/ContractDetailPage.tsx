@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Schemas } from "../../api/types";
+import type { Page, Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, todayIso } from "../../lib/format";
@@ -17,7 +17,7 @@ interface Kpi_ { id: string; name: string; source: string; target: number; weigh
 interface Penalty { id: string; kpi_id: string; below_percent: number; cut_kind: string; cut_value: string }
 interface Escalation { kind: string; fixed_rate: number | null; period: string; cap: number | null }
 interface Preview { status: "none" | "not_due" | "missing_index" | "due" | "approved" | "rejected"; date?: string; days_left?: number; index_period?: string; rate?: number | null; capped_rate?: number | null; old_amount?: string; new_amount?: string | null; annual_effect?: string | null; record?: { decision: string; note: string | null; by: string; at: string } | null }
-interface Perf { vendor_id: string | null; vendor: { id: string; name: string; rating_avg: number | null; rating_count: number } | null; kpis: Kpi_[]; penalties: Penalty[]; escalation: Escalation; escalations: { date: string; old_amount: string; new_amount: string; rate: number; decision: string; note: string | null; by: string }[]; monthly_amount: string | null; escalation_preview: Preview; last_scorecards: { period: string; total: number | null; status: string; penalty: string | null }[] }
+interface Perf { vendor_id: string | null; vendor: { id: string; name: string; rating_avg: string | null; rating_count: number } | null; kpis: Kpi_[]; penalties: Penalty[]; escalation: Escalation; escalations: { date: string; old_amount: string; new_amount: string; rate: number; decision: string; note: string | null; by: string }[]; monthly_amount: string | null; escalation_preview: Preview; last_scorecards: { period: string; total: number | null; status: string; penalty: string | null }[] }
 interface Row { kpi_id: string; name: string; source: string; target: number; weight: number; actual: number | null; score: number | null; detail: string | null }
 interface Card { period: string; rows: Row[]; total: number | null; comment: string | null; status: string; penalty: { amount: string; reasons: string[]; status: string; decided_by: string | null; note: string | null } | null; monthly_amount: string | null; expected_invoice: string | null; finalized_by: string | null; finalized_by_id: string | null; finalized_at: string | null }
 
@@ -58,7 +58,7 @@ function General({ c, p }: { c: Contract; p: Perf }) {
       <div className="grid grid--kpi">
         <Kpi label="Bedel" value={c.amount ? <Money value={c.amount} /> : "—"} note={contractPeriod(c.period)} />
         <Kpi label="Bitişe" value={c.days_left >= 0 ? `${c.days_left} gün` : "Doldu"} tone={c.days_left <= 30 ? "danger" : c.days_left <= 60 ? "warn" : undefined} />
-        <Kpi label="Tedarikçi puanı" value={p.vendor?.rating_avg ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : "tedarikçi kartı bağlı değil"} />
+        <Kpi label="Tedarikçi puanı" value={p.vendor?.rating_avg?.replace(".", ",") ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : "tedarikçi kartı bağlı değil"} />
         <Kpi label="Son karne" value={p.last_scorecards[0]?.total ?? "—"} note={p.last_scorecards[0]?.period} />
       </div>
       {c.days_left <= 60 && c.days_left >= 0 && <Alert tone="warn" title="Yenileme kararı">Sözleşme {c.days_left} gün sonra bitiyor. Son 12 ayın karnesine bakarak yenileyin, yeniden teklif alın ya da sonlandırın.</Alert>}
@@ -78,7 +78,7 @@ function General({ c, p }: { c: Contract; p: Perf }) {
 }
 
 function PerfForm({ c, p, manage }: { c: Contract; p: Perf; manage: boolean }) {
-  const vendors = useSiteGet<VendorRow[]>("/vendors");
+  const vendors = useSiteGet<Page<VendorRow>>("/vendors", { page_size: 200 });
   const [vendorId, setVendorId] = useState(p.vendor_id ?? "");
   const [kpis, setKpis] = useState(p.kpis.map((k) => ({ ...k, target: String(k.target), weight: String(k.weight), request_category: k.request_category ?? "" })));
   const [pens, setPens] = useState(p.penalties.map((x) => ({ ...x, below_percent: String(x.below_percent), cut_value: String(Number(x.cut_value)) })));
@@ -93,7 +93,7 @@ function PerfForm({ c, p, manage }: { c: Contract; p: Perf; manage: boolean }) {
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); save(); }}>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
-        <Field label="Tedarikçi kartı" hint="Puan ve sipariş geçmişi için" error={fieldError(m.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" disabled={!manage} value={vendorId} onChange={(e) => setVendorId(e.target.value)}><option value="">— bağlı değil —</option>{(vendors.data ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>}</Field>
+        <Field label="Tedarikçi kartı" hint="Puan ve sipariş geçmişi için" error={fieldError(m.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" disabled={!manage} value={vendorId} onChange={(e) => setVendorId(e.target.value)}><option value="">— bağlı değil —</option>{(vendors.data?.items ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>}</Field>
         <fieldset style={{ border: 0, padding: 0, margin: 0 }} className="stack">
           <legend className="field__label">KPI'lar (aylık)</legend>
           {kpis.length === 0 && <p className="small muted mb-0">Henüz KPI yok. Kaynak modül kapalıysa "Elle giriş" seçin.</p>}

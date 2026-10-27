@@ -18911,6 +18911,1868 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/vendors": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçiler (unvana göre; sayfalı)",
+        "operationId": "list_vendors_api_v1_sites__slug__vendors_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "unvan ya da vergi no",
+              "title": "Q"
+            },
+            "description": "unvan ya da vergi no"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/VendorStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_VendorOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçi ekle",
+        "operationId": "create_vendor_api_v1_sites__slug__vendors_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_VendorOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/vendors/{vendor_id}": {
+      "patch": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçiyi düzenle (boş IBAN korunur)",
+        "operationId": "update_vendor_api_v1_sites__slug__vendors__vendor_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "vendor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vendor Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_VendorOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-settings": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Satın alma ayarları (yoksa varsayılan)",
+        "operationId": "get_settings_api_v1_sites__slug__purchase_settings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Satın alma ayarlarını kaydet",
+        "operationId": "put_settings_api_v1_sites__slug__purchase_settings_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseSettingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-budget": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Kategorinin kalan bütçesi",
+        "operationId": "purchase_budget_api_v1_sites__slug__purchase_budget_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseBudgetOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Satın alma talepleri (yeni üstte; sayfalı)",
+        "operationId": "list_requests_api_v1_sites__slug__purchase_requests_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PurchaseStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PurchaseRequestRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Satın alma talebi aç",
+        "operationId": "create_request_api_v1_sites__slug__purchase_requests_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Talep: kalemler, teklifler, linkler, kararlar",
+        "operationId": "get_request_api_v1_sites__slug__purchase_requests__pr_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/quotes": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Teklifi personel girer",
+        "operationId": "add_quote_api_v1_sites__slug__purchase_requests__pr_id__quotes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseQuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseQuoteOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/quote-links": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçiye tek kullanımlık teklif linki",
+        "operationId": "create_link_api_v1_sites__slug__purchase_requests__pr_id__quote_links_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteLinkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_QuoteLinkCreated_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/select-quote": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Teklifi seç ve onaya gönder",
+        "operationId": "select_quote_api_v1_sites__slug__purchase_requests__pr_id__select_quote_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectQuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/decide": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "İstisna / satın alma kararı",
+        "operationId": "decide_request_api_v1_sites__slug__purchase_requests__pr_id__decide_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseDecideIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-requests/{pr_id}/cancel": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Talebi iptal et (açık linkler kapanır)",
+        "operationId": "cancel_request_api_v1_sites__slug__purchase_requests__pr_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pr Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-orders": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Siparişler (yeni üstte; sayfalı)",
+        "operationId": "list_orders_api_v1_sites__slug__purchase_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OrderStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PurchaseOrderRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Onaylı talepten sipariş (\"Sipariş\" onay kuralı varsa 202)",
+        "operationId": "create_order_api_v1_sites__slug__purchase_orders_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseOrderIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseOrderWriteOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-orders/{order_id}": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Sipariş: kalemler, kabuller, faturalar",
+        "operationId": "get_order_api_v1_sites__slug__purchase_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseOrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-orders/{order_id}/receipts": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Mal/hizmet kabul (stoklu kalem sistem adına stoğa girer)",
+        "operationId": "receive_api_v1_sites__slug__purchase_orders__order_id__receipts_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReceiptIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseOrderOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/vendor-invoices": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçi faturaları (yeni üstte; sayfalı)",
+        "operationId": "list_invoices_api_v1_sites__slug__vendor_invoices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/InvoiceStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_VendorInvoiceOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Tedarikçi faturası: sipariş + kabul + fatura eşleşmesi",
+        "operationId": "create_invoice_api_v1_sites__slug__vendor_invoices_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorInvoiceIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_VendorInvoiceOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/decide": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Fatura farkını onayla / itiraz et",
+        "operationId": "decide_invoice_api_v1_sites__slug__vendor_invoices__invoice_id__decide_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceDecideIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_VendorInvoiceOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/payables": {
+      "get": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Ödenecekler: eşleşmiş faturalar + siparişsiz gider özeti",
+        "operationId": "payables_api_v1_sites__slug__payables_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayablesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/mark-paid": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Ödendi: gider + kasa çıkışı aynı işlemde (Idempotency-Key)",
+        "operationId": "mark_paid_api_v1_sites__slug__vendor_invoices__invoice_id__mark_paid_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkPaidIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_VendorInvoiceOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-quotes/{quote_id}/file": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Teklif belgesi ekle (multipart, bir kez)",
+        "operationId": "attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "quote_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Quote Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseFileOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/purchase-receipts/{receipt_id}/file": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Kabul fotoğrafı / irsaliye ekle (multipart, bir kez)",
+        "operationId": "attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "receipt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Receipt Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseFileOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/vendor-invoices/{invoice_id}/file": {
+      "post": {
+        "tags": [
+          "satın alma"
+        ],
+        "summary": "Fatura görüntüsü ekle (multipart, bir kez; ödenince gidere bağlanır)",
+        "operationId": "attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseFileOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/quote-links/{token}": {
+      "get": {
+        "tags": [
+          "herkese açık"
+        ],
+        "summary": "Tedarikçi teklif formu (oturumsuz, tek kullanımlık)",
+        "operationId": "public_link_api_v1_public_quote_links__token__get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicQuoteLinkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "herkese açık"
+        ],
+        "summary": "Tedarikçi teklifini gönderir",
+        "operationId": "public_submit_api_v1_public_quote_links__token__post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicQuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PublicQuoteResult_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/quote-links/{token}/file": {
+      "post": {
+        "tags": [
+          "herkese açık"
+        ],
+        "summary": "Gönderilen teklife belge ekle (gönderimden sonra 1 saat, bir kez)",
+        "operationId": "public_file_api_v1_public_quote_links__token__file_post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_public_file_api_v1_public_quote_links__token__file_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PurchaseFileOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/staff": {
       "get": {
         "tags": [
@@ -22719,7 +24581,8 @@
           "stock_count_difference",
           "approval_rule_change",
           "ownership_transfer",
-          "leave_request"
+          "leave_request",
+          "invoice_difference"
         ],
         "title": "ActionType",
         "description": "Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için\ntanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir."
@@ -25008,6 +26871,63 @@
         "type": "object",
         "title": "BlockUpdate"
       },
+      "Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)"
+          }
+        },
+        "type": "object",
+        "title": "Body_attach_invoice_file_api_v1_sites__slug__vendor_invoices__invoice_id__file_post"
+      },
+      "Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)"
+          }
+        },
+        "type": "object",
+        "title": "Body_attach_quote_file_api_v1_sites__slug__purchase_quotes__quote_id__file_post"
+      },
+      "Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)"
+          }
+        },
+        "type": "object",
+        "title": "Body_attach_receipt_file_api_v1_sites__slug__purchase_receipts__receipt_id__file_post"
+      },
       "Body_create_expense_api_v1_sites__slug__expenses_post": {
         "properties": {
           "expense_category_id": {
@@ -25124,6 +27044,25 @@
           "date"
         ],
         "title": "Body_create_expense_api_v1_sites__slug__expenses_post"
+      },
+      "Body_public_file_api_v1_public_quote_links__token__file_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "PDF, JPG, PNG, WEBP · ≤ 10 MB (içerik doğrulanır)"
+          }
+        },
+        "type": "object",
+        "title": "Body_public_file_api_v1_public_quote_links__token__file_post"
       },
       "Body_upload_api_v1_sites__slug__bank_imports_post": {
         "properties": {
@@ -28465,6 +30404,15 @@
         ],
         "title": "DecisionIn"
       },
+      "DecisionKind": {
+        "type": "string",
+        "enum": [
+          "approve",
+          "reject",
+          "withdraw"
+        ],
+        "title": "DecisionKind"
+      },
       "DecisionOut": {
         "properties": {
           "revision": {
@@ -28530,6 +30478,15 @@
           "guard"
         ],
         "title": "DecisionSource"
+      },
+      "DecisionStage": {
+        "type": "string",
+        "enum": [
+          "exception",
+          "purchase",
+          "order"
+        ],
+        "title": "DecisionStage"
       },
       "DecisionsIn": {
         "properties": {
@@ -28845,6 +30802,29 @@
         },
         "type": "object",
         "title": "DepartmentPatch"
+      },
+      "DirectExpensesOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "total"
+        ],
+        "title": "DirectExpensesOut"
       },
       "Direction": {
         "type": "string",
@@ -31615,6 +33595,49 @@
         ],
         "title": "InviteType"
       },
+      "InvoiceDecideIn": {
+        "properties": {
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "approve",
+                  "reject"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "InvoiceDecideIn"
+      },
+      "InvoiceStatus": {
+        "type": "string",
+        "enum": [
+          "matched",
+          "diff_pending",
+          "disputed",
+          "paid"
+        ],
+        "title": "InvoiceStatus"
+      },
       "ItemTotalOut": {
         "properties": {
           "budget_item_id": {
@@ -32167,6 +34190,15 @@
         ],
         "title": "LinkPatch"
       },
+      "LinkState": {
+        "type": "string",
+        "enum": [
+          "open",
+          "used",
+          "expired"
+        ],
+        "title": "LinkState"
+      },
       "LinkableUserOut": {
         "properties": {
           "user_id": {
@@ -32496,6 +34528,26 @@
           "disposed"
         ],
         "title": "LostItemStatus"
+      },
+      "MarkPaidIn": {
+        "properties": {
+          "paid_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Paid On"
+          },
+          "cash_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Cash Account Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paid_on",
+          "cash_account_id"
+        ],
+        "title": "MarkPaidIn"
       },
       "MatchStatus": {
         "type": "string",
@@ -34060,6 +36112,16 @@
         ],
         "title": "OptionOut"
       },
+      "OrderStatus": {
+        "type": "string",
+        "enum": [
+          "sent",
+          "partial",
+          "received",
+          "closed"
+        ],
+        "title": "OrderStatus"
+      },
       "OutageIn": {
         "properties": {
           "title": {
@@ -35459,6 +37521,68 @@
         ],
         "title": "Page[PostedChargeOut]"
       },
+      "Page_PurchaseOrderRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[PurchaseOrderRow]"
+      },
+      "Page_PurchaseRequestRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseRequestRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[PurchaseRequestRow]"
+      },
       "Page_RegistrationOut_": {
         "properties": {
           "items": {
@@ -35737,6 +37861,68 @@
           "total"
         ],
         "title": "Page[VehicleOut]"
+      },
+      "Page_VendorInvoiceOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VendorInvoiceOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[VendorInvoiceOut]"
+      },
+      "Page_VendorOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VendorOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[VendorOut]"
       },
       "Page_VisitorOut_": {
         "properties": {
@@ -37066,6 +39252,38 @@
           "paid_on"
         ],
         "title": "PayIn"
+      },
+      "PayablesOut": {
+        "properties": {
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/VendorInvoiceOut"
+            },
+            "type": "array",
+            "title": "Invoices",
+            "description": "eşleşmiş, ödenmemiş; vadeye göre"
+          },
+          "direct_expenses": {
+            "$ref": "#/components/schemas/DirectExpensesOut",
+            "description": "siparişsiz ödenmemiş giderler"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoices",
+          "direct_expenses",
+          "total"
+        ],
+        "title": "PayablesOut"
       },
       "PayerRule": {
         "type": "string",
@@ -38898,6 +41116,158 @@
         ],
         "title": "PublicInvitationOut"
       },
+      "PublicQuoteIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseQuotePriceIn"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Lines"
+          },
+          "delivery_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": -1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Days"
+          },
+          "payment_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "terms_ack": {
+            "type": "boolean",
+            "title": "Terms Ack",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "PublicQuoteIn"
+      },
+      "PublicQuoteItemOut": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "qty",
+          "unit"
+        ],
+        "title": "PublicQuoteItemOut"
+      },
+      "PublicQuoteLinkOut": {
+        "properties": {
+          "site_name": {
+            "type": "string",
+            "title": "Site Name"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicQuoteItemOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "yalnız açıklama, miktar, birim — tahmini fiyat, bütçe, diğer teklifler yok"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site_name",
+          "vendor_name",
+          "number",
+          "title",
+          "items",
+          "expires_at"
+        ],
+        "title": "PublicQuoteLinkOut"
+      },
+      "PublicQuoteResult": {
+        "properties": {
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "title": "PublicQuoteResult"
+      },
       "PublicSiteOut": {
         "properties": {
           "site_name": {
@@ -38957,6 +41327,1523 @@
           "name"
         ],
         "title": "PublicUnitOut"
+      },
+      "PurchaseApprovalRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "action_type",
+          "status"
+        ],
+        "title": "PurchaseApprovalRef"
+      },
+      "PurchaseBudgetOut": {
+        "properties": {
+          "has_budget": {
+            "type": "boolean",
+            "title": "Has Budget",
+            "description": "false → kategoride işletme projesi kalemi yok"
+          },
+          "annual": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Annual",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "spent": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Spent",
+            "description": "bu yılın gerçekleşen gideri",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "committed": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Committed",
+            "description": "onay bekleyen/onaylı talepler + açık siparişler",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Remaining",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_budget",
+          "annual",
+          "spent",
+          "committed",
+          "remaining"
+        ],
+        "title": "PurchaseBudgetOut"
+      },
+      "PurchaseBudgetSnapshot": {
+        "properties": {
+          "annual": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Annual",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "spent": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Spent",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "committed": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Committed",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Remaining",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "annual",
+          "spent",
+          "committed",
+          "remaining"
+        ],
+        "title": "PurchaseBudgetSnapshot"
+      },
+      "PurchaseDecideIn": {
+        "properties": {
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "approve",
+                  "reject"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseDecideIn"
+      },
+      "PurchaseDecisionOut": {
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/DecisionStage"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionKind"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "decision",
+          "by",
+          "at",
+          "note"
+        ],
+        "title": "PurchaseDecisionOut"
+      },
+      "PurchaseFileOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "indirme: GET …/files/{id}"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "file_name"
+        ],
+        "title": "PurchaseFileOut"
+      },
+      "PurchaseItemIn": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty",
+            "description": "miktar (en çok 3 ondalık)"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "est_unit_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Unit Price"
+          },
+          "stock_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Item Id",
+            "description": "stoklu kalem: kabulde stoğa girer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qty"
+        ],
+        "title": "PurchaseItemIn"
+      },
+      "PurchaseItemOut": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "est_unit_price": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Est Unit Price",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "stock_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Item Id"
+          },
+          "stock_item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Item Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "qty",
+          "unit",
+          "est_unit_price",
+          "stock_item_id",
+          "stock_item_name"
+        ],
+        "title": "PurchaseItemOut"
+      },
+      "PurchaseOrderIn": {
+        "properties": {
+          "pr_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Pr Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pr_id"
+        ],
+        "title": "PurchaseOrderIn"
+      },
+      "PurchaseOrderLineOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "unit_price": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Unit Price",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "stock_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Item Id"
+          },
+          "received": {
+            "type": "string",
+            "title": "Received"
+          },
+          "invoiced": {
+            "type": "string",
+            "title": "Invoiced",
+            "description": "itiraz edilmemiş faturalardaki miktar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "qty",
+          "unit",
+          "unit_price",
+          "total",
+          "stock_item_id",
+          "received",
+          "invoiced"
+        ],
+        "title": "PurchaseOrderLineOut"
+      },
+      "PurchaseOrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "pr_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Pr Id"
+          },
+          "pr_number": {
+            "type": "string",
+            "title": "Pr Number"
+          },
+          "vendor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vendor Id"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseOrderLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "receipts": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseReceiptOut"
+            },
+            "type": "array",
+            "title": "Receipts"
+          },
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/VendorInvoiceOut"
+            },
+            "type": "array",
+            "title": "Invoices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "pr_id",
+          "pr_number",
+          "vendor_id",
+          "vendor_name",
+          "category_id",
+          "lines",
+          "total",
+          "status",
+          "created_by",
+          "created_at",
+          "receipts",
+          "invoices"
+        ],
+        "title": "PurchaseOrderOut"
+      },
+      "PurchaseOrderRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "pr_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Pr Id"
+          },
+          "pr_number": {
+            "type": "string",
+            "title": "Pr Number"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "pr_id",
+          "pr_number",
+          "vendor_name",
+          "total",
+          "status",
+          "created_at"
+        ],
+        "title": "PurchaseOrderRow"
+      },
+      "PurchaseOrderWriteOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "created",
+              "approval_pending"
+            ],
+            "title": "Status"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchaseOrderOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "order",
+          "approval_request_id"
+        ],
+        "title": "PurchaseOrderWriteOut"
+      },
+      "PurchaseQuoteIn": {
+        "properties": {
+          "vendor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseQuotePriceIn"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Lines"
+          },
+          "delivery_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": -1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Days"
+          },
+          "payment_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseQuoteIn"
+      },
+      "PurchaseQuoteOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "vendor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vendor Id"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseUnitPrice"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "delivery_days": {
+            "type": "integer",
+            "title": "Delivery Days"
+          },
+          "payment_terms": {
+            "type": "string",
+            "title": "Payment Terms"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid Until"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id",
+            "description": "belge: GET …/files/{id}"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "source": {
+            "$ref": "#/components/schemas/QuoteSource",
+            "description": "vendor_link → \"Tedarikçi girdi\""
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "rating_avg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Avg"
+          },
+          "rating_count": {
+            "type": "integer",
+            "title": "Rating Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vendor_id",
+          "vendor_name",
+          "lines",
+          "total",
+          "delivery_days",
+          "payment_terms",
+          "valid_until",
+          "note",
+          "file_id",
+          "file_name",
+          "source",
+          "created_by",
+          "created_at",
+          "rating_avg",
+          "rating_count"
+        ],
+        "title": "PurchaseQuoteOut"
+      },
+      "PurchaseQuotePriceIn": {
+        "properties": {
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseQuotePriceIn"
+      },
+      "PurchaseReceiptIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseReceiptQtyIn"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Lines"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": -100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseReceiptIn"
+      },
+      "PurchaseReceiptOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseReceiptQty"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "lines",
+          "note",
+          "rating",
+          "file_id",
+          "file_name",
+          "by",
+          "at"
+        ],
+        "title": "PurchaseReceiptOut"
+      },
+      "PurchaseReceiptQty": {
+        "properties": {
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qty"
+        ],
+        "title": "PurchaseReceiptQty"
+      },
+      "PurchaseReceiptQtyIn": {
+        "properties": {
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseReceiptQtyIn"
+      },
+      "PurchaseRequestIn": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseItemIn"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "title": "PurchaseRequestIn"
+      },
+      "PurchaseRequestOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "estimated_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Estimated Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchaseBudgetSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "talep anındaki bütçe görüntüsü"
+          },
+          "over_budget": {
+            "type": "boolean",
+            "title": "Over Budget"
+          },
+          "required_quotes": {
+            "type": "integer",
+            "title": "Required Quotes"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PurchaseStatus"
+          },
+          "selected_quote_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Quote Id"
+          },
+          "exception_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception Reason"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseDecisionOut"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "quotes": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseQuoteOut"
+            },
+            "type": "array",
+            "title": "Quotes"
+          },
+          "quote_count": {
+            "type": "integer",
+            "title": "Quote Count"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteLinkOut"
+            },
+            "type": "array",
+            "title": "Links"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "order_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Number"
+          },
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchaseApprovalRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "açık onay talebi (onay kuralı varsa) — karar Onaylar ekranından da verilir"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "title",
+          "reason",
+          "category_id",
+          "category_name",
+          "items",
+          "estimated_total",
+          "budget",
+          "over_budget",
+          "required_quotes",
+          "status",
+          "selected_quote_id",
+          "exception_reason",
+          "decisions",
+          "reject_reason",
+          "created_by",
+          "created_by_id",
+          "created_at",
+          "quotes",
+          "quote_count",
+          "links",
+          "order_id",
+          "order_number",
+          "approval"
+        ],
+        "title": "PurchaseRequestOut"
+      },
+      "PurchaseRequestRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "over_budget": {
+            "type": "boolean",
+            "title": "Over Budget"
+          },
+          "estimated_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Estimated Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "quote_count": {
+            "type": "integer",
+            "title": "Quote Count"
+          },
+          "required_quotes": {
+            "type": "integer",
+            "title": "Required Quotes"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PurchaseStatus"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "order_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Number"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "title",
+          "category_id",
+          "category_name",
+          "over_budget",
+          "estimated_total",
+          "quote_count",
+          "required_quotes",
+          "status",
+          "order_id",
+          "order_number",
+          "created_by",
+          "created_at"
+        ],
+        "title": "PurchaseRequestRow"
+      },
+      "PurchaseSettingsIn": {
+        "properties": {
+          "thresholds": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseThreshold"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Thresholds"
+          },
+          "above_quotes": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Above Quotes"
+          },
+          "tolerance_percent": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,7}0*$)\\d{0,4}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Tolerance Percent"
+          },
+          "link_days": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Link Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "thresholds",
+          "above_quotes",
+          "tolerance_percent",
+          "link_days"
+        ],
+        "title": "PurchaseSettingsIn"
+      },
+      "PurchaseSettingsOut": {
+        "properties": {
+          "thresholds": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseThreshold"
+            },
+            "type": "array",
+            "title": "Thresholds"
+          },
+          "above_quotes": {
+            "type": "integer",
+            "title": "Above Quotes",
+            "description": "son eşiğin üstünde gereken teklif"
+          },
+          "tolerance_percent": {
+            "type": "string",
+            "title": "Tolerance Percent",
+            "description": "fatura toplam toleransı, yüzde (`1.00`)"
+          },
+          "link_days": {
+            "type": "integer",
+            "title": "Link Days",
+            "description": "tedarikçi teklif linki geçerliliği (gün)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "thresholds",
+          "above_quotes",
+          "tolerance_percent",
+          "link_days"
+        ],
+        "title": "PurchaseSettingsOut"
+      },
+      "PurchaseStatus": {
+        "type": "string",
+        "enum": [
+          "quoting",
+          "exception_pending",
+          "approval_pending",
+          "approved",
+          "rejected",
+          "ordered",
+          "cancelled"
+        ],
+        "title": "PurchaseStatus"
+      },
+      "PurchaseThreshold": {
+        "properties": {
+          "max": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Max",
+            "description": "bu tutarın altındaysa",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "quotes": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Quotes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "max",
+          "quotes"
+        ],
+        "title": "PurchaseThreshold"
+      },
+      "PurchaseUnitPrice": {
+        "properties": {
+          "unit_price": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Unit Price",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_price"
+        ],
+        "title": "PurchaseUnitPrice"
       },
       "PushPlatform": {
         "type": "string",
@@ -39160,6 +43047,112 @@
           "total"
         ],
         "title": "QuoteLineOut"
+      },
+      "QuoteLinkCreated": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "yalnız bu yanıtta; tedarikçiye /teklif/{token} iletilir"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "vendor_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "expires_at",
+          "vendor_name",
+          "vendor_email"
+        ],
+        "title": "QuoteLinkCreated"
+      },
+      "QuoteLinkIn": {
+        "properties": {
+          "vendor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Id"
+          }
+        },
+        "type": "object",
+        "title": "QuoteLinkIn"
+      },
+      "QuoteLinkOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "belirteç yalnız oluşturulurken bir kez döner"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used At"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LinkState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vendor_name",
+          "expires_at",
+          "used_at",
+          "state"
+        ],
+        "title": "QuoteLinkOut"
+      },
+      "QuoteSource": {
+        "type": "string",
+        "enum": [
+          "staff",
+          "vendor_link"
+        ],
+        "title": "QuoteSource"
       },
       "QuoteStatus": {
         "type": "string",
@@ -42422,6 +46415,36 @@
           "updated_by"
         ],
         "title": "SecuritySettingsOut"
+      },
+      "SelectQuoteIn": {
+        "properties": {
+          "quote_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id"
+          },
+          "exception_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception Reason"
+          }
+        },
+        "type": "object",
+        "title": "SelectQuoteIn"
       },
       "SelectionIn": {
         "properties": {
@@ -47364,6 +51387,612 @@
         ],
         "title": "VehicleStatus"
       },
+      "VendorIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "tax_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax No"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "iban": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iban",
+            "description": "düzenlemede boş/gönderilmezse mevcut korunur"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "VendorIn"
+      },
+      "VendorInvoiceDecisionOut": {
+        "properties": {
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "by",
+          "at",
+          "note"
+        ],
+        "title": "VendorInvoiceDecisionOut"
+      },
+      "VendorInvoiceIn": {
+        "properties": {
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/VendorInvoiceLineIn"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "title": "VendorInvoiceIn"
+      },
+      "VendorInvoiceLineIn": {
+        "properties": {
+          "qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Qty",
+            "default": "0"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          }
+        },
+        "type": "object",
+        "title": "VendorInvoiceLineIn"
+      },
+      "VendorInvoiceLineOut": {
+        "properties": {
+          "qty": {
+            "type": "string",
+            "title": "Qty"
+          },
+          "unit_price": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Unit Price",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "qty",
+          "unit_price",
+          "total"
+        ],
+        "title": "VendorInvoiceLineOut"
+      },
+      "VendorInvoiceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id"
+          },
+          "order_number": {
+            "type": "string",
+            "title": "Order Number"
+          },
+          "vendor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vendor Id"
+          },
+          "vendor_name": {
+            "type": "string",
+            "title": "Vendor Name"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/VendorInvoiceLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "expected_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Expected Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "diffs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Diffs"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InvoiceStatus"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VendorInvoiceDecisionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id",
+            "description": "fark onay kuralına düştüyse"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "cash_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Account Id"
+          },
+          "expense_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Id",
+            "description": "\"ödendi\" ile yazılan gider"
+          },
+          "overdue": {
+            "type": "boolean",
+            "title": "Overdue"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "order_number",
+          "vendor_id",
+          "vendor_name",
+          "number",
+          "date",
+          "due_date",
+          "lines",
+          "total",
+          "expected_total",
+          "diffs",
+          "status",
+          "decision",
+          "approval_request_id",
+          "file_id",
+          "file_name",
+          "paid_on",
+          "cash_account_id",
+          "expense_id",
+          "overdue",
+          "created_by",
+          "created_by_id",
+          "created_at"
+        ],
+        "title": "VendorInvoiceOut"
+      },
+      "VendorOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tax_no": {
+            "type": "string",
+            "title": "Tax No"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "iban_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iban Masked",
+            "description": "IBAN hiçbir okumada açık dönmez"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VendorStatus"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rating_avg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Avg",
+            "description": "kabuldeki 1–5 puanların ortalaması (`4.5`)"
+          },
+          "rating_count": {
+            "type": "integer",
+            "title": "Rating Count"
+          },
+          "order_count": {
+            "type": "integer",
+            "title": "Order Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "tax_no",
+          "phone",
+          "email",
+          "iban_masked",
+          "category",
+          "status",
+          "note",
+          "rating_avg",
+          "rating_count",
+          "order_count",
+          "created_at"
+        ],
+        "title": "VendorOut"
+      },
+      "VendorStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "passive",
+          "blacklist"
+        ],
+        "title": "VendorStatus"
+      },
       "VersionOut": {
         "properties": {
           "version": {
@@ -49554,6 +54183,142 @@
         ],
         "title": "Written[PreferencesOut]"
       },
+      "Written_PublicQuoteResult_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicQuoteResult"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PublicQuoteResult]"
+      },
+      "Written_PurchaseFileOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseFileOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseFileOut]"
+      },
+      "Written_PurchaseOrderOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseOrderOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseOrderOut]"
+      },
+      "Written_PurchaseOrderWriteOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseOrderWriteOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseOrderWriteOut]"
+      },
+      "Written_PurchaseQuoteOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseQuoteOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseQuoteOut]"
+      },
+      "Written_PurchaseRequestOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseRequestOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseRequestOut]"
+      },
+      "Written_PurchaseSettingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PurchaseSettingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PurchaseSettingsOut]"
+      },
+      "Written_QuoteLinkCreated_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/QuoteLinkCreated"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[QuoteLinkCreated]"
+      },
       "Written_RecurringOut_": {
         "properties": {
           "data": {
@@ -50097,6 +54862,40 @@
           "message"
         ],
         "title": "Written[VehicleSettingsOut]"
+      },
+      "Written_VendorInvoiceOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VendorInvoiceOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[VendorInvoiceOut]"
+      },
+      "Written_VendorOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VendorOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[VendorOut]"
       },
       "Written_VisitRequestOut_": {
         "properties": {

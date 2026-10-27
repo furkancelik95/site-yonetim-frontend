@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18, 19–26 (yapı, kişiler ve kayıt — backend #70), 35–39 (insan kaynakları — backend #68), 40–46 (güvenlik ve devriye — backend #69) ve 47–52 (hizmetler — backend #71) backend'de (26.10.2026). **Kalanı sahte serviste** (27–34 finans, 53–58 operasyon, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18, 19–26 (yapı, kişiler ve kayıt — backend #70), 35–39 (insan kaynakları — backend #68), 40–46 (güvenlik ve devriye — backend #69), 47–52 (hizmetler — backend #71) ve 62–67 (satın alma — backend #78, 27.10.2026) backend'de (26.10.2026). **Kalanı sahte serviste** (27–34 finans, 53–58 operasyon, 59–61 rezervasyon, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -77,12 +77,12 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [59](59-rezervasyon-alan-kurallari.md) | Rezervasyon alanları ve kuralları | `…/reservable-areas`, `…/reservable-areas/{id}/rules` | `/rezervasyon/alanlar` | Sahte servis — K21 |
 | [60](60-rezervasyon.md) | Rezervasyon: sakin, sakin adına, iptal, bekleme listesi | `…/reservable-areas/{id}/availability`, `…/reservations`, `…/resident/reservations`, `…/resident/waitlist/{id}/accept` | `/rezervasyon`, sakin `/rezervasyon` | Sahte servis — K5 |
 | [61](61-rezervasyon-takvim-dogrulama.md) | Günlük liste, kullanım doğrulama, no-show, kullanım raporu | `…/reservations/check-in-code`, `…/reservations/{id}/check-in`, `…/reservations/report` | `/rezervasyon` | Sahte servis |
-| [62](62-tedarikci-karti.md) | Tedarikçi kartı | `…/vendors` | `/tedarikciler` | Sahte servis |
-| [63](63-satin-alma-ayar-butce.md) | Satın alma ayarları ve bütçe kontrolü | `…/purchase-settings`, `…/purchase-budget` | `/satin-alma?sekme=ayar`, talep formu | Sahte servis |
-| [64](64-satin-alma-talep-teklif-onay.md) | Satın alma talebi, teklif, tedarikçi linki, onay | `…/purchase-requests`, `…/quotes`, `…/quote-links`, `/public/v1/quote-links/{token}`, `…/select-quote`, `…/decide` | `/satin-alma`, `/satin-alma/{id}`, `/teklif/{token}` | Sahte servis — onay modülüne bağlanacak |
-| [65](65-siparis-kabul.md) | Sipariş ve mal/hizmet kabul | `…/purchase-orders`, `…/purchase-orders/{id}/receipts` | `/satin-alma/siparis/{id}` | Sahte servis |
-| [66](66-tedarikci-faturasi-uclu-eslesme.md) | Tedarikçi faturası ve üçlü eşleşme | `…/vendor-invoices`, `…/vendor-invoices/{id}/decide` | sipariş ayrıntısı, `/satin-alma?sekme=fatura` | Sahte servis |
-| [67](67-odenecekler.md) | Ödenecekler ve "ödendi" | `…/payables`, `…/vendor-invoices/{id}/mark-paid` | `/satin-alma?sekme=odenecek` | Sahte servis |
+| [62](62-tedarikci-karti.md) | Tedarikçi kartı | `…/vendors` | `/tedarikciler` | **Backend'de** (#78) |
+| [63](63-satin-alma-ayar-butce.md) | Satın alma ayarları ve bütçe kontrolü | `…/purchase-settings`, `…/purchase-budget` | `/satin-alma?sekme=ayar`, talep formu | **Backend'de** (#78) |
+| [64](64-satin-alma-talep-teklif-onay.md) | Satın alma talebi, teklif, tedarikçi linki, onay | `…/purchase-requests`, `…/quotes`, `…/quote-links`, `/public/quote-links/{token}` (+`/file`), `…/select-quote`, `…/decide` | `/satin-alma`, `/satin-alma/{id}`, `/teklif/{token}` | **Backend'de** (#78) |
+| [65](65-siparis-kabul.md) | Sipariş ve mal/hizmet kabul | `…/purchase-orders`, `…/purchase-orders/{id}/receipts` | `/satin-alma/siparis/{id}` | **Backend'de** (#78) |
+| [66](66-tedarikci-faturasi-uclu-eslesme.md) | Tedarikçi faturası ve üçlü eşleşme | `…/vendor-invoices`, `…/vendor-invoices/{id}/decide` | sipariş ayrıntısı, `/satin-alma?sekme=fatura` | **Backend'de** (#78) |
+| [67](67-odenecekler.md) | Ödenecekler ve "ödendi" | `…/payables`, `…/vendor-invoices/{id}/mark-paid` | `/satin-alma?sekme=odenecek` | **Backend'de** (#78) |
 | [68](68-sozlesme-kpi-ceza-kurallari.md) | Sözleşme performans tanımları: KPI, ceza, artış kuralı | `…/contracts/{id}/performance` | `/sozlesmeler/{id}` | Sahte servis |
 | [69](69-aylik-hizmet-karnesi.md) | Aylık hizmet karnesi ve ceza kesintisi | `…/contracts/{id}/scorecards/{period}` (+`/finalize`, `/penalty`) | `/sozlesmeler/{id}?sekme=karne` | Sahte servis — onay türü "Ceza kesintisi" |
 | [70](70-endeksli-artis.md) | Endeksli fiyat artışı ve endeks değerleri | `…/contracts/{id}/escalation`, `/api/v1/platform/index-values` | `/sozlesmeler/{id}?sekme=artis`, `/yonetim/endeksler` | Sahte servis |
