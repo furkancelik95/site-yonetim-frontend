@@ -118,7 +118,7 @@ export const moduleName = label({
   portfolio: "Portföy",
 });
 
-export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme", export: "Dışa aktarma" });
+export const auditAction = label({ create: "Oluşturma", update: "Güncelleme", delete: "Silme", import: "İçe aktarma", download: "İndirme", export: "Dışa aktarma", contact_view: "Kişisel veri görüntüleme" });
 export const actorType = label({ user: "Kullanıcı", system: "Sistem", delegate: "Vekâleten" });
 
 export const warningKind = label({
