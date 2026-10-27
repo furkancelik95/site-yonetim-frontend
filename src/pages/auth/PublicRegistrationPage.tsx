@@ -83,8 +83,8 @@ export function PublicRegistrationPage() {
   const err = (k: string) => errs[k] ?? fieldError(m.error, k);
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 620 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 620px)" }}>
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">SY</span>
           <span><span className="sidebar__name">{site.data?.site_name ?? "SiteYönetimi"}</span><br /><span className="sidebar__sub">Sakin kaydı</span></span>
@@ -154,8 +154,8 @@ export function PublicRegistrationPage() {
 export function PrivacyNoticePage() {
   useDocumentTitle("Aydınlatma metni");
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 720 }}>
-      <div className="auth__panel stack" style={{ gap: "var(--s-3)", lineHeight: 1.7 }}>
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel stack" style={{ gap: "var(--s-3)", lineHeight: 1.7, width: "min(100%, 720px)" }}>
         <Alert tone="warn" title="Taslak">Bu metin hukuk onayı bekliyor (açık karar K8). Yayına almadan önce site yönetimi ve hukukçu tarafından tamamlanmalı.</Alert>
         <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
         <p className="mb-0"><strong>Veri sorumlusu:</strong> Kaydolduğunuz sitenin yönetimi.</p>

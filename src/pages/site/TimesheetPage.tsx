@@ -1,9 +1,10 @@
 import { Fragment, useState, type FormEvent } from "react";
-import { Download, Lock, RefreshCw } from "lucide-react";
+import { CalendarDays, Clock, Download, Lock, RefreshCw, Timer, UserX, Users } from "lucide-react";
 import { download } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { BarChart, Donut } from "../../components/charts";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { attendanceFlag, attendanceMethod, leaveType, timesheetStatus } from "../../lib/labels";
@@ -40,10 +41,31 @@ export function TimesheetPage() {
   return (
     <div className="stack">
       <PageHead title="Puantaj" subtitle="Vardiya planından otomatik; yalnız istisnaları düzeltin ve günü kesinleştirin. Ay sonunda bordroya aktarın." />
-      <div className="row" role="tablist" aria-label="Puantaj" style={{ gap: "var(--s-2)" }}>
-        {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k })}>{l}</button>)}
-      </div>
+      <MonthKpis month={s.ay} />
+      <Segmented label="Puantaj" value={s.sekme} onChange={(k) => set({ sekme: k })} options={tabs.map(([k, l]) => ({ value: k, label: l }))} />
       {s.sekme === "aktarim" || !manage ? <MonthExport month={s.ay} setMonth={(ay) => set({ ay })} /> : s.sekme === "ayar" ? <AttendanceSettings /> : <DayView date={s.tarih} setDate={(tarih) => set({ tarih })} />}
+    </div>
+  );
+}
+
+const hoursText = (v: number) => `${v.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} sa`;
+
+/**
+ * Bant altı göstergeler: seçili ayın puantaj özeti (aktarım önizlemesi; satır toplamları, yeniden hesap yok).
+ * Aylık aktarım sekmesiyle aynı sorgu; önbellekten gelir.
+ */
+function MonthKpis({ month }: { month: string }) {
+  const pv = useSiteGet<ExportPreview>("/timesheet-exports/preview", { month });
+  if (pv.isError) return null;
+  if (!pv.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const rows = pv.data.rows;
+  const sum = (k: "worked_hours" | "overtime_hours" | "absent_days" | "worked_days") => rows.reduce((s, r) => s + Number(r[k] ?? 0), 0);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Personel" icon={<Users aria-hidden="true" />} value={rows.length} note={`${month} · ${sum("worked_days")} çalışılan gün`} />
+      <Kpi label="Çalışma saati" tone="accent" icon={<Clock aria-hidden="true" />} value={hoursText(sum("worked_hours"))} note="ay toplamı" />
+      <Kpi label="Fazla mesai" tone={sum("overtime_hours") > 0 ? "warn" : undefined} icon={<Timer aria-hidden="true" />} value={hoursText(sum("overtime_hours"))} note="ay toplamı" />
+      <Kpi label="Devamsız gün" tone={sum("absent_days") > 0 ? "danger" : undefined} icon={<UserX aria-hidden="true" />} value={sum("absent_days")} note={pv.data.missing_days.length > 0 ? `${pv.data.missing_days.length} gün kesinleşmedi` : "tüm günler kesin"} />
     </div>
   );
 }
@@ -52,12 +74,25 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
   const q = useSiteGet<Day>("/timesheets", { date });
   const fin = useSiteMutation<{ date: string }, unknown>("POST", "/timesheets/finalize");
   const [editing, setEditing] = useState<string | null>(null);
+  // Günün dağılımı (gerçek satır sayıları): çalıştı / izinli / gelmedi
+  const rows = q.data?.rows ?? [];
+  const n = (st: string) => rows.filter((r) => r.status === st).length;
   return (
     <>
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="ts-date">Gün</label><input id="ts-date" className="field__input" type="date" max={yesterday()} value={date} onChange={(e) => setDate(e.target.value)} /></div></div>
-      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
+      <div className={rows.length > 0 ? "grid grid--main" : undefined}>
         <div className="card">
-          <div className="card__head"><span className="card__title">{formatDate(q.data.date)}</span><span className="card__meta">{attendanceMethod(q.data.attendance_method)}</span><span className="ml-auto">{q.data.is_final ? <Badge tone="ok">Kesin</Badge> : <Badge tone="warn">Taslak</Badge>}</span></div>
+          <div className="card__head">
+            <span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span>
+            <div>
+              <div className="card__title">{formatDate(date)}</div>
+              {q.data && <div className="card__meta">{attendanceMethod(q.data.attendance_method)}</div>}
+            </div>
+            {q.data && (q.data.is_final ? <Badge tone="ok">Kesin</Badge> : <Badge tone="warn">Taslak</Badge>)}
+            <div className="card__tools">
+              <div className="field"><label className="field__label" htmlFor="ts-date">Gün</label><input id="ts-date" className="field__input" type="date" max={yesterday()} value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            </div>
+          </div>
+          {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : (<>
           <div className="card__body card__body--flush">
             {q.data.rows.length === 0 ? <Empty title="Bu gün vardiya yok">Vardiya planında atama yapılınca puantaj buradan üretilir.</Empty> : (
               <div className="table-wrap"><table className="data">
@@ -68,7 +103,7 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
                   return (
                     <Fragment key={key}>
                       <tr>
-                        <td className="cell-main">{r.staff_name}<div className="cell-sub">{r.position ?? ""}{!r.payroll_no && " · sicil no yok"}</div></td>
+                        <td><div className="cell-person"><Avatar name={r.staff_name} size="sm" soft /><div><div className="cell-main">{r.staff_name}</div><div className="cell-sub">{r.position ?? ""}{!r.payroll_no && " · sicil no yok"}</div></div></div></td>
                         <td className="small nowrap">{r.template}</td>
                         <td><Badge tone={r.status === "worked" ? "ok" : r.status === "absent" ? "danger" : "info"}>{r.status === "leave" && r.leave_type ? leaveType(r.leave_type) : timesheetStatus(r.status)}</Badge></td>
                         <td className="right small nowrap">{r.status === "worked" ? hm(r.worked_minutes) : "—"}{r.night_minutes > 0 && <div className="cell-sub">gece {hm(r.night_minutes)}</div>}</td>
@@ -90,8 +125,21 @@ function DayView({ date, setDate }: { date: string; setDate: (d: string) => void
             <span className="small muted">{q.data.is_final ? `Kesinleştiren ${q.data.finalized_by}, ${formatDateTime(q.data.finalized_at)}. Kesin gün değişmez.` : "Plan dışında bir şey olmadıysa doğrudan kesinleştirin."}</span>
             {!q.data.is_final && q.data.rows.length > 0 && <ConfirmButton className="btn btn--primary" title="Günü kesinleştir" confirmLabel="Kesinleştir" body="Kesinleşen günün puantajı ve o güne ait vardiya atamaları değiştirilemez." onConfirm={() => fin.mutateAsync({ date })}><Lock aria-hidden="true" /> Günü kesinleştir</ConfirmButton>}
           </div>
+          </>)}
         </div>
-      )}
+        {rows.length > 0 && (
+          <div className="card">
+            <div className="card__head"><span className="card__icon card__icon--info"><Users aria-hidden="true" /></span><span className="card__title">Günün dağılımı</span></div>
+            <div className="card__body">
+              <Donut label="Günlük puantaj dağılımı" centerSub="personel" segments={[
+                { label: timesheetStatus("worked"), value: n("worked"), tone: "ok" },
+                { label: timesheetStatus("leave"), value: n("leave"), tone: "info" },
+                { label: timesheetStatus("absent"), value: n("absent"), tone: "danger" },
+              ]} />
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -125,16 +173,32 @@ function MonthExport({ month, setMonth }: { month: string; setMonth: (m: string)
   const hist = useSiteGet<Page<Export>>("/timesheet-exports", { page_size: 24 });
   const file = (x: Export) => download(`/sites/${site.slug}/timesheet-exports/${x.id}/file`, undefined, x.file_name);
   const run = useSiteMutation<{ month: string }, Export>("POST", "/timesheet-exports", { onSuccess: (x) => { if (x) void file(x); } });
+  // Ay özeti sayıları: satırların toplamı (backend'in hesapladığı değerler toplanır, yeniden hesap yok)
+  const rows = pv.data?.rows ?? [];
+  const shortName = (name: string) => { const p = name.trim().split(/\s+/); return p.length > 1 ? `${p[0]} ${p[p.length - 1]!.charAt(0)}.` : name; };
   return (
     <>
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="ts-m">Ay</label><input id="ts-m" className="field__input" type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></div></div>
-      {pv.isPending ? <Loading /> : pv.isError ? <ErrorState error={pv.error} /> : (
         <div className="card">
-          <div className="card__head"><span className="card__title">{month} puantaj özeti</span>{pv.data.exported && <span className="ml-auto"><Badge tone="ok">Aktarıldı, kilitli</Badge></span>}</div>
+          <div className="card__head">
+            <span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span>
+            <span className="card__title">{month} puantaj özeti</span>
+            {pv.data?.exported && <Badge tone="ok">Aktarıldı, kilitli</Badge>}
+            <div className="card__tools">
+              <div className="field"><label className="field__label" htmlFor="ts-m">Ay</label><input id="ts-m" className="field__input" type="month" value={month} onChange={(e) => setMonth(e.target.value)} /></div>
+            </div>
+          </div>
+      {pv.isPending ? <Loading /> : pv.isError ? <div className="card__body"><ErrorState error={pv.error} /></div> : (
+        <>
           <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
             {pv.data.missing_days.length > 0 && <Alert tone="warn" title={`${pv.data.missing_days.length} gün kesinleşmedi`}>{pv.data.missing_days.slice(0, 10).map(formatDate).join(", ")}{pv.data.missing_days.length > 10 && "…"} — aktarım için tüm günler kesinleşmeli.</Alert>}
             {pv.data.missing_payroll.length > 0 && <Alert tone="warn" title="Bordro sicil no eksik">{pv.data.missing_payroll.join(", ")} — Personel kartından girin.</Alert>}
             <FormError error={run.error} />
+            {rows.length > 1 && (
+              <div>
+                <div className="section-title">Personel bazında çalışma saati</div>
+                <BarChart label="Personel bazında çalışma saati" format={hoursText} data={rows.map((r) => ({ label: shortName(String(r.name ?? "")), value: Number(r.worked_hours ?? 0), sub: `${r.worked_days} gün` }))} />
+              </div>
+            )}
           </div>
           {pv.data.rows.length === 0 ? <div className="card__body"><Empty title="Bu ay puantaj yok" /></div> : (
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
@@ -152,10 +216,11 @@ function MonthExport({ month, setMonth }: { month: string; setMonth: (m: string)
               <ConfirmButton className="btn btn--primary" disabled={!!pv.data.exported || pv.data.missing_days.length > 0 || pv.data.missing_payroll.length > 0 || pv.data.rows.length === 0} title="Puantajı aktar" confirmLabel="Dosyayı üret" body="Ayın puantajı dosyaya yazılır ve kilitlenir; bu ay için puantaj bir daha değiştirilemez." onConfirm={() => run.mutateAsync({ month })}><Download aria-hidden="true" /> Aktarım dosyası</ConfirmButton>
             </div>
           )}
-        </div>
+        </>
       )}
+        </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Aktarım geçmişi</span></div>
+        <div className="card__head"><span className="card__icon"><Download aria-hidden="true" /></span><span className="card__title">Aktarım geçmişi</span></div>
         <div className="card__body card__body--flush">
           {!hist.data || hist.data.items.length === 0 ? <Empty title="Henüz aktarım yok" /> : (
             <div className="table-wrap"><table className="data">

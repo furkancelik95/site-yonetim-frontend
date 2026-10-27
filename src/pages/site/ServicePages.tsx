@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { CheckCircle2, ClipboardCheck, Hammer, Pencil, Plus, Siren } from "lucide-react";
+import { CalendarDays, CheckCircle2, ClipboardCheck, Hammer, Hourglass, Layers, MessageSquareText, Pencil, Plus, Receipt, Settings2, Siren, Tags, Timer, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatDateTime, parseMoneyInput } from "../../lib/format";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatDateTime, formatMoneyShort, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { PRIORITIES, WEEKDAYS_LONG, hourType, permitStatus, permitTone, permitType, requestPriority } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
@@ -25,12 +25,28 @@ type Department = { id: string; name: string; is_active: boolean };
 export function RequestSettingsPage() {
   const { site } = useSite();
   const [s, set] = useUrlState({ sekme: "sla" });
+  const st = useSiteGet<ReqSettings>("/settings/requests");
+  const cats = useSiteGet<RequestCategory[]>("/request-categories");
+  const tpl = useSiteGet<Tpl[]>("/reply-templates");
+  const tar = useSiteGet<Tariff[]>("/service-tariffs");
+  const activeCats = cats.data?.filter((c) => c.is_active) ?? [];
+  const allDay = activeCats.filter((c) => c.hour_type === "24x7").length;
+  const openDays = st.data ? st.data.calendar.filter((d) => !d.closed).length : 0;
   return (
     <div className="stack">
-      <PageHead title="Talep ayarları" subtitle="Kategoriler, SLA hedefleri, çalışma takvimi, hazır yanıtlar ve ücretli hizmet tarifesi." actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>} />
-      <div className="row" role="tablist" aria-label="Talep ayarları" style={{ gap: "var(--s-2)" }}>
-        {[["sla", "SLA ve takvim"], ["kategori", "Kategoriler"], ["yanit", "Hazır yanıtlar"], ["tarife", "Hizmet tarifesi"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
-      </div>
+      <PageHead title="Talep ayarları" subtitle="Kategoriler, SLA hedefleri, çalışma takvimi, hazır yanıtlar ve ücretli hizmet tarifesi." actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>}>
+        <div className="tabs" role="tablist" aria-label="Talep ayarları">
+          {[["sla", "SLA ve takvim"], ["kategori", "Kategoriler"], ["yanit", "Hazır yanıtlar"], ["tarife", "Hizmet tarifesi"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className="tabs__tab" onClick={() => set({ sekme: k! })}>{l}</button>)}
+        </div>
+      </PageHead>
+      {st.data && cats.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Kullanımdaki kategori" icon={<Tags aria-hidden="true" />} value={activeCats.length} note={`${allDay} tanesi 7/24, ${activeCats.length - allDay} tanesi mesai`} />
+          <Kpi label="Çalışma günü" icon={<CalendarDays aria-hidden="true" />} value={`${openDays} / 7`} note="haftalık çalışma takvimi" />
+          <Kpi label="Hazır yanıt" icon={<MessageSquareText aria-hidden="true" />} value={tpl.data ? tpl.data.filter((x) => x.is_active).length : "…"} note={tpl.data ? `${tpl.data.length} şablondan etkin olan` : undefined} />
+          <Kpi label="Tarife kalemi" icon={<Receipt aria-hidden="true" />} value={tar.data ? tar.data.filter((x) => x.is_active).length : "…"} note="ücretli hizmet teklifinde" />
+        </div>
+      ) : !st.isError && !cats.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {s.sekme === "yanit" ? <Templates /> : s.sekme === "tarife" ? <Tariffs /> : s.sekme === "kategori" ? <Categories /> : <SlaSettings />}
     </div>
   );
@@ -55,7 +71,7 @@ function SlaSettings() {
       <FormError error={m.error} />
       <fieldset disabled={!edit} style={{ border: 0, padding: 0, margin: 0 }} className="stack">
         <div className="card">
-          <div className="card__head"><span className="card__title">Çözüm süresi hedefleri (saat)</span><span className="card__meta ml-auto">çalışma saati tipinde mesai dışında sayaç durur</span></div>
+          <div className="card__head"><span className="card__icon card__icon--accent"><Timer aria-hidden="true" /></span><span className="card__title">Çözüm süresi hedefleri (saat)</span><span className="card__meta ml-auto">çalışma saati tipinde mesai dışında sayaç durur</span></div>
           <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Kategori ve öncelik bazında SLA</caption>
             <thead><tr><th scope="col">Kategori</th><th scope="col">Saat tipi</th>{PRIORITIES.map((p) => <th key={p} scope="col" className="right">{requestPriority(p)}</th>)}</tr></thead>
@@ -69,7 +85,7 @@ function SlaSettings() {
           </table></div></div>
         </div>
         <div className="card">
-          <div className="card__head"><span className="card__title">Çalışma takvimi</span><span className="card__meta ml-auto">resmî tatiller platform takviminden gelecek (S-03)</span></div>
+          <div className="card__head"><span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span><span className="card__title">Çalışma takvimi</span><span className="card__meta ml-auto">resmî tatiller platform takviminden gelecek (S-03)</span></div>
           <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
             {fieldError(m.error, "calendar") && <span className="field__error" role="alert">{fieldError(m.error, "calendar")}</span>}
             {s.calendar.map((d, i) => (
@@ -103,7 +119,9 @@ function Categories() {
     <>
       {can(P.requestsSettings) && <div className="row"><button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Kategori ekle</button><span className="small muted">Yeni talepler bu kurallarla açılır; açık talepler açıldıkları kuralla devam eder.</span></div>}
       {editing && <CategoryForm c={editing === "new" ? null : editing} departments={deps.data ?? []} onDone={() => setEditing(null)} />}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><Tags aria-hidden="true" /></span><span className="card__title">Talep kategorileri</span>{q.data && <span className="card__meta ml-auto">{q.data.length} kategori</span>}</div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Talep kategorileri</caption>
@@ -156,8 +174,10 @@ function Templates() {
     <>
       <div className="row">{can(P.requestsSettings) && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Şablon ekle</button>}<span className="small muted">Değişkenler: {"{{sakin.ad}}"}, {"{{talep.no}}"}, {"{{talep.konu}}"}</span></div>
       {editing && <TplForm t={editing === "new" ? null : editing} categories={categories} onDone={() => setEditing(null)} />}
-      <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Şablon yok" /> : (
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><MessageSquareText aria-hidden="true" /></span><span className="card__title">Hazır yanıtlar</span>{q.data && <span className="card__meta ml-auto">{q.data.length} şablon</span>}</div>
+        <div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Şablon yok" icon={<MessageSquareText aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Hazır yanıtlar</caption>
             <thead><tr><th scope="col">Şablon</th><th scope="col">Kategori</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
@@ -196,7 +216,7 @@ function Tariffs() {
   const m = useSiteMutation<Record<string, unknown>, unknown>("POST", "/service-tariffs", { onSuccess: () => setF({ name: "", unit: "saat", price: "" }) });
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Hizmet tarifesi</span><span className="card__meta ml-auto">teknik ekip teklif hazırlarken kullanır</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span><span className="card__title">Hizmet tarifesi</span><span className="card__meta ml-auto">teknik ekip teklif hazırlarken kullanır</span></div>
       {edit && (
         <form className="card__body grid grid--kpi" style={{ alignItems: "end", borderBottom: "1px solid var(--line)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ ...f, price: parseMoneyInput(f.price) }); }}>
           <FormError error={m.error} />
@@ -239,10 +259,23 @@ export function OutagesPage() {
   const categories = useRequestCategories();
   const [s, set] = useUrlState({ page: "1" });
   const q = useSiteGet<Page<Outage>>("/outages", { page: s.page, page_size: 50 });
+  // Göstergeler sayfadan bağımsız: en yeni 200 olay; daha fazlası varsa sayılar gösterilmez (uydurulmaz)
+  const all = useSiteGet<Page<Outage>>("/outages", { page_size: 200 });
+  const items = all.data?.items ?? [];
+  const complete = !!all.data && all.data.total <= items.length;
   return (
     <div className="stack">
       <PageHead title="Ana olaylar" subtitle="Aynı arızadan gelen talepler tek olayda; sakinler birbirinin talebini değil olayın genel açıklamasını görür." actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>} />
-      <div className="card"><div className="card__body card__body--flush">
+      {all.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Açık olay" tone={items.some((o) => o.status === "open") ? "warn" : "ok"} icon={<Siren aria-hidden="true" />} value={complete ? items.filter((o) => o.status === "open").length : "—"} note="çözüm bekleyen arıza" />
+          <Kpi label="Çözülen" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={complete ? items.filter((o) => o.status === "resolved").length : "—"} note="bağlı talepleriyle kapandı" />
+          <Kpi label="Toplanan talep" icon={<Layers aria-hidden="true" />} value={complete ? items.reduce((a, o) => a + o.request_ids.length, 0) : "—"} note={`${all.data.total} olaya bağlı`} />
+        </div>
+      ) : !all.isError && <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--warn"><Siren aria-hidden="true" /></span><span className="card__title">Olay listesi</span>{q.data && <span className="card__meta ml-auto">{q.data.total} olay</span>}</div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Ana olay yok" icon={<Siren aria-hidden="true" />}>Talep ayrıntısındaki birleştirme önerisinden oluşturulur.</Empty> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Ana olaylar</caption>
@@ -284,14 +317,40 @@ export function PermitsPage() {
   const q = useSiteGet<Page<Permit>>("/permits", { status: s.durum || undefined, page: s.page, page_size: 50 });
   const ps = useSiteGet<PermitRules>("/settings/permits");
   const [open, setOpen] = useState<string | null>(null);
+  // Sekme sayıları: durum başına süzgeçli sorgunun toplamı. Bugün süren iş ve depozito, onay
+  // bekleyen + onaylı başvuruların ilk 200'ünden; fazlası varsa o iki sayı gösterilmez.
+  const pen = useSiteGet<Page<Permit>>("/permits", { status: "pending", page_size: 200 });
+  const apr = useSiteGet<Page<Permit>>("/permits", { status: "approved", page_size: 200 });
+  const cmp = useSiteGet<Page<Permit>>("/permits", { status: "completed", page_size: 1 });
+  const rej = useSiteGet<Page<Permit>>("/permits", { status: "rejected", page_size: 1 });
+  const counts: Record<string, number | undefined> = { pending: pen.data?.total, approved: apr.data?.total, completed: cmp.data?.total, rejected: rej.data?.total };
+  const full = !!pen.data && !!apr.data && pen.data.total <= pen.data.items.length && apr.data.total <= apr.data.items.length;
+  const today = new Date().toISOString().slice(0, 10);
+  const activeNow = apr.data?.items.filter((p) => p.date_from <= today && p.date_to >= today).length;
+  const deposits = full ? [...pen.data!.items, ...apr.data!.items].filter((p) => p.deposit && !p.deposit_refunded).reduce((a, p) => a + Number(p.deposit), 0) : undefined;
   return (
     <div className="stack">
       <PageHead title="Tadilat ve taşınma" subtitle="Sakinlerin tadilat ve taşınma başvuruları; çalışma saatleri, kontrol listesi ve depozito." />
+      {pen.data && apr.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Onay bekleyen" tone={pen.data.total > 0 ? "warn" : undefined} icon={<Hourglass aria-hidden="true" />} value={pen.data.total} note="yönetim kararı bekliyor" />
+          <Kpi label="Bugün süren iş" tone="accent" icon={<Hammer aria-hidden="true" />} value={full ? activeNow ?? 0 : "—"} note="onaylı, tarih aralığı bugünü kapsıyor" />
+          <Kpi label="Tamamlanan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={cmp.data?.total ?? "…"} note="kontrol listesiyle kapandı" />
+          <Kpi label="Bekleyen depozito" icon={<Wallet aria-hidden="true" />} value={deposits !== undefined ? formatMoneyShort(deposits.toFixed(2)) : "—"} note="iadesi henüz yapılmamış" />
+        </div>
+      ) : !pen.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {can(P.requestsSettings) && <PermitRulesForm />}
-      <div className="row" role="tablist" aria-label="Durum" style={{ gap: "var(--s-2)" }}>
-        {[["pending", "Onay bekleyen"], ["approved", "Onaylı"], ["completed", "Tamamlanan"], ["rejected", "Reddedilen"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>)}
-      </div>
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Hammer aria-hidden="true" /></span>
+          <span className="card__title">Başvurular</span>
+          <div className="card__tools">
+            <div className="tabs" role="tablist" aria-label="Durum">
+              {[["pending", "Onay bekleyen"], ["approved", "Onaylı"], ["completed", "Tamamlanan"], ["rejected", "Reddedilen"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.durum === k} className="tabs__tab" onClick={() => set({ durum: k!, page: "1" })}>{l}{counts[k!] !== undefined && <span className="tabs__count">{counts[k!]}</span>}</button>)}
+            </div>
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Başvuru yok" icon={<Hammer aria-hidden="true" />}>Sakinler uygulamadaki "Tadilat ve taşınma" ekranından başvurur.</Empty> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Tadilat ve taşınma başvuruları</caption>
@@ -351,7 +410,7 @@ function PermitRulesForm() {
   if (!s) return null;
   return (
     <details className="card">
-      <summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">Tadilat kuralları</span><span className="card__meta ml-auto">hafta içi {q.data?.weekday_hours} · cumartesi {q.data?.saturday_hours || "yasak"} · pazar {q.data?.sunday_allowed ? "serbest" : "yasak"}</span></summary>
+      <summary className="card__head" style={{ cursor: "pointer" }}><span className="card__icon card__icon--accent"><Settings2 aria-hidden="true" /></span><span className="card__title">Tadilat kuralları</span><span className="card__meta ml-auto">hafta içi {q.data?.weekday_hours} · cumartesi {q.data?.saturday_hours || "yasak"} · pazar {q.data?.sunday_allowed ? "serbest" : "yasak"}</span></summary>
       <form className="card__body stack" style={{ gap: "var(--s-3)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ ...s, saturday_hours: s.saturday_hours.trim() || null, deposit_amount: parseMoneyInput(s.deposit_amount) ?? "0", checklist: s.checklist.map((x) => x.trim()).filter(Boolean) }); }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">

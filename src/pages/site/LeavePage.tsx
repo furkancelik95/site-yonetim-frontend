@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { CalendarOff, Plus } from "lucide-react";
+import { Activity, CalendarDays, CalendarOff, Clock, Plus, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { leaveStatus, leaveStatusTone, leaveType } from "../../lib/labels";
@@ -24,14 +24,22 @@ export function LeavePage() {
   const [s, set] = useUrlState({ durum: "pending", page: "1" });
   const q = useSiteGet<Page<Leave>>("/leave-requests", { status: s.durum || undefined, page: s.page, page_size: 50 });
   const bal = useSiteGet<Balance[]>("/leave-balances");
+  // Üst sayı: onay bekleyen toplamı (sayfa boyutu 1 — yalnız `total` okunur)
+  const pending = useSiteGet<Page<Leave>>("/leave-requests", { status: "pending", page_size: 1 });
   const [adding, setAdding] = useState(false);
+  // Bu yıl kullanılan günler, tür bazında toplam (bilgi amaçlı; bordro hesabı platformda yapılmaz)
+  const used = (t: string) => (bal.data ? bal.data.reduce((sum, b) => sum + Number(b.used[t] ?? 0), 0) : "—");
   return (
     <div className="stack">
       <PageHead title="İzinler" subtitle="Personel izinlerini kaydedin ve onaylayın; onaylı izin vardiya planına ve puantaja yansır." actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> İzin kaydet</button>} />
-      {adding && <LeaveForm onDone={() => setAdding(false)} />}
-      <div className="row" role="tablist" aria-label="İzin durumu" style={{ gap: "var(--s-2)" }}>
-        {[["pending", "Onay bekleyen"], ["approved", "Onaylanan"], ["rejected", "Reddedilen"], ["", "Tümü"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>)}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Onay bekleyen" tone={pending.data && pending.data.total > 0 ? "warn" : undefined} icon={<Clock aria-hidden="true" />} value={pending.data ? pending.data.total : "—"} note="karar bekleyen talep" />
+        <Kpi label="Yıllık izin" icon={<CalendarDays aria-hidden="true" />} value={used("annual")} note="bu yıl kullanılan gün" />
+        <Kpi label="Raporlu" icon={<Activity aria-hidden="true" />} value={used("sick")} note="bu yıl, gün" />
+        <Kpi label="Mazeret ve ücretsiz" icon={<Wallet aria-hidden="true" />} value={bal.data ? Number(used("excuse")) + Number(used("unpaid")) : "—"} note="bu yıl, gün" />
       </div>
+      {adding && <LeaveForm onDone={() => setAdding(false)} />}
+      <Segmented label="İzin durumu" value={s.durum} onChange={(k) => set({ durum: k, page: "1" })} options={[{ value: "pending", label: "Onay bekleyen" }, { value: "approved", label: "Onaylanan" }, { value: "rejected", label: "Reddedilen" }, { value: "", label: "Tümü" }]} />
       <div className="card"><div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Kayıt yok" icon={<CalendarOff aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
@@ -39,7 +47,7 @@ export function LeavePage() {
             <thead><tr><th scope="col">Personel</th><th scope="col">İzin</th><th scope="col">Tarih</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
             <tbody>{q.data.items.map((l) => (
               <tr key={l.id}>
-                <td className="cell-main">{l.staff_name}<div className="cell-sub">{l.source === "staff" ? "Kendi talebi" : l.created_by}, {formatDateTime(l.created_at)}</div></td>
+                <td><div className="cell-person"><Avatar name={l.staff_name} size="sm" soft /><div><div className="cell-main">{l.staff_name}</div><div className="cell-sub">{l.source === "staff" ? "Kendi talebi" : l.created_by}, {formatDateTime(l.created_at)}</div></div></div></td>
                 <td className="small">{leaveType(l.type)}{l.note && <div className="cell-sub">{l.note}</div>}</td>
                 <td className="small nowrap">{formatDate(l.from)} – {formatDate(l.to)}<div className="cell-sub">{l.days} gün{l.clashing_shifts > 0 && ` · ${l.clashing_shifts} vardiya`}</div></td>
                 <td>
@@ -62,7 +70,7 @@ export function LeavePage() {
           <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Personel bazında kullanılan izin günleri</caption>
             <thead><tr><th scope="col">Personel</th>{TYPES.map((t) => <th key={t} scope="col" className="right">{leaveType(t)}</th>)}</tr></thead>
-            <tbody>{bal.data.map((b) => <tr key={b.staff_id}><td className="cell-main">{b.staff_name}</td>{TYPES.map((t) => <td key={t} className="right num">{b.used[t] || "—"}</td>)}</tr>)}</tbody>
+            <tbody>{bal.data.map((b) => <tr key={b.staff_id}><td><div className="cell-person"><Avatar name={b.staff_name} size="sm" soft /><span className="cell-main">{b.staff_name}</span></div></td>{TYPES.map((t) => <td key={t} className="right num">{b.used[t] || "—"}</td>)}</tr>)}</tbody>
           </table></div></div>
         </details>
       )}

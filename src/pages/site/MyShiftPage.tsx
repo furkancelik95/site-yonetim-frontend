@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { CalendarClock, LogIn, LogOut, Plus } from "lucide-react";
+import { CalendarClock, CalendarDays, LogIn, LogOut, Plus, RefreshCw } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { attendanceMethod, leaveStatus, leaveStatusTone, leaveType } from "../../lib/labels";
 
@@ -39,9 +39,15 @@ export function MyShiftPage() {
   return (
     <div className="stack">
       <PageHead title="Vardiyam" subtitle={`${q.data.full_name} · ${q.data.position}. Giriş-çıkış: ${attendanceMethod(q.data.attendance_method)}.`} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Bugünkü vardiya" tone={active.length > 0 ? "accent" : undefined} icon={<CalendarClock aria-hidden="true" />} value={active[0] ? `${active[0].template.start}–${active[0].template.end}` : "Yok"} small note={active[0] ? active[0].template.name : "bugün vardiyanız yok"} />
+        <Kpi label="Yayınlanmış vardiya" icon={<CalendarDays aria-hidden="true" />} value={q.data.shifts.length} note="bu ve gelecek hafta" />
+        <Kpi label="Giriş yapılan" tone="ok" icon={<LogIn aria-hidden="true" />} value={q.data.shifts.filter((s) => s.events.some((e) => e.kind === "in")).length} note={`giriş-çıkış: ${attendanceMethod(q.data.attendance_method)}`} />
+        <Kpi label="Değişen vardiya" tone={q.data.shifts.some((s) => s.changed_after_publish) ? "warn" : undefined} icon={<RefreshCw aria-hidden="true" />} value={q.data.shifts.filter((s) => s.changed_after_publish).length} note="yayından sonra güncellendi" />
+      </div>
       {active.length > 0 && <div className="stack">{active.map((s) => <ClockCard key={s.id} s={s} method={q.data.attendance_method} />)}</div>}
       <div className="card">
-        <div className="card__head"><span className="card__title">Yayınlanmış vardiyalarım</span><span className="card__meta ml-auto">bu ve gelecek hafta</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><CalendarClock aria-hidden="true" /></span><span className="card__title">Yayınlanmış vardiyalarım</span><span className="card__meta ml-auto">bu ve gelecek hafta</span></div>
         <div className="card__body card__body--flush">
           {q.data.shifts.length === 0 ? <Empty title="Yayınlanmış vardiya yok" icon={<CalendarClock aria-hidden="true" />}>Plan yayınlanınca burada görünür ve bildirim alırsınız.</Empty> : (
             <div className="table-wrap"><table className="data">

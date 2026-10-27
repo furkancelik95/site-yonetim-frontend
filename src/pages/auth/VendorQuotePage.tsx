@@ -30,8 +30,8 @@ export function VendorQuotePage() {
   }
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 640 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 640px)" }}>
         {q.isPending ? <Loading /> : q.isError ? (
           <div className="stack"><h1 className="auth__title">Teklif formu</h1><ErrorState error={q.error} /></div>
         ) : m.isSuccess ? (

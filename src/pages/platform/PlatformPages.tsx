@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy } from "lucide-react";
+import { AlertTriangle, BarChart3, Building2, CalendarDays, Copy, Layers, ListOrdered, Plus, TrendingUp, Users } from "lucide-react";
 import { api, get } from "../../api/client";
 import type { Page, Schemas, Written } from "../../api/types";
+import { BarChart, Donut } from "../../components/charts";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatInt } from "../../lib/format";
 import { moduleName, propertyKind } from "../../lib/labels";
 
@@ -42,11 +43,11 @@ export function PlatformOverviewPage() {
       />
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : (
         <>
-          <div className="grid grid--kpi">
-            <Kpi label="Müşteri" value={formatInt(q.data.customer_count)} />
-            <Kpi label="Site" value={formatInt(q.data.site_count)} />
-            <Kpi label="Bağımsız bölüm" tone="accent" value={formatInt(q.data.unit_count)} />
-            <Kpi label="Tavanı aşan site" tone={q.data.over_cap_sites.length > 0 ? "danger" : "ok"} value={q.data.over_cap_sites.length} />
+          <div className="grid grid--kpi rise">
+            <Kpi label="Müşteri" icon={<Users aria-hidden="true" />} value={formatInt(q.data.customer_count)} />
+            <Kpi label="Site" icon={<Building2 aria-hidden="true" />} value={formatInt(q.data.site_count)} />
+            <Kpi label="Bağımsız bölüm" tone="accent" icon={<Layers aria-hidden="true" />} value={formatInt(q.data.unit_count)} />
+            <Kpi label="Tavanı aşan site" tone={q.data.over_cap_sites.length > 0 ? "danger" : "ok"} icon={<AlertTriangle aria-hidden="true" />} value={q.data.over_cap_sites.length} note={q.data.over_cap_sites.length === 0 ? "tüm siteler plan içinde" : "plan yükseltmesi gerekebilir"} />
           </div>
 
           {q.data.over_cap_sites.length > 0 && (
@@ -55,26 +56,52 @@ export function PlatformOverviewPage() {
             </Alert>
           )}
 
-          <div className="card">
-            <div className="card__head"><span className="card__title">Müşteriler</span></div>
-            <div className="card__body card__body--flush">
-              <div className="table-wrap">
-                <table className="data">
-                  <caption className="visually-hidden">Müşteriler</caption>
-                  <thead><tr><th scope="col">Müşteri</th><th scope="col">Plan</th><th scope="col" className="right">Site</th><th scope="col" className="right">Bölüm</th></tr></thead>
-                  <tbody>
-                    {q.data.customers.items.map((c) => (
-                      <tr key={c.id}><td className="cell-main">{c.name}</td><td className="small">{c.plan_name ?? "—"}</td><td className="right num">{c.site_count}</td><td className="right num">{formatInt(c.units)}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="plt-grid">
+            <div className="card">
+              <div className="card__head"><span className="card__icon card__icon--accent"><Users aria-hidden="true" /></span><span className="card__title">Müşteriler</span></div>
+              <div className="card__body card__body--flush">
+                <div className="table-wrap">
+                  <table className="data">
+                    <caption className="visually-hidden">Müşteriler</caption>
+                    <thead><tr><th scope="col">Müşteri</th><th scope="col">Plan</th><th scope="col" className="right">Site</th><th scope="col" className="right">Bölüm</th></tr></thead>
+                    <tbody>
+                      {q.data.customers.items.map((c) => (
+                        <tr key={c.id}>
+                          <td><div className="cell-person"><Avatar name={c.name} size="sm" soft /><div className="cell-main">{c.name}</div></div></td>
+                          <td>{c.plan_name ? <Badge tone="info">{c.plan_name}</Badge> : <span className="subtle">—</span>}</td>
+                          <td className="right num">{c.site_count}</td>
+                          <td className="right num">{formatInt(c.units)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="card__foot"><Pager page={q.data.customers.page} pageSize={q.data.customers.page_size} total={q.data.customers.total} onPage={setPage} /></div>
+            </div>
+
+            {/* Plan dağılımı: listelenen sitelerden sayılır (gerçek veri, sayfa kapsamı) */}
+            <div className="card">
+              <div className="card__head"><span className="card__icon card__icon--info"><Layers aria-hidden="true" /></span><span className="card__title">Plan dağılımı</span></div>
+              <div className="card__body">
+                <Donut
+                  label="Sitelerin plan dağılımı"
+                  centerSub="site"
+                  segments={Object.entries(
+                    q.data.sites.items.reduce<Record<string, number>>((acc, s) => {
+                      const k = s.plan_name ?? "Plan yok";
+                      acc[k] = (acc[k] ?? 0) + 1;
+                      return acc;
+                    }, {}),
+                  ).map(([label, value]) => ({ label, value }))}
+                />
+                {q.data.sites.total > q.data.sites.items.length && <p className="xs muted mb-0 mt-2">Bu sayfada listelenen {q.data.sites.items.length} site sayıldı.</p>}
               </div>
             </div>
-            <div className="card__foot"><Pager page={q.data.customers.page} pageSize={q.data.customers.page_size} total={q.data.customers.total} onPage={setPage} /></div>
           </div>
 
           <div className="card">
-            <div className="card__head"><span className="card__title">Siteler</span></div>
+            <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Siteler</span></div>
             <div className="card__body card__body--flush">
               <div className="table-wrap">
                 <table className="data">
@@ -83,7 +110,7 @@ export function PlatformOverviewPage() {
                   <tbody>
                     {q.data.sites.items.map((s) => (
                       <tr key={s.id} className={s.over_cap ? "is-overdue" : undefined}>
-                        <td><div className="cell-main">{s.name}</div><div className="cell-sub mono">{s.slug}</div></td>
+                        <td><div className="cell-person"><IconChip tone={s.over_cap ? "danger" : undefined}><Building2 /></IconChip><div><div className="cell-main">{s.name}</div><div className="cell-sub mono">{s.slug}</div></div></div></td>
                         <td className="small">{s.organization_name ?? "—"}</td>
                         <td className="right num">{formatInt(s.units)} / {s.max_units ?? "∞"} {s.over_cap && <Badge tone="danger">Aşıldı</Badge>}</td>
                         <td>
@@ -178,6 +205,7 @@ export function NewCustomerPage() {
     <div className="stack page--narrow">
       <PageHead title="Müşteri ekle" subtitle="Yönetim şirketi ya da kendi kendini yöneten site. İlk yetkili kullanıcı da açılır." />
       <form className="card" onSubmit={submit} noValidate>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Müşteri ve ilk yetkili</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
           <FormError error={m.error} />
           <Field label="Müşteri adı" required error={fieldError(m.error, "name")}>{(p) => <input {...p} className="field__input" value={f.name} onChange={up("name")} />}</Field>
@@ -244,9 +272,10 @@ export function NewSitePage() {
 
   return (
     <div className="stack page--narrow">
-      <PageHead title="Site aç" />
+      <PageHead title="Site aç" subtitle="Yeni tesis bir müşteriye bağlanır; plan, açılacak modülleri belirler." />
       <Alert tone="info" title="Açılışta kurulanlar">Kasa ve banka hesabı, standart gider kategorileri, tahakkuk tipleri, dağıtım kuralları ve planın izin verdiği modüller otomatik kurulur.</Alert>
       <form className="card" onSubmit={submit} noValidate>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Site bilgileri</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
           <FormError error={m.error} />
           <div className="grid grid--2">
@@ -293,7 +322,37 @@ export function IndexValuesPage() {
   return (
     <div className="stack">
       <PageHead title="Endeks değerleri" subtitle="Sözleşmelerdeki TÜFE / ÜFE artış kuralları bu tablodan hesaplanır. Değer, TÜİK'in açıkladığı yıllık değişim oranıdır (%). TÜİK'ten otomatik çekme Faz 2." />
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (() => {
+        const sorted = [...q.data].sort((a, b) => a.period.localeCompare(b.period));
+        const last = sorted[sorted.length - 1];
+        const prev = sorted[sorted.length - 2];
+        const pct = (v: number) => `%${v.toLocaleString("tr-TR")}`;
+        const dir = (a?: number, b?: number) => (a == null || b == null ? undefined : a > b ? "up" as const : a < b ? "down" as const : "flat" as const);
+        return (
+          <div className="grid grid--kpi rise">
+            <Kpi label="Son dönem" tone="accent" icon={<CalendarDays aria-hidden="true" />} value={last ? last.period : "—"} small note={last ? `${last.entered_by} girdi` : "henüz değer yok"} />
+            <Kpi label="TÜFE yıllık" icon={<TrendingUp aria-hidden="true" />} value={last ? pct(last.tufe) : "—"} note={last ? undefined : "henüz değer yok"}
+              delta={last && prev ? { tone: "muted", dir: dir(last.tufe, prev.tufe), label: `önceki ${pct(prev.tufe)}` } : undefined} />
+            <Kpi label="ÜFE yıllık" icon={<TrendingUp aria-hidden="true" />} value={last ? pct(last.ufe) : "—"} note={last ? undefined : "henüz değer yok"}
+              delta={last && prev ? { tone: "muted", dir: dir(last.ufe, prev.ufe), label: `önceki ${pct(prev.ufe)}` } : undefined} />
+            <Kpi label="Girilen dönem" icon={<ListOrdered aria-hidden="true" />} value={q.data.length} note="tüm tesislerde kullanılır" />
+          </div>
+        );
+      })()}
+      {q.data && q.data.length > 1 && (
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">TÜFE yıllık değişim</span><span className="card__meta ml-auto">son {Math.min(12, q.data.length)} dönem</span></div>
+          <div className="card__body">
+            <BarChart label="TÜFE yıllık değişim" format={(v) => `%${v.toLocaleString("tr-TR", { maximumFractionDigits: 1 })}`}
+              data={[...q.data].sort((a, b) => a.period.localeCompare(b.period)).slice(-12).map((v) => ({ label: v.period.slice(2).replace("-", "/"), value: v.tufe, sub: `ÜFE %${v.ufe.toLocaleString("tr-TR")}` }))}
+              highlight={Math.min(12, q.data.length) - 1} />
+          </div>
+        </div>
+      )}
       <form className="card" noValidate onSubmit={submit}>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Plus aria-hidden="true" /></span><span className="card__title">Değer gir</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={m.error} />
           <div className="grid grid--kpi">
@@ -304,8 +363,10 @@ export function IndexValuesPage() {
         </div>
         <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
       </form>
-      <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <p className="card__body small muted mb-0">Henüz değer girilmedi.</p> : (
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><ListOrdered aria-hidden="true" /></span><span className="card__title">Girilen değerler</span>{q.data && <span className="card__meta ml-auto">{q.data.length} dönem</span>}</div>
+        <div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Henüz değer girilmedi" icon={<TrendingUp aria-hidden="true" />}>TÜİK yıllık değişim oranını yukarıdan dönem dönem girin.</Empty> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Endeks değerleri</caption>
             <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">TÜFE %</th><th scope="col" className="right">ÜFE %</th><th scope="col">Giren</th></tr></thead>
             <tbody>{q.data.map((v) => <tr key={v.period}><td>{v.period}</td><td className="right num">{v.tufe.toLocaleString("tr-TR")}</td><td className="right num">{v.ufe.toLocaleString("tr-TR")}</td><td className="small">{v.entered_by}</td></tr>)}</tbody>
