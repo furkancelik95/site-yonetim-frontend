@@ -12,7 +12,7 @@ import { heroUrl } from "../../lib/cover";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
 import { categoryIcon } from "../../lib/icons";
 import { installmentStatus, installmentTone, planStatus, planStatusTone } from "../../lib/labels";
-import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { M, useSite } from "../../site/SiteContext";
 import { NotificationsPage } from "../NotificationsPage";
 import { ProfilePage } from "../ProfilePage";
@@ -348,7 +348,7 @@ export function ResidentRequestsPage() {
   useDocumentTitle("Taleplerim");
   const [page, setPage] = useState(1);
   const q = useSiteGet<Page<Req>>("/resident/requests", { page, page_size: 20 });
-  const extras = useSiteGet<Record<string, ReqExtras>>("/resident/requests/extras");
+  const categories = useRequestCategories(true);
   const home = useSiteGet<Home>("/resident/home");
   const units = home.data?.units ?? [];
   // Yer: bölüm içi (bölüm seçilir) ya da ortak alan (konum yazılır) — HIZ-01
@@ -358,7 +358,7 @@ export function ResidentRequestsPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const unitId = f.place === "unit" ? f.unit_id || units[0]?.unit_id || null : null;
-    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, priority: "normal", unit_id: unitId, location: f.location.trim() || null });
+    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, unit_id: unitId, location: f.location.trim() || null });
   }
 
   if (q.isError) return <StaffNotice error={q.error} />;
@@ -369,7 +369,7 @@ export function ResidentRequestsPage() {
           <div className="section-title" style={{ margin: 0 }}>Yeni talep</div>
           <FormError error={m.error} />
           <Field label="Konu" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={(e) => setF((x) => ({ ...x, title: e.target.value }))} placeholder="ör. Banyoda su sızıntısı" />}</Field>
-          <Field label="Kategori">{(p) => <select {...p} className="field__input" value={f.category} onChange={(e) => setF((x) => ({ ...x, category: e.target.value }))}>{CATEGORIES.map((c) => <option key={c} value={c}>{requestCategory(c)}</option>)}</select>}</Field>
+          <Field label="Kategori" hint="Öncelik ve hedef süre kategoriye göre belirlenir" error={fieldError(m.error, "category")}>{(p) => <select {...p} className="field__input" value={f.category} onChange={(e) => setF((x) => ({ ...x, category: e.target.value }))}>{categories.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}</select>}</Field>
           <Field label="Yer" error={fieldError(m.error, "unit_id")}>{(p) => <select {...p} className="field__input" value={f.place === "unit" ? f.unit_id || units[0]?.unit_id || "unit" : "common"} onChange={(e) => setF((x) => (e.target.value === "common" ? { ...x, place: "common" } : { ...x, place: "unit", unit_id: e.target.value }))}>{units.map((u) => <option key={u.unit_id} value={u.unit_id}>Bölümüm ({u.unit_name})</option>)}<option value="common">Ortak alan</option></select>}</Field>
           <Field label={f.place === "common" ? "Konum" : "Bölüm içinde nerede?"} hint={f.place === "common" ? "ör. B blok asansör, otopark girişi" : "İsteğe bağlı; ör. mutfak, banyo"} error={fieldError(m.error, "location")}>{(p) => <input {...p} className="field__input" maxLength={120} value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} />}</Field>
           <Field label="Açıklama">{(p) => <textarea {...p} className="field__input" rows={3} value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
@@ -389,9 +389,9 @@ export function ResidentRequestsPage() {
                   <IconChip tone={done ? "ok" : r.priority === "urgent" ? "danger" : r.priority === "high" ? "warn" : undefined}><Icon /></IconChip>
                   <div className="ann__main">
                     <div className="ann__title">#{r.number} {r.title}</div>
-                    <div className="ann__meta"><span>{requestCategory(r.category)}</span><span>·</span><span>{formatDateTime(r.created_at)}</span></div>
+                    <div className="ann__meta"><span>{r.category_name || requestCategory(r.category)}</span><span>·</span><span>{formatDateTime(r.created_at)}</span></div>
                     {r.resolution && <div className="ann__body">Çözüm: {r.resolution}</div>}
-                    <RequestExtrasBlock id={r.id} status={r.status} ex={extras.data?.[r.id]} />
+                    <RequestExtrasBlock r={r} />
                   </div>
                   <div className="ann__side">
                     <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
@@ -530,4 +530,5 @@ export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePa
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
-import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";
+import { RequestExtrasBlock } from "./ResidentServicePages";
+import { useRequestCategories } from "../site/requestCategories";

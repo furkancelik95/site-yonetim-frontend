@@ -20,6 +20,7 @@ export const P = {
   requestsRead: "requests.read",
   requestsCreate: "requests.create",
   requestsAssign: "requests.assign",
+  requestsSettings: "requests.settings",
   announcementsRead: "announcements.read",
   announcementsPublish: "announcements.publish",
   packages: "security.packages",
