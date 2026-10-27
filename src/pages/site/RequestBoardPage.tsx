@@ -5,7 +5,7 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { Badge, ErrorState, FormError, Loading, PageHead } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { priorityTone, requestCategory, requestPriority, requestStatus } from "../../lib/labels";
+import { priorityTone, requestPriority, requestStatus } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { useUrlState } from "../../lib/hooks";
 import { DepartmentFilter } from "./Departments";
@@ -13,13 +13,15 @@ import { DepartmentFilter } from "./Departments";
 type Req = Schemas["RequestOut"];
 type Status = Req["status"];
 
-// Panoda aktif akış; kapanan/iptal edilenler listede görünür
-const COLUMNS: Status[] = ["open", "in_progress", "waiting", "resolved"];
-const NEEDS_RESOLUTION = new Set<Status>(["resolved", "closed"]);
+// Panoda aktif akış (K18: Açık → Atandı → İşlemde → Beklemede → Çözüldü); kapanan/iptal edilenler listede görünür
+const COLUMNS: Status[] = ["open", "assigned", "in_progress", "waiting", "resolved"];
+/** Çözüldü için çözüm notu, iptal için gerekçe zorunlu (backend kuralı). */
+const NEEDS_RESOLUTION = new Set<Status>(["resolved", "cancelled"]);
 
 /**
- * Talep panosu (Apsiyon "İş Takip Panosu" karşılığı). Yeni servis gerekmez: mevcut liste ve
- * durum değiştirme uçları kullanılır. Sürükle-bırakın klavye karşılığı kart üstündeki "Taşı" seçimi.
+ * Talep panosu (Apsiyon "İş Takip Panosu" karşılığı). Mevcut liste ve durum değiştirme uçları
+ * kullanılır; kart yalnız dokümandaki akışın izin verdiği sütuna bırakılır (`allowed_transitions`).
+ * Sürükle-bırakın klavye karşılığı kart üstündeki "Taşı" seçimi.
  */
 export function RequestBoardPage() {
   const { site, can } = useSite();
@@ -28,6 +30,7 @@ export function RequestBoardPage() {
   const dep = s.departman;
   const cols = {
     open: useSiteGet<Page<Req>>("/requests", { status: "open", department_id: dep, page_size: 100 }),
+    assigned: useSiteGet<Page<Req>>("/requests", { status: "assigned", department_id: dep, page_size: 100 }),
     in_progress: useSiteGet<Page<Req>>("/requests", { status: "in_progress", department_id: dep, page_size: 100 }),
     waiting: useSiteGet<Page<Req>>("/requests", { status: "waiting", department_id: dep, page_size: 100 }),
     resolved: useSiteGet<Page<Req>>("/requests", { status: "resolved", department_id: dep, page_size: 100 }),
@@ -38,8 +41,15 @@ export function RequestBoardPage() {
 
   const move = useSiteMutation<{ id: string; status: Status; resolution: string | null }, unknown>("POST", (v) => `/requests/${v.id}/status`);
 
+  const [denied, setDenied] = useState<string | null>(null);
+
   function requestMove(req: Req, to: Status) {
     if (req.status === to) return;
+    if (!req.allowed_transitions.includes(to)) {
+      setDenied(`#${req.number} talep "${requestStatus(req.status)}" durumundan "${requestStatus(to)}" durumuna geçemez.${req.allowed_transitions.length ? ` Geçilebilecek: ${req.allowed_transitions.map((s) => requestStatus(s)).join(", ")}.` : ""}`);
+      return;
+    }
+    setDenied(null);
     if (NEEDS_RESOLUTION.has(to)) setPending({ req, to });
     else move.mutate({ id: req.id, status: to, resolution: null });
   }
@@ -62,6 +72,7 @@ export function RequestBoardPage() {
       />
       <div className="filters"><DepartmentFilter id="b-dep" value={dep} onChange={(v) => set({ departman: v })} /></div>
       <FormError error={move.error} />
+      {denied && <p className="small field__error" role="alert">{denied}</p>}
       {anyError && <ErrorState error={anyError.error} />}
 
       <div className="board" role="list">
@@ -87,18 +98,18 @@ export function RequestBoardPage() {
                       key={r.id}
                       role="listitem"
                       className={`board__card${r.priority === "urgent" ? " board__card--urgent" : ""}`}
-                      draggable={canMove}
+                      draggable={canMove && r.allowed_transitions.length > 0}
                       onDragStart={() => { dragged.current = r; }}
                     >
                       <Link to={`/s/${site.slug}/talepler/${r.id}`} className="cell-main">#{r.number} {r.title}</Link>
-                      <div className="cell-sub">{r.unit_name ?? r.location ?? "Ortak alan"} · {requestCategory(r.category)}</div>
+                      <div className="cell-sub">{r.unit_name ?? r.location ?? "Ortak alan"} · {r.category_name}</div>
                       <div className="row" style={{ gap: "var(--s-1)", marginTop: "var(--s-2)" }}>
                         {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
                         {r.department_name && <Badge tone="info">{r.department_name}</Badge>}{r.assigned_to && <Badge>{r.assigned_to}</Badge>}
                       </div>
                       <div className="row row--between" style={{ marginTop: "var(--s-2)" }}>
                         <span className="xs muted">{formatDateTime(r.created_at)}</span>
-                        {canMove && (
+                        {canMove && r.allowed_transitions.length > 0 && (
                           <select
                             className="board__move"
                             aria-label={`#${r.number} talebini taşı`}
@@ -107,7 +118,7 @@ export function RequestBoardPage() {
                             onChange={(e) => requestMove(r, e.target.value as Status)}
                           >
                             <option value="" disabled>Taşı…</option>
-                            {[...COLUMNS, "closed", "cancelled"].filter((s) => s !== r.status).map((s) => <option key={s} value={s}>{requestStatus(s)}</option>)}
+                            {r.allowed_transitions.map((s) => <option key={s} value={s}>{requestStatus(s)}</option>)}
                           </select>
                         )}
                       </div>
@@ -134,7 +145,7 @@ export function RequestBoardPage() {
   );
 }
 
-/** Çözüldü/kapandı için çözüm notu zorunlu (backend kuralı) — taşırken sorulur. */
+/** Çözüldü için çözüm notu, iptal için gerekçe zorunlu (backend kuralı) — taşırken sorulur. */
 function ResolutionDialog({ req, to, busy, onCancel, onConfirm }: { req: Req; to: Status; busy: boolean; onCancel: () => void; onConfirm: (r: string) => Promise<unknown> }) {
   const [text, setText] = useState("");
   const [err, setErr] = useState<string>();
@@ -144,14 +155,14 @@ function ResolutionDialog({ req, to, busy, onCancel, onConfirm }: { req: Req; to
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (!text.trim()) return setErr("Çözüm notu zorunlu.");
+          if (!text.trim()) return setErr(to === "cancelled" ? "İptal gerekçesi zorunlu." : "Çözüm notu zorunlu.");
           onConfirm(text.trim()).catch(() => {});
         }}
       >
         <div className="dialog__body">
           <h2 className="dialog__title">#{req.number} → {requestStatus(to)}</h2>
           <div className="field">
-            <label className="field__label" htmlFor="res-text">Çözüm notu *</label>
+            <label className="field__label" htmlFor="res-text">{to === "cancelled" ? "İptal gerekçesi" : "Çözüm notu"} *</label>
             <textarea id="res-text" className="field__input" rows={3} value={text} onChange={(e) => setText(e.target.value)} aria-invalid={err ? true : undefined} autoFocus />
             {err && <span className="field__error" role="alert">{err}</span>}
           </div>

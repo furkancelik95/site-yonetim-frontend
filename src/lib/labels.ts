@@ -41,6 +41,10 @@ export const ledgerSource = label({
   adjustment: "Düzeltme",
   transfer: "Aktarım",
   advance: "Avans mahsubu",
+  opening: "Devir bakiye",
+  refund: "İade",
+  service: "Ücretli hizmet",
+  deposit: "Tadilat depozitosu",
 });
 
 export const paymentMethod = label({ cash: "Nakit", bank_transfer: "Havale / EFT", credit_card: "Kredi kartı", other: "Diğer" });
@@ -53,6 +57,7 @@ export const expenseCategoryKind = label({ operating: "İşletme gideri", capita
 
 export const requestStatus = label({
   open: "Açık",
+  assigned: "Atandı",
   in_progress: "İşlemde",
   waiting: "Beklemede",
   resolved: "Çözüldü",
@@ -60,18 +65,28 @@ export const requestStatus = label({
   cancelled: "İptal",
 });
 export const requestStatusTone = (s: string): Tone =>
-  ({ open: "info", in_progress: "warn", waiting: "muted", resolved: "ok", closed: "muted", cancelled: "muted" })[s] as Tone ?? "muted";
+  ({ open: "info", assigned: "info", in_progress: "warn", waiting: "muted", resolved: "ok", closed: "muted", cancelled: "muted" })[s] as Tone ?? "muted";
 
+/** Talep durumları (dokümandaki akış sırası, K18). Geçilebilecek durumları backend verir (`allowed_transitions`). */
+export const REQUEST_STATUSES = ["open", "assigned", "in_progress", "waiting", "resolved", "closed", "cancelled"];
+
+/** Talep kategorisi adı — site kategorileri backend'den gelir (GET /request-categories); bu varsayılanların yedeği. */
 export const requestCategory = label({
   other: "Diğer",
-  plumbing: "Su tesisatı",
+  plumbing: "Su / tesisat",
   electrical: "Elektrik",
   elevator: "Asansör",
   heating: "Isıtma",
-  cleaning: "Temizlik",
+  cleaning: "Ortak alan temizliği",
   security: "Güvenlik",
   garden: "Bahçe",
   common_area: "Ortak alan",
+  noise: "Gürültü / şikâyet",
+  parking: "Otopark",
+  meter_dispute: "Sayaç itirazı",
+  flood: "Su baskını",
+  elevator_trapped: "Asansörde mahsur kalma",
+  gas_smell: "Gaz kokusu",
 });
 
 export const requestPriority = label({ low: "Düşük", normal: "Normal", high: "Yüksek", urgent: "Acil" });
@@ -83,6 +98,14 @@ export const requestEvent = label({
   assigned: "Atandı",
   comment: "Yorum",
   resolved: "Çözüldü",
+  department_changed: "Departman",
+  closed: "Kapandı",
+  cancelled: "İptal edildi",
+  reopened: "Yeniden açıldı",
+  feedback: "Sakin değerlendirmesi",
+  outage_linked: "Ana olaya bağlandı",
+  outage_unlinked: "Ana olaydan ayrıldı",
+  quote: "Ücretli hizmet",
 });
 
 export const importance = label({ normal: "Normal", important: "Önemli", critical: "Acil" });
@@ -136,7 +159,6 @@ export function overdueTone(days: number): Tone {
   return "muted";
 }
 
-export const CATEGORIES = ["plumbing", "electrical", "elevator", "heating", "cleaning", "security", "garden", "common_area", "other"];
 export const PRIORITIES = ["low", "normal", "high", "urgent"];
 
 export const incidentKind = label({

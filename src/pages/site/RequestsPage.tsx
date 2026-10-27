@@ -7,20 +7,19 @@ import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { CATEGORIES, PRIORITIES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { PRIORITIES, REQUEST_STATUSES, priorityTone, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentFilter, DepartmentManager } from "./Departments";
-import { SlaBadge, type Sla } from "./RequestExtras";
+import { SlaBadge } from "./RequestExtras";
+import { useRequestCategories } from "./requestCategories";
 
 type Req = Schemas["RequestOut"];
 
-const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
-
 export function RequestsPage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ status: "", category: "", priority: "", departman: "", page: "1" });
-  const sla = useSiteGet<Record<string, Sla>>("/requests/sla");
-  const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, department_id: s.departman, page: s.page, page_size: 50 });
+  const [s, set] = useUrlState({ status: "", category: "", priority: "", departman: "", sla: "", page: "1" });
+  const categories = useRequestCategories();
+  const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, department_id: s.departman, sla_breached: s.sla === "breached" ? "true" : undefined, page: s.page, page_size: 50 });
   const [adding, setAdding] = useState(false);
   const [managing, setManaging] = useState(false);
 
@@ -39,14 +38,14 @@ export function RequestsPage() {
           <label className="field__label" htmlFor="r-status">Durum</label>
           <select id="r-status" className="field__input" value={s.status} onChange={(e) => set({ status: e.target.value })}>
             <option value="">Tümü</option>
-            {STATUSES.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}
+            {REQUEST_STATUSES.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}
           </select>
         </div>
         <div className="field">
           <label className="field__label" htmlFor="r-cat">Kategori</label>
           <select id="r-cat" className="field__input" value={s.category} onChange={(e) => set({ category: e.target.value })}>
             <option value="">Tümü</option>
-            {CATEGORIES.map((x) => <option key={x} value={x}>{requestCategory(x)}</option>)}
+            {categories.map((c) => <option key={c.key} value={c.key}>{c.name}{c.is_active ? "" : " (pasif)"}</option>)}
           </select>
         </div>
         <div className="field">
@@ -57,6 +56,13 @@ export function RequestsPage() {
           </select>
         </div>
         <DepartmentFilter id="r-dep" value={s.departman} onChange={(v) => set({ departman: v })} />
+        <div className="field">
+          <label className="field__label" htmlFor="r-sla">SLA</label>
+          <select id="r-sla" className="field__input" value={s.sla} onChange={(e) => set({ sla: e.target.value, page: "1" })}>
+            <option value="">Tümü</option>
+            <option value="breached">Süresi geçmiş açık talepler</option>
+          </select>
+        </div>
       </div>
 
       <div className="card">
@@ -81,14 +87,14 @@ export function RequestsPage() {
                         <Link to={q.id} className="cell-main">#{q.number} {q.title}</Link>
                         <div className="cell-sub">{q.unit_name ?? q.location ?? "Ortak alan"}{q.reporter_name ? ` · ${q.reporter_name}` : ""}</div>
                       </td>
-                      <td className="small">{requestCategory(q.category)}</td>
+                      <td className="small">{q.category_name}</td>
                       <td>
                         <Badge tone={requestStatusTone(q.status)}>{q.status_label || requestStatus(q.status)}</Badge>
                         {(q.priority === "high" || q.priority === "urgent") && <div style={{ marginTop: 4 }}><Badge tone={priorityTone(q.priority)}>{requestPriority(q.priority)}</Badge></div>}
                       </td>
                       <td className="small">{q.department_name && <Badge tone="info">{q.department_name}</Badge>}<div>{q.assigned_to ?? (q.department_name ? null : <span className="subtle">—</span>)}</div></td>
                       <td className="small nowrap">{formatDateTime(q.created_at)}</td>
-                      <td><SlaBadge s={sla.data?.[q.id]} /></td>
+                      <td><SlaBadge s={q.sla} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -108,7 +114,8 @@ export function RequestsPage() {
 
 function NewRequestForm({ onDone }: { onDone: () => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
-  const [f, setF] = useState({ title: "", description: "", category: "other", priority: "normal", location: "" });
+  const categories = useRequestCategories(true);
+  const [f, setF] = useState({ title: "", description: "", category: "other", priority: "", location: "" });
   const m = useSiteMutation<Record<string, unknown>, Schemas["RequestDetail"]>("POST", "/requests", { onSuccess: onDone });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   function submit(e: FormEvent) {
@@ -117,7 +124,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
       title: f.title.trim(),
       description: f.description.trim() || null,
       category: f.category,
-      priority: f.priority,
+      priority: f.priority || null,
       unit_id: unit?.id ?? null,
       location: unit ? null : f.location.trim() || null,
     });
@@ -129,8 +136,8 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
         <FormError error={m.error} />
         <Field label="Başlık" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={up("title")} placeholder="ör. B blok asansörü çalışmıyor" />}</Field>
         <div className="grid grid--kpi">
-          <Field label="Kategori">{(p) => <select {...p} className="field__input" value={f.category} onChange={up("category")}>{CATEGORIES.map((x) => <option key={x} value={x}>{requestCategory(x)}</option>)}</select>}</Field>
-          <Field label="Öncelik">{(p) => <select {...p} className="field__input" value={f.priority} onChange={up("priority")}>{PRIORITIES.map((x) => <option key={x} value={x}>{requestPriority(x)}</option>)}</select>}</Field>
+          <Field label="Kategori" error={fieldError(m.error, "category")}>{(p) => <select {...p} className="field__input" value={f.category} onChange={up("category")}>{categories.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}</select>}</Field>
+          <Field label="Öncelik" hint="Boş: kategorinin varsayılanı">{(p) => <select {...p} className="field__input" value={f.priority} onChange={up("priority")}><option value="">Kategoriden ({requestPriority(categories.find((c) => c.key === f.category)?.default_priority ?? "normal")})</option>{PRIORITIES.map((x) => <option key={x} value={x}>{requestPriority(x)}</option>)}</select>}</Field>
           {!unit && <Field label="Yer (ortak alan)">{(p) => <input {...p} className="field__input" value={f.location} onChange={up("location")} placeholder="ör. Otopark girişi" />}</Field>}
         </div>
         <UnitPicker label="Bölüm" value={unit} onChange={setUnit} allowEmptyLabel="ortak alan talebi" />

@@ -4,15 +4,15 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { priorityTone, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentAssign } from "./Departments";
 import { ExtrasCard, InternalNotes, MergeCard, SlaCard } from "./RequestExtras";
 import { fillTemplate } from "../../lib/labels";
 
 type Detail = Schemas["RequestDetail"];
-const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
-const NEEDS_RESOLUTION = new Set(["resolved", "closed"]);
+/** Çözüm notu (çözüldü) ya da gerekçe (iptal) zorunlu — backend kuralı (K18). */
+const NEEDS_RESOLUTION = new Set(["resolved", "cancelled"]);
 
 export function RequestDetailPage() {
   const { requestId = "" } = useParams();
@@ -27,7 +27,7 @@ export function RequestDetailPage() {
     <div className="stack">
       <PageHead
         title={`#${r.number} ${r.title}`}
-        subtitle={<>{requestCategory(r.category)} · {r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
+        subtitle={<>{r.category_name} · {r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
         actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>}
       />
 
@@ -41,15 +41,15 @@ export function RequestDetailPage() {
             <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
             <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ?? "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
-            <SlaCard id={r.id} />
+            <SlaCard s={r.sla} />
             {r.resolution && <div className="kv"><span className="kv__k">Çözüm</span><span className="kv__v">{r.resolution}</span></div>}
             {r.description && <p className="mt-4 mb-0" style={{ whiteSpace: "pre-wrap" }}>{r.description}</p>}
           </div>
         </div>
 
         <div className="stack">
-          {can(P.requestsAssign) && <StatusForm r={r} />}
-          {can(P.requestsAssign) && <AssignForm r={r} />}
+          {can(P.requestsAssign) && r.allowed_transitions.length > 0 && <StatusForm key={`${r.status}-${r.allowed_transitions.join()}`} r={r} />}
+          {can(P.requestsAssign) && !["closed", "cancelled"].includes(r.status) && <AssignForm r={r} />}
         </div>
       </div>
 
@@ -79,14 +79,15 @@ export function RequestDetailPage() {
   );
 }
 
+/** Yalnız dokümandaki akışta izin verilen geçişler (backend `allowed_transitions`, K18). */
 function StatusForm({ r }: { r: Detail }) {
-  const [status, setStatus] = useState(r.status);
+  const [status, setStatus] = useState<Detail["status"]>(r.allowed_transitions[0] ?? r.status);
   const [resolution, setResolution] = useState("");
   const [err, setErr] = useState<string>();
   const m = useSiteMutation<{ status: string; resolution: string | null }, Detail>("POST", `/requests/${r.id}/status`, { onSuccess: () => setResolution("") });
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (NEEDS_RESOLUTION.has(status) && !resolution.trim()) return setErr("Çözüldü ya da kapandı için çözüm notu zorunlu.");
+    if (NEEDS_RESOLUTION.has(status) && !resolution.trim()) return setErr(status === "cancelled" ? "İptal için gerekçe yazın." : "Çözüldü için çözüm notu zorunlu.");
     setErr(undefined);
     m.mutate({ status, resolution: resolution.trim() || null });
   }
@@ -96,9 +97,10 @@ function StatusForm({ r }: { r: Detail }) {
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Yeni durum">
-          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{STATUSES.map((x) => <option key={x} value={x} disabled={x === r.status}>{requestStatus(x)}</option>)}</select>}
+          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{r.allowed_transitions.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}</select>}
         </Field>
-        <Field label="Çözüm notu" required={NEEDS_RESOLUTION.has(status)} error={err ?? fieldError(m.error, "resolution")}>
+        {r.status === "resolved" && r.reported_by_person_id && <p className="small muted mb-0">Sakin onayı bekleniyor; talep sakin onaylayınca ya da yanıt gelmezse kendiliğinden kapanır.</p>}
+        <Field label={status === "cancelled" ? "İptal gerekçesi" : "Çözüm notu"} required={NEEDS_RESOLUTION.has(status)} error={err ?? fieldError(m.error, "resolution")}>
           {(p) => <textarea {...p} className="field__input" rows={2} value={resolution} onChange={(e) => setResolution(e.target.value)} />}
         </Field>
       </div>
