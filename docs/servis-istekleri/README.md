@@ -110,7 +110,7 @@ Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 - **Toplu tahsilat** (`/tahsilat/toplu`) — `POST …/payments` satır satır, satır başına `Idempotency-Key`.
 
 ## P16c — kimlik ve bildirim gönderimi (servis isteği yok; Yazılım Dokümanı PLT-01/05/10, ILT-05, RAP-05)
-**Backend'de** (P16c PR'ı): telefon + SMS koduyla giriş, iki adımlı doğrulama (QR, yedek kodlar),
+**Backend'de** (#75): telefon + SMS koduyla giriş, iki adımlı doğrulama (QR, yedek kodlar),
 parola sıfırlama, telefon değişikliği, hesap daveti (`/hesap-davet/:token`), SMS hesabı ve kota
 (`/s/:slug/sms-hesabi`), sessiz saatler (istek 71'in `communication-settings` kısmı), teslim
 kayıtları, planlı raporlar (rapor kataloğu), platform test gelen kutusu. Sağlayıcı K5'e kadar
