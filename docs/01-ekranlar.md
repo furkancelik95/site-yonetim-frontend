@@ -46,6 +46,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/kasa` | **Kasa ve banka** — hesap kartları, bakiye, hesap aç, aktarım | `finance.cash.read` / `.manage` | `cash-accounts`, `cash-transfers` | R |
 | `/s/{slug}/kasa/{id}` | **Hesap ekstresi** — tarih aralığı, elle hareket, yürüyen bakiye, sayfalama, Excel | `finance.cash.read` | `cash-accounts/{id}/statement` | R |
 | `/s/{slug}/raporlar` | **Gelir-gider raporu** — yıl seçimi, KPI, ay ay çubuk, kategori dökümü, işletme projesi karşılaştırması, Excel | `finance.reports.read` | `reports/income-expense` | R |
+| `/s/{slug}/seffaflik-raporu` | **Şeffaflık raporu** (RAP-02, K32) — aylık özet hazırlama (kapsam seçimi), yayına gönderme ("Şeffaflık raporu" onay kuralı; yoksa yönetici yayınlar), ret gerekçesi | `finance.reports.read` / `transparency.manage` | `transparency-reports` | R |
 | `/s/{slug}/iceri-aktar` | **Excel'den aktarım** — şablon indir, yükle, önizleme (satır satır hata/uyarı), onayla | `units.manage` | `imports/units` | R |
 | `/s/{slug}/talepler` | **Talepler** — liste, filtre, yeni talep | `requests.read` | `requests` | R |
 | `/s/{slug}/talep/{id}` | **Talep ayrıntısı** — durum değiştir (çözüldü/kapandıda çözüm notu zorunlu), ata, not, geçmiş | `requests.read` / `.assign` | `requests/{id}` | R |
@@ -99,7 +100,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | istek 68–70 | R (sahte servis) |
 | `/s/{slug}/duyurular/{id}/okuma-raporu` | **Okuma raporu** — alıcı/okuyan/onaylayan, zaman damgalı, yazdır (ILT-01) | `announcements.publish` | istek 71 | R (sahte servis) |
 | `/s/{slug}/bildirim-sablonlari` | **Bildirim şablonları** — TR/EN, değişken, SMS parça hesabı, sürüm (ILT-02) | `announcements.publish` | istek 72 | R (sahte servis) |
-| `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | istek 73, 74 | R (sahte servis) |
+| `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | `emergencies*`, `emergency-info-card`, `emergency-settings` | R |
 | `/s/{slug}/toplantilar/{id}/genel-kurul` | **Genel kurul** — format, karar türü, çağrı ve ispat; hazirun, fiziki vekâlet, nisap (kişi + arsa payı), salonda oylama; tutanak (TOP-01/03/04) | `meetings.manage` | istek 75–77 | R (sahte servis) |
 | `/s/{slug}/karar-defteri` | **Karar defteri** — kesinleşen kararlar sıra numarasıyla (TOP-04) | toplantı okuma | istek 77 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | **Belgeler** — kapsam, gizlilik, sürüm, SHA-256, geçerlilik uyarısı, gizli açılış kaydı (RAP-03) | yönetim rolleri | istek 78 | R (sahte servis) |
@@ -128,7 +129,7 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
 | `/teklif/{token}` | **Tedarikçi teklif formu** — oturumsuz, tek kullanımlık link (SAT-02) | R (sahte servis, istek 64) |
 | `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
-| `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R (sahte servis, istek 73, 74) |
+| `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R |
 | `/sakin/{slug}/belgeler` | **Belgeler** — açık ve bölüme özel belgeler (RAP-03) | R (sahte servis, istek 78) |
 | `/sakin/{slug}/kvkk` | **Kişisel verilerim** — KVKK başvurusu ve yanıtları (RAP-04) | R (sahte servis, istek 80) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |

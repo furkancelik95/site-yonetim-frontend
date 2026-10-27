@@ -11200,7 +11200,7 @@
         "tags": [
           "duyuru"
         ],
-        "summary": "Duyuru yayınla",
+        "summary": "Duyuru yayınla ya da zamanla",
         "operationId": "publish_announcement_api_v1_sites__slug__announcements_post",
         "security": [
           {
@@ -11348,7 +11348,1556 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReadOut"
+                  "$ref": "#/components/schemas/AnnouncementReadOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/announcements/{announcement_id}/read-report": {
+      "get": {
+        "tags": [
+          "duyuru"
+        ],
+        "summary": "Okuma raporu (alıcı, okuma, onay)",
+        "description": "Kişisel veri içerir (ad, bölüm, zaman): yalnız yayınlayan. Hane üyeleri teslim almadığı\niçin listede yoktur (onayları bölüm adına sayılmaz).",
+        "operationId": "read_report_api_v1_sites__slug__announcements__announcement_id__read_report_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "announcement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Announcement Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-announcements": {
+      "get": {
+        "tags": [
+          "duyuru"
+        ],
+        "summary": "Yayın bekleyen zamanlanmış duyurular",
+        "operationId": "scheduled_api_v1_sites__slug__scheduled_announcements_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduledAnnouncementOut"
+                  },
+                  "title": "Response Scheduled Api V1 Sites  Slug  Scheduled Announcements Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/scheduled-announcements/{announcement_id}/cancel": {
+      "post": {
+        "tags": [
+          "duyuru"
+        ],
+        "summary": "Zamanlanmış duyuruyu iptal et",
+        "operationId": "cancel_scheduled_api_v1_sites__slug__scheduled_announcements__announcement_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "announcement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Announcement Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ScheduledAnnouncementOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/pending-acks": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Okuma onayı bekleyen duyurularım",
+        "operationId": "pending_acks_api_v1_sites__slug__resident_pending_acks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingAckOut"
+                  },
+                  "title": "Response Pending Acks Api V1 Sites  Slug  Resident Pending Acks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/announcements/{announcement_id}/acknowledge": {
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "\"Okudum, anladım\" (zorunlu okuma onayı)",
+        "operationId": "acknowledge_api_v1_sites__slug__resident_announcements__announcement_id__acknowledge_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "announcement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Announcement Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AckOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/notification-templates": {
+      "get": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Bildirim ve duyuru şablonları",
+        "operationId": "list_templates_api_v1_sites__slug__notification_templates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationTemplateOut"
+                  },
+                  "title": "Response List Templates Api V1 Sites  Slug  Notification Templates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/notification-templates/{code}": {
+      "put": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Şablonu kaydet (yeni sürüm)",
+        "operationId": "save_template_api_v1_sites__slug__notification_templates__code__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_NotificationTemplateOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/notification-templates/{code}/reset": {
+      "post": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Sistem metnine dön (yeni sürüm)",
+        "operationId": "reset_template_api_v1_sites__slug__notification_templates__code__reset_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_NotificationTemplateOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergency-info-card": {
+      "get": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil bilgi kartı (personel)",
+        "operationId": "info_card_api_v1_sites__slug__emergency_info_card_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "if-none-match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 400
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencyInfoCardOut"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Kart değişmedi (If-None-Match)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil bilgi kartını yayınla (yeni sürüm)",
+        "operationId": "publish_card_api_v1_sites__slug__emergency_info_card_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyInfoCardIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_EmergencyInfoCardOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergency-settings": {
+      "get": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil durum verisi saklama ayarı",
+        "operationId": "emergency_settings_api_v1_sites__slug__emergency_settings_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencySettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Saklama ayarını kaydet",
+        "operationId": "save_emergency_settings_api_v1_sites__slug__emergency_settings_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencySettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_EmergencySettingsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergencies": {
+      "post": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil durumu başlat",
+        "operationId": "start_emergency_api_v1_sites__slug__emergencies_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyStartIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_EmergencyOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil durumlar (geçmiş; yeni üstte)",
+        "operationId": "emergencies_api_v1_sites__slug__emergencies_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmergencyOut"
+                  },
+                  "title": "Response Emergencies Api V1 Sites  Slug  Emergencies Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergencies/active": {
+      "get": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Aktif acil durum ve pano (yoksa null)",
+        "operationId": "active_emergency_api_v1_sites__slug__emergencies_active_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EmergencyBoardOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Active Emergency Api V1 Sites  Slug  Emergencies Active Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergencies/{emergency_id}/muster-checks": {
+      "post": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Listeden toplanma yoklaması",
+        "operationId": "muster_checks_api_v1_sites__slug__emergencies__emergency_id__muster_checks_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "emergency_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Emergency Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MusterCheckIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MusterCheckOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/emergencies/{emergency_id}/end": {
+      "post": {
+        "tags": [
+          "iletişim"
+        ],
+        "summary": "Acil durumu bitir (özet üretilir)",
+        "operationId": "end_emergency_api_v1_sites__slug__emergencies__emergency_id__end_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "emergency_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Emergency Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_EmergencyOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/emergency-info-card": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Acil bilgi kartı (sakin, çevrimdışı)",
+        "operationId": "my_info_card_api_v1_sites__slug__resident_emergency_info_card_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "if-none-match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 400
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencyInfoCardOut"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Kart değişmedi (If-None-Match)"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/emergency": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Aktif acil durum (kapsamdaysam; yoksa null)",
+        "operationId": "my_emergency_api_v1_sites__slug__resident_emergency_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ResidentEmergencyOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Emergency Api V1 Sites  Slug  Resident Emergency Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/emergency/status": {
+      "post": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Durumumu bildir (güvendeyim / yardım)",
+        "operationId": "my_emergency_status_api_v1_sites__slug__resident_emergency_status_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_EmergencyStatusOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/transparency-reports": {
+      "get": {
+        "tags": [
+          "şeffaflık"
+        ],
+        "summary": "Şeffaflık raporları (yeni dönem üstte)",
+        "operationId": "list_reports_api_v1_sites__slug__transparency_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TransparencyReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "şeffaflık"
+        ],
+        "summary": "Dönem için taslak hazırla",
+        "operationId": "prepare_api_v1_sites__slug__transparency_reports_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransparencyReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_TransparencyReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/transparency-reports/{report_id}": {
+      "get": {
+        "tags": [
+          "şeffaflık"
+        ],
+        "summary": "Şeffaflık raporu",
+        "operationId": "get_report_api_v1_sites__slug__transparency_reports__report_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransparencyReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "şeffaflık"
+        ],
+        "summary": "Taslağı sil",
+        "operationId": "delete_report_api_v1_sites__slug__transparency_reports__report_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/transparency-reports/{report_id}/publish": {
+      "post": {
+        "tags": [
+          "şeffaflık"
+        ],
+        "summary": "Yayına gönder (onay kuralı varsa 202)",
+        "operationId": "publish_report_api_v1_sites__slug__transparency_reports__report_id__publish_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_TransparencyPublishOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/transparency-reports": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Yayınlanmış şeffaflık raporları",
+        "operationId": "my_reports_api_v1_sites__slug__resident_transparency_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ResidentTransparencyReportOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/transparency-reports/{report_id}": {
+      "get": {
+        "tags": [
+          "sakin"
+        ],
+        "summary": "Yayınlanmış şeffaflık raporu",
+        "operationId": "my_report_api_v1_sites__slug__resident_transparency_reports__report_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResidentTransparencyReportOut"
                 }
               }
             }
@@ -13453,151 +15002,6 @@
         }
       }
     },
-    "/api/v1/sites/{slug}/resident/expenses": {
-      "get": {
-        "tags": [
-          "sakin"
-        ],
-        "summary": "Sitenin gider dökümü (gerçekleşen)",
-        "operationId": "site_expenses_api_v1_sites__slug__resident_expenses_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Slug"
-            }
-          },
-          {
-            "name": "year",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "maximum": 2100,
-                  "minimum": 2000
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "boşsa bu yıl",
-              "title": "Year"
-            },
-            "description": "boşsa bu yıl"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 50,
-              "title": "Page Size"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SiteExpensesOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sites/{slug}/resident/files/{file_id}": {
-      "get": {
-        "tags": [
-          "sakin"
-        ],
-        "summary": "Gider belgesi (fatura görüntüsü)",
-        "description": "Yalnız gerçekleşen bir giderin belgesi; başka dosya \"yok\"tur.",
-        "operationId": "expense_document_api_v1_sites__slug__resident_files__file_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "file_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "File Id"
-            }
-          },
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Slug"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/pdf": {},
-              "image/*": {}
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/sites/{slug}/resident/polls": {
       "get": {
         "tags": [
@@ -13654,7 +15058,7 @@
         "tags": [
           "sakin"
         ],
-        "summary": "Bölüm adına oy ver (değiştirilemez)",
+        "summary": "Yanıt ver / oy ver (değiştirilemez)",
         "operationId": "vote_api_v1_sites__slug__resident_polls__poll_id__vote_post",
         "security": [
           {
@@ -16273,6 +17677,67 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Written_PollOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/polls/{poll_id}/responses": {
+      "get": {
+        "tags": [
+          "anket"
+        ],
+        "summary": "İsimli anket: kim ne yanıtladı (yalnız yetkili)",
+        "operationId": "named_responses_api_v1_sites__slug__polls__poll_id__responses_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "poll_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Poll Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PollNamedResponse"
+                  },
+                  "title": "Response Named Responses Api V1 Sites  Slug  Polls  Poll Id  Responses Get"
                 }
               }
             }
@@ -20695,6 +22160,26 @@
         ],
         "title": "AccountKind"
       },
+      "AckOut": {
+        "properties": {
+          "announcement_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Announcement Id"
+          },
+          "acked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Acked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "announcement_id",
+          "acked_at"
+        ],
+        "title": "AckOut"
+      },
       "ActionType": {
         "type": "string",
         "enum": [
@@ -20718,7 +22203,8 @@
           "stock_count_difference",
           "approval_rule_change",
           "ownership_transfer",
-          "leave_request"
+          "leave_request",
+          "transparency_report"
         ],
         "title": "ActionType",
         "description": "Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için\ntanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir."
@@ -21049,6 +22535,43 @@
             "type": "boolean",
             "title": "Is Pinned",
             "default": false
+          },
+          "requires_ack": {
+            "type": "boolean",
+            "title": "Requires Ack",
+            "description": "zorunlu okuma onayı (16.3)",
+            "default": false
+          },
+          "ack_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ack Hours",
+            "description": "son onay süresi, 1–720 saat"
+          },
+          "sms_fallback": {
+            "type": "boolean",
+            "title": "Sms Fallback",
+            "description": "süre dolunca onaylamayanlara bir kez SMS (P16c ile)",
+            "default": false
+          },
+          "publish_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publish At",
+            "description": "ileride ise zamanlanır; sessiz saatte bitişe kayar"
           }
         },
         "type": "object",
@@ -21097,7 +22620,21 @@
                 "type": "null"
               }
             ],
-            "title": "Published At"
+            "title": "Published At",
+            "description": "zamanlanmışsa null"
+          },
+          "scheduled_for": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled For",
+            "description": "zamanlanmış yayın anı (kaydırılmış)"
           },
           "expires_on": {
             "anyOf": [
@@ -21126,6 +22663,24 @@
             "type": "boolean",
             "title": "Is Pinned"
           },
+          "requires_ack": {
+            "type": "boolean",
+            "title": "Requires Ack",
+            "description": "zorunlu okuma onayı"
+          },
+          "ack_deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ack Deadline",
+            "description": "son onay anı (yayın + ack_hours)"
+          },
           "read_at": {
             "anyOf": [
               {
@@ -21138,6 +22693,19 @@
             ],
             "title": "Read At",
             "description": "sakin için: okuduğu an; personelde null"
+          },
+          "acked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked At",
+            "description": "sakin için: onayladığı an"
           },
           "recipient_count": {
             "anyOf": [
@@ -21162,6 +22730,18 @@
             ],
             "title": "Read Count",
             "description": "yalnız yayınlayana: okuyan kişi sayısı"
+          },
+          "ack_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ack Count",
+            "description": "yalnız yayınlayana ve onaylı duyuruda"
           }
         },
         "type": "object",
@@ -21173,14 +22753,33 @@
           "audience",
           "audience_block_ids",
           "published_at",
+          "scheduled_for",
           "expires_on",
           "published_by",
           "is_pinned",
+          "requires_ack",
+          "ack_deadline",
           "read_at",
+          "acked_at",
           "recipient_count",
-          "read_count"
+          "read_count",
+          "ack_count"
         ],
         "title": "AnnouncementOut"
+      },
+      "AnnouncementReadOut": {
+        "properties": {
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "read_at"
+        ],
+        "title": "AnnouncementReadOut"
       },
       "AnnouncementRow": {
         "properties": {
@@ -22906,6 +24505,38 @@
           "name"
         ],
         "title": "BlockCreate"
+      },
+      "BlockNoteIO": {
+        "properties": {
+          "block_id": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Block Id"
+          },
+          "block_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Name"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "block_id"
+        ],
+        "title": "BlockNoteIO"
       },
       "BlockOut": {
         "properties": {
@@ -27035,6 +28666,717 @@
         ],
         "title": "DuplicateGroupOut"
       },
+      "EmergencyAuditEntry": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "by",
+          "action"
+        ],
+        "title": "EmergencyAuditEntry"
+      },
+      "EmergencyBoardOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EmergencyKind"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/EmergencyScope"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Block Ids"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "started_by": {
+            "type": "string",
+            "title": "Started By"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "ended_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended By"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmergencyTotals"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "bitişte üretilen özet"
+          },
+          "purge_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purge On",
+            "description": "yoklama ayrıntısının silineceği gün"
+          },
+          "purged": {
+            "type": "boolean",
+            "title": "Purged"
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyAuditEntry"
+            },
+            "type": "array",
+            "title": "Audit"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyBoardRow"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "yardım isteyenler en üstte"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/EmergencyTotals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "scope",
+          "block_ids",
+          "message",
+          "started_by",
+          "started_at",
+          "ended_at",
+          "ended_by",
+          "summary",
+          "purge_on",
+          "purged",
+          "audit",
+          "rows",
+          "totals"
+        ],
+        "title": "EmergencyBoardOut"
+      },
+      "EmergencyBoardRow": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "block_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Id"
+          },
+          "block_name": {
+            "type": "string",
+            "title": "Block Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/UnitSafety"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "muster_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muster Point"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method",
+            "description": "app (sakin) · list (yoklama)"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "unit_name",
+          "block_id",
+          "block_name",
+          "status",
+          "note",
+          "muster_point",
+          "by",
+          "method",
+          "at"
+        ],
+        "title": "EmergencyBoardRow"
+      },
+      "EmergencyInfoCardIn": {
+        "properties": {
+          "muster_points": {
+            "items": {
+              "$ref": "#/components/schemas/MusterPointIO"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Muster Points"
+          },
+          "phones": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyPhoneIO"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Phones"
+          },
+          "instructions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Instructions"
+          },
+          "block_notes": {
+            "items": {
+              "$ref": "#/components/schemas/BlockNoteIO"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Block Notes"
+          }
+        },
+        "type": "object",
+        "title": "EmergencyInfoCardIn"
+      },
+      "EmergencyInfoCardOut": {
+        "properties": {
+          "muster_points": {
+            "items": {
+              "$ref": "#/components/schemas/MusterPointIO"
+            },
+            "type": "array",
+            "title": "Muster Points"
+          },
+          "phones": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyPhoneIO"
+            },
+            "type": "array",
+            "title": "Phones"
+          },
+          "instructions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Instructions",
+            "description": "earthquake · fire · flood · gas"
+          },
+          "block_notes": {
+            "items": {
+              "$ref": "#/components/schemas/BlockNoteIO"
+            },
+            "type": "array",
+            "title": "Block Notes"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "0 = henüz yayınlanmadı (varsayılanlar)"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "muster_points",
+          "phones",
+          "instructions",
+          "block_notes",
+          "version",
+          "updated_at",
+          "updated_by"
+        ],
+        "title": "EmergencyInfoCardOut"
+      },
+      "EmergencyKind": {
+        "type": "string",
+        "enum": [
+          "earthquake",
+          "fire",
+          "flood",
+          "gas",
+          "other"
+        ],
+        "title": "EmergencyKind"
+      },
+      "EmergencyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EmergencyKind"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/EmergencyScope"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Block Ids"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "started_by": {
+            "type": "string",
+            "title": "Started By"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "ended_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended By"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmergencyTotals"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "bitişte üretilen özet"
+          },
+          "purge_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purge On",
+            "description": "yoklama ayrıntısının silineceği gün"
+          },
+          "purged": {
+            "type": "boolean",
+            "title": "Purged"
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/EmergencyAuditEntry"
+            },
+            "type": "array",
+            "title": "Audit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "scope",
+          "block_ids",
+          "message",
+          "started_by",
+          "started_at",
+          "ended_at",
+          "ended_by",
+          "summary",
+          "purge_on",
+          "purged",
+          "audit"
+        ],
+        "title": "EmergencyOut"
+      },
+      "EmergencyPhoneIO": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Label",
+            "default": ""
+          },
+          "number": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Number",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "EmergencyPhoneIO"
+      },
+      "EmergencyScope": {
+        "type": "string",
+        "enum": [
+          "all",
+          "blocks"
+        ],
+        "title": "EmergencyScope"
+      },
+      "EmergencySettingsIn": {
+        "properties": {
+          "retention_days": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Retention Days"
+          },
+          "auto_purge": {
+            "type": "boolean",
+            "title": "Auto Purge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "retention_days",
+          "auto_purge"
+        ],
+        "title": "EmergencySettingsIn"
+      },
+      "EmergencySettingsOut": {
+        "properties": {
+          "retention_days": {
+            "type": "integer",
+            "title": "Retention Days",
+            "description": "bitişten sonra yoklama ayrıntısının saklanacağı gün"
+          },
+          "auto_purge": {
+            "type": "boolean",
+            "title": "Auto Purge",
+            "description": "gece işi siler mi (hukuk teyidine kadar kapalı)"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "retention_days",
+          "auto_purge",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "EmergencySettingsOut"
+      },
+      "EmergencyStartIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "scope": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Scope",
+            "default": "all"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Block Ids"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "title": "EmergencyStartIn"
+      },
+      "EmergencyStatusIn": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "safe · help · muster"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "muster_point": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muster Point"
+          }
+        },
+        "type": "object",
+        "title": "EmergencyStatusIn"
+      },
+      "EmergencyStatusOut": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/UnitSafety"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "units"
+        ],
+        "title": "EmergencyStatusOut"
+      },
+      "EmergencyTotals": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "safe": {
+            "type": "integer",
+            "title": "Safe"
+          },
+          "muster": {
+            "type": "integer",
+            "title": "Muster"
+          },
+          "help": {
+            "type": "integer",
+            "title": "Help"
+          },
+          "none": {
+            "type": "integer",
+            "title": "None"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "safe",
+          "muster",
+          "help",
+          "none"
+        ],
+        "title": "EmergencyTotals"
+      },
       "Employer": {
         "type": "string",
         "enum": [
@@ -31145,6 +33487,125 @@
         ],
         "title": "MovementOut"
       },
+      "MusterCheckIn": {
+        "properties": {
+          "unit_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "title": "Unit Ids"
+          },
+          "muster_point": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muster Point"
+          }
+        },
+        "type": "object",
+        "title": "MusterCheckIn"
+      },
+      "MusterCheckOut": {
+        "properties": {
+          "marked": {
+            "type": "integer",
+            "title": "Marked"
+          },
+          "skipped_help": {
+            "type": "integer",
+            "title": "Skipped Help",
+            "description": "yardım isteyen bölüm yoklamayla kapanmaz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "marked",
+          "skipped_help"
+        ],
+        "title": "MusterCheckOut"
+      },
+      "MusterPointIO": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name",
+            "default": ""
+          },
+          "directions": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Directions",
+            "default": ""
+          },
+          "map": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Map",
+            "description": "küçültülmüş görsel (data URL)"
+          }
+        },
+        "type": "object",
+        "title": "MusterPointIO"
+      },
+      "MyEmergencyUnit": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyUnitSafetyOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "henüz yanıt yoksa null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "unit_name",
+          "status"
+        ],
+        "title": "MyEmergencyUnit"
+      },
       "MyPackage": {
         "properties": {
           "id": {
@@ -31245,6 +33706,55 @@
         ],
         "title": "MyUnit"
       },
+      "MyUnitSafetyOut": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/UnitSafety"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "muster_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Muster Point"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "note",
+          "muster_point",
+          "at"
+        ],
+        "title": "MyUnitSafetyOut"
+      },
       "MyVote": {
         "properties": {
           "unit_id": {
@@ -31267,14 +33777,20 @@
               }
             ],
             "title": "Option Id",
-            "description": "bu bölüm adına verilen oy; yoksa null"
+            "description": "bu bölüm adına ilk sorudaki seçim; yoksa null"
+          },
+          "voted": {
+            "type": "boolean",
+            "title": "Voted",
+            "description": "bu bölüm adına yanıt verildi mi"
           }
         },
         "type": "object",
         "required": [
           "unit_id",
           "unit_name",
-          "option_id"
+          "option_id",
+          "voted"
         ],
         "title": "MyVote"
       },
@@ -31502,6 +34018,86 @@
           "unread_count"
         ],
         "title": "NotificationReadOut"
+      },
+      "NotificationTemplateOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/TemplateChannel"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variables"
+          },
+          "required": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateVariantIO"
+            },
+            "type": "array",
+            "title": "Variants"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateHistoryOut"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "customized": {
+            "type": "boolean",
+            "title": "Customized"
+          },
+          "sms": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SmsCountOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sms",
+            "description": "yalnız SMS şablonunda"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "channel",
+          "variables",
+          "required",
+          "variants",
+          "version",
+          "history",
+          "customized",
+          "sms"
+        ],
+        "title": "NotificationTemplateOut"
       },
       "NotifyIn": {
         "properties": {
@@ -33108,6 +35704,37 @@
         ],
         "title": "Page[ResidentDocumentOut]"
       },
+      "Page_ResidentTransparencyReportOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ResidentTransparencyReportOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[ResidentTransparencyReportOut]"
+      },
       "Page_SiteUsageOut_": {
         "properties": {
           "items": {
@@ -33169,6 +35796,37 @@
           "total"
         ],
         "title": "Page[TimesheetExportOut]"
+      },
+      "Page_TransparencyReportOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TransparencyReportOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[TransparencyReportOut]"
       },
       "Page_UnitListItem_": {
         "properties": {
@@ -34992,6 +37650,38 @@
         ],
         "title": "PaymentStatus"
       },
+      "PendingAckOut": {
+        "properties": {
+          "announcement_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Announcement Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "announcement_id",
+          "title",
+          "deadline"
+        ],
+        "title": "PendingAckOut"
+      },
       "PersonCreate": {
         "properties": {
           "phone": {
@@ -35272,6 +37962,52 @@
         ],
         "title": "PlateResult"
       },
+      "PollAnswerIn": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Question Id"
+          },
+          "option_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Option Ids"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id"
+        ],
+        "title": "PollAnswerIn"
+      },
       "PollAudience": {
         "type": "string",
         "enum": [
@@ -35293,7 +38029,8 @@
                 "type": "null"
               }
             ],
-            "title": "Question"
+            "title": "Question",
+            "description": "anketin başlığı"
           },
           "description": {
             "anyOf": [
@@ -35313,7 +38050,24 @@
             },
             "type": "array",
             "maxItems": 20,
-            "title": "Options"
+            "title": "Options",
+            "description": "eski biçim: tek sorunun seçenekleri"
+          },
+          "questions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PollQuestionIn"
+                },
+                "type": "array",
+                "maxItems": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Questions",
+            "description": "çoklu soru; verilirse `options` kullanılmaz"
           },
           "audience": {
             "anyOf": [
@@ -35327,6 +38081,15 @@
             ],
             "title": "Audience"
           },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Block Ids"
+          },
           "ends_on": {
             "anyOf": [
               {
@@ -35338,10 +38101,108 @@
               }
             ],
             "title": "Ends On"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous",
+            "description": "anonim: kim yanıtladı tutulmaz",
+            "default": true
+          },
+          "one_per_unit": {
+            "type": "boolean",
+            "title": "One Per Unit",
+            "description": "bölüm başına tek yanıt",
+            "default": true
           }
         },
         "type": "object",
         "title": "PollIn"
+      },
+      "PollNamedAnswer": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Question Id"
+          },
+          "option_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Option Ids"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "option_ids",
+          "rating",
+          "text"
+        ],
+        "title": "PollNamedAnswer"
+      },
+      "PollNamedResponse": {
+        "properties": {
+          "person_name": {
+            "type": "string",
+            "title": "Person Name"
+          },
+          "unit_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Name"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/PollNamedAnswer"
+            },
+            "type": "array",
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_name",
+          "unit_name",
+          "at",
+          "answers"
+        ],
+        "title": "PollNamedResponse"
       },
       "PollOut": {
         "properties": {
@@ -35370,10 +38231,34 @@
               "$ref": "#/components/schemas/OptionOut"
             },
             "type": "array",
-            "title": "Options"
+            "title": "Options",
+            "description": "ilk sorunun seçenekleri (eski biçim)"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/PollQuestionOut"
+            },
+            "type": "array",
+            "title": "Questions"
           },
           "audience": {
             "$ref": "#/components/schemas/PollAudience"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Block Ids"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous"
+          },
+          "one_per_unit": {
+            "type": "boolean",
+            "title": "One Per Unit"
           },
           "ends_on": {
             "type": "string",
@@ -35393,7 +38278,7 @@
               }
             ],
             "title": "Total Votes",
-            "description": "oy veren bölüm sayısı"
+            "description": "yanıt veren bölüm (ya da kişi) sayısı"
           },
           "created_by": {
             "anyOf": [
@@ -35410,6 +38295,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice",
+            "description": "resmî oylama değildir uyarısı"
           }
         },
         "type": "object",
@@ -35418,14 +38308,185 @@
           "question",
           "description",
           "options",
+          "questions",
           "audience",
+          "block_ids",
+          "is_anonymous",
+          "one_per_unit",
           "ends_on",
           "status",
           "total_votes",
           "created_by",
-          "created_at"
+          "created_at",
+          "notice"
         ],
         "title": "PollOut"
+      },
+      "PollQuestionIn": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind",
+            "description": "single · multiple · rating · text"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Options"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "PollQuestionIn"
+      },
+      "PollQuestionKind": {
+        "type": "string",
+        "enum": [
+          "single",
+          "multiple",
+          "rating",
+          "text"
+        ],
+        "title": "PollQuestionKind"
+      },
+      "PollQuestionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PollQuestionKind"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OptionOut"
+            },
+            "type": "array",
+            "title": "Options"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered",
+            "description": "bu soruyu yanıtlayan sayısı"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PollRatingOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "puan sorusunda sonuç"
+          },
+          "texts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texts",
+            "description": "metin yanıtları — yalnız anket yöneticisine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order",
+          "text",
+          "kind",
+          "required",
+          "options",
+          "answered",
+          "rating",
+          "texts"
+        ],
+        "title": "PollQuestionOut"
+      },
+      "PollRatingOut": {
+        "properties": {
+          "average": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average",
+            "description": "ortalama puan, metin (ör. \"4.25\")"
+          },
+          "counts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Counts",
+            "description": "1–5 puan sayıları"
+          }
+        },
+        "type": "object",
+        "required": [
+          "average",
+          "counts"
+        ],
+        "title": "PollRatingOut"
       },
       "PollStatus": {
         "type": "string",
@@ -36121,19 +39182,213 @@
         "type": "object",
         "title": "ReadIn"
       },
-      "ReadOut": {
+      "ReadReportAck": {
         "properties": {
-          "read_at": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "at": {
             "type": "string",
             "format": "date-time",
-            "title": "Read At"
+            "title": "At"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/Channel"
           }
         },
         "type": "object",
         "required": [
-          "read_at"
+          "name",
+          "units",
+          "at",
+          "channel"
         ],
-        "title": "ReadOut"
+        "title": "ReadReportAck"
+      },
+      "ReadReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/Audience"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At",
+            "description": "rapor üretim zamanı (zaman damgası)"
+          },
+          "recipient_count": {
+            "type": "integer",
+            "title": "Recipient Count"
+          },
+          "read_count": {
+            "type": "integer",
+            "title": "Read Count"
+          },
+          "requires_ack": {
+            "type": "boolean",
+            "title": "Requires Ack"
+          },
+          "ack_deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ack Deadline"
+          },
+          "acks": {
+            "items": {
+              "$ref": "#/components/schemas/ReadReportAck"
+            },
+            "type": "array",
+            "title": "Acks",
+            "description": "onaylayanlar, onay sırasına göre"
+          },
+          "not_acked": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Acked"
+          },
+          "sms_fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmsFallbackOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recipients": {
+            "items": {
+              "$ref": "#/components/schemas/ReadReportRecipient"
+            },
+            "type": "array",
+            "title": "Recipients",
+            "description": "alıcı listesi (kişi bazında)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "audience",
+          "published_at",
+          "generated_at",
+          "recipient_count",
+          "read_count",
+          "requires_ack",
+          "ack_deadline",
+          "acks",
+          "not_acked",
+          "sms_fallback",
+          "recipients"
+        ],
+        "title": "ReadReportOut"
+      },
+      "ReadReportRecipient": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          },
+          "acked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked At"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/Channel",
+            "description": "onay/okuma kanalı (şimdilik uygulama içi)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "units",
+          "delivered_at",
+          "read_at",
+          "acked_at",
+          "channel"
+        ],
+        "title": "ReadReportRecipient"
       },
       "ReadyResponse": {
         "properties": {
@@ -37855,6 +41110,57 @@
         "title": "ResidentDocumentOut",
         "description": "Sakin görünümü: yükleyen, özet ve sürüm geçmişi yok."
       },
+      "ResidentEmergencyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EmergencyKind"
+          },
+          "kind_label": {
+            "type": "string",
+            "title": "Kind Label"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/MyEmergencyUnit"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "muster_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Muster Points",
+            "description": "acil bilgi kartındaki toplanma alanları"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "kind_label",
+          "message",
+          "started_at",
+          "units",
+          "muster_points"
+        ],
+        "title": "ResidentEmergencyOut"
+      },
       "ResidentPollOut": {
         "properties": {
           "id": {
@@ -37882,10 +41188,34 @@
               "$ref": "#/components/schemas/OptionOut"
             },
             "type": "array",
-            "title": "Options"
+            "title": "Options",
+            "description": "ilk sorunun seçenekleri (eski biçim)"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/PollQuestionOut"
+            },
+            "type": "array",
+            "title": "Questions"
           },
           "audience": {
             "$ref": "#/components/schemas/PollAudience"
+          },
+          "block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Block Ids"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous"
+          },
+          "one_per_unit": {
+            "type": "boolean",
+            "title": "One Per Unit"
           },
           "ends_on": {
             "type": "string",
@@ -37905,7 +41235,7 @@
               }
             ],
             "title": "Total Votes",
-            "description": "oy veren bölüm sayısı"
+            "description": "yanıt veren bölüm (ya da kişi) sayısı"
           },
           "created_by": {
             "anyOf": [
@@ -37923,13 +41253,28 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "notice": {
+            "type": "string",
+            "title": "Notice",
+            "description": "resmî oylama değildir uyarısı"
+          },
           "my_votes": {
             "items": {
               "$ref": "#/components/schemas/MyVote"
             },
             "type": "array",
             "title": "My Votes",
-            "description": "oy verebileceğim bölümler"
+            "description": "bölüm başına ankette: yanıt verebileceğim bölümler"
+          },
+          "can_respond": {
+            "type": "boolean",
+            "title": "Can Respond",
+            "description": "şu an yanıt verebilir miyim"
+          },
+          "responded": {
+            "type": "boolean",
+            "title": "Responded",
+            "description": "yanıt verdim mi (bölüm başına ankette: bir bölüm adına)"
           }
         },
         "type": "object",
@@ -37938,15 +41283,73 @@
           "question",
           "description",
           "options",
+          "questions",
           "audience",
+          "block_ids",
+          "is_anonymous",
+          "one_per_unit",
           "ends_on",
           "status",
           "total_votes",
           "created_by",
           "created_at",
-          "my_votes"
+          "notice",
+          "my_votes",
+          "can_respond",
+          "responded"
         ],
         "title": "ResidentPollOut"
+      },
+      "ResidentTransparencyReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "month": {
+            "type": "integer",
+            "title": "Month"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "content": {
+            "$ref": "#/components/schemas/TransparencyContent"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "year",
+          "month",
+          "period",
+          "content",
+          "note",
+          "published_at"
+        ],
+        "title": "ResidentTransparencyReportOut"
       },
       "ResidentVehiclesOut": {
         "properties": {
@@ -38539,6 +41942,65 @@
           "failed"
         ],
         "title": "ScheduleRunStatus"
+      },
+      "ScheduledAnnouncementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "importance": {
+            "$ref": "#/components/schemas/Importance"
+          },
+          "publish_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Publish At",
+            "description": "yayınlanacağı an (sessiz saatte kaydırılmış)"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At",
+            "description": "istenen yayın anı"
+          },
+          "shifted": {
+            "type": "boolean",
+            "title": "Shifted"
+          },
+          "requires_ack": {
+            "type": "boolean",
+            "title": "Requires Ack"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "importance",
+          "publish_at",
+          "requested_at",
+          "shifted",
+          "requires_ack",
+          "created_by"
+        ],
+        "title": "ScheduledAnnouncementOut"
       },
       "ScopeKind": {
         "type": "string",
@@ -39979,118 +43441,6 @@
         ],
         "title": "SiteCreate"
       },
-      "SiteExpense": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "date": {
-            "type": "string",
-            "format": "date",
-            "title": "Date"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description"
-          },
-          "category": {
-            "type": "string",
-            "title": "Category"
-          },
-          "vendor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vendor"
-          },
-          "amount": {
-            "type": "string",
-            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
-            "title": "Amount",
-            "description": "Para: metin, 2 ondalık (TRY).",
-            "examples": [
-              "1234.56"
-            ]
-          },
-          "is_paid": {
-            "type": "boolean",
-            "title": "Is Paid"
-          },
-          "document_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Id",
-            "description": "fatura görüntüsü: GET …/resident/files/{id}"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "date",
-          "description",
-          "category",
-          "vendor",
-          "amount",
-          "is_paid",
-          "document_id"
-        ],
-        "title": "SiteExpense"
-      },
-      "SiteExpensesOut": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/SiteExpense"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "total_amount": {
-            "type": "string",
-            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
-            "title": "Total Amount",
-            "description": "seçilen yılın gerçekleşen gideri",
-            "examples": [
-              "1234.56"
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "page",
-          "page_size",
-          "total",
-          "total_amount"
-        ],
-        "title": "SiteExpensesOut"
-      },
       "SiteFinanceOut": {
         "properties": {
           "charged": {
@@ -40551,6 +43901,73 @@
           "done_with_deviation"
         ],
         "title": "SlotStatus"
+      },
+      "SmsCountOut": {
+        "properties": {
+          "lang": {
+            "type": "string",
+            "title": "Lang"
+          },
+          "encoding": {
+            "type": "string",
+            "title": "Encoding",
+            "description": "GSM-7 · Unicode"
+          },
+          "chars": {
+            "type": "integer",
+            "title": "Chars"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lang",
+          "encoding",
+          "chars",
+          "segments"
+        ],
+        "title": "SmsCountOut"
+      },
+      "SmsFallbackOut": {
+        "properties": {
+          "due": {
+            "type": "boolean",
+            "title": "Due",
+            "description": "son onay süresi doldu mu"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count",
+            "description": "süre dolduğunda onaylamayan kişi; dolmadıysa null"
+          },
+          "sent": {
+            "type": "boolean",
+            "title": "Sent",
+            "description": "SMS gerçekten gönderildi mi (sağlayıcı yokken false)"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "due",
+          "count",
+          "sent",
+          "note"
+        ],
+        "title": "SmsFallbackOut"
       },
       "StaffIn": {
         "properties": {
@@ -41430,6 +44847,99 @@
         ],
         "title": "SuggestionOut"
       },
+      "TemplateChannel": {
+        "type": "string",
+        "enum": [
+          "push",
+          "sms",
+          "email",
+          "announcement"
+        ],
+        "title": "TemplateChannel"
+      },
+      "TemplateHistoryOut": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At",
+            "description": "sistem sürümünde null"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "at",
+          "by"
+        ],
+        "title": "TemplateHistoryOut"
+      },
+      "TemplateIn": {
+        "properties": {
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateVariantIO"
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Variants"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variants"
+        ],
+        "title": "TemplateIn"
+      },
+      "TemplateVariantIO": {
+        "properties": {
+          "lang": {
+            "type": "string",
+            "maxLength": 5,
+            "title": "Lang",
+            "description": "tr · en"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject",
+            "description": "duyuru şablonunda başlık"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lang",
+          "body"
+        ],
+        "title": "TemplateVariantIO"
+      },
       "TimesheetDayOut": {
         "properties": {
           "date": {
@@ -42060,6 +45570,381 @@
         ],
         "title": "TransferOut"
       },
+      "TransparencyCategory": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "share": {
+            "type": "string",
+            "title": "Share",
+            "description": "giderdeki pay %, metin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount",
+          "count",
+          "share"
+        ],
+        "title": "TransparencyCategory"
+      },
+      "TransparencyCollection": {
+        "properties": {
+          "charged": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Charged",
+            "description": "dönemde kesilen aidat",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "collected": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Collected",
+            "description": "o borçlara yapılan tahsilat",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate",
+            "description": "tahsilat oranı %, metin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "charged",
+          "collected",
+          "rate"
+        ],
+        "title": "TransparencyCollection"
+      },
+      "TransparencyContent": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "income": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Income",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "expense": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Expense",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "difference": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Difference",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TransparencyCategory"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories",
+            "description": "kapsamda yoksa null"
+          },
+          "collection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransparencyCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "income",
+          "expense",
+          "difference",
+          "categories",
+          "collection",
+          "cash_balance"
+        ],
+        "title": "TransparencyContent",
+        "description": "Kişi/bölüm içermez: yalnız toplamlar ve kategori adları."
+      },
+      "TransparencyPublishOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "published",
+              "approval_pending"
+            ],
+            "title": "Status"
+          },
+          "report": {
+            "$ref": "#/components/schemas/TransparencyReportOut"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "report",
+          "approval_request_id"
+        ],
+        "title": "TransparencyPublishOut"
+      },
+      "TransparencyReportIn": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "maximum": 2100.0,
+            "minimum": 2000.0,
+            "title": "Year"
+          },
+          "month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Month"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TransparencyScope"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "month"
+        ],
+        "title": "TransparencyReportIn"
+      },
+      "TransparencyReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "month": {
+            "type": "integer",
+            "title": "Month"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TransparencyStatus"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/TransparencyScope"
+          },
+          "content": {
+            "$ref": "#/components/schemas/TransparencyContent"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "prepared_by": {
+            "type": "string",
+            "title": "Prepared By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "year",
+          "month",
+          "period",
+          "status",
+          "scope",
+          "content",
+          "note",
+          "prepared_by",
+          "created_at",
+          "approval_request_id",
+          "published_at",
+          "published_by",
+          "rejection_reason"
+        ],
+        "title": "TransparencyReportOut"
+      },
+      "TransparencyScope": {
+        "properties": {
+          "include_categories": {
+            "type": "boolean",
+            "title": "Include Categories",
+            "description": "gider kategorisi dökümü",
+            "default": true
+          },
+          "include_collection": {
+            "type": "boolean",
+            "title": "Include Collection",
+            "description": "aidat tahsilat oranı",
+            "default": true
+          },
+          "include_cash_balance": {
+            "type": "boolean",
+            "title": "Include Cash Balance",
+            "description": "kasa + banka toplam bakiyesi",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "TransparencyScope"
+      },
+      "TransparencyStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "pending",
+          "published",
+          "rejected"
+        ],
+        "title": "TransparencyStatus"
+      },
       "UnannouncedMethod": {
         "type": "string",
         "enum": [
@@ -42649,6 +46534,16 @@
           "display_name"
         ],
         "title": "UnitRefOut"
+      },
+      "UnitSafety": {
+        "type": "string",
+        "enum": [
+          "none",
+          "safe",
+          "muster",
+          "help"
+        ],
+        "title": "UnitSafety"
       },
       "UnitTypeIn": {
         "properties": {
@@ -44332,28 +48227,62 @@
       "VoteIn": {
         "properties": {
           "unit_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Unit Id"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id",
+            "description": "bölüm başına ankette zorunlu"
           },
           "option_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Option Id"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Option Id",
+            "description": "eski biçim: ilk sorunun seçimi"
+          },
+          "answers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PollAnswerIn"
+                },
+                "type": "array",
+                "maxItems": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answers"
           }
         },
         "type": "object",
-        "required": [
-          "unit_id",
-          "option_id"
-        ],
         "title": "VoteIn"
       },
       "VoteOut": {
         "properties": {
           "option_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Option Id"
           }
         },
@@ -44433,6 +48362,23 @@
           "message"
         ],
         "title": "Written[AcceptedOut]"
+      },
+      "Written_AckOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AckOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AckOut]"
       },
       "Written_AddedOut_": {
         "properties": {
@@ -44825,6 +48771,74 @@
         ],
         "title": "Written[DocumentOut]"
       },
+      "Written_EmergencyInfoCardOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmergencyInfoCardOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[EmergencyInfoCardOut]"
+      },
+      "Written_EmergencyOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmergencyOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[EmergencyOut]"
+      },
+      "Written_EmergencySettingsOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmergencySettingsOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[EmergencySettingsOut]"
+      },
+      "Written_EmergencyStatusOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmergencyStatusOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[EmergencyStatusOut]"
+      },
       "Written_ExpenseOut_": {
         "properties": {
           "data": {
@@ -45165,6 +49179,23 @@
         ],
         "title": "Written[MovementOut]"
       },
+      "Written_MusterCheckOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MusterCheckOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[MusterCheckOut]"
+      },
       "Written_NoneType_": {
         "properties": {
           "data": {
@@ -45199,6 +49230,23 @@
           "message"
         ],
         "title": "Written[NotificationReadOut]"
+      },
+      "Written_NotificationTemplateOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NotificationTemplateOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[NotificationTemplateOut]"
       },
       "Written_OpeningBalanceOut_": {
         "properties": {
@@ -45642,6 +49690,23 @@
         ],
         "title": "Written[ScheduleOut]"
       },
+      "Written_ScheduledAnnouncementOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ScheduledAnnouncementOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ScheduledAnnouncementOut]"
+      },
       "Written_SecuritySettingsOut_": {
         "properties": {
           "data": {
@@ -45862,6 +49927,40 @@
           "message"
         ],
         "title": "Written[TransferOut]"
+      },
+      "Written_TransparencyPublishOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TransparencyPublishOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[TransparencyPublishOut]"
+      },
+      "Written_TransparencyReportOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TransparencyReportOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[TransparencyReportOut]"
       },
       "Written_UnitDetail_": {
         "properties": {

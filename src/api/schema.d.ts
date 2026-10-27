@@ -2551,7 +2551,7 @@ export interface paths {
         /** Duyurular (sabitlenmiş önce, sonra yeni) */
         get: operations["list_announcements_api_v1_sites__slug__announcements_get"];
         put?: never;
-        /** Duyuru yayınla */
+        /** Duyuru yayınla ya da zamanla */
         post: operations["publish_announcement_api_v1_sites__slug__announcements_post"];
         delete?: never;
         options?: never;
@@ -2587,6 +2587,389 @@ export interface paths {
         put?: never;
         /** Okundu işaretle (sakin) */
         post: operations["mark_read_api_v1_sites__slug__announcements__announcement_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/announcements/{announcement_id}/read-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Okuma raporu (alıcı, okuma, onay)
+         * @description Kişisel veri içerir (ad, bölüm, zaman): yalnız yayınlayan. Hane üyeleri teslim almadığı
+         *     için listede yoktur (onayları bölüm adına sayılmaz).
+         */
+        get: operations["read_report_api_v1_sites__slug__announcements__announcement_id__read_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yayın bekleyen zamanlanmış duyurular */
+        get: operations["scheduled_api_v1_sites__slug__scheduled_announcements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/scheduled-announcements/{announcement_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Zamanlanmış duyuruyu iptal et */
+        post: operations["cancel_scheduled_api_v1_sites__slug__scheduled_announcements__announcement_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/pending-acks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Okuma onayı bekleyen duyurularım */
+        get: operations["pending_acks_api_v1_sites__slug__resident_pending_acks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/announcements/{announcement_id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** "Okudum, anladım" (zorunlu okuma onayı) */
+        post: operations["acknowledge_api_v1_sites__slug__resident_announcements__announcement_id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notification-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bildirim ve duyuru şablonları */
+        get: operations["list_templates_api_v1_sites__slug__notification_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notification-templates/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Şablonu kaydet (yeni sürüm) */
+        put: operations["save_template_api_v1_sites__slug__notification_templates__code__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/notification-templates/{code}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sistem metnine dön (yeni sürüm) */
+        post: operations["reset_template_api_v1_sites__slug__notification_templates__code__reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergency-info-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acil bilgi kartı (personel) */
+        get: operations["info_card_api_v1_sites__slug__emergency_info_card_get"];
+        /** Acil bilgi kartını yayınla (yeni sürüm) */
+        put: operations["publish_card_api_v1_sites__slug__emergency_info_card_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergency-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acil durum verisi saklama ayarı */
+        get: operations["emergency_settings_api_v1_sites__slug__emergency_settings_get"];
+        /** Saklama ayarını kaydet */
+        put: operations["save_emergency_settings_api_v1_sites__slug__emergency_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acil durumlar (geçmiş; yeni üstte) */
+        get: operations["emergencies_api_v1_sites__slug__emergencies_get"];
+        put?: never;
+        /** Acil durumu başlat */
+        post: operations["start_emergency_api_v1_sites__slug__emergencies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergencies/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktif acil durum ve pano (yoksa null) */
+        get: operations["active_emergency_api_v1_sites__slug__emergencies_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergencies/{emergency_id}/muster-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Listeden toplanma yoklaması */
+        post: operations["muster_checks_api_v1_sites__slug__emergencies__emergency_id__muster_checks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/emergencies/{emergency_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acil durumu bitir (özet üretilir) */
+        post: operations["end_emergency_api_v1_sites__slug__emergencies__emergency_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/emergency-info-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acil bilgi kartı (sakin, çevrimdışı) */
+        get: operations["my_info_card_api_v1_sites__slug__resident_emergency_info_card_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/emergency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aktif acil durum (kapsamdaysam; yoksa null) */
+        get: operations["my_emergency_api_v1_sites__slug__resident_emergency_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/emergency/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Durumumu bildir (güvendeyim / yardım) */
+        post: operations["my_emergency_status_api_v1_sites__slug__resident_emergency_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/transparency-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Şeffaflık raporları (yeni dönem üstte) */
+        get: operations["list_reports_api_v1_sites__slug__transparency_reports_get"];
+        put?: never;
+        /** Dönem için taslak hazırla */
+        post: operations["prepare_api_v1_sites__slug__transparency_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/transparency-reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Şeffaflık raporu */
+        get: operations["get_report_api_v1_sites__slug__transparency_reports__report_id__get"];
+        put?: never;
+        post?: never;
+        /** Taslağı sil */
+        delete: operations["delete_report_api_v1_sites__slug__transparency_reports__report_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/transparency-reports/{report_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yayına gönder (onay kuralı varsa 202) */
+        post: operations["publish_report_api_v1_sites__slug__transparency_reports__report_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/transparency-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yayınlanmış şeffaflık raporları */
+        get: operations["my_reports_api_v1_sites__slug__resident_transparency_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/transparency-reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yayınlanmış şeffaflık raporu */
+        get: operations["my_report_api_v1_sites__slug__resident_transparency_reports__report_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3033,43 +3416,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/sites/{slug}/resident/expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sitenin gider dökümü (gerçekleşen) */
-        get: operations["site_expenses_api_v1_sites__slug__resident_expenses_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sites/{slug}/resident/files/{file_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Gider belgesi (fatura görüntüsü)
-         * @description Yalnız gerçekleşen bir giderin belgesi; başka dosya "yok"tur.
-         */
-        get: operations["expense_document_api_v1_sites__slug__resident_files__file_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/sites/{slug}/resident/polls": {
         parameters: {
             query?: never;
@@ -3096,7 +3442,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bölüm adına oy ver (değiştirilemez) */
+        /** Yanıt ver / oy ver (değiştirilemez) */
         post: operations["vote_api_v1_sites__slug__resident_polls__poll_id__vote_post"];
         delete?: never;
         options?: never;
@@ -3674,6 +4020,23 @@ export interface paths {
         put?: never;
         /** Anketi erken kapat */
         post: operations["close_poll_api_v1_sites__slug__polls__poll_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/polls/{poll_id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** İsimli anket: kim ne yanıtladı (yalnız yetkili) */
+        get: operations["named_responses_api_v1_sites__slug__polls__poll_id__responses_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4681,13 +5044,26 @@ export interface components {
          * @enum {string}
          */
         AccountKind: "owner" | "occupant";
+        /** AckOut */
+        AckOut: {
+            /**
+             * Announcement Id
+             * Format: uuid
+             */
+            announcement_id: string;
+            /**
+             * Acked At
+             * Format: date-time
+             */
+            acked_at: string;
+        };
         /**
          * ActionType
          * @description Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "ownership_transfer" | "leave_request" | "transparency_report";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -4807,6 +5183,28 @@ export interface components {
              * @default false
              */
             is_pinned: boolean;
+            /**
+             * Requires Ack
+             * @description zorunlu okuma onayı (16.3)
+             * @default false
+             */
+            requires_ack: boolean;
+            /**
+             * Ack Hours
+             * @description son onay süresi, 1–720 saat
+             */
+            ack_hours?: number | null;
+            /**
+             * Sms Fallback
+             * @description süre dolunca onaylamayanlara bir kez SMS (P16c ile)
+             * @default false
+             */
+            sms_fallback: boolean;
+            /**
+             * Publish At
+             * @description ileride ise zamanlanır; sessiz saatte bitişe kayar
+             */
+            publish_at?: string | null;
         };
         /** AnnouncementOut */
         AnnouncementOut: {
@@ -4823,8 +5221,16 @@ export interface components {
             audience: components["schemas"]["Audience"];
             /** Audience Block Ids */
             audience_block_ids: string[];
-            /** Published At */
+            /**
+             * Published At
+             * @description zamanlanmışsa null
+             */
             published_at: string | null;
+            /**
+             * Scheduled For
+             * @description zamanlanmış yayın anı (kaydırılmış)
+             */
+            scheduled_for: string | null;
             /** Expires On */
             expires_on: string | null;
             /** Published By */
@@ -4832,10 +5238,25 @@ export interface components {
             /** Is Pinned */
             is_pinned: boolean;
             /**
+             * Requires Ack
+             * @description zorunlu okuma onayı
+             */
+            requires_ack: boolean;
+            /**
+             * Ack Deadline
+             * @description son onay anı (yayın + ack_hours)
+             */
+            ack_deadline: string | null;
+            /**
              * Read At
              * @description sakin için: okuduğu an; personelde null
              */
             read_at: string | null;
+            /**
+             * Acked At
+             * @description sakin için: onayladığı an
+             */
+            acked_at: string | null;
             /**
              * Recipient Count
              * @description yalnız yayınlayana: hedef kişi sayısı
@@ -4846,6 +5267,19 @@ export interface components {
              * @description yalnız yayınlayana: okuyan kişi sayısı
              */
             read_count: number | null;
+            /**
+             * Ack Count
+             * @description yalnız yayınlayana ve onaylı duyuruda
+             */
+            ack_count: number | null;
+        };
+        /** AnnouncementReadOut */
+        AnnouncementReadOut: {
+            /**
+             * Read At
+             * Format: date-time
+             */
+            read_at: string;
         };
         /** AnnouncementRow */
         AnnouncementRow: {
@@ -5446,6 +5880,18 @@ export interface components {
              * @default 0
              */
             sort_order: number;
+        };
+        /** BlockNoteIO */
+        BlockNoteIO: {
+            /** Block Id */
+            block_id: string;
+            /** Block Name */
+            block_name?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
         };
         /** BlockOut */
         BlockOut: {
@@ -7071,6 +7517,254 @@ export interface components {
             kind: "phone" | "email";
             /** People */
             people: components["schemas"]["PersonOut"][];
+        };
+        /** EmergencyAuditEntry */
+        EmergencyAuditEntry: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string;
+            /** Action */
+            action: string;
+        };
+        /** EmergencyBoardOut */
+        EmergencyBoardOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["EmergencyKind"];
+            scope: components["schemas"]["EmergencyScope"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Message */
+            message: string;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            /** Ended By */
+            ended_by: string | null;
+            /** @description bitişte üretilen özet */
+            summary: components["schemas"]["EmergencyTotals"] | null;
+            /**
+             * Purge On
+             * @description yoklama ayrıntısının silineceği gün
+             */
+            purge_on: string | null;
+            /** Purged */
+            purged: boolean;
+            /** Audit */
+            audit: components["schemas"]["EmergencyAuditEntry"][];
+            /**
+             * Rows
+             * @description yardım isteyenler en üstte
+             */
+            rows: components["schemas"]["EmergencyBoardRow"][];
+            totals: components["schemas"]["EmergencyTotals"];
+        };
+        /** EmergencyBoardRow */
+        EmergencyBoardRow: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Block Id */
+            block_id: string | null;
+            /** Block Name */
+            block_name: string;
+            status: components["schemas"]["UnitSafety"];
+            /** Note */
+            note: string | null;
+            /** Muster Point */
+            muster_point: string | null;
+            /** By */
+            by: string | null;
+            /**
+             * Method
+             * @description app (sakin) · list (yoklama)
+             */
+            method: string | null;
+            /** At */
+            at: string | null;
+        };
+        /** EmergencyInfoCardIn */
+        EmergencyInfoCardIn: {
+            /** Muster Points */
+            muster_points?: components["schemas"]["MusterPointIO"][];
+            /** Phones */
+            phones?: components["schemas"]["EmergencyPhoneIO"][];
+            /** Instructions */
+            instructions?: {
+                [key: string]: string;
+            };
+            /** Block Notes */
+            block_notes?: components["schemas"]["BlockNoteIO"][];
+        };
+        /** EmergencyInfoCardOut */
+        EmergencyInfoCardOut: {
+            /** Muster Points */
+            muster_points: components["schemas"]["MusterPointIO"][];
+            /** Phones */
+            phones: components["schemas"]["EmergencyPhoneIO"][];
+            /**
+             * Instructions
+             * @description earthquake · fire · flood · gas
+             */
+            instructions: {
+                [key: string]: string;
+            };
+            /** Block Notes */
+            block_notes: components["schemas"]["BlockNoteIO"][];
+            /**
+             * Version
+             * @description 0 = henüz yayınlanmadı (varsayılanlar)
+             */
+            version: number;
+            /** Updated At */
+            updated_at: string | null;
+            /** Updated By */
+            updated_by: string | null;
+        };
+        /**
+         * EmergencyKind
+         * @enum {string}
+         */
+        EmergencyKind: "earthquake" | "fire" | "flood" | "gas" | "other";
+        /** EmergencyOut */
+        EmergencyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["EmergencyKind"];
+            scope: components["schemas"]["EmergencyScope"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Message */
+            message: string;
+            /** Started By */
+            started_by: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            /** Ended By */
+            ended_by: string | null;
+            /** @description bitişte üretilen özet */
+            summary: components["schemas"]["EmergencyTotals"] | null;
+            /**
+             * Purge On
+             * @description yoklama ayrıntısının silineceği gün
+             */
+            purge_on: string | null;
+            /** Purged */
+            purged: boolean;
+            /** Audit */
+            audit: components["schemas"]["EmergencyAuditEntry"][];
+        };
+        /** EmergencyPhoneIO */
+        EmergencyPhoneIO: {
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Number
+             * @default
+             */
+            number: string;
+        };
+        /**
+         * EmergencyScope
+         * @enum {string}
+         */
+        EmergencyScope: "all" | "blocks";
+        /** EmergencySettingsIn */
+        EmergencySettingsIn: {
+            /** Retention Days */
+            retention_days: number;
+            /** Auto Purge */
+            auto_purge: boolean;
+        };
+        /** EmergencySettingsOut */
+        EmergencySettingsOut: {
+            /**
+             * Retention Days
+             * @description bitişten sonra yoklama ayrıntısının saklanacağı gün
+             */
+            retention_days: number;
+            /**
+             * Auto Purge
+             * @description gece işi siler mi (hukuk teyidine kadar kapalı)
+             */
+            auto_purge: boolean;
+            /** Updated By */
+            updated_by: string | null;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /** EmergencyStartIn */
+        EmergencyStartIn: {
+            /** Kind */
+            kind?: string | null;
+            /**
+             * Scope
+             * @default all
+             */
+            scope: string;
+            /** Block Ids */
+            block_ids?: string[];
+            /** Message */
+            message?: string | null;
+        };
+        /** EmergencyStatusIn */
+        EmergencyStatusIn: {
+            /**
+             * Status
+             * @description safe · help · muster
+             */
+            status?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Muster Point */
+            muster_point?: string | null;
+        };
+        /** EmergencyStatusOut */
+        EmergencyStatusOut: {
+            status: components["schemas"]["UnitSafety"];
+            /** Units */
+            units: number;
+        };
+        /** EmergencyTotals */
+        EmergencyTotals: {
+            /** Total */
+            total: number;
+            /** Safe */
+            safe: number;
+            /** Muster */
+            muster: number;
+            /** Help */
+            help: number;
+            /** None */
+            none: number;
         };
         /**
          * Employer
@@ -8728,6 +9422,55 @@ export interface components {
              */
             running_balance: string | null;
         };
+        /** MusterCheckIn */
+        MusterCheckIn: {
+            /** Unit Ids */
+            unit_ids?: string[];
+            /** Muster Point */
+            muster_point?: string | null;
+        };
+        /** MusterCheckOut */
+        MusterCheckOut: {
+            /** Marked */
+            marked: number;
+            /**
+             * Skipped Help
+             * @description yardım isteyen bölüm yoklamayla kapanmaz
+             */
+            skipped_help: number;
+        };
+        /** MusterPointIO */
+        MusterPointIO: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Directions
+             * @default
+             */
+            directions: string;
+            /**
+             * Map
+             * @description küçültülmüş görsel (data URL)
+             */
+            map?: string | null;
+        };
+        /** MyEmergencyUnit */
+        MyEmergencyUnit: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** @description henüz yanıt yoksa null */
+            status: components["schemas"]["MyUnitSafetyOut"] | null;
+        };
         /** MyPackage */
         MyPackage: {
             /**
@@ -8777,6 +9520,16 @@ export interface components {
             /** @description owner · tenant · resident · proxy */
             role: components["schemas"]["PartyRole"];
         };
+        /** MyUnitSafetyOut */
+        MyUnitSafetyOut: {
+            status: components["schemas"]["UnitSafety"];
+            /** Note */
+            note: string | null;
+            /** Muster Point */
+            muster_point: string | null;
+            /** At */
+            at: string | null;
+        };
         /** MyVote */
         MyVote: {
             /**
@@ -8788,9 +9541,14 @@ export interface components {
             unit_name: string;
             /**
              * Option Id
-             * @description bu bölüm adına verilen oy; yoksa null
+             * @description bu bölüm adına ilk sorudaki seçim; yoksa null
              */
             option_id: string | null;
+            /**
+             * Voted
+             * @description bu bölüm adına yanıt verildi mi
+             */
+            voted: boolean;
         };
         /** NamedRef */
         NamedRef: {
@@ -8871,6 +9629,31 @@ export interface components {
             marked: number;
             /** Unread Count */
             unread_count: number;
+        };
+        /** NotificationTemplateOut */
+        NotificationTemplateOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            channel: components["schemas"]["TemplateChannel"];
+            /** Variables */
+            variables: string[];
+            /** Required */
+            required: string[];
+            /** Variants */
+            variants: components["schemas"]["TemplateVariantIO"][];
+            /** Version */
+            version: number;
+            /** History */
+            history: components["schemas"]["TemplateHistoryOut"][];
+            /** Customized */
+            customized: boolean;
+            /**
+             * Sms
+             * @description yalnız SMS şablonunda
+             */
+            sms: components["schemas"]["SmsCountOut"][] | null;
         };
         /** NotifyIn */
         NotifyIn: {
@@ -9467,6 +10250,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[ResidentTransparencyReportOut] */
+        Page_ResidentTransparencyReportOut_: {
+            /** Items */
+            items: components["schemas"]["ResidentTransparencyReportOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[SiteUsageOut] */
         Page_SiteUsageOut_: {
             /** Items */
@@ -9482,6 +10276,17 @@ export interface components {
         Page_TimesheetExportOut_: {
             /** Items */
             items: components["schemas"]["TimesheetExportOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[TransparencyReportOut] */
+        Page_TransparencyReportOut_: {
+            /** Items */
+            items: components["schemas"]["TransparencyReportOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -10205,6 +11010,18 @@ export interface components {
          * @enum {string}
          */
         PaymentStatus: "pending" | "confirmed" | "cancelled";
+        /** PendingAckOut */
+        PendingAckOut: {
+            /**
+             * Announcement Id
+             * Format: uuid
+             */
+            announcement_id: string;
+            /** Title */
+            title: string;
+            /** Deadline */
+            deadline: string | null;
+        };
         /** PersonCreate */
         PersonCreate: {
             /** Phone */
@@ -10294,6 +11111,20 @@ export interface components {
          * @enum {string}
          */
         PlateResult: "registered" | "guest" | "unknown";
+        /** PollAnswerIn */
+        PollAnswerIn: {
+            /**
+             * Question Id
+             * Format: uuid
+             */
+            question_id: string;
+            /** Option Ids */
+            option_ids?: string[];
+            /** Rating */
+            rating?: number | null;
+            /** Text */
+            text?: string | null;
+        };
         /**
          * PollAudience
          * @enum {string}
@@ -10301,16 +11132,69 @@ export interface components {
         PollAudience: "all" | "owners" | "tenants";
         /** PollIn */
         PollIn: {
-            /** Question */
+            /**
+             * Question
+             * @description anketin başlığı
+             */
             question?: string | null;
             /** Description */
             description?: string | null;
-            /** Options */
+            /**
+             * Options
+             * @description eski biçim: tek sorunun seçenekleri
+             */
             options?: string[];
+            /**
+             * Questions
+             * @description çoklu soru; verilirse `options` kullanılmaz
+             */
+            questions?: components["schemas"]["PollQuestionIn"][] | null;
             /** Audience */
             audience?: string | null;
+            /** Block Ids */
+            block_ids?: string[];
             /** Ends On */
             ends_on?: string | null;
+            /**
+             * Is Anonymous
+             * @description anonim: kim yanıtladı tutulmaz
+             * @default true
+             */
+            is_anonymous: boolean;
+            /**
+             * One Per Unit
+             * @description bölüm başına tek yanıt
+             * @default true
+             */
+            one_per_unit: boolean;
+        };
+        /** PollNamedAnswer */
+        PollNamedAnswer: {
+            /**
+             * Question Id
+             * Format: uuid
+             */
+            question_id: string;
+            /** Option Ids */
+            option_ids: string[];
+            /** Rating */
+            rating: number | null;
+            /** Text */
+            text: string | null;
+        };
+        /** PollNamedResponse */
+        PollNamedResponse: {
+            /** Person Name */
+            person_name: string;
+            /** Unit Name */
+            unit_name: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Answers */
+            answers: components["schemas"]["PollNamedAnswer"][];
         };
         /** PollOut */
         PollOut: {
@@ -10323,9 +11207,20 @@ export interface components {
             question: string;
             /** Description */
             description: string | null;
-            /** Options */
+            /**
+             * Options
+             * @description ilk sorunun seçenekleri (eski biçim)
+             */
             options: components["schemas"]["OptionOut"][];
+            /** Questions */
+            questions: components["schemas"]["PollQuestionOut"][];
             audience: components["schemas"]["PollAudience"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Is Anonymous */
+            is_anonymous: boolean;
+            /** One Per Unit */
+            one_per_unit: boolean;
             /**
              * Ends On
              * Format: date
@@ -10334,7 +11229,7 @@ export interface components {
             status: components["schemas"]["PollStatus"];
             /**
              * Total Votes
-             * @description oy veren bölüm sayısı
+             * @description yanıt veren bölüm (ya da kişi) sayısı
              */
             total_votes: number | null;
             /** Created By */
@@ -10344,6 +11239,75 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Notice
+             * @description resmî oylama değildir uyarısı
+             */
+            notice: string;
+        };
+        /** PollQuestionIn */
+        PollQuestionIn: {
+            /** Text */
+            text?: string | null;
+            /**
+             * Kind
+             * @description single · multiple · rating · text
+             */
+            kind?: string | null;
+            /** Options */
+            options?: string[];
+            /**
+             * Required
+             * @default true
+             */
+            required: boolean;
+        };
+        /**
+         * PollQuestionKind
+         * @enum {string}
+         */
+        PollQuestionKind: "single" | "multiple" | "rating" | "text";
+        /** PollQuestionOut */
+        PollQuestionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order */
+            order: number;
+            /** Text */
+            text: string;
+            kind: components["schemas"]["PollQuestionKind"];
+            /** Required */
+            required: boolean;
+            /** Options */
+            options: components["schemas"]["OptionOut"][];
+            /**
+             * Answered
+             * @description bu soruyu yanıtlayan sayısı
+             */
+            answered: number | null;
+            /** @description puan sorusunda sonuç */
+            rating: components["schemas"]["PollRatingOut"] | null;
+            /**
+             * Texts
+             * @description metin yanıtları — yalnız anket yöneticisine
+             */
+            texts: string[] | null;
+        };
+        /** PollRatingOut */
+        PollRatingOut: {
+            /**
+             * Average
+             * @description ortalama puan, metin (ör. "4.25")
+             */
+            average: string | null;
+            /**
+             * Counts
+             * @description 1–5 puan sayıları
+             */
+            counts: number[];
         };
         /**
          * PollStatus
@@ -10646,13 +11610,73 @@ export interface components {
              */
             ids?: string[] | null;
         };
-        /** ReadOut */
-        ReadOut: {
+        /** ReadReportAck */
+        ReadReportAck: {
+            /** Name */
+            name: string;
+            /** Units */
+            units: string[];
             /**
-             * Read At
+             * At
              * Format: date-time
              */
-            read_at: string;
+            at: string;
+            channel: components["schemas"]["Channel"];
+        };
+        /** ReadReportOut */
+        ReadReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            audience: components["schemas"]["Audience"];
+            /** Published At */
+            published_at: string | null;
+            /**
+             * Generated At
+             * Format: date-time
+             * @description rapor üretim zamanı (zaman damgası)
+             */
+            generated_at: string;
+            /** Recipient Count */
+            recipient_count: number;
+            /** Read Count */
+            read_count: number;
+            /** Requires Ack */
+            requires_ack: boolean;
+            /** Ack Deadline */
+            ack_deadline: string | null;
+            /**
+             * Acks
+             * @description onaylayanlar, onay sırasına göre
+             */
+            acks: components["schemas"]["ReadReportAck"][];
+            /** Not Acked */
+            not_acked: number | null;
+            sms_fallback: components["schemas"]["SmsFallbackOut"] | null;
+            /**
+             * Recipients
+             * @description alıcı listesi (kişi bazında)
+             */
+            recipients: components["schemas"]["ReadReportRecipient"][];
+        };
+        /** ReadReportRecipient */
+        ReadReportRecipient: {
+            /** Name */
+            name: string;
+            /** Units */
+            units: string[];
+            /** Delivered At */
+            delivered_at: string | null;
+            /** Read At */
+            read_at: string | null;
+            /** Acked At */
+            acked_at: string | null;
+            /** @description onay/okuma kanalı (şimdilik uygulama içi) */
+            channel: components["schemas"]["Channel"];
         };
         /** ReadyResponse */
         ReadyResponse: {
@@ -11283,6 +12307,31 @@ export interface components {
              */
             updated_at: string;
         };
+        /** ResidentEmergencyOut */
+        ResidentEmergencyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["EmergencyKind"];
+            /** Kind Label */
+            kind_label: string;
+            /** Message */
+            message: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Units */
+            units: components["schemas"]["MyEmergencyUnit"][];
+            /**
+             * Muster Points
+             * @description acil bilgi kartındaki toplanma alanları
+             */
+            muster_points: string[];
+        };
         /** ResidentPollOut */
         ResidentPollOut: {
             /**
@@ -11294,9 +12343,20 @@ export interface components {
             question: string;
             /** Description */
             description: string | null;
-            /** Options */
+            /**
+             * Options
+             * @description ilk sorunun seçenekleri (eski biçim)
+             */
             options: components["schemas"]["OptionOut"][];
+            /** Questions */
+            questions: components["schemas"]["PollQuestionOut"][];
             audience: components["schemas"]["PollAudience"];
+            /** Block Ids */
+            block_ids: string[];
+            /** Is Anonymous */
+            is_anonymous: boolean;
+            /** One Per Unit */
+            one_per_unit: boolean;
             /**
              * Ends On
              * Format: date
@@ -11305,7 +12365,7 @@ export interface components {
             status: components["schemas"]["PollStatus"];
             /**
              * Total Votes
-             * @description oy veren bölüm sayısı
+             * @description yanıt veren bölüm (ya da kişi) sayısı
              */
             total_votes: number | null;
             /** Created By */
@@ -11316,10 +12376,47 @@ export interface components {
              */
             created_at: string;
             /**
+             * Notice
+             * @description resmî oylama değildir uyarısı
+             */
+            notice: string;
+            /**
              * My Votes
-             * @description oy verebileceğim bölümler
+             * @description bölüm başına ankette: yanıt verebileceğim bölümler
              */
             my_votes: components["schemas"]["MyVote"][];
+            /**
+             * Can Respond
+             * @description şu an yanıt verebilir miyim
+             */
+            can_respond: boolean;
+            /**
+             * Responded
+             * @description yanıt verdim mi (bölüm başına ankette: bir bölüm adına)
+             */
+            responded: boolean;
+        };
+        /** ResidentTransparencyReportOut */
+        ResidentTransparencyReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /** Period */
+            period: string;
+            content: components["schemas"]["TransparencyContent"];
+            /** Note */
+            note: string | null;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
         };
         /** ResidentVehiclesOut */
         ResidentVehiclesOut: {
@@ -11550,6 +12647,35 @@ export interface components {
          * @enum {string}
          */
         ScheduleRunStatus: "posted" | "skipped" | "failed";
+        /** ScheduledAnnouncementOut */
+        ScheduledAnnouncementOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            importance: components["schemas"]["Importance"];
+            /**
+             * Publish At
+             * Format: date-time
+             * @description yayınlanacağı an (sessiz saatte kaydırılmış)
+             */
+            publish_at: string;
+            /**
+             * Requested At
+             * Format: date-time
+             * @description istenen yayın anı
+             */
+            requested_at: string;
+            /** Shifted */
+            shifted: boolean;
+            /** Requires Ack */
+            requires_ack: boolean;
+            /** Created By */
+            created_by: string | null;
+        };
         /**
          * ScopeKind
          * @enum {string}
@@ -12096,55 +13222,6 @@ export interface components {
             /** Bank Name */
             bank_name?: string | null;
         };
-        /** SiteExpense */
-        SiteExpense: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Date
-             * Format: date
-             */
-            date: string;
-            /** Description */
-            description: string;
-            /** Category */
-            category: string;
-            /** Vendor */
-            vendor: string | null;
-            /**
-             * Amount
-             * @description Para: metin, 2 ondalık (TRY).
-             * @example 1234.56
-             */
-            amount: string;
-            /** Is Paid */
-            is_paid: boolean;
-            /**
-             * Document Id
-             * @description fatura görüntüsü: GET …/resident/files/{id}
-             */
-            document_id: string | null;
-        };
-        /** SiteExpensesOut */
-        SiteExpensesOut: {
-            /** Items */
-            items: components["schemas"]["SiteExpense"][];
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Total */
-            total: number;
-            /**
-             * Total Amount
-             * @description seçilen yılın gerçekleşen gideri
-             * @example 1234.56
-             */
-            total_amount: string;
-        };
         /** SiteFinanceOut */
         SiteFinanceOut: {
             /**
@@ -12311,6 +13388,40 @@ export interface components {
          * @enum {string}
          */
         SlotStatus: "upcoming" | "due" | "not_started" | "running" | "overdue" | "done" | "done_with_deviation";
+        /** SmsCountOut */
+        SmsCountOut: {
+            /** Lang */
+            lang: string;
+            /**
+             * Encoding
+             * @description GSM-7 · Unicode
+             */
+            encoding: string;
+            /** Chars */
+            chars: number;
+            /** Segments */
+            segments: number;
+        };
+        /** SmsFallbackOut */
+        SmsFallbackOut: {
+            /**
+             * Due
+             * @description son onay süresi doldu mu
+             */
+            due: boolean;
+            /**
+             * Count
+             * @description süre dolduğunda onaylamayan kişi; dolmadıysa null
+             */
+            count: number | null;
+            /**
+             * Sent
+             * @description SMS gerçekten gönderildi mi (sağlayıcı yokken false)
+             */
+            sent: boolean;
+            /** Note */
+            note: string;
+        };
         /** StaffIn */
         StaffIn: {
             /** Full Name */
@@ -12618,6 +13729,43 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /**
+         * TemplateChannel
+         * @enum {string}
+         */
+        TemplateChannel: "push" | "sms" | "email" | "announcement";
+        /** TemplateHistoryOut */
+        TemplateHistoryOut: {
+            /** Version */
+            version: number;
+            /**
+             * At
+             * @description sistem sürümünde null
+             */
+            at: string | null;
+            /** By */
+            by: string;
+        };
+        /** TemplateIn */
+        TemplateIn: {
+            /** Variants */
+            variants: components["schemas"]["TemplateVariantIO"][];
+        };
+        /** TemplateVariantIO */
+        TemplateVariantIO: {
+            /**
+             * Lang
+             * @description tr · en
+             */
+            lang: string;
+            /**
+             * Subject
+             * @description duyuru şablonunda başlık
+             */
+            subject?: string | null;
+            /** Body */
+            body: string;
+        };
         /** TimesheetDayOut */
         TimesheetDayOut: {
             /**
@@ -12869,6 +14017,159 @@ export interface components {
             outgoing: components["schemas"]["MovementOut"];
             incoming: components["schemas"]["MovementOut"];
         };
+        /** TransparencyCategory */
+        TransparencyCategory: {
+            /** Name */
+            name: string;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            /** Count */
+            count: number;
+            /**
+             * Share
+             * @description giderdeki pay %, metin
+             */
+            share: string;
+        };
+        /** TransparencyCollection */
+        TransparencyCollection: {
+            /**
+             * Charged
+             * @description dönemde kesilen aidat
+             * @example 1234.56
+             */
+            charged: string;
+            /**
+             * Collected
+             * @description o borçlara yapılan tahsilat
+             * @example 1234.56
+             */
+            collected: string;
+            /**
+             * Rate
+             * @description tahsilat oranı %, metin
+             */
+            rate: string;
+        };
+        /**
+         * TransparencyContent
+         * @description Kişi/bölüm içermez: yalnız toplamlar ve kategori adları.
+         */
+        TransparencyContent: {
+            /** Period */
+            period: string;
+            /**
+             * Income
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            income: string;
+            /**
+             * Expense
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            expense: string;
+            /**
+             * Difference
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            difference: string;
+            /**
+             * Categories
+             * @description kapsamda yoksa null
+             */
+            categories: components["schemas"]["TransparencyCategory"][] | null;
+            collection: components["schemas"]["TransparencyCollection"] | null;
+            /** Cash Balance */
+            cash_balance: string | null;
+        };
+        /** TransparencyPublishOut */
+        TransparencyPublishOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "published" | "approval_pending";
+            report: components["schemas"]["TransparencyReportOut"];
+            /** Approval Request Id */
+            approval_request_id: string | null;
+        };
+        /** TransparencyReportIn */
+        TransparencyReportIn: {
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            scope?: components["schemas"]["TransparencyScope"];
+            /** Note */
+            note?: string | null;
+        };
+        /** TransparencyReportOut */
+        TransparencyReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /** Period */
+            period: string;
+            status: components["schemas"]["TransparencyStatus"];
+            scope: components["schemas"]["TransparencyScope"];
+            content: components["schemas"]["TransparencyContent"];
+            /** Note */
+            note: string | null;
+            /** Prepared By */
+            prepared_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Published At */
+            published_at: string | null;
+            /** Published By */
+            published_by: string | null;
+            /** Rejection Reason */
+            rejection_reason: string | null;
+        };
+        /** TransparencyScope */
+        TransparencyScope: {
+            /**
+             * Include Categories
+             * @description gider kategorisi dökümü
+             * @default true
+             */
+            include_categories: boolean;
+            /**
+             * Include Collection
+             * @description aidat tahsilat oranı
+             * @default true
+             */
+            include_collection: boolean;
+            /**
+             * Include Cash Balance
+             * @description kasa + banka toplam bakiyesi
+             * @default false
+             */
+            include_cash_balance: boolean;
+        };
+        /**
+         * TransparencyStatus
+         * @enum {string}
+         */
+        TransparencyStatus: "draft" | "pending" | "published" | "rejected";
         /**
          * UnannouncedMethod
          * @enum {string}
@@ -13029,6 +14330,11 @@ export interface components {
             /** Display Name */
             display_name: string;
         };
+        /**
+         * UnitSafety
+         * @enum {string}
+         */
+        UnitSafety: "none" | "safe" | "muster" | "help";
         /** UnitTypeIn */
         UnitTypeIn: {
             /** Name */
@@ -13571,22 +14877,21 @@ export interface components {
         VoteIn: {
             /**
              * Unit Id
-             * Format: uuid
+             * @description bölüm başına ankette zorunlu
              */
-            unit_id: string;
+            unit_id?: string | null;
             /**
              * Option Id
-             * Format: uuid
+             * @description eski biçim: ilk sorunun seçimi
              */
-            option_id: string;
+            option_id?: string | null;
+            /** Answers */
+            answers?: components["schemas"]["PollAnswerIn"][] | null;
         };
         /** VoteOut */
         VoteOut: {
-            /**
-             * Option Id
-             * Format: uuid
-             */
-            option_id: string;
+            /** Option Id */
+            option_id: string | null;
         };
         /**
          * WarningKind
@@ -13606,6 +14911,12 @@ export interface components {
         /** Written[AcceptedOut] */
         Written_AcceptedOut_: {
             data: components["schemas"]["AcceptedOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[AckOut] */
+        Written_AckOut_: {
+            data: components["schemas"]["AckOut"];
             /** Message */
             message: string;
         };
@@ -13747,6 +15058,30 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[EmergencyInfoCardOut] */
+        Written_EmergencyInfoCardOut_: {
+            data: components["schemas"]["EmergencyInfoCardOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[EmergencyOut] */
+        Written_EmergencyOut_: {
+            data: components["schemas"]["EmergencyOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[EmergencySettingsOut] */
+        Written_EmergencySettingsOut_: {
+            data: components["schemas"]["EmergencySettingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[EmergencyStatusOut] */
+        Written_EmergencyStatusOut_: {
+            data: components["schemas"]["EmergencyStatusOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[ExpenseOut] */
         Written_ExpenseOut_: {
             data: components["schemas"]["ExpenseOut"];
@@ -13867,6 +15202,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[MusterCheckOut] */
+        Written_MusterCheckOut_: {
+            data: components["schemas"]["MusterCheckOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[NoneType] */
         Written_NoneType_: {
             /** Data */
@@ -13877,6 +15218,12 @@ export interface components {
         /** Written[NotificationReadOut] */
         Written_NotificationReadOut_: {
             data: components["schemas"]["NotificationReadOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[NotificationTemplateOut] */
+        Written_NotificationTemplateOut_: {
+            data: components["schemas"]["NotificationTemplateOut"];
             /** Message */
             message: string;
         };
@@ -14036,6 +15383,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[ScheduledAnnouncementOut] */
+        Written_ScheduledAnnouncementOut_: {
+            data: components["schemas"]["ScheduledAnnouncementOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[SecuritySettingsOut] */
         Written_SecuritySettingsOut_: {
             data: components["schemas"]["SecuritySettingsOut"];
@@ -14111,6 +15464,18 @@ export interface components {
         /** Written[TransferOut] */
         Written_TransferOut_: {
             data: components["schemas"]["TransferOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[TransparencyPublishOut] */
+        Written_TransparencyPublishOut_: {
+            data: components["schemas"]["TransparencyPublishOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[TransparencyReportOut] */
+        Written_TransparencyReportOut_: {
+            data: components["schemas"]["TransparencyReportOut"];
             /** Message */
             message: string;
         };
@@ -20561,7 +21926,905 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReadOut"];
+                    "application/json": components["schemas"]["AnnouncementReadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_report_api_v1_sites__slug__announcements__announcement_id__read_report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scheduled_api_v1_sites__slug__scheduled_announcements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledAnnouncementOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_scheduled_api_v1_sites__slug__scheduled_announcements__announcement_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ScheduledAnnouncementOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pending_acks_api_v1_sites__slug__resident_pending_acks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingAckOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_api_v1_sites__slug__resident_announcements__announcement_id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AckOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_sites__slug__notification_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationTemplateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_template_api_v1_sites__slug__notification_templates__code__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_NotificationTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_template_api_v1_sites__slug__notification_templates__code__reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_NotificationTemplateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    info_card_api_v1_sites__slug__emergency_info_card_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmergencyInfoCardOut"];
+                };
+            };
+            /** @description Kart değişmedi (If-None-Match) */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_card_api_v1_sites__slug__emergency_info_card_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmergencyInfoCardIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EmergencyInfoCardOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    emergency_settings_api_v1_sites__slug__emergency_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmergencySettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_emergency_settings_api_v1_sites__slug__emergency_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmergencySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EmergencySettingsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    emergencies_api_v1_sites__slug__emergencies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmergencyOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_emergency_api_v1_sites__slug__emergencies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmergencyStartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EmergencyOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    active_emergency_api_v1_sites__slug__emergencies_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmergencyBoardOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    muster_checks_api_v1_sites__slug__emergencies__emergency_id__muster_checks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                emergency_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusterCheckIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MusterCheckOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_emergency_api_v1_sites__slug__emergencies__emergency_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                emergency_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EmergencyOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_info_card_api_v1_sites__slug__resident_emergency_info_card_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmergencyInfoCardOut"];
+                };
+            };
+            /** @description Kart değişmedi (If-None-Match) */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_emergency_api_v1_sites__slug__resident_emergency_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidentEmergencyOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_emergency_status_api_v1_sites__slug__resident_emergency_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmergencyStatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_EmergencyStatusOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reports_api_v1_sites__slug__transparency_reports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_TransparencyReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_api_v1_sites__slug__transparency_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransparencyReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TransparencyReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_v1_sites__slug__transparency_reports__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransparencyReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_report_api_v1_sites__slug__transparency_reports__report_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_report_api_v1_sites__slug__transparency_reports__report_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_TransparencyPublishOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_reports_api_v1_sites__slug__resident_transparency_reports_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ResidentTransparencyReportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_report_api_v1_sites__slug__resident_transparency_reports__report_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResidentTransparencyReportOut"];
                 };
             };
             /** @description Validation Error */
@@ -21602,75 +23865,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyPackage"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    site_expenses_api_v1_sites__slug__resident_expenses_get: {
-        parameters: {
-            query?: {
-                /** @description boşsa bu yıl */
-                year?: number | null;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteExpensesOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    expense_document_api_v1_sites__slug__resident_files__file_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                file_id: string;
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/pdf": unknown;
-                    "image/*": unknown;
                 };
             };
             /** @description Validation Error */
@@ -23142,6 +25336,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_PollOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    named_responses_api_v1_sites__slug__polls__poll_id__responses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                poll_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollNamedResponse"][];
                 };
             };
             /** @description Validation Error */

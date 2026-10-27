@@ -40,6 +40,8 @@ export const P = {
   documentsRead: "documents.read",
   documentsManage: "documents.manage",
   documentsConfidential: "documents.confidential",
+  transparencyManage: "transparency.manage",
+  transparencyPublish: "transparency.publish",
 } as const;
 
 export const M = {

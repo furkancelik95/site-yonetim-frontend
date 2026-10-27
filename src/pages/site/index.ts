@@ -61,3 +61,4 @@ export { EmergencyPage, NotificationTemplatesPage, ReadReportPage } from "./Comm
 export { DecisionBookPage, GeneralAssemblyPage } from "./AssemblyPages";
 export { AuditPackagesPage, DocumentsPage, PrivacyPage, ReportCatalogPage } from "./RecordsPages";
 export { HelpCenterPage, SupportPage } from "./SupportPages";
+export { TransparencyPage } from "./TransparencyPage";
