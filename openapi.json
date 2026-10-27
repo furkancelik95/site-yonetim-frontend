@@ -3464,7 +3464,7 @@
         "tags": [
           "işletme projesi"
         ],
-        "summary": "Kesinleştir",
+        "summary": "Kesinleştir ('Bütçe' onay kuralı varsa onaya gider: 202)",
         "operationId": "finalize_plan_api_v1_sites__slug__budget_plans__plan_id__finalize_post",
         "security": [
           {
@@ -3499,6 +3499,1035 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Written_BudgetPlanDetail_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/budgets": {
+      "get": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Bütçeler (yeniden eskiye)",
+        "operationId": "list_budgets_api_v1_sites__slug__budgets_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "fiscal_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "mali yıl",
+              "title": "Fiscal Year"
+            },
+            "description": "mali yıl"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AnnualBudgetOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Bütçe taslağı aç",
+        "operationId": "create_budget_api_v1_sites__slug__budgets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetCreateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AnnualBudgetDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/budgets/{budget_id}": {
+      "get": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Bütçe (kategori × ay)",
+        "operationId": "get_budget_api_v1_sites__slug__budgets__budget_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnualBudgetDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Taslak bütçeyi düzenle",
+        "operationId": "update_budget_api_v1_sites__slug__budgets__budget_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetUpdateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AnnualBudgetDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/budgets/{budget_id}/submit": {
+      "post": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Bütçeyi onaya gönder (kural yoksa hemen yürürlüğe girer)",
+        "operationId": "submit_budget_api_v1_sites__slug__budgets__budget_id__submit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AnnualBudgetDetail_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/budgets/{budget_id}/revise": {
+      "post": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Revizyon (yeni sürüm)",
+        "operationId": "revise_budget_api_v1_sites__slug__budgets__budget_id__revise_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AnnualBudgetDetail_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/budgets/{budget_id}/actuals": {
+      "get": {
+        "tags": [
+          "bütçe"
+        ],
+        "summary": "Bütçe–gerçekleşme (aylık ve kümülatif)",
+        "operationId": "budget_actuals_api_v1_sites__slug__budgets__budget_id__actuals_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 12,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boşsa bu ay / yıl sonu",
+              "title": "Month"
+            },
+            "description": "boşsa bu ay / yıl sonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetActualsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules": {
+      "get": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Aidat kuralları (geçerli sürüm ve sürüm geçmişi)",
+        "operationId": "list_rules_api_v1_sites__slug__billing_rules_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BillingRuleOut"
+                  },
+                  "title": "Response List Rules Api V1 Sites  Slug  Billing Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Aidat kuralı ve ilk sürümü (taslak)",
+        "operationId": "create_rule_api_v1_sites__slug__billing_rules_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingRuleCreateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BillingRuleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}": {
+      "get": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Aidat kuralı",
+        "operationId": "get_rule_api_v1_sites__slug__billing_rules__rule_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingRuleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Kuralın adı, kalem tipi, malik kalemi",
+        "operationId": "update_rule_api_v1_sites__slug__billing_rules__rule_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingRuleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BillingRuleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions": {
+      "post": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Yeni sürüm (taslak)",
+        "operationId": "add_version_api_v1_sites__slug__billing_rules__rule_id__versions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingVersionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BillingRuleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}": {
+      "put": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Taslak sürümü düzenle",
+        "operationId": "update_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingVersionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BillingRuleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}/submit": {
+      "post": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Sürümü onaya gönder (kural yoksa hemen yürürlüğe girer)",
+        "description": "409 `missing_unit_data` (eksik bölüm verisi), `scope_overlap`, `period_locked`.",
+        "operationId": "submit_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__submit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_BillingRuleOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/trial": {
+      "post": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Deneme hesabı (kayıt oluşturmaz)",
+        "operationId": "trial_api_v1_sites__slug__billing_rules_trial_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingTrialIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingTrialOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}/trial": {
+      "post": {
+        "tags": [
+          "aidat kuralları"
+        ],
+        "summary": "Kayıtlı sürümün deneme hesabı",
+        "operationId": "version_trial_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__trial_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingTrialOut"
                 }
               }
             }
@@ -3783,7 +4812,7 @@
         "tags": [
           "tahakkuk"
         ],
-        "summary": "Tahakkuku kaydet",
+        "summary": "Tahakkuku kaydet (onay kuralı varsa taslak onaya gider: 202)",
         "operationId": "post_run_api_v1_sites__slug__charge_runs_post",
         "security": [
           {
@@ -3840,8 +4869,11 @@
               }
             }
           },
+          "202": {
+            "description": "Taslak onaya gönderildi"
+          },
           "409": {
-            "description": "Dönem zaten kesilmiş / kesinleşmiş proje yok"
+            "description": "Dönem zaten kesilmiş / kaynak yok / açık taslak var"
           },
           "422": {
             "description": "Validation Error",
@@ -3976,6 +5008,522 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page_PostedChargeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/drafts": {
+      "post": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Tahakkuk taslağı hazırla (deftere yazılmaz)",
+        "operationId": "create_draft_api_v1_sites__slug__charge_runs_drafts_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ChargeRunOut_"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Dönem kesilmiş / açık taslak var / kaynak yok"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/refresh": {
+      "post": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Taslağı güncel veriyle yeniden hesapla",
+        "operationId": "refresh_draft_api_v1_sites__slug__charge_runs__run_id__refresh_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ChargeRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/submit": {
+      "post": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Taslağı onaya gönder (kural yoksa hemen kesinleşir: 201)",
+        "operationId": "submit_draft_api_v1_sites__slug__charge_runs__run_id__submit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ChargeRunOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/cancel": {
+      "post": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Taslaktan vazgeç",
+        "operationId": "cancel_draft_api_v1_sites__slug__charge_runs__run_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ChargeRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/diff": {
+      "get": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Taslağın fark raporu (son kesinleşmiş döneme göre)",
+        "operationId": "draft_diff_api_v1_sites__slug__charge_runs__run_id__diff_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChargeDiffOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/summary": {
+      "get": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Taslağın uyarıları ve kalem toplamları",
+        "operationId": "draft_summary_api_v1_sites__slug__charge_runs__run_id__summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftSummaryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/lines/{line_id}/adjustments": {
+      "post": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Kesinleşmiş tahakkukta satır düzeltmesi (onay kuralı varsa 202)",
+        "description": "Ters kayıt + düzeltilmiş tutarla yeni borç; kilitli dönemde \"önceki döneme ait\" (FIN-05).",
+        "operationId": "adjust_line_api_v1_sites__slug__charge_runs_lines__line_id__adjustments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Line Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli.",
+              "title": "Idempotency-Key"
+            },
+            "description": "Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ChargeAdjustmentOut_"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Onaya gönderildi"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/adjustments": {
+      "get": {
+        "tags": [
+          "tahakkuk"
+        ],
+        "summary": "Koşunun satır düzeltmeleri",
+        "operationId": "run_adjustments_api_v1_sites__slug__charge_runs__run_id__adjustments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChargeAdjustmentOut"
+                  },
+                  "title": "Response Run Adjustments Api V1 Sites  Slug  Charge Runs  Run Id  Adjustments Get"
                 }
               }
             }
@@ -5268,7 +6816,7 @@
           "tahakkuk"
         ],
         "summary": "Otomatik aylık tahakkuk ayarı",
-        "description": "Hiç kaydedilmediyse varsayılan: kapalı, gün 1, vade 14.",
+        "description": "Hiç kaydedilmediyse varsayılan: kapalı, gün 1, taslak 5 gün önce.",
         "operationId": "get_schedule_api_v1_sites__slug__charge_schedule_get",
         "security": [
           {
@@ -16867,7 +18415,9 @@
           "cash_difference",
           "ad_hoc_charge",
           "finance_parameter",
-          "demand_letter"
+          "demand_letter",
+          "budget",
+          "charge_adjustment"
         ],
         "title": "ActionType",
         "description": "Onay gerektirebilen işlem tipleri (Bölüm 6.2 + ONY-01 hazır şablonları). Kural her tip için\ntanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir."
@@ -17263,6 +18813,31 @@
           "temporary_password"
         ],
         "title": "AddedOut"
+      },
+      "AdjustmentIn": {
+        "properties": {
+          "new_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "New Amount",
+            "description": "satırın doğru tutarı (0 olabilir)",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Reason",
+            "description": "gerekçe zorunlu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_amount",
+          "reason"
+        ],
+        "title": "AdjustmentIn"
       },
       "AgendaItemOut": {
         "properties": {
@@ -17851,6 +19426,282 @@
           "published_at"
         ],
         "title": "AnnouncementRow"
+      },
+      "AnnualBudgetDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approval_pending",
+              "active",
+              "rejected",
+              "superseded"
+            ],
+            "title": "Status"
+          },
+          "income_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Target",
+            "description": "aidat ve diğer gelir hedefi (isteğe bağlı)"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "yıllık gider bütçesi toplamı",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "budget_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Plan Id",
+            "description": "öneri kaynağı işletme projesi"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetCategoryOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "month_totals": {
+            "items": {
+              "type": "string",
+              "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+              "description": "Para: metin, 2 ondalık (TRY).",
+              "examples": [
+                "1234.56"
+              ]
+            },
+            "type": "array",
+            "title": "Month Totals",
+            "description": "ay başına toplam (12)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fiscal_year",
+          "version",
+          "name",
+          "status",
+          "income_target",
+          "total",
+          "budget_plan_id",
+          "approval_request_id",
+          "created_by",
+          "created_at",
+          "activated_at",
+          "lines",
+          "month_totals"
+        ],
+        "title": "AnnualBudgetDetail"
+      },
+      "AnnualBudgetOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approval_pending",
+              "active",
+              "rejected",
+              "superseded"
+            ],
+            "title": "Status"
+          },
+          "income_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Target",
+            "description": "aidat ve diğer gelir hedefi (isteğe bağlı)"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "yıllık gider bütçesi toplamı",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "budget_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Plan Id",
+            "description": "öneri kaynağı işletme projesi"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fiscal_year",
+          "version",
+          "name",
+          "status",
+          "income_target",
+          "total",
+          "budget_plan_id",
+          "approval_request_id",
+          "created_by",
+          "created_at",
+          "activated_at"
+        ],
+        "title": "AnnualBudgetOut"
       },
       "ApplicationIn": {
         "properties": {
@@ -19414,6 +21265,546 @@
         ],
         "title": "BankAutoMatch"
       },
+      "BillingRuleCreateIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name"
+          },
+          "charge_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Type Id",
+            "description": "kalem tipi — kimin ödeyeceğini belirler"
+          },
+          "owner_item": {
+            "type": "boolean",
+            "title": "Owner Item",
+            "description": "malik kalemi: malike, kiracıya görünmez",
+            "default": false
+          },
+          "version": {
+            "$ref": "#/components/schemas/BillingVersionIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "charge_type_id",
+          "version"
+        ],
+        "title": "BillingRuleCreateIn"
+      },
+      "BillingRuleIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name"
+          },
+          "charge_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Type Id",
+            "description": "kalem tipi — kimin ödeyeceğini belirler"
+          },
+          "owner_item": {
+            "type": "boolean",
+            "title": "Owner Item",
+            "description": "malik kalemi: malike, kiracıya görünmez",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "charge_type_id"
+        ],
+        "title": "BillingRuleIn"
+      },
+      "BillingRuleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "charge_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Type Id"
+          },
+          "charge_type_name": {
+            "type": "string",
+            "title": "Charge Type Name"
+          },
+          "owner_item": {
+            "type": "boolean",
+            "title": "Owner Item"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BillingVersionOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "bu dönemde geçerli sürüm"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/BillingVersionOut"
+            },
+            "type": "array",
+            "title": "Versions",
+            "description": "yeniden eskiye"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "charge_type_id",
+          "charge_type_name",
+          "owner_item",
+          "current_version",
+          "versions"
+        ],
+        "title": "BillingRuleOut"
+      },
+      "BillingTrialIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name"
+          },
+          "charge_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Type Id",
+            "description": "kalem tipi — kimin ödeyeceğini belirler"
+          },
+          "owner_item": {
+            "type": "boolean",
+            "title": "Owner Item",
+            "description": "malik kalemi: malike, kiracıya görünmez",
+            "default": false
+          },
+          "version": {
+            "$ref": "#/components/schemas/BillingVersionIn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "charge_type_id",
+          "version"
+        ],
+        "title": "BillingTrialIn"
+      },
+      "BillingTrialOut": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/TrialLineOut"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "bölüm bazında tutar (ödeyenden bağımsız)"
+          },
+          "unit_count": {
+            "type": "integer",
+            "title": "Unit Count"
+          },
+          "period_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Period Total",
+            "description": "bir dönemde yazılacak toplam",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "pool": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Pool",
+            "description": "kuralın dönem tutarı (sabitte bölüm × tutar)",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "exempted": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Exempted",
+            "description": "muafiyetle yazılmayan",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "annual_total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Annual Total",
+            "description": "yıllık karşılığı (dönem × yıldaki dönem sayısı)",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "budget_income_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Income Target",
+            "description": "yürürlükteki yıllık bütçenin gelir hedefi (FIN-17); yoksa null"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/TrialWarningOut"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines",
+          "unit_count",
+          "period_total",
+          "pool",
+          "exempted",
+          "annual_total",
+          "budget_income_target",
+          "warnings"
+        ],
+        "title": "BillingTrialOut"
+      },
+      "BillingVersionIn": {
+        "properties": {
+          "effective_period": {
+            "type": "string",
+            "title": "Effective Period",
+            "description": "yürürlük dönemi YYYY-AA; geçmiş/kilitli olamaz"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AllocationKind",
+            "description": "equal · by_area · by_land_share · by_unit_type_weight · fixed_per_unit · composite"
+          },
+          "area_basis": {
+            "$ref": "#/components/schemas/AreaBasis",
+            "default": "gross"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "bölüm başına sabitte bölüm başına tutar, diğerlerinde dönem toplamı",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency",
+            "default": "monthly"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/RuleComponentIn-Input"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "type_coefficients": {
+            "items": {
+              "$ref": "#/components/schemas/TypeCoefficientIn-Input"
+            },
+            "type": "array",
+            "title": "Type Coefficients"
+          },
+          "exemptions": {
+            "items": {
+              "$ref": "#/components/schemas/ExemptionIn-Input"
+            },
+            "type": "array",
+            "title": "Exemptions"
+          },
+          "scope_kind": {
+            "$ref": "#/components/schemas/ScopeKind",
+            "default": "whole_site"
+          },
+          "scope_block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Scope Block Ids"
+          },
+          "scope_unit_type_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Scope Unit Type Ids"
+          },
+          "scope_usage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Usage"
+          },
+          "discontinued": {
+            "type": "boolean",
+            "title": "Discontinued",
+            "description": "kural bu dönemden itibaren durur",
+            "default": false
+          },
+          "basis_note": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Basis Note",
+            "description": "dayanak: yönetim planı md. / kurul kararı"
+          },
+          "basis_document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Basis Document Id",
+            "description": "belge arşivinden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "effective_period",
+          "kind",
+          "amount",
+          "basis_note"
+        ],
+        "title": "BillingVersionIn"
+      },
+      "BillingVersionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version_no": {
+            "type": "integer",
+            "title": "Version No"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "approval_pending",
+              "active",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "effective_period": {
+            "type": "string",
+            "title": "Effective Period",
+            "description": "YYYY-MM"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AllocationKind"
+          },
+          "area_basis": {
+            "$ref": "#/components/schemas/AreaBasis"
+          },
+          "amount_mode": {
+            "type": "string",
+            "enum": [
+              "per_unit",
+              "total"
+            ],
+            "title": "Amount Mode"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/RuleComponentIn-Output"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "type_coefficients": {
+            "items": {
+              "$ref": "#/components/schemas/TypeCoefficientIn-Output"
+            },
+            "type": "array",
+            "title": "Type Coefficients"
+          },
+          "exemptions": {
+            "items": {
+              "$ref": "#/components/schemas/ExemptionIn-Output"
+            },
+            "type": "array",
+            "title": "Exemptions"
+          },
+          "scope_kind": {
+            "$ref": "#/components/schemas/ScopeKind"
+          },
+          "scope_block_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Scope Block Ids"
+          },
+          "scope_unit_type_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Scope Unit Type Ids"
+          },
+          "scope_usage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Usage"
+          },
+          "discontinued": {
+            "type": "boolean",
+            "title": "Discontinued"
+          },
+          "basis_note": {
+            "type": "string",
+            "title": "Basis Note"
+          },
+          "basis_document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Basis Document Id"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "activated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version_no",
+          "status",
+          "effective_period",
+          "kind",
+          "area_basis",
+          "amount_mode",
+          "amount",
+          "frequency",
+          "components",
+          "type_coefficients",
+          "exemptions",
+          "scope_kind",
+          "scope_block_ids",
+          "scope_unit_type_ids",
+          "scope_usage",
+          "discontinued",
+          "basis_note",
+          "basis_document_id",
+          "approval_request_id",
+          "created_by",
+          "created_at",
+          "activated_at"
+        ],
+        "title": "BillingVersionOut"
+      },
       "BlockCreate": {
         "properties": {
           "name": {
@@ -19822,6 +22213,292 @@
         ],
         "title": "Body_upload_units_api_v1_sites__slug__imports_units_post"
       },
+      "BudgetActualRowOut": {
+        "properties": {
+          "expense_category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Expense Category Id"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "month_budget": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Month Budget",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "month_actual": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Month Actual",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "cumulative_budget": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Cumulative Budget",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "cumulative_actual": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Cumulative Actual",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "annual_budget": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Annual Budget",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Remaining",
+            "description": "yıllık bütçe − kümülatif gerçekleşen",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "usage_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage Percent",
+            "description": "kümülatif gerçekleşen / yıllık bütçe (%)"
+          },
+          "deviation_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deviation Percent",
+            "description": "kümülatif sapma (%)"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warn",
+              "over"
+            ],
+            "title": "Level",
+            "description": "%90 sarı (warn), %100 kırmızı"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expense_category_id",
+          "category_name",
+          "month_budget",
+          "month_actual",
+          "cumulative_budget",
+          "cumulative_actual",
+          "annual_budget",
+          "remaining",
+          "usage_percent",
+          "deviation_percent",
+          "level"
+        ],
+        "title": "BudgetActualRowOut"
+      },
+      "BudgetActualsOut": {
+        "properties": {
+          "budget_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Budget Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "month": {
+            "type": "integer",
+            "title": "Month"
+          },
+          "warn_percent": {
+            "type": "integer",
+            "title": "Warn Percent",
+            "description": "finans parametresi `budget_warn_percent`"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetActualRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "totals": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetActualRowOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "budget_id",
+          "fiscal_year",
+          "month",
+          "warn_percent",
+          "rows",
+          "totals"
+        ],
+        "title": "BudgetActualsOut"
+      },
+      "BudgetCategoryLine": {
+        "properties": {
+          "expense_category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Expense Category Id"
+          },
+          "months": {
+            "items": {
+              "type": "string",
+              "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+              "description": "Para: metin, 2 ondalık (TRY).",
+              "examples": [
+                "1234.56"
+              ]
+            },
+            "type": "array",
+            "title": "Months",
+            "description": "Ocak–Aralık, 12 tutar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expense_category_id",
+          "months"
+        ],
+        "title": "BudgetCategoryLine"
+      },
+      "BudgetCategoryOut": {
+        "properties": {
+          "expense_category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Expense Category Id"
+          },
+          "months": {
+            "items": {
+              "type": "string",
+              "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+              "description": "Para: metin, 2 ondalık (TRY).",
+              "examples": [
+                "1234.56"
+              ]
+            },
+            "type": "array",
+            "title": "Months",
+            "description": "Ocak–Aralık, 12 tutar"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Total",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "expense_category_id",
+          "months",
+          "category_name",
+          "total"
+        ],
+        "title": "BudgetCategoryOut"
+      },
+      "BudgetCreateIn": {
+        "properties": {
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Name"
+          },
+          "income_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Target"
+          },
+          "budget_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Plan Id",
+            "description": "işletme projesinden öneri: kalemler kategori × aya dağıtılır"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fiscal_year",
+          "name"
+        ],
+        "title": "BudgetCreateIn"
+      },
       "BudgetItemIn": {
         "properties": {
           "name": {
@@ -19946,7 +22623,7 @@
             "type": "string",
             "pattern": "^-?\\d{1,16}\\.\\d{2}$",
             "title": "Period Amount",
-            "description": "bir kesimdeki tutar (aylıkta yıllık/12)",
+            "description": "ilk kesimdeki tutar: yıllık tutar dönemlere `distribute` ile bölünür, kuruş farkı ilk dönemlere (yıllık toplam korunur, D-5)",
             "examples": [
               "1234.56"
             ]
@@ -20156,6 +22833,19 @@
             "type": "integer",
             "title": "Item Count"
           },
+          "finalize_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalize Request Id",
+            "description": "'Bütçe' onayına giden kesinleştirme talebi (D-16)"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/BudgetItemOut"
@@ -20246,6 +22936,19 @@
           "item_count": {
             "type": "integer",
             "title": "Item Count"
+          },
+          "finalize_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalize Request Id",
+            "description": "'Bütçe' onayına giden kesinleştirme talebi (D-16)"
           }
         },
         "type": "object",
@@ -20271,6 +22974,55 @@
           "superseded"
         ],
         "title": "BudgetStatus"
+      },
+      "BudgetUpdateIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "income_target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Target"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/BudgetCategoryLine"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines",
+            "description": "verilirse tüm satırların yerine geçer"
+          }
+        },
+        "type": "object",
+        "title": "BudgetUpdateIn"
       },
       "BulkReminderIn": {
         "properties": {
@@ -21004,6 +23756,123 @@
         ],
         "title": "Channel"
       },
+      "ChargeAdjustmentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "charge_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Id"
+          },
+          "charge_line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Charge Line Id"
+          },
+          "ledger_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ledger Account Id"
+          },
+          "old_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Old Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "new_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "New Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "approval_pending",
+              "applied",
+              "rejected"
+            ],
+            "title": "Status"
+          },
+          "prior_period": {
+            "type": "boolean",
+            "title": "Prior Period",
+            "description": "kilitli döneme ait; açık döneme yazıldı"
+          },
+          "applied_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied On"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "charge_id",
+          "charge_line_id",
+          "ledger_account_id",
+          "old_amount",
+          "new_amount",
+          "reason",
+          "status",
+          "prior_period",
+          "applied_on",
+          "approval_request_id",
+          "requested_by",
+          "created_at"
+        ],
+        "title": "ChargeAdjustmentOut"
+      },
       "ChargeDiffCountsOut": {
         "properties": {
           "increase": {
@@ -21213,6 +24082,30 @@
               "1234.56"
             ]
           },
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days",
+            "description": "K9 kıst: ödeyenin dönemdeki gün sayısı (tam dönemde null)"
+          },
+          "period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Days",
+            "description": "dönemin gün sayısı (kıstta)"
+          },
           "lines": {
             "items": {
               "$ref": "#/components/schemas/LineOut"
@@ -21319,7 +24212,7 @@
             "type": "string",
             "pattern": "^-?\\d{1,16}\\.\\d{2}$",
             "title": "Total Amount",
-            "description": "koşunun borç toplamı (ters kayıtta orijinalinki)",
+            "description": "koşunun borç toplamı (ters kayıtta orijinalinki, taslakta önizlemeninki)",
             "examples": [
               "1234.56"
             ]
@@ -21327,6 +24220,41 @@
           "charge_count": {
             "type": "integer",
             "title": "Charge Count"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ChargeSource",
+            "description": "K23 tahakkuk kaynağı"
+          },
+          "approval_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Request Id",
+            "description": "'Tahakkuk' onay talebi"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "taslağı hazırlayan"
+          },
+          "warning_count": {
+            "type": "integer",
+            "title": "Warning Count",
+            "description": "taslak önizlemesindeki uyarı sayısı",
+            "default": 0
           }
         },
         "type": "object",
@@ -21343,7 +24271,10 @@
           "reversal_of_run_id",
           "reason",
           "total_amount",
-          "charge_count"
+          "charge_count",
+          "source",
+          "approval_request_id",
+          "created_by"
         ],
         "title": "ChargeRunOut"
       },
@@ -21351,10 +24282,15 @@
         "type": "string",
         "enum": [
           "draft",
+          "approval_pending",
+          "approved",
+          "rejected",
+          "cancelled",
           "posted",
           "reversed"
         ],
-        "title": "ChargeRunStatus"
+        "title": "ChargeRunStatus",
+        "description": "FIN-05 dönem durum modeli: Taslak → Onay bekliyor → Onaylandı → Kesinleşti (`posted`).\nKesinleşmiş koşu yalnız ters kayıtla düzeltilir (`reversed`)."
       },
       "ChargeSource": {
         "type": "string",
@@ -23720,6 +26656,38 @@
         ],
         "title": "DocumentVersionOut"
       },
+      "DraftSummaryOut": {
+        "properties": {
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/WarningOut"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "item_totals": {
+            "items": {
+              "$ref": "#/components/schemas/ItemTotalOut"
+            },
+            "type": "array",
+            "title": "Item Totals"
+          },
+          "not_due_items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Not Due Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "warnings",
+          "item_totals",
+          "not_due_items"
+        ],
+        "title": "DraftSummaryOut"
+      },
       "Employer": {
         "type": "string",
         "enum": [
@@ -23797,6 +26765,26 @@
             "examples": [
               "1234.56"
             ]
+          },
+          "allocated": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Allocated",
+            "description": "borca yapılan mahsuplar (tahsilat + avans)",
+            "default": "0.00",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "advance_applied": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Advance Applied",
+            "description": "önceden yatırılmış avanstan mahsup edilen (D-6)",
+            "default": "0.00",
+            "examples": [
+              "1234.56"
+            ]
           }
         },
         "type": "object",
@@ -23864,6 +26852,69 @@
           "created_at"
         ],
         "title": "EventOut"
+      },
+      "ExemptionIn-Input": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Percent",
+            "description": "indirim oranı (%), 100 = tam muaf"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Reason",
+            "description": "ör. boş daire, personel dairesi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "percent",
+          "reason"
+        ],
+        "title": "ExemptionIn"
+      },
+      "ExemptionIn-Output": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "percent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Percent",
+            "description": "indirim oranı (%), 100 = tam muaf"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Reason",
+            "description": "ör. boş daire, personel dairesi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "percent",
+          "reason"
+        ],
+        "title": "ExemptionIn"
       },
       "ExpenseCategoryKind": {
         "type": "string",
@@ -24584,6 +27635,33 @@
             ],
             "title": "Late Fee Grace Days"
           },
+          "late_fee_cap_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Cap Percent"
+          },
+          "late_fee_minimum_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Fee Minimum Amount"
+          },
           "allocation_order": {
             "anyOf": [
               {
@@ -24707,6 +27785,20 @@
             "type": "integer",
             "title": "Late Fee Grace Days"
           },
+          "late_fee_cap_percent": {
+            "type": "integer",
+            "title": "Late Fee Cap Percent",
+            "description": "tavan: ana borcun %X'i (0 = yok)"
+          },
+          "late_fee_minimum_amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Late Fee Minimum Amount",
+            "description": "bu tutarın altındaki gecikme yazılmaz",
+            "examples": [
+              "1234.56"
+            ]
+          },
           "allocation_order": {
             "$ref": "#/components/schemas/AllocationOrder",
             "description": "K24 mahsup sırası"
@@ -24746,6 +27838,8 @@
           "late_fee_monthly_rate_percent",
           "late_fee_method",
           "late_fee_grace_days",
+          "late_fee_cap_percent",
+          "late_fee_minimum_amount",
           "allocation_order",
           "debtor_restriction_enabled",
           "debtor_restriction_min_amount",
@@ -25694,7 +28788,17 @@
             "type": "string",
             "pattern": "^-?\\d{1,16}\\.\\d{2}$",
             "title": "Distributed",
-            "description": "bölümlere dağıtılan; `amount`'a eşit olmalı",
+            "description": "bölümlere dağıtılan; `amount − exempted`'e eşit olmalı",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "exempted": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Exempted",
+            "description": "muafiyetle yazılmayan",
+            "default": "0.00",
             "examples": [
               "1234.56"
             ]
@@ -26117,10 +29221,44 @@
       },
       "LineOut": {
         "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "kesinleşmiş satır; önizlemede null"
+          },
           "budget_item_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Budget Item Id"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Budget Item Id",
+            "description": "işletme projesi kalemi"
+          },
+          "billing_rule_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Rule Version Id",
+            "description": "aidat kuralı sürümü (K23)"
           },
           "description": {
             "type": "string",
@@ -26134,6 +29272,23 @@
             "examples": [
               "1234.56"
             ]
+          },
+          "current_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Amount",
+            "description": "satır düzeltmesinden sonraki tutar; düzeltilmediyse null"
           },
           "allocation_kind": {
             "$ref": "#/components/schemas/AllocationKind"
@@ -28058,6 +31213,37 @@
           "total"
         ],
         "title": "Page[AnnouncementOut]"
+      },
+      "Page_AnnualBudgetOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnnualBudgetOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[AnnualBudgetOut]"
       },
       "Page_AuditOut_": {
         "properties": {
@@ -30551,7 +33737,7 @@
               }
             ],
             "title": "Due Date",
-            "description": "boşsa tahakkuk + 14 gün"
+            "description": "boşsa dönemin vade günü (finans parametresi `due_day`)"
           }
         },
         "type": "object",
@@ -30560,9 +33746,17 @@
       "PostedChargeOut": {
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "taslakta null"
           },
           "unit_id": {
             "type": "string",
@@ -30605,6 +33799,46 @@
             "examples": [
               "1234.56"
             ]
+          },
+          "current_amount": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Amount",
+            "description": "satır düzeltmelerinden sonraki toplam; düzeltme yoksa null"
+          },
+          "days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days",
+            "description": "K9 kıst günü (taslakta)"
+          },
+          "period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Days"
           },
           "lines": {
             "items": {
@@ -32961,6 +36195,59 @@
         ],
         "title": "RuleChangeOut"
       },
+      "RuleComponentIn-Input": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AllocationKind"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Percent",
+            "description": "yüzde (ör. 70)"
+          },
+          "area_basis": {
+            "$ref": "#/components/schemas/AreaBasis",
+            "default": "gross"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "percent"
+        ],
+        "title": "RuleComponentIn"
+      },
+      "RuleComponentIn-Output": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AllocationKind"
+          },
+          "percent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Percent",
+            "description": "yüzde (ör. 70)"
+          },
+          "area_basis": {
+            "$ref": "#/components/schemas/AreaBasis",
+            "default": "gross"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "percent"
+        ],
+        "title": "RuleComponentIn"
+      },
       "RuleIn": {
         "properties": {
           "action_type": {
@@ -33205,10 +36492,11 @@
             "title": "Charge Day",
             "description": "ayın kaçında: 1–28"
           },
-          "due_days": {
+          "draft_lead_days": {
             "type": "integer",
-            "title": "Due Days",
-            "description": "tahakkuktan kaç gün sonra son ödeme: 0–60"
+            "title": "Draft Lead Days",
+            "description": "onay kuralı varsa taslak kesimden kaç gün önce: 0–15",
+            "default": 5
           },
           "notify_on_run": {
             "type": "boolean",
@@ -33219,8 +36507,7 @@
         "type": "object",
         "required": [
           "enabled",
-          "charge_day",
-          "due_days"
+          "charge_day"
         ],
         "title": "ScheduleIn"
       },
@@ -33234,9 +36521,19 @@
             "type": "integer",
             "title": "Charge Day"
           },
-          "due_days": {
+          "draft_lead_days": {
             "type": "integer",
-            "title": "Due Days"
+            "title": "Draft Lead Days"
+          },
+          "due_day": {
+            "type": "integer",
+            "title": "Due Day",
+            "description": "K25 vade günü — finans parametresi (salt okunur)"
+          },
+          "approval_required": {
+            "type": "boolean",
+            "title": "Approval Required",
+            "description": "'Tahakkuk' onay kuralı var: taslak hazırlanıp onaya gider (FIN-05)"
           },
           "notify_on_run": {
             "type": "boolean",
@@ -33271,7 +36568,9 @@
         "required": [
           "enabled",
           "charge_day",
-          "due_days",
+          "draft_lead_days",
+          "due_day",
+          "approval_required",
           "notify_on_run",
           "next_run_on",
           "last_run"
@@ -33282,6 +36581,7 @@
         "type": "string",
         "enum": [
           "posted",
+          "drafted",
           "skipped",
           "failed"
         ],
@@ -36214,6 +39514,106 @@
         ],
         "title": "TransferOut"
       },
+      "TrialLineOut": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+            "title": "Amount",
+            "description": "Para: metin, 2 ondalık (TRY).",
+            "examples": [
+              "1234.56"
+            ]
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "unit_name",
+          "amount",
+          "explanation"
+        ],
+        "title": "TrialLineOut"
+      },
+      "TrialWarningOut": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/WarningKind"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "message"
+        ],
+        "title": "TrialWarningOut"
+      },
+      "TypeCoefficientIn-Input": {
+        "properties": {
+          "unit_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Type Id"
+          },
+          "coefficient": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Coefficient",
+            "description": "ör. dükkan 1.5 · daire 1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_type_id",
+          "coefficient"
+        ],
+        "title": "TypeCoefficientIn"
+      },
+      "TypeCoefficientIn-Output": {
+        "properties": {
+          "unit_type_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Type Id"
+          },
+          "coefficient": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Coefficient",
+            "description": "ör. dükkan 1.5 · daire 1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_type_id",
+          "coefficient"
+        ],
+        "title": "TypeCoefficientIn"
+      },
       "UnitCreate": {
         "properties": {
           "number": {
@@ -37443,6 +40843,23 @@
         ],
         "title": "Written[AnnouncementOut]"
       },
+      "Written_AnnualBudgetDetail_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AnnualBudgetDetail"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AnnualBudgetDetail]"
+      },
       "Written_ApprovalRequestOut_": {
         "properties": {
           "data": {
@@ -37527,6 +40944,23 @@
           "message"
         ],
         "title": "Written[AttendanceSettingsOut]"
+      },
+      "Written_BillingRuleOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BillingRuleOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[BillingRuleOut]"
       },
       "Written_BlockOut_": {
         "properties": {
@@ -37629,6 +41063,23 @@
           "message"
         ],
         "title": "Written[CertificateOut]"
+      },
+      "Written_ChargeAdjustmentOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ChargeAdjustmentOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ChargeAdjustmentOut]"
       },
       "Written_ChargeRunOut_": {
         "properties": {
@@ -38756,8 +42207,42 @@
             "title": "Already Charged",
             "description": "bu dönemin geçerli koşusu var; kaydetmek 409 döner"
           },
+          "source": {
+            "$ref": "#/components/schemas/ChargeSource",
+            "description": "K23 tahakkuk kaynağı (finans parametresi)"
+          },
+          "proration": {
+            "$ref": "#/components/schemas/Proration",
+            "description": "K9 kıst yöntemi (finans parametresi)"
+          },
+          "approval_required": {
+            "type": "boolean",
+            "title": "Approval Required",
+            "description": "'Tahakkuk' onay kuralı var: kaydetmek taslağı onaya gönderir (202)"
+          },
+          "open_draft_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Open Draft Id",
+            "description": "bu dönemin açık taslağı"
+          },
           "budget_plan": {
-            "$ref": "#/components/schemas/site_yonetim__api__v1__charges__PlanRef"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/site_yonetim__api__v1__charges__PlanRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "aidat kuralı kaynağında null"
           },
           "total_amount": {
             "type": "string",
@@ -38811,6 +42296,10 @@
           "charge_date",
           "due_date",
           "already_charged",
+          "source",
+          "proration",
+          "approval_required",
+          "open_draft_id",
           "budget_plan",
           "total_amount",
           "unit_count",

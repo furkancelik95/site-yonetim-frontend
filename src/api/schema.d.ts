@@ -873,8 +873,219 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Kesinleştir */
+        /** Kesinleştir ('Bütçe' onay kuralı varsa onaya gider: 202) */
         post: operations["finalize_plan_api_v1_sites__slug__budget_plans__plan_id__finalize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bütçeler (yeniden eskiye) */
+        get: operations["list_budgets_api_v1_sites__slug__budgets_get"];
+        put?: never;
+        /** Bütçe taslağı aç */
+        post: operations["create_budget_api_v1_sites__slug__budgets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/budgets/{budget_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bütçe (kategori × ay) */
+        get: operations["get_budget_api_v1_sites__slug__budgets__budget_id__get"];
+        /** Taslak bütçeyi düzenle */
+        put: operations["update_budget_api_v1_sites__slug__budgets__budget_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/budgets/{budget_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bütçeyi onaya gönder (kural yoksa hemen yürürlüğe girer) */
+        post: operations["submit_budget_api_v1_sites__slug__budgets__budget_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/budgets/{budget_id}/revise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revizyon (yeni sürüm) */
+        post: operations["revise_budget_api_v1_sites__slug__budgets__budget_id__revise_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/budgets/{budget_id}/actuals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bütçe–gerçekleşme (aylık ve kümülatif) */
+        get: operations["budget_actuals_api_v1_sites__slug__budgets__budget_id__actuals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aidat kuralları (geçerli sürüm ve sürüm geçmişi) */
+        get: operations["list_rules_api_v1_sites__slug__billing_rules_get"];
+        put?: never;
+        /** Aidat kuralı ve ilk sürümü (taslak) */
+        post: operations["create_rule_api_v1_sites__slug__billing_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aidat kuralı */
+        get: operations["get_rule_api_v1_sites__slug__billing_rules__rule_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Kuralın adı, kalem tipi, malik kalemi */
+        patch: operations["update_rule_api_v1_sites__slug__billing_rules__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Yeni sürüm (taslak) */
+        post: operations["add_version_api_v1_sites__slug__billing_rules__rule_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Taslak sürümü düzenle */
+        put: operations["update_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sürümü onaya gönder (kural yoksa hemen yürürlüğe girer)
+         * @description 409 `missing_unit_data` (eksik bölüm verisi), `scope_overlap`, `period_locked`.
+         */
+        post: operations["submit_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deneme hesabı (kayıt oluşturmaz) */
+        post: operations["trial_api_v1_sites__slug__billing_rules_trial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/billing-rules/{rule_id}/versions/{version_id}/trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kayıtlı sürümün deneme hesabı */
+        post: operations["version_trial_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__trial_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -928,7 +1139,7 @@ export interface paths {
         /** Tahakkuk koşuları (en yeni üstte) */
         get: operations["list_runs_api_v1_sites__slug__charge_runs_get"];
         put?: never;
-        /** Tahakkuku kaydet */
+        /** Tahakkuku kaydet (onay kuralı varsa taslak onaya gider: 202) */
         post: operations["post_run_api_v1_sites__slug__charge_runs_post"];
         delete?: never;
         options?: never;
@@ -962,6 +1173,145 @@ export interface paths {
         };
         /** Koşunun borçları ve kalem dökümü (sayfalı) */
         get: operations["run_charges_api_v1_sites__slug__charge_runs__run_id__charges_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tahakkuk taslağı hazırla (deftere yazılmaz) */
+        post: operations["create_draft_api_v1_sites__slug__charge_runs_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslağı güncel veriyle yeniden hesapla */
+        post: operations["refresh_draft_api_v1_sites__slug__charge_runs__run_id__refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslağı onaya gönder (kural yoksa hemen kesinleşir: 201) */
+        post: operations["submit_draft_api_v1_sites__slug__charge_runs__run_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Taslaktan vazgeç */
+        post: operations["cancel_draft_api_v1_sites__slug__charge_runs__run_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Taslağın fark raporu (son kesinleşmiş döneme göre) */
+        get: operations["draft_diff_api_v1_sites__slug__charge_runs__run_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Taslağın uyarıları ve kalem toplamları */
+        get: operations["draft_summary_api_v1_sites__slug__charge_runs__run_id__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/lines/{line_id}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kesinleşmiş tahakkukta satır düzeltmesi (onay kuralı varsa 202)
+         * @description Ters kayıt + düzeltilmiş tutarla yeni borç; kilitli dönemde "önceki döneme ait" (FIN-05).
+         */
+        post: operations["adjust_line_api_v1_sites__slug__charge_runs_lines__line_id__adjustments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/charge-runs/{run_id}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Koşunun satır düzeltmeleri */
+        get: operations["run_adjustments_api_v1_sites__slug__charge_runs__run_id__adjustments_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1273,7 +1623,7 @@ export interface paths {
         };
         /**
          * Otomatik aylık tahakkuk ayarı
-         * @description Hiç kaydedilmediyse varsayılan: kapalı, gün 1, vade 14.
+         * @description Hiç kaydedilmediyse varsayılan: kapalı, gün 1, taslak 5 gün önce.
          */
         get: operations["get_schedule_api_v1_sites__slug__charge_schedule_get"];
         /** Otomatik aylık tahakkuk ayarını kaydet */
@@ -3914,7 +4264,7 @@ export interface components {
          *     tanımlanabilir; talebi açabilmek için modülün yürütücüyü kaydetmiş olması gerekir.
          * @enum {string}
          */
-        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "leave_request" | "period_unlock" | "cash_difference" | "ad_hoc_charge" | "finance_parameter" | "demand_letter";
+        ActionType: "charge_rule" | "charge_run" | "charge_run_reversal" | "refund" | "debt_write_off" | "expense" | "emergency_expense" | "purchase_request" | "purchase_order" | "quote_exception" | "reservation" | "renovation_permit" | "payment_plan" | "paid_service_tariff" | "role_change" | "finance_mode_change" | "registration" | "stock_count_difference" | "approval_rule_change" | "leave_request" | "period_unlock" | "cash_difference" | "ad_hoc_charge" | "finance_parameter" | "demand_letter" | "budget" | "charge_adjustment";
         /** ActionTypeOut */
         ActionTypeOut: {
             key: components["schemas"]["ActionType"];
@@ -4057,6 +4407,20 @@ export interface components {
              * @description yalnız yeni kullanıcıda, yalnız bu yanıtta; kişiye elden iletilir (K5)
              */
             temporary_password: string | null;
+        };
+        /** AdjustmentIn */
+        AdjustmentIn: {
+            /**
+             * New Amount
+             * @description satırın doğru tutarı (0 olabilir)
+             * @example 1234.56
+             */
+            new_amount: string;
+            /**
+             * Reason
+             * @description gerekçe zorunlu
+             */
+            reason: string;
         };
         /** AgendaItemOut */
         AgendaItemOut: {
@@ -4282,6 +4646,105 @@ export interface components {
             is_pinned: boolean;
             /** Published At */
             published_at: string | null;
+        };
+        /** AnnualBudgetDetail */
+        AnnualBudgetDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Fiscal Year */
+            fiscal_year: number;
+            /** Version */
+            version: number;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approval_pending" | "active" | "rejected" | "superseded";
+            /**
+             * Income Target
+             * @description aidat ve diğer gelir hedefi (isteğe bağlı)
+             */
+            income_target: string | null;
+            /**
+             * Total
+             * @description yıllık gider bütçesi toplamı
+             * @example 1234.56
+             */
+            total: string;
+            /**
+             * Budget Plan Id
+             * @description öneri kaynağı işletme projesi
+             */
+            budget_plan_id: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Created By */
+            created_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Activated At */
+            activated_at: string | null;
+            /** Lines */
+            lines: components["schemas"]["BudgetCategoryOut"][];
+            /**
+             * Month Totals
+             * @description ay başına toplam (12)
+             */
+            month_totals: string[];
+        };
+        /** AnnualBudgetOut */
+        AnnualBudgetOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Fiscal Year */
+            fiscal_year: number;
+            /** Version */
+            version: number;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approval_pending" | "active" | "rejected" | "superseded";
+            /**
+             * Income Target
+             * @description aidat ve diğer gelir hedefi (isteğe bağlı)
+             */
+            income_target: string | null;
+            /**
+             * Total
+             * @description yıllık gider bütçesi toplamı
+             * @example 1234.56
+             */
+            total: string;
+            /**
+             * Budget Plan Id
+             * @description öneri kaynağı işletme projesi
+             */
+            budget_plan_id: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Created By */
+            created_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Activated At */
+            activated_at: string | null;
         };
         /** ApplicationIn */
         ApplicationIn: {
@@ -4810,6 +5273,240 @@ export interface components {
          * @enum {string}
          */
         BankAutoMatch: "high" | "high_medium";
+        /** BillingRuleCreateIn */
+        BillingRuleCreateIn: {
+            /** Name */
+            name: string;
+            /**
+             * Charge Type Id
+             * Format: uuid
+             * @description kalem tipi — kimin ödeyeceğini belirler
+             */
+            charge_type_id: string;
+            /**
+             * Owner Item
+             * @description malik kalemi: malike, kiracıya görünmez
+             * @default false
+             */
+            owner_item: boolean;
+            version: components["schemas"]["BillingVersionIn"];
+        };
+        /** BillingRuleIn */
+        BillingRuleIn: {
+            /** Name */
+            name: string;
+            /**
+             * Charge Type Id
+             * Format: uuid
+             * @description kalem tipi — kimin ödeyeceğini belirler
+             */
+            charge_type_id: string;
+            /**
+             * Owner Item
+             * @description malik kalemi: malike, kiracıya görünmez
+             * @default false
+             */
+            owner_item: boolean;
+        };
+        /** BillingRuleOut */
+        BillingRuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Charge Type Id
+             * Format: uuid
+             */
+            charge_type_id: string;
+            /** Charge Type Name */
+            charge_type_name: string;
+            /** Owner Item */
+            owner_item: boolean;
+            /** @description bu dönemde geçerli sürüm */
+            current_version: components["schemas"]["BillingVersionOut"] | null;
+            /**
+             * Versions
+             * @description yeniden eskiye
+             */
+            versions: components["schemas"]["BillingVersionOut"][];
+        };
+        /** BillingTrialIn */
+        BillingTrialIn: {
+            /** Name */
+            name: string;
+            /**
+             * Charge Type Id
+             * Format: uuid
+             * @description kalem tipi — kimin ödeyeceğini belirler
+             */
+            charge_type_id: string;
+            /**
+             * Owner Item
+             * @description malik kalemi: malike, kiracıya görünmez
+             * @default false
+             */
+            owner_item: boolean;
+            version: components["schemas"]["BillingVersionIn"];
+        };
+        /** BillingTrialOut */
+        BillingTrialOut: {
+            /**
+             * Lines
+             * @description bölüm bazında tutar (ödeyenden bağımsız)
+             */
+            lines: components["schemas"]["TrialLineOut"][];
+            /** Unit Count */
+            unit_count: number;
+            /**
+             * Period Total
+             * @description bir dönemde yazılacak toplam
+             * @example 1234.56
+             */
+            period_total: string;
+            /**
+             * Pool
+             * @description kuralın dönem tutarı (sabitte bölüm × tutar)
+             * @example 1234.56
+             */
+            pool: string;
+            /**
+             * Exempted
+             * @description muafiyetle yazılmayan
+             * @example 1234.56
+             */
+            exempted: string;
+            /**
+             * Annual Total
+             * @description yıllık karşılığı (dönem × yıldaki dönem sayısı)
+             * @example 1234.56
+             */
+            annual_total: string;
+            /**
+             * Budget Income Target
+             * @description yürürlükteki yıllık bütçenin gelir hedefi (FIN-17); yoksa null
+             */
+            budget_income_target: string | null;
+            /** Warnings */
+            warnings: components["schemas"]["TrialWarningOut"][];
+        };
+        /** BillingVersionIn */
+        BillingVersionIn: {
+            /**
+             * Effective Period
+             * @description yürürlük dönemi YYYY-AA; geçmiş/kilitli olamaz
+             */
+            effective_period: string;
+            /** @description equal · by_area · by_land_share · by_unit_type_weight · fixed_per_unit · composite */
+            kind: components["schemas"]["AllocationKind"];
+            /** @default gross */
+            area_basis: components["schemas"]["AreaBasis"];
+            /**
+             * Amount
+             * @description bölüm başına sabitte bölüm başına tutar, diğerlerinde dönem toplamı
+             * @example 1234.56
+             */
+            amount: string;
+            /** @default monthly */
+            frequency: components["schemas"]["Frequency"];
+            /** Components */
+            components?: components["schemas"]["RuleComponentIn-Input"][];
+            /** Type Coefficients */
+            type_coefficients?: components["schemas"]["TypeCoefficientIn-Input"][];
+            /** Exemptions */
+            exemptions?: components["schemas"]["ExemptionIn-Input"][];
+            /** @default whole_site */
+            scope_kind: components["schemas"]["ScopeKind"];
+            /** Scope Block Ids */
+            scope_block_ids?: string[];
+            /** Scope Unit Type Ids */
+            scope_unit_type_ids?: string[];
+            /** Scope Usage */
+            scope_usage?: string | null;
+            /**
+             * Discontinued
+             * @description kural bu dönemden itibaren durur
+             * @default false
+             */
+            discontinued: boolean;
+            /**
+             * Basis Note
+             * @description dayanak: yönetim planı md. / kurul kararı
+             */
+            basis_note: string;
+            /**
+             * Basis Document Id
+             * @description belge arşivinden
+             */
+            basis_document_id?: string | null;
+        };
+        /** BillingVersionOut */
+        BillingVersionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version No */
+            version_no: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approval_pending" | "active" | "rejected";
+            /**
+             * Effective Period
+             * @description YYYY-MM
+             */
+            effective_period: string;
+            kind: components["schemas"]["AllocationKind"];
+            area_basis: components["schemas"]["AreaBasis"];
+            /**
+             * Amount Mode
+             * @enum {string}
+             */
+            amount_mode: "per_unit" | "total";
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            frequency: components["schemas"]["Frequency"];
+            /** Components */
+            components: components["schemas"]["RuleComponentIn-Output"][];
+            /** Type Coefficients */
+            type_coefficients: components["schemas"]["TypeCoefficientIn-Output"][];
+            /** Exemptions */
+            exemptions: components["schemas"]["ExemptionIn-Output"][];
+            scope_kind: components["schemas"]["ScopeKind"];
+            /** Scope Block Ids */
+            scope_block_ids: string[];
+            /** Scope Unit Type Ids */
+            scope_unit_type_ids: string[];
+            /** Scope Usage */
+            scope_usage: string | null;
+            /** Discontinued */
+            discontinued: boolean;
+            /** Basis Note */
+            basis_note: string;
+            /** Basis Document Id */
+            basis_document_id: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Created By */
+            created_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Activated At */
+            activated_at: string | null;
+        };
         /** BlockCreate */
         BlockCreate: {
             /**
@@ -4966,6 +5663,136 @@ export interface components {
              */
             file: string;
         };
+        /** BudgetActualRowOut */
+        BudgetActualRowOut: {
+            /**
+             * Expense Category Id
+             * Format: uuid
+             */
+            expense_category_id: string;
+            /** Category Name */
+            category_name: string;
+            /**
+             * Month Budget
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            month_budget: string;
+            /**
+             * Month Actual
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            month_actual: string;
+            /**
+             * Cumulative Budget
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            cumulative_budget: string;
+            /**
+             * Cumulative Actual
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            cumulative_actual: string;
+            /**
+             * Annual Budget
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            annual_budget: string;
+            /**
+             * Remaining
+             * @description yıllık bütçe − kümülatif gerçekleşen
+             * @example 1234.56
+             */
+            remaining: string;
+            /**
+             * Usage Percent
+             * @description kümülatif gerçekleşen / yıllık bütçe (%)
+             */
+            usage_percent: string | null;
+            /**
+             * Deviation Percent
+             * @description kümülatif sapma (%)
+             */
+            deviation_percent: string | null;
+            /**
+             * Level
+             * @description %90 sarı (warn), %100 kırmızı
+             * @enum {string}
+             */
+            level: "ok" | "warn" | "over";
+        };
+        /** BudgetActualsOut */
+        BudgetActualsOut: {
+            /**
+             * Budget Id
+             * Format: uuid
+             */
+            budget_id: string;
+            /** Fiscal Year */
+            fiscal_year: number;
+            /** Month */
+            month: number;
+            /**
+             * Warn Percent
+             * @description finans parametresi `budget_warn_percent`
+             */
+            warn_percent: number;
+            /** Rows */
+            rows: components["schemas"]["BudgetActualRowOut"][];
+            totals: components["schemas"]["BudgetActualRowOut"] | null;
+        };
+        /** BudgetCategoryLine */
+        BudgetCategoryLine: {
+            /**
+             * Expense Category Id
+             * Format: uuid
+             */
+            expense_category_id: string;
+            /**
+             * Months
+             * @description Ocak–Aralık, 12 tutar
+             */
+            months: string[];
+        };
+        /** BudgetCategoryOut */
+        BudgetCategoryOut: {
+            /**
+             * Expense Category Id
+             * Format: uuid
+             */
+            expense_category_id: string;
+            /**
+             * Months
+             * @description Ocak–Aralık, 12 tutar
+             */
+            months: string[];
+            /** Category Name */
+            category_name: string;
+            /**
+             * Total
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            total: string;
+        };
+        /** BudgetCreateIn */
+        BudgetCreateIn: {
+            /** Fiscal Year */
+            fiscal_year: number;
+            /** Name */
+            name: string;
+            /** Income Target */
+            income_target?: string | null;
+            /**
+             * Budget Plan Id
+             * @description işletme projesinden öneri: kalemler kategori × aya dağıtılır
+             */
+            budget_plan_id?: string | null;
+        };
         /** BudgetItemIn */
         BudgetItemIn: {
             /** Name */
@@ -5038,7 +5865,7 @@ export interface components {
             annual_amount: string;
             /**
              * Period Amount
-             * @description bir kesimdeki tutar (aylıkta yıllık/12)
+             * @description ilk kesimdeki tutar: yıllık tutar dönemlere `distribute` ile bölünür, kuruş farkı ilk dönemlere (yıllık toplam korunur, D-5)
              * @example 1234.56
              */
             period_amount: string;
@@ -5123,6 +5950,11 @@ export interface components {
             total_annual_amount: string;
             /** Item Count */
             item_count: number;
+            /**
+             * Finalize Request Id
+             * @description 'Bütçe' onayına giden kesinleştirme talebi (D-16)
+             */
+            finalize_request_id?: string | null;
             /** Items */
             items: components["schemas"]["BudgetItemOut"][];
         };
@@ -5155,12 +5987,29 @@ export interface components {
             total_annual_amount: string;
             /** Item Count */
             item_count: number;
+            /**
+             * Finalize Request Id
+             * @description 'Bütçe' onayına giden kesinleştirme talebi (D-16)
+             */
+            finalize_request_id?: string | null;
         };
         /**
          * BudgetStatus
          * @enum {string}
          */
         BudgetStatus: "draft" | "notified" | "finalized" | "superseded";
+        /** BudgetUpdateIn */
+        BudgetUpdateIn: {
+            /** Name */
+            name?: string | null;
+            /** Income Target */
+            income_target?: string | null;
+            /**
+             * Lines
+             * @description verilirse tüm satırların yerine geçer
+             */
+            lines?: components["schemas"]["BudgetCategoryLine"][] | null;
+        };
         /** BulkReminderIn */
         BulkReminderIn: {
             /** Account Ids */
@@ -5488,6 +6337,64 @@ export interface components {
          * @enum {string}
          */
         "Channel-Output": "app" | "sms" | "phone";
+        /** ChargeAdjustmentOut */
+        ChargeAdjustmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Charge Id
+             * Format: uuid
+             */
+            charge_id: string;
+            /**
+             * Charge Line Id
+             * Format: uuid
+             */
+            charge_line_id: string;
+            /**
+             * Ledger Account Id
+             * Format: uuid
+             */
+            ledger_account_id: string;
+            /**
+             * Old Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            old_amount: string;
+            /**
+             * New Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            new_amount: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approval_pending" | "applied" | "rejected";
+            /**
+             * Prior Period
+             * @description kilitli döneme ait; açık döneme yazıldı
+             */
+            prior_period: boolean;
+            /** Applied On */
+            applied_on: string | null;
+            /** Approval Request Id */
+            approval_request_id: string | null;
+            /** Requested By */
+            requested_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ChargeDiffCountsOut */
         ChargeDiffCountsOut: {
             /** Increase */
@@ -5586,6 +6493,16 @@ export interface components {
              * @example 1234.56
              */
             amount: string;
+            /**
+             * Days
+             * @description K9 kıst: ödeyenin dönemdeki gün sayısı (tam dönemde null)
+             */
+            days?: number | null;
+            /**
+             * Period Days
+             * @description dönemin gün sayısı (kıstta)
+             */
+            period_days?: number | null;
             /** Lines */
             lines: components["schemas"]["LineOut"][];
         };
@@ -5629,18 +6546,38 @@ export interface components {
             reason: string | null;
             /**
              * Total Amount
-             * @description koşunun borç toplamı (ters kayıtta orijinalinki)
+             * @description koşunun borç toplamı (ters kayıtta orijinalinki, taslakta önizlemeninki)
              * @example 1234.56
              */
             total_amount: string;
             /** Charge Count */
             charge_count: number;
+            /** @description K23 tahakkuk kaynağı */
+            source: components["schemas"]["ChargeSource"];
+            /**
+             * Approval Request Id
+             * @description 'Tahakkuk' onay talebi
+             */
+            approval_request_id: string | null;
+            /**
+             * Created By
+             * @description taslağı hazırlayan
+             */
+            created_by: string | null;
+            /**
+             * Warning Count
+             * @description taslak önizlemesindeki uyarı sayısı
+             * @default 0
+             */
+            warning_count: number;
         };
         /**
          * ChargeRunStatus
+         * @description FIN-05 dönem durum modeli: Taslak → Onay bekliyor → Onaylandı → Kesinleşti (`posted`).
+         *     Kesinleşmiş koşu yalnız ters kayıtla düzeltilir (`reversed`).
          * @enum {string}
          */
-        ChargeRunStatus: "draft" | "posted" | "reversed";
+        ChargeRunStatus: "draft" | "approval_pending" | "approved" | "rejected" | "cancelled" | "posted" | "reversed";
         /**
          * ChargeSource
          * @enum {string}
@@ -6562,6 +7499,15 @@ export interface components {
              */
             at: string;
         };
+        /** DraftSummaryOut */
+        DraftSummaryOut: {
+            /** Warnings */
+            warnings: components["schemas"]["WarningOut"][];
+            /** Item Totals */
+            item_totals: components["schemas"]["ItemTotalOut"][];
+            /** Not Due Items */
+            not_due_items: string[];
+        };
         /**
          * Employer
          * @enum {string}
@@ -6604,6 +7550,20 @@ export interface components {
              * @example 1234.56
              */
             running_balance: string;
+            /**
+             * Allocated
+             * @description borca yapılan mahsuplar (tahsilat + avans)
+             * @default 0.00
+             * @example 1234.56
+             */
+            allocated: string;
+            /**
+             * Advance Applied
+             * @description önceden yatırılmış avanstan mahsup edilen (D-6)
+             * @default 0.00
+             * @example 1234.56
+             */
+            advance_applied: string;
         };
         /** EventOut */
         EventOut: {
@@ -6623,6 +7583,42 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** ExemptionIn */
+        "ExemptionIn-Input": {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /**
+             * Percent
+             * @description indirim oranı (%), 100 = tam muaf
+             */
+            percent: number | string;
+            /**
+             * Reason
+             * @description ör. boş daire, personel dairesi
+             */
+            reason: string;
+        };
+        /** ExemptionIn */
+        "ExemptionIn-Output": {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /**
+             * Percent
+             * @description indirim oranı (%), 100 = tam muaf
+             */
+            percent: string;
+            /**
+             * Reason
+             * @description ör. boş daire, personel dairesi
+             */
+            reason: string;
         };
         /**
          * ExpenseCategoryKind
@@ -6920,6 +7916,10 @@ export interface components {
             late_fee_method?: string | null;
             /** Late Fee Grace Days */
             late_fee_grace_days?: number | null;
+            /** Late Fee Cap Percent */
+            late_fee_cap_percent?: number | null;
+            /** Late Fee Minimum Amount */
+            late_fee_minimum_amount?: string | null;
             /** Allocation Order */
             allocation_order?: string | null;
             /** Debtor Restriction Enabled */
@@ -6976,6 +7976,17 @@ export interface components {
             late_fee_method: components["schemas"]["LateFeeMethod"];
             /** Late Fee Grace Days */
             late_fee_grace_days: number;
+            /**
+             * Late Fee Cap Percent
+             * @description tavan: ana borcun %X'i (0 = yok)
+             */
+            late_fee_cap_percent: number;
+            /**
+             * Late Fee Minimum Amount
+             * @description bu tutarın altındaki gecikme yazılmaz
+             * @example 1234.56
+             */
+            late_fee_minimum_amount: string;
             /** @description K24 mahsup sırası */
             allocation_order: components["schemas"]["AllocationOrder"];
             /**
@@ -7351,10 +8362,17 @@ export interface components {
             amount: string;
             /**
              * Distributed
-             * @description bölümlere dağıtılan; `amount`'a eşit olmalı
+             * @description bölümlere dağıtılan; `amount − exempted`'e eşit olmalı
              * @example 1234.56
              */
             distributed: string;
+            /**
+             * Exempted
+             * @description muafiyetle yazılmayan
+             * @default 0.00
+             * @example 1234.56
+             */
+            exempted: string;
         };
         /** LastChargeOut */
         LastChargeOut: {
@@ -7521,10 +8539,20 @@ export interface components {
         /** LineOut */
         LineOut: {
             /**
-             * Budget Item Id
-             * Format: uuid
+             * Id
+             * @description kesinleşmiş satır; önizlemede null
              */
-            budget_item_id: string;
+            id?: string | null;
+            /**
+             * Budget Item Id
+             * @description işletme projesi kalemi
+             */
+            budget_item_id: string | null;
+            /**
+             * Billing Rule Version Id
+             * @description aidat kuralı sürümü (K23)
+             */
+            billing_rule_version_id?: string | null;
             /** Description */
             description: string;
             /**
@@ -7533,6 +8561,11 @@ export interface components {
              * @example 1234.56
              */
             amount: string;
+            /**
+             * Current Amount
+             * @description satır düzeltmesinden sonraki tutar; düzeltilmediyse null
+             */
+            current_amount?: string | null;
             allocation_kind: components["schemas"]["AllocationKind"];
             /**
              * Weight
@@ -8280,6 +9313,17 @@ export interface components {
         Page_AnnouncementOut_: {
             /** Items */
             items: components["schemas"]["AnnouncementOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[AnnualBudgetOut] */
+        Page_AnnualBudgetOut_: {
+            /** Items */
+            items: components["schemas"]["AnnualBudgetOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -9238,7 +10282,7 @@ export interface components {
             charge_date?: string | null;
             /**
              * Due Date
-             * @description boşsa tahakkuk + 14 gün
+             * @description boşsa dönemin vade günü (finans parametresi `due_day`)
              */
             due_date?: string | null;
         };
@@ -9246,9 +10290,9 @@ export interface components {
         PostedChargeOut: {
             /**
              * Id
-             * Format: uuid
+             * @description taslakta null
              */
-            id: string;
+            id: string | null;
             /**
              * Unit Id
              * Format: uuid
@@ -9275,6 +10319,18 @@ export interface components {
              * @example 1234.56
              */
             amount: string;
+            /**
+             * Current Amount
+             * @description satır düzeltmelerinden sonraki toplam; düzeltme yoksa null
+             */
+            current_amount?: string | null;
+            /**
+             * Days
+             * @description K9 kıst günü (taslakta)
+             */
+            days?: number | null;
+            /** Period Days */
+            period_days?: number | null;
             /** Lines */
             lines: components["schemas"]["LineOut"][];
         };
@@ -10160,6 +11216,28 @@ export interface components {
             /** @description önerilen kural; arşivlemede null */
             rule: components["schemas"]["ProposedRuleOut"] | null;
         };
+        /** RuleComponentIn */
+        "RuleComponentIn-Input": {
+            kind: components["schemas"]["AllocationKind"];
+            /**
+             * Percent
+             * @description yüzde (ör. 70)
+             */
+            percent: number | string;
+            /** @default gross */
+            area_basis: components["schemas"]["AreaBasis"];
+        };
+        /** RuleComponentIn */
+        "RuleComponentIn-Output": {
+            kind: components["schemas"]["AllocationKind"];
+            /**
+             * Percent
+             * @description yüzde (ör. 70)
+             */
+            percent: string;
+            /** @default gross */
+            area_basis: components["schemas"]["AreaBasis"];
+        };
         /** RuleIn */
         RuleIn: {
             action_type: components["schemas"]["ActionType"];
@@ -10259,10 +11337,11 @@ export interface components {
              */
             charge_day: number;
             /**
-             * Due Days
-             * @description tahakkuktan kaç gün sonra son ödeme: 0–60
+             * Draft Lead Days
+             * @description onay kuralı varsa taslak kesimden kaç gün önce: 0–15
+             * @default 5
              */
-            due_days: number;
+            draft_lead_days: number;
             /**
              * Notify On Run
              * @default true
@@ -10275,8 +11354,18 @@ export interface components {
             enabled: boolean;
             /** Charge Day */
             charge_day: number;
-            /** Due Days */
-            due_days: number;
+            /** Draft Lead Days */
+            draft_lead_days: number;
+            /**
+             * Due Day
+             * @description K25 vade günü — finans parametresi (salt okunur)
+             */
+            due_day: number;
+            /**
+             * Approval Required
+             * @description 'Tahakkuk' onay kuralı var: taslak hazırlanıp onaya gider (FIN-05)
+             */
+            approval_required: boolean;
             /**
              * Notify On Run
              * @description bildirim sağlayıcısı yok (K5): şimdilik yalnız kayıt
@@ -10293,7 +11382,7 @@ export interface components {
          * ScheduleRunStatus
          * @enum {string}
          */
-        ScheduleRunStatus: "posted" | "skipped" | "failed";
+        ScheduleRunStatus: "posted" | "drafted" | "skipped" | "failed";
         /**
          * ScopeKind
          * @enum {string}
@@ -11398,6 +12487,56 @@ export interface components {
             outgoing: components["schemas"]["MovementOut"];
             incoming: components["schemas"]["MovementOut"];
         };
+        /** TrialLineOut */
+        TrialLineOut: {
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /**
+             * Amount
+             * @description Para: metin, 2 ondalık (TRY).
+             * @example 1234.56
+             */
+            amount: string;
+            /** Explanation */
+            explanation: string;
+        };
+        /** TrialWarningOut */
+        TrialWarningOut: {
+            kind: components["schemas"]["WarningKind"];
+            /** Message */
+            message: string;
+        };
+        /** TypeCoefficientIn */
+        "TypeCoefficientIn-Input": {
+            /**
+             * Unit Type Id
+             * Format: uuid
+             */
+            unit_type_id: string;
+            /**
+             * Coefficient
+             * @description ör. dükkan 1.5 · daire 1.0
+             */
+            coefficient: number | string;
+        };
+        /** TypeCoefficientIn */
+        "TypeCoefficientIn-Output": {
+            /**
+             * Unit Type Id
+             * Format: uuid
+             */
+            unit_type_id: string;
+            /**
+             * Coefficient
+             * @description ör. dükkan 1.5 · daire 1.0
+             */
+            coefficient: string;
+        };
         /** UnitCreate */
         UnitCreate: {
             /** Number */
@@ -11754,6 +12893,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[AnnualBudgetDetail] */
+        Written_AnnualBudgetDetail_: {
+            data: components["schemas"]["AnnualBudgetDetail"];
+            /** Message */
+            message: string;
+        };
         /** Written[ApprovalRequestOut] */
         Written_ApprovalRequestOut_: {
             data: components["schemas"]["ApprovalRequestOut"];
@@ -11781,6 +12926,12 @@ export interface components {
         /** Written[AttendanceSettingsOut] */
         Written_AttendanceSettingsOut_: {
             data: components["schemas"]["AttendanceSettingsOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[BillingRuleOut] */
+        Written_BillingRuleOut_: {
+            data: components["schemas"]["BillingRuleOut"];
             /** Message */
             message: string;
         };
@@ -11817,6 +12968,12 @@ export interface components {
         /** Written[CertificateOut] */
         Written_CertificateOut_: {
             data: components["schemas"]["CertificateOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ChargeAdjustmentOut] */
+        Written_ChargeAdjustmentOut_: {
+            data: components["schemas"]["ChargeAdjustmentOut"];
             /** Message */
             message: string;
         };
@@ -12259,7 +13416,22 @@ export interface components {
              * @description bu dönemin geçerli koşusu var; kaydetmek 409 döner
              */
             already_charged: boolean;
-            budget_plan: components["schemas"]["site_yonetim__api__v1__charges__PlanRef"];
+            /** @description K23 tahakkuk kaynağı (finans parametresi) */
+            source: components["schemas"]["ChargeSource"];
+            /** @description K9 kıst yöntemi (finans parametresi) */
+            proration: components["schemas"]["Proration"];
+            /**
+             * Approval Required
+             * @description 'Tahakkuk' onay kuralı var: kaydetmek taslağı onaya gönderir (202)
+             */
+            approval_required: boolean;
+            /**
+             * Open Draft Id
+             * @description bu dönemin açık taslağı
+             */
+            open_draft_id: string | null;
+            /** @description aidat kuralı kaynağında null */
+            budget_plan: components["schemas"]["site_yonetim__api__v1__charges__PlanRef"] | null;
             /**
              * Total Amount
              * @description Para: metin, 2 ondalık (TRY).
@@ -14354,6 +15526,573 @@ export interface operations {
                     "application/json": components["schemas"]["Written_BudgetPlanDetail_"];
                 };
             };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_budgets_api_v1_sites__slug__budgets_get: {
+        parameters: {
+            query?: {
+                /** @description mali yıl */
+                fiscal_year?: number | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AnnualBudgetOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_budget_api_v1_sites__slug__budgets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AnnualBudgetDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_budget_api_v1_sites__slug__budgets__budget_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnualBudgetDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_budget_api_v1_sites__slug__budgets__budget_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AnnualBudgetDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_budget_api_v1_sites__slug__budgets__budget_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AnnualBudgetDetail_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revise_budget_api_v1_sites__slug__budgets__budget_id__revise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AnnualBudgetDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    budget_actuals_api_v1_sites__slug__budgets__budget_id__actuals_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bu ay / yıl sonu */
+                month?: number | null;
+            };
+            header?: never;
+            path: {
+                budget_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetActualsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_v1_sites__slug__billing_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingRuleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rule_api_v1_sites__slug__billing_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingRuleCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BillingRuleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rule_api_v1_sites__slug__billing_rules__rule_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_v1_sites__slug__billing_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingRuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BillingRuleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_version_api_v1_sites__slug__billing_rules__rule_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingVersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BillingRuleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                version_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingVersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BillingRuleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_version_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                version_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_BillingRuleOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trial_api_v1_sites__slug__billing_rules_trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingTrialIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingTrialOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    version_trial_api_v1_sites__slug__billing_rules__rule_id__versions__version_id__trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+                version_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingTrialOut"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -14500,7 +16239,14 @@ export interface operations {
                     "application/json": components["schemas"]["Written_ChargeRunOut_"];
                 };
             };
-            /** @description Dönem zaten kesilmiş / kesinleşmiş proje yok */
+            /** @description Taslak onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Dönem zaten kesilmiş / kaynak yok / açık taslak var */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -14572,6 +16318,296 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_PostedChargeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_draft_api_v1_sites__slug__charge_runs_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ChargeRunOut_"];
+                };
+            };
+            /** @description Dönem kesilmiş / açık taslak var / kaynak yok */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_draft_api_v1_sites__slug__charge_runs__run_id__refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ChargeRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_draft_api_v1_sites__slug__charge_runs__run_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ChargeRunOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_draft_api_v1_sites__slug__charge_runs__run_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ChargeRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_diff_api_v1_sites__slug__charge_runs__run_id__diff_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeDiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_summary_api_v1_sites__slug__charge_runs__run_id__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftSummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adjust_line_api_v1_sites__slug__charge_runs_lines__line_id__adjustments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Aynı işlemin tekrarında çift kayıt olmasın diye istemcinin ürettiği anahtar (ör. UUID). 24 saat geçerli. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                line_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ChargeAdjustmentOut_"];
+                };
+            };
+            /** @description Onaya gönderildi */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_adjustments_api_v1_sites__slug__charge_runs__run_id__adjustments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeAdjustmentOut"][];
                 };
             };
             /** @description Validation Error */

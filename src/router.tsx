@@ -86,6 +86,8 @@ const siteScreens: [string, string][] = [
   ["ek-ucretler", "AdHocChargesPage"],
   ["muhasebe-aktarimi", "AccountingExportPage"],
   ["ayarlar/finans", "FinanceSettingsPage"],
+  // Finans motoru (P03b: aidat kuralları K23)
+  ["aidat-kurallari", "BillingRulesPage"],
   // İnsan kaynakları paketi (servis istekleri 35–39)
   ["vardiya", "ShiftPlanPage"],
   ["izinler", "LeavePage"],
