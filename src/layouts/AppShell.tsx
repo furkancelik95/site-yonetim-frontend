@@ -62,6 +62,8 @@ import {
 import { useAuth, useMe } from "../auth/AuthContext";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
 import { NotificationBell } from "../components/NotificationBell";
+import { QuickSearch } from "../components/QuickSearch";
+import { Avatar } from "../components/ui";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
 
@@ -308,8 +310,14 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             </button>
             <span className="topbar__title">{title ?? siteCtx?.site.name ?? (platform ? "Platform" : "SiteYönetimi")}</span>
             <div className="topbar__spacer" />
+            <QuickSearch />
             {platform && <span className="badge badge--info">Platform</span>}
             {siteCtx && <NotificationBell to={`/s/${siteCtx.site.slug}/bildirimler`} />}
+            {/* Dar ekranda kenar çubuğu gizli: profile giden avatar üst çubukta da durur */}
+            <Link to="/profil" className="topbar__user" title={`${me.full_name} — profil`}>
+              <Avatar name={me.full_name} />
+              <span className="visually-hidden">Profil</span>
+            </Link>
           </header>
           <main id="main" className="page" tabIndex={-1}>
             {siteCtx && <SupportSessionBanner />}

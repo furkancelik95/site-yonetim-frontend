@@ -36,8 +36,8 @@ export function InviteAcceptPage() {
   }
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 560 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 560px)" }}>
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">SY</span>
           <span><span className="sidebar__name">{inv.data?.site_name ?? "SiteYönetimi"}</span><br /><span className="sidebar__sub">Davetle kayıt</span></span>

@@ -1,14 +1,14 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet } from "lucide-react";
+import { ArrowDownToLine, CheckCircle2, FileSpreadsheet, HelpCircle, Landmark, Lightbulb, Upload, Wallet } from "lucide-react";
 import { api, newIdempotencyKey } from "../../api/client";
 import { useSiteGet } from "../../api/hooks";
 import type { CashAccounts, Schemas, Written } from "../../api/types";
 import { AccountPicker, type PickedAccount } from "../../components/AccountPicker";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, FormError, Kpi, PageHead, SubmitButton } from "../../components/ui";
-import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
+import { formatDate, formatDateTime, formatMoney, formatMoneyShort } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
 import Decimal from "decimal.js";
 
@@ -43,6 +43,7 @@ export function BankImportPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [result, setResult] = useState<ConfirmResult | null>(null);
   const bankId = cashId || banks[0]?.id || "";
+  const selectedBank = banks.find((b) => b.id === bankId);
 
   const upload = useMutation({
     mutationFn: (f: File) => {
@@ -111,6 +112,24 @@ export function BankImportPage() {
         subtitle="Bankadan indirdiğiniz ekstreyi yükleyin; gelen havaleler hesaplarla eşleştirilir, onayladıklarınız tahsilat olarak işlenir."
       />
 
+      {/* Yüklemeden önce: banka hesaplarının durumu; yükleyince: ekstrenin eşleşme özeti */}
+      {p ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Gelen havale" icon={<ArrowDownToLine aria-hidden="true" />} value={formatMoney(p.total_in)} small note={`${p.row_count} satır · ${p.file_name}`} />
+          <Kpi label="Eşleşti" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={p.matched_count} note="referans kodu bulundu" />
+          <Kpi label="Öneri" icon={<Lightbulb aria-hidden="true" />} value={p.suggested_count} note="ad benziyor, kontrol edin" />
+          <Kpi label="Eşleşmedi" tone={p.unmatched_count > 0 ? "warn" : undefined} icon={<HelpCircle aria-hidden="true" />} value={p.unmatched_count} note={`${p.ignored_count} satır aktarılmaz`} />
+        </div>
+      ) : cash.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : banks.length > 0 ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Banka hesabı" tone="accent" icon={<Landmark aria-hidden="true" />} value={banks.length} note="aktif" />
+          <Kpi label="Banka bakiyesi" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(banks.reduce((s, b) => s.plus(b.balance), new Decimal(0)).toFixed(2))} note="tüm banka hesapları" />
+          {selectedBank && <Kpi label="Seçili hesaba giriş" tone="ok" icon={<ArrowDownToLine aria-hidden="true" />} value={formatMoneyShort(selectedBank.inflow)} note={`${selectedBank.name} · toplam`} />}
+        </div>
+      ) : null}
+
       {result && (
         <Alert tone="ok" title="Aktarım tamamlandı">
           {result.created_payments} tahsilat işlendi, toplam {formatMoney(result.total_amount)}.
@@ -119,6 +138,7 @@ export function BankImportPage() {
       )}
 
       <form className="card" onSubmit={submit} noValidate>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Upload aria-hidden="true" /></span><span className="card__title">Ekstre yükle</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={upload.error} />
           <div className="grid grid--2">
@@ -144,15 +164,8 @@ export function BankImportPage() {
 
       {p && (
         <>
-          <div className="grid grid--kpi">
-            <Kpi label="Gelen havale" value={formatMoney(p.total_in)} small note={`${p.row_count} satır · ${p.file_name}`} />
-            <Kpi label="Eşleşti" tone="ok" value={p.matched_count} note="referans kodu bulundu" />
-            <Kpi label="Öneri" value={p.suggested_count} note="ad benziyor, kontrol edin" />
-            <Kpi label="Eşleşmedi" tone={p.unmatched_count > 0 ? "warn" : undefined} value={p.unmatched_count} note={`${p.ignored_count} satır aktarılmaz`} />
-          </div>
-
           <div className="card">
-            <div className="card__head"><span className="card__title">Hareketler</span><span className="card__meta ml-auto">Önizleme {formatDateTime(p.expires_at)} tarihine kadar geçerli</span></div>
+            <div className="card__head"><span className="card__icon card__icon--accent"><ArrowDownToLine aria-hidden="true" /></span><span className="card__title">Hareketler</span><span className="card__meta ml-auto">Önizleme {formatDateTime(p.expires_at)} tarihine kadar geçerli</span></div>
             <div className="card__body card__body--flush">
               <div className="table-wrap" style={{ overflow: "visible" }}>
                 <table className="data">

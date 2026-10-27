@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, BookOpen, LifeBuoy, ShieldCheck, Siren, Smile, ThumbsUp, Timer } from "lucide-react";
 import { api, get } from "../../api/client";
 import type { Schemas, Written } from "../../api/types";
 import { useToast } from "../../components/toast";
@@ -27,15 +28,31 @@ export function PlatformSupportPage() {
   return (
     <div className="stack">
       <PageHead title="Destek" subtitle="Bilet SLA'sı varsayılan hedeflerle izleniyor (kritik 1/8 saat, yüksek 4/24, normal 8/72); paket bazlı SLA paket kararıyla." />
-      <div className="grid grid--kpi">
-        <Kpi label="Açık bilet" value={open.length} />
-        <Kpi label="İlk yanıtı geciken" value={open.filter((x) => !x.first_response_at && x.sla.first_breached).length} tone={open.some((x) => !x.first_response_at && x.sla.first_breached) ? "danger" : undefined} />
-        <Kpi label="Kritik" value={open.filter((x) => x.priority === "critical").length} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Açık bilet" icon={<LifeBuoy aria-hidden="true" />} value={open.length} />
+        <Kpi label="İlk yanıtı geciken" icon={<Timer aria-hidden="true" />} value={open.filter((x) => !x.first_response_at && x.sla.first_breached).length} tone={open.some((x) => !x.first_response_at && x.sla.first_breached) ? "danger" : "ok"} />
+        <Kpi label="Kritik" icon={<Siren aria-hidden="true" />} value={open.filter((x) => x.priority === "critical").length} tone={open.some((x) => x.priority === "critical") ? "warn" : undefined} />
+        <Kpi label="Destek oturumu" icon={<ShieldCheck aria-hidden="true" />} value={(sessions.data ?? []).filter((s) => s.status === "active").length}
+          tone={(sessions.data ?? []).some((s) => s.status === "active") ? "danger" : undefined}
+          note={`aktif · ${(sessions.data ?? []).filter((s) => s.status === "pending").length} onay bekliyor`} />
       </div>
-      <div className="field" style={{ maxWidth: "16rem" }}><label className="field__label" htmlFor="pt-st">Durum</label><select id="pt-st" className="field__input" value={st} onChange={(e) => setSt(e.target.value)}><option value="">Tümü</option>{Object.entries(T_ST).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select></div>
-      {t.isPending ? <Loading /> : t.isError ? <ErrorState error={t.error} /> : t.data.length === 0 ? <Empty title="Bilet yok" /> : t.data.map((x) => <PTicket key={x.id} t={x} />)}
-      <div className="section-title">Destek oturumu</div>
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><LifeBuoy aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Biletler</div>
+            {t.data && <div className="card__meta">{t.data.length} bilet</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="pt-st">Durum</label><select id="pt-st" className="field__input" value={st} onChange={(e) => setSt(e.target.value)}><option value="">Tümü</option>{Object.entries(T_ST).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select></div>
+          </div>
+        </div>
+        <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+          {t.isPending ? <Loading /> : t.isError ? <ErrorState error={t.error} /> : t.data.length === 0 ? <Empty title="Bilet yok" icon={<LifeBuoy aria-hidden="true" />} /> : t.data.map((x) => <PTicket key={x.id} t={x} />)}
+        </div>
+      </div>
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); req.mutate(); }}>
+        <div className="card__head"><span className="card__icon card__icon--warn"><ShieldCheck aria-hidden="true" /></span><span className="card__title">Destek oturumu talebi</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={req.error} />
           <div className="grid grid--kpi">
@@ -47,7 +64,17 @@ export function PlatformSupportPage() {
         </div>
         <div className="card__foot"><SubmitButton busy={req.isPending}>Onaya gönder</SubmitButton></div>
       </form>
-      {(sessions.data ?? []).map((s) => <div key={s.id} className="small"><Badge tone={S_ST[s.status]![1]}>{S_ST[s.status]![0]}</Badge> {s.site_name} · {s.hours} saat · {s.reason} · {formatDateTime(s.requested_at)}{s.ends_at && ` · bitiş ${formatDateTime(s.ends_at)}`}{s.decided_by && ` · ${s.decided_by}`}</div>)}
+      {(sessions.data ?? []).length > 0 && (
+        <ul className="session-list" aria-label="Destek oturumları">
+          {(sessions.data ?? []).map((s) => (
+            <li key={s.id}>
+              <Badge tone={S_ST[s.status]![1]}>{S_ST[s.status]![0]}</Badge>
+              <span className="strong">{s.site_name}</span>
+              <span className="session-list__meta">{s.hours} saat · {s.reason} · {formatDateTime(s.requested_at)}{s.ends_at && ` · bitiş ${formatDateTime(s.ends_at)}`}{s.decided_by && ` · ${s.decided_by}`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -96,9 +123,24 @@ export function KnowledgeAdminPage() {
   return (
     <div className="stack">
       <PageHead title="Bilgi bankası" subtitle="Makaleler ilgili ekranlarda bağlamsal yardım olarak görünür. Faydasız bulunan makaleler güncelleme listesine düşer." />
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (() => {
+        const yes = q.data.reduce((a, x) => a + x.helpful, 0);
+        const no = q.data.reduce((a, x) => a + x.not_helpful, 0);
+        const staff = q.data.filter((a) => a.audience === "staff").length;
+        return (
+          <div className="grid grid--kpi rise">
+            <Kpi label="Makale" tone="accent" icon={<BookOpen aria-hidden="true" />} value={q.data.length} note={`${staff} personel · ${q.data.length - staff} sakin`} />
+            <Kpi label="Faydalı bulundu" tone="ok" icon={<ThumbsUp aria-hidden="true" />} value={yes} note={`${no} kez faydasız`} />
+            <Kpi label="Memnuniyet" icon={<Smile aria-hidden="true" />} value={yes + no > 0 ? `%${Math.round((yes / (yes + no)) * 100)}` : "—"} note={yes + no > 0 ? `${yes + no} geri bildirim` : "geri bildirim yok"} />
+            <Kpi label="Güncellenmeli" tone={low.length > 0 ? "warn" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={low.length} note="faydasız oyu faydalıdan fazla" />
+          </div>
+        );
+      })()}
       {low.length > 0 && <div className="small"><Badge tone="warn">Güncellenmeli</Badge> {low.map((a) => a.title).join(", ")}</div>}
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate(); }}>
-        <div className="card__head"><span className="card__title">{edit ? `Düzenle: ${edit.title}` : "Yeni makale"}</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><BookOpen aria-hidden="true" /></span><span className="card__title">{edit ? `Düzenle: ${edit.title}` : "Yeni makale"}</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={m.error} />
           <div className="grid grid--2">

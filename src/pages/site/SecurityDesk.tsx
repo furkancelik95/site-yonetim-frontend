@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { BookOpen, Car, CheckCircle2, KeyRound, LogIn, LogOut, PackageX, Route, ShieldAlert, UserRoundPlus } from "lucide-react";
+import { BookOpen, CalendarClock, Car, CheckCircle2, KeyRound, LogIn, LogOut, PackageX, Route, ShieldAlert, UserRoundPlus } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
@@ -64,9 +64,9 @@ function InviteCheckIn() {
         <Field label="Davet kodu" hint="Ziyaretçinin gösterdiği 6 haneli kod" error={fieldError(m.error, "code")}>{(p) => <input {...p} className="field__input mono" style={{ fontSize: "1.25rem", letterSpacing: ".2em" }} inputMode="numeric" autoComplete="off" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />}</Field>
         <div><SubmitButton busy={m.isPending} disabled={code.length !== 6}><LogIn aria-hidden="true" /> İçeri al</SubmitButton></div>
       </form>
-      <div className="card__body">
+      <div className={exp.data && exp.data.length > 0 ? "card__body card__body--flush" : "card__body"}>
         {exp.isPending ? <Loading /> : !exp.data || exp.data.length === 0 ? <p className="small muted mb-0">Bugün beklenen davetli yok.</p> : (
-          <ul className="stack" style={{ gap: "var(--s-2)", listStyle: "none", margin: 0, padding: 0 }}>{exp.data.map((x) => <li key={x.id} className="small"><span className="strong">{x.visitor_name}</span> · {x.unit_name} · {inviteType(x.type)}{x.time_from && ` ${x.time_from}–${x.time_to}`}{x.plate && <> · <span className="mono">{x.plate}</span></>}</li>)}</ul>
+          <ul className="txn txn--compact">{exp.data.map((x) => <li key={x.id}><span className="txn__icon" aria-hidden="true"><UserRoundPlus /></span><div className="txn__main"><div className="txn__title">{x.visitor_name}</div><div className="txn__sub">{x.unit_name} · {inviteType(x.type)}{x.time_from && ` · ${x.time_from}–${x.time_to}`}{x.plate && <> · <span className="mono">{x.plate}</span></>}</div></div></li>)}</ul>
         )}
       </div>
     </div>
@@ -180,9 +180,9 @@ function LongWaiting() {
   return (
     <div className="card">
       <div className="card__head"><span className="card__icon card__icon--warn"><PackageX aria-hidden="true" /></span><span className="card__title">Uzun bekleyen kargolar</span><span className="card__meta ml-auto">{q.data ? `${q.data.days} günden eski` : ""}</span></div>
-      <div className="card__body">
+      <div className={q.data && q.data.items.length > 0 ? "card__body card__body--flush" : "card__body"}>
         {q.isPending ? <Loading /> : !q.data || q.data.items.length === 0 ? <p className="small muted mb-0">Uzun bekleyen kargo yok.</p> : (
-          <ul className="stack" style={{ gap: "var(--s-2)", listStyle: "none", margin: 0, padding: 0 }}>{q.data.items.map((p) => <li key={p.id} className="small"><span className="strong">{p.unit_name}</span> · {p.carrier ?? "Kargo"} · <Badge tone="warn">{p.waiting_days} gün</Badge>{p.delegates.length > 0 && <div className="xs muted">Teslim yetkilisi: {p.delegates.join(", ")}</div>}</li>)}</ul>
+          <ul className="txn txn--compact">{q.data.items.map((p) => <li key={p.id}><span className="txn__icon txn__icon--warn" aria-hidden="true"><PackageX /></span><div className="txn__main"><div className="txn__title">{p.unit_name}</div><div className="txn__sub">{p.carrier ?? "Kargo"}{p.delegates.length > 0 && ` · teslim yetkilisi: ${p.delegates.join(", ")}`}</div></div><span className="txn__badge"><Badge tone="warn">{p.waiting_days} gün</Badge></span></li>)}</ul>
         )}
       </div>
     </div>
@@ -257,7 +257,7 @@ export function PatrolRunner() {
         )}
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Bugünkü turlar</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><CalendarClock aria-hidden="true" /></span><span className="card__title">Bugünkü turlar</span>{sched.data && <span className="card__meta ml-auto">{sched.data.filter((s) => s.status === "done").length} / {sched.data.length} tamam</span>}</div>
         <div className="card__body">
           {!sched.data || sched.data.length === 0 ? <p className="small muted mb-0">Planlı tur yok.</p> : (
             <ul className="stack" style={{ gap: "var(--s-2)", listStyle: "none", margin: 0, padding: 0 }}>{sched.data.map((s) => <li key={`${s.plan_id}-${s.slot}`} className="row row--between small"><span><span className="mono">{s.slot}</span> · {s.plan_name}</span><Badge tone={patrolSlotTone(s.status)}>{patrolSlotStatus(s.status)}</Badge></li>)}</ul>

@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight, Copy, Pencil, Plus, Send, X } from "lucide-react";
+import { AlertTriangle, BarChart3, CalendarClock, CalendarOff, ChevronLeft, ChevronRight, Copy, Pencil, Plus, Send, Users, X } from "lucide-react";
+import { BarChart } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { conflictKind, leaveType } from "../../lib/labels";
@@ -30,10 +31,47 @@ export function ShiftPlanPage() {
   return (
     <div className="stack">
       <PageHead title="Vardiya planı" subtitle="Saha ekibinin haftalık vardiyaları. Puantaj bu plandan üretilir; izinler planda görünür." />
-      <div className="row" role="tablist" aria-label="Vardiya" style={{ gap: "var(--s-2)" }}>
-        {[["plan", "Haftalık plan"], ["sablon", "Vardiya şablonları"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
-      </div>
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (
+        <WeekKpis p={q.data} week={s.hafta} />
+      )}
+      <Segmented label="Vardiya" value={s.sekme} onChange={(k) => set({ sekme: k })} options={[{ value: "plan", label: "Haftalık plan" }, { value: "sablon", label: "Vardiya şablonları" }]} />
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : s.sekme === "sablon" ? <Templates list={q.data.templates} manage={manage} /> : <WeekPlan p={q.data} week={s.hafta} setWeek={(w) => set({ hafta: w })} manage={manage} />}
+    </div>
+  );
+}
+
+/** Bant altı göstergeler: seçili haftanın planından (personel, atama, izinli, çakışma). Yeni hesap yok, yalnız sayım. */
+function WeekKpis({ p, week }: { p: Plan; week: string }) {
+  const onLeave = new Set(p.leaves.map((l) => l.staff_id)).size;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Personel" icon={<Users aria-hidden="true" />} value={p.staff.length} note={`${short(week)} – ${short(plus(week, 6))} haftası`} />
+      <Kpi label="Vardiya ataması" tone="accent" icon={<CalendarClock aria-hidden="true" />} value={p.assignments.length}
+        delta={p.published ? { tone: "ok", label: "yayında" } : { tone: "muted", label: "taslak" }} />
+      <Kpi label="İzinli personel" icon={<CalendarOff aria-hidden="true" />} value={onLeave} note="bu hafta onaylı izni olan" />
+      <Kpi label="Çakışma" tone={p.conflicts.length > 0 ? "danger" : "ok"} icon={<AlertTriangle aria-hidden="true" />} value={p.conflicts.length} note={p.conflicts.length > 0 ? "kırmızı hücrelere bakın" : "çakışma yok"} />
+    </div>
+  );
+}
+
+/** Günlere göre atama sayısı: haftanın yükü bir bakışta. */
+function DayLoad({ p, week }: { p: Plan; week: string }) {
+  const days = Array.from({ length: 7 }, (_, i) => plus(week, i));
+  const today = iso(new Date());
+  const data = days.map((d, i) => ({ label: DAYS[i]!, value: p.assignments.filter((a) => a.date === d).length, sub: short(d) }));
+  const hi = days.indexOf(today);
+  return (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span>
+        <span className="card__title">Günlere göre vardiya</span>
+        <span className="card__meta ml-auto">atama sayısı</span>
+      </div>
+      <div className="card__body">
+        <BarChart compact label="Günlere göre vardiya ataması" data={data} format={(v) => `${Math.round(v)}`} highlight={hi >= 0 ? hi : undefined} />
+      </div>
     </div>
   );
 }
@@ -74,7 +112,7 @@ function WeekPlan({ p, week, setWeek, manage }: { p: Plan; week: string; setWeek
           <thead><tr><th scope="col">Personel</th>{days.map((d, i) => <th key={d} scope="col">{DAYS[i]}<div className="cell-sub">{short(d)}</div></th>)}</tr></thead>
           <tbody>{p.staff.map((st) => (
             <tr key={st.id}>
-              <th scope="row"><div className="cell-main">{st.full_name}</div><div className="cell-sub">{st.position}</div></th>
+              <th scope="row"><div className="cell-person"><Avatar name={st.full_name} size="sm" soft /><div><div className="cell-main">{st.full_name}</div><div className="cell-sub">{st.position}</div></div></div></th>
               {days.map((d) => {
                 const as = p.assignments.filter((a) => a.staff_id === st.id && a.date === d);
                 const lv = onLeave(st.id, d);
@@ -101,6 +139,7 @@ function WeekPlan({ p, week, setWeek, manage }: { p: Plan; week: string; setWeek
           ))}</tbody>
         </table></div></div></div>
       )}
+      {p.assignments.length > 0 && <DayLoad p={p} week={week} />}
     </>
   );
 }

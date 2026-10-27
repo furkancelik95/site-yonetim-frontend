@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import Decimal from "decimal.js";
-import { Plus, Trash2, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ListChecks, Plus, Settings2, Trash2, Users, Wallet } from "lucide-react";
 import { api, ApiError, newIdempotencyKey } from "../../api/client";
 import { useSiteGet } from "../../api/hooks";
 import type { CashAccounts, Schemas, Written } from "../../api/types";
 import { AccountPicker, type PickedAccount } from "../../components/AccountPicker";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, PageHead } from "../../components/ui";
-import { formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
+import { Alert, Badge, Kpi, PageHead } from "../../components/ui";
+import { formatMoney, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { paymentMethod } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
@@ -93,6 +93,7 @@ export function BulkPaymentPage() {
   }
 
   const errors = rows.filter((r) => r.state === "error").length;
+  const saved = rows.filter((r) => r.state === "saved").length;
 
   return (
     <div className="stack">
@@ -102,8 +103,16 @@ export function BulkPaymentPage() {
         actions={<Link className="btn" to={`/s/${site.slug}/tahsilat`}>Tahsilat listesi</Link>}
       />
 
+      {/* Formun canlı özeti: satırlar doldukça ve kaydedildikçe değişir */}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Kaydedilecek" tone="accent" icon={<ListChecks aria-hidden="true" />} value={filled.length} note={`${rows.length} satırdan`} />
+        <Kpi label="Toplam tutar" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(total.toFixed(2))} note={formatMoney(total.toFixed(2))} />
+        <Kpi label="Kaydedilen" tone={saved > 0 ? "ok" : undefined} icon={<CheckCircle2 aria-hidden="true" />} value={saved} note="bu oturumda" />
+        <Kpi label="Hatalı satır" tone={errors > 0 ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={errors} note={errors > 0 ? "düzeltip yeniden kaydedin" : "sorun yok"} />
+      </div>
+
       <div className="card">
-        <div className="card__head"><span className="card__title">Ortak bilgiler</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Settings2 aria-hidden="true" /></span><span className="card__title">Ortak bilgiler</span></div>
         <div className="card__body">
           <div className="grid grid--kpi">
             <div className="field">
@@ -128,13 +137,14 @@ export function BulkPaymentPage() {
 
       <div className="card">
         <div className="card__head">
+          <span className="card__icon card__icon--ok"><Wallet aria-hidden="true" /></span>
           <span className="card__title">Tahsilatlar</span>
           <button className="btn btn--sm ml-auto" type="button" disabled={loadingDebtors || running} onClick={addDebtors}>
             <Users aria-hidden="true" /> Borçluları ekle
           </button>
         </div>
         <div className="card__body card__body--flush">
-          <div className="table-wrap" style={{ overflow: "visible" }}>
+          <div className="table-wrap fin-bulk" style={{ overflow: "visible" }}>
             <table className="data">
               <caption className="visually-hidden">Toplu tahsilat satırları</caption>
               <thead>

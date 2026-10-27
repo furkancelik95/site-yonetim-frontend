@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { DoorOpen, Pencil, Plus } from "lucide-react";
+import { Archive, DoorOpen, Package, Pencil, Plus, UserRoundPlus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { gateKind, parcelMethod, unannouncedMethod } from "../../lib/labels";
 
 /** Servis isteği 40'taki şekiller. */
@@ -14,12 +14,22 @@ export function SecuritySettingsPage() {
   const gates = useSiteGet<Gate[]>("/gates");
   const blocks = useSiteGet<Page<Schemas["BlockOut"]>>("/blocks", { page_size: 200 });
   const [editing, setEditing] = useState<Gate | "new" | null>(null);
+  const st = useSiteGet<Settings>("/settings/security");
+  const g = gates.data ?? [];
   return (
     <div className="stack">
       <PageHead title="Güvenlik ayarları" subtitle="Kapılar ve kapıdaki süreçlerin yöntemleri. Değişiklik kapı ekranlarına hemen yansır." actions={<button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Kapı ekle</button>} />
+      {gates.data && st.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Etkin kapı" icon={<DoorOpen aria-hidden="true" />} value={g.filter((x) => x.is_active).length} note={`${g.length} tanımlı kapı`} />
+          <Kpi label="Habersiz ziyaretçi" icon={<UserRoundPlus aria-hidden="true" />} value={unannouncedMethod(st.data.unannounced_method)} small note={st.data.unannounced_method === "approval" ? `${st.data.approval_timeout_seconds} sn bekleme` : `${Object.keys(st.data.gate_methods).length} kapı istisnası`} />
+          <Kpi label="Kargo teslimi" icon={<Package aria-hidden="true" />} value={parcelMethod(st.data.parcel_method)} small note={`${st.data.parcel_long_wait_days} günde uzun bekleyen`} />
+          <Kpi label="Veri saklama" tone={st.data.retention_months > 24 ? "danger" : undefined} icon={<Archive aria-hidden="true" />} value={`${st.data.retention_months} ay`} small note="sonra kayıt anonimleşir" />
+        </div>
+      ) : !gates.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {editing && <GateForm g={editing === "new" ? null : editing} blocks={blocks.data?.items ?? []} onDone={() => setEditing(null)} />}
       <div className="card">
-        <div className="card__head"><span className="card__icon card__icon--accent"><DoorOpen aria-hidden="true" /></span><span className="card__title">Kapılar</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><DoorOpen aria-hidden="true" /></span><span className="card__title">Kapılar</span>{gates.data && <span className="card__meta ml-auto">{g.length} kapı</span>}</div>
         <div className="card__body card__body--flush">
           {gates.isPending ? <Loading /> : gates.isError ? <div className="card__body"><ErrorState error={gates.error} /></div> : gates.data.length === 0 ? <Empty title="Kapı tanımlı değil">Tek girişli sitede de bir kapı tanımlamak, kayıtların hangi kapıdan yapıldığını gösterir.</Empty> : (
             <div className="table-wrap"><table className="data">
@@ -48,7 +58,7 @@ function GateForm({ g, blocks, onDone }: { g: Gate | null; blocks: Schemas["Bloc
   const m = useSiteMutation<Record<string, unknown>, Gate>(g ? "PATCH" : "POST", g ? `/gates/${g.id}` : "/gates", { onSuccess: onDone });
   return (
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate(f); }}>
-      <div className="card__head"><span className="card__title">{g ? `${g.name} — düzenle` : "Kapı ekle"}</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><DoorOpen aria-hidden="true" /></span><span className="card__title">{g ? `${g.name} — düzenle` : "Kapı ekle"}</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">
@@ -79,7 +89,7 @@ function SettingsForm({ gates }: { gates: Gate[] }) {
     <form className="stack" noValidate onSubmit={submit}>
       <FormError error={m.error} />
       <div className="card">
-        <div className="card__head"><span className="card__title">Habersiz ziyaretçi</span></div>
+        <div className="card__head"><span className="card__icon card__icon--info"><UserRoundPlus aria-hidden="true" /></span><span className="card__title">Habersiz ziyaretçi</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <label className="check check--rich"><input type="radio" name="um" checked={s.unannounced_method === "info"} onChange={() => setS({ ...s, unannounced_method: "info" })} /><span><span className="strong">{unannouncedMethod("info")}</span><br /><span className="small muted">Görevli kaydeder, ziyaretçi girer; sakine bilgi gider.</span></span></label>
           <label className="check check--rich"><input type="radio" name="um" checked={s.unannounced_method === "approval"} onChange={() => setS({ ...s, unannounced_method: "approval" })} /><span><span className="strong">{unannouncedMethod("approval")}</span><br /><span className="small muted">Sakine onay/ret isteği gider; süre dolarsa görevli diafon/telefonla ulaşır ve gerekçeli karar verir.</span></span></label>
@@ -93,7 +103,7 @@ function SettingsForm({ gates }: { gates: Gate[] }) {
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Kargo ve ziyaretçi verisi</span></div>
+        <div className="card__head"><span className="card__icon card__icon--warn"><Package aria-hidden="true" /></span><span className="card__title">Kargo ve ziyaretçi verisi</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <div className="grid grid--kpi">
             <Field label="Kargo teslim doğrulaması">{(p) => <select {...p} className="field__input" value={s.parcel_method} onChange={(e) => setS({ ...s, parcel_method: e.target.value as Settings["parcel_method"] })}>{["both", "code", "qr"].map((k) => <option key={k} value={k}>{parcelMethod(k)}</option>)}</select>}</Field>

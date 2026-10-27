@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BookOpen, Gavel, Printer } from "lucide-react";
+import { BookOpen, CalendarDays, Gavel, PieChart, Printer } from "lucide-react";
+import { Donut } from "../../components/charts";
 import { Link, useParams } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
@@ -27,7 +28,7 @@ const FORMAT: Record<string, string> = { physical: "Fiziki toplantı, salonda oy
 const pct = (v: number, t: number) => `%${(t ? (v / t) * 100 : 0).toLocaleString("tr-TR", { maximumFractionDigits: 2 })}`;
 const VOTE: Record<string, string> = { for: "Kabul", against: "Ret", abstain: "Çekimser" };
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row print-hide" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <div className="tabs print-hide" role="tablist" aria-label={label}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className="tabs__tab" onClick={() => set(k)}>{l}</button>)}</div>
 );
 
 /** Genel kurul (TOP-01, TOP-03 salonda oylama, TOP-04): hazırlık ve çağrı, hazirun ve nisap, kişi + arsa payı oylaması, tutanak. */
@@ -258,7 +259,30 @@ export function DecisionBookPage() {
   return (
     <div className="stack">
       <PageHead title="Karar defteri" subtitle="Genel kurulda kesinleşen kararlar sıra numarasıyla." actions={<button className="btn print-hide" type="button" onClick={() => window.print()}><Printer aria-hidden="true" /> Yazdır</button>} />
-      <div className="card doc-print"><div className="card__body card__body--flush">
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi print-hide">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (() => {
+        const last = [...q.data].sort((a, b) => b.date.localeCompare(a.date))[0];
+        const types = [...new Set(q.data.map((e) => e.type_name))];
+        return (
+          <>
+            <div className="grid grid--kpi rise print-hide">
+              <Kpi label="Kesinleşen karar" tone="accent" icon={<Gavel aria-hidden="true" />} value={q.data.length} note="defterde sıra numarasıyla" />
+              <Kpi label="Toplantı" icon={<CalendarDays aria-hidden="true" />} value={new Set(q.data.map((e) => e.meeting_id)).size} note="kararın alındığı genel kurul" />
+              <Kpi label="Son karar" icon={<BookOpen aria-hidden="true" />} value={last ? formatDate(last.date) : "—"} small note={last ? `No ${last.no} · ${last.item_title}` : "henüz karar yok"} />
+            </div>
+            {types.length > 1 && (
+              <div className="card print-hide">
+                <div className="card__head"><span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span><span className="card__title">Karar türleri</span></div>
+                <div className="card__body"><Donut label="Karar türleri" centerSub="karar" segments={types.map((t) => ({ label: t, value: q.data.filter((e) => e.type_name === t).length }))} /></div>
+              </div>
+            )}
+          </>
+        );
+      })()}
+      <div className="card doc-print">
+        <div className="card__head print-hide"><span className="card__icon card__icon--accent"><BookOpen aria-hidden="true" /></span><span className="card__title">Kararlar</span>{q.data && <span className="card__meta ml-auto">{q.data.length} karar</span>}</div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Karar yok" icon={<BookOpen aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Karar defteri</caption>
             <thead><tr><th scope="col" className="right">No</th><th scope="col">Tarih</th><th scope="col">Toplantı / madde</th><th scope="col">Karar</th></tr></thead>

@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { GitMerge, Pencil, Users } from "lucide-react";
+import { Link } from "react-router";
+import { GitMerge, Pencil, UserPlus, Users, UserX } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { CustomValuesCard } from "../../components/CustomValuesCard";
 import { MaskedContact } from "../../components/MaskedContact";
-import { Alert, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
+import type { StructureSummary } from "./YapiPage";
 
 type Person = Schemas["PersonOut"];
 /** Servis isteği 21'deki şekil. */
@@ -14,7 +16,7 @@ interface DuplicateGroup { key: string; kind: "phone" | "email"; people: Person[
 
 /** Kişiler (YAP-04): arama, düzenleme, mükerrer kayıt önerisi ve birleştirme. İletişim bilgisi maskeli. */
 export function PeoplePage() {
-  const { can } = useSite();
+  const { site, can } = useSite();
   const [s, set] = useUrlState({ q: "", page: "1" });
   const [search, setSearch] = useState(s.q);
   const q = useDebounced(search, 300);
@@ -22,13 +24,44 @@ export function PeoplePage() {
   const list = useSiteGet<Page<Person>>("/people", { q: s.q || undefined, page: s.page, page_size: 50 });
   const [editing, setEditing] = useState<Person | null>(null);
   const manage = can(P.peopleManage);
+  // Özet göstergeler: süzgeçsiz kişi sayısı, mükerrer grup, maliksiz bölüm, bekleyen kayıt başvurusu
+  const all = useSiteGet<Page<Person>>("/people", { page: 1, page_size: 1 });
+  const dups = useSiteGet<DuplicateGroup[]>("/people/duplicates", undefined, { enabled: manage });
+  const sum = useSiteGet<StructureSummary>("/structure/summary", undefined, { enabled: can(P.unitsManage) });
+  const regs = useSiteGet<Page<unknown>>("/registrations", { status: "pending", page_size: 1 }, { enabled: manage });
+  // Kartlar hepsi birden gelir: geç gelen özet sonradan eklenip diğerlerini kaydırmasın
+  const settled = (on: boolean, x: { data?: unknown; isError: boolean }) => !on || x.data !== undefined || x.isError;
+  const ready = !!all.data && settled(manage, dups) && settled(can(P.unitsManage), sum) && settled(manage, regs);
   return (
     <div className="stack">
       <PageHead title="Kişiler" subtitle="Malik, kiracı ve oturanlar. Telefon ve e-posta maskeli gösterilir; açmak denetim kaydına yazılır." />
+      {!all.isError && (
+        <div className={`grid grid--kpi${ready ? " rise" : ""}`}>
+          {ready && all.data ? (
+            <>
+              <Kpi label="Kayıtlı kişi" icon={<Users aria-hidden="true" />} value={all.data.total} note="malik, kiracı ve oturan" />
+              {manage && dups.data && <Kpi label="Mükerrer olabilir" icon={<GitMerge aria-hidden="true" />} tone={dups.data.length ? "warn" : "ok"} value={dups.data.length} note={dups.data.length ? "aynı telefon / e-posta grubu" : "çakışma yok"} />}
+              {sum.data && <Kpi label="Maliksiz bölüm" icon={<UserX aria-hidden="true" />} tone={sum.data.units_without_owner.length ? "danger" : "ok"} value={sum.data.units_without_owner.length} note={`${sum.data.active_unit_count} etkin bölümden`} />}
+              {manage && regs.data && <Kpi label="Bekleyen başvuru" icon={<UserPlus aria-hidden="true" />} tone={regs.data.total ? "warn" : undefined} value={regs.data.total} note={regs.data.total ? <Link to={`/s/${site.slug}/kayit-basvurulari`}>Sakin kaydına git</Link> : "kuyruk boş"} />}
+            </>
+          ) : (
+            [0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)
+          )}
+        </div>
+      )}
       {manage && <Duplicates />}
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="p-q">Ara</label><input id="p-q" className="field__input" type="search" placeholder="Ad, soyad, telefon, e-posta" value={search} onChange={(e) => setSearch(e.target.value)} /></div></div>
       {editing && <PersonForm p={editing} onDone={() => setEditing(null)} />}
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Users aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Kişi listesi</div>
+            {list.data && <div className="card__meta">{list.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="p-q">Ara</label><input id="p-q" className="field__input" type="search" placeholder="Ad, soyad, telefon, e-posta" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.items.length === 0 ? <Empty title="Kişi bulunamadı" icon={<Users aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data">
@@ -36,7 +69,7 @@ export function PeoplePage() {
               <thead><tr><th scope="col">Kişi</th><th scope="col">İletişim</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
               <tbody>{list.data.items.map((p) => (
                 <tr key={p.id}>
-                  <td className="cell-main">{p.full_name}</td>
+                  <td><div className="cell-person"><Avatar name={p.full_name} size="sm" soft /><span className="cell-main">{p.full_name}</span></div></td>
                   <td><MaskedContact personId={p.id} phone={p.phone} email={p.email} /></td>
                   {manage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${p.full_name} düzenle`} onClick={() => setEditing(p)}><Pencil aria-hidden="true" /></button></td>}
                 </tr>
@@ -89,7 +122,7 @@ function Duplicates() {
         {q.data.map((g) => {
           const k = keep[g.key] ?? g.people[0]!.id;
           return (
-            <div key={g.key} className="stack" style={{ gap: "var(--s-2)", border: "1px solid var(--line)", borderRadius: "var(--r-md)", padding: "var(--s-3)" }}>
+            <div key={g.key} className="stack subcard" style={{ gap: "var(--s-2)" }}>
               <div className="small muted">Ortak {g.kind === "phone" ? "telefon" : "e-posta"}: <span className="mono">{g.key}</span></div>
               <fieldset style={{ border: 0, padding: 0, margin: 0 }}><legend className="visually-hidden">Hangi kayıt kalsın</legend>
                 {g.people.map((p) => <label key={p.id} className="check" style={{ minHeight: 36 }}><input type="radio" name={`keep-${g.key}`} checked={k === p.id} onChange={() => setKeep((x) => ({ ...x, [g.key]: p.id }))} /><span>{p.full_name} <span className="muted">· {[p.phone, p.email].filter(Boolean).join(" · ")}</span>{k === p.id && <span className="muted"> (kalacak)</span>}</span></label>)}

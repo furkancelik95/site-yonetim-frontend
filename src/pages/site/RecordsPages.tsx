@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Download, FileText, Info, Plus, Upload } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, BarChart3, BookOpen, CheckCircle2, Clock, Download, File, FileSignature, FileText, Flame, Inbox, Info, Landmark, Layers, ListChecks, Package, Plus, Umbrella, Upload } from "lucide-react";
 import { Link } from "react-router";
 import { api, download } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { requestCategory } from "../../lib/labels";
@@ -26,8 +26,13 @@ export const PRIV_KIND: Record<string, string> = { access: "Verilerime erişim",
 const OUTCOME: Record<string, string> = { fulfilled: "Yerine getirildi", partial: "Kısmen", rejected: "Reddedildi" };
 const kb = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toLocaleString("tr-TR", { maximumFractionDigits: 1 })} MB`);
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
 );
+/** Belge türü → ikon (dekoratif; tür adı satırda yazılır) */
+function KindIcon({ kind }: { kind: string }) {
+  const I = kind === "plan" ? BookOpen : kind === "rules" ? ListChecks : kind === "insurance" ? Umbrella : kind === "fire_report" ? Flame : kind === "elevator" ? ArrowUpDown : kind === "contract" ? FileSignature : kind === "minutes" ? FileText : kind === "financial" ? Landmark : File;
+  return <I />;
+}
 
 export function saveJson(fileName: string, data: unknown) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
@@ -44,17 +49,30 @@ export function DocumentsPage() {
   const expiring = useSiteGet<Page<DocRow>>("/documents", { expiring: "true", page_size: 50 });
   const [adding, setAdding] = useState(false);
   const warn = expiring.data?.items ?? [];
+  const expired = warn.filter((d) => d.warning === "expired").length;
   return (
     <div className="stack">
       <PageHead title="Belgeler" subtitle="Yönetim planı, poliçe, yangın raporu, asansör etiketi, sözleşme ve tutanaklar tek arşivde; aynı adla yüklenen dosya yeni sürüm olur." actions={can(P.documentsManage) && <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Upload aria-hidden="true" /> Belge yükle</button>} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Belge" icon={<FileText aria-hidden="true" />} value={q.data ? q.data.total : "—"} note={s.q || s.tur || s.suresi ? "süzgece uyan" : "arşivdeki toplam"} />
+        <Kpi label="Geçerliliği yaklaşan" tone={warn.length - expired > 0 ? "warn" : undefined} icon={<Clock aria-hidden="true" />} value={expiring.data ? warn.length - expired : "—"} note="60 / 30 gün kala uyarı" />
+        <Kpi label="Süresi dolan" tone={expired > 0 ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={expiring.data ? expired : "—"} note="yenilenmesi gereken belge" />
+      </div>
       {adding && <DocForm onDone={() => setAdding(false)} />}
       {warn.length > 0 && <Alert tone="warn" title="Geçerliliği biten / yaklaşan belge">{warn.map((d) => `${d.title} (${d.warning === "expired" ? "süresi doldu" : `${d.days_left} gün`})`).join(", ")}</Alert>}
-      <div className="filters">
-        <div className="field"><label className="field__label" htmlFor="dc-q">Ara</label><input id="dc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value, sayfa: "" })} /></div>
-        <div className="field"><label className="field__label" htmlFor="dc-k">Tür</label><select id="dc-k" className="field__input" value={s.tur} onChange={(e) => set({ tur: e.target.value, sayfa: "" })}><option value="">Tümü</option>{Object.entries(DOC_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-        <label className="check" style={{ alignSelf: "flex-end" }}><input type="checkbox" checked={!!s.suresi} onChange={(e) => set({ suresi: e.target.checked ? "1" : "", sayfa: "" })} /><span>Yalnız süresi yaklaşan</span></label>
-      </div>
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><FileText aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Belge arşivi</div>
+            {q.data && <div className="card__meta">{q.data.total} belge</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="dc-q">Ara</label><input id="dc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value, sayfa: "" })} /></div>
+            <div className="field"><label className="field__label" htmlFor="dc-k">Tür</label><select id="dc-k" className="field__input" value={s.tur} onChange={(e) => set({ tur: e.target.value, sayfa: "" })}><option value="">Tümü</option>{Object.entries(DOC_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+            <label className="check" style={{ alignSelf: "flex-end", minHeight: 38 }}><input type="checkbox" checked={!!s.suresi} onChange={(e) => set({ suresi: e.target.checked ? "1" : "", sayfa: "" })} /><span>Yalnız süresi yaklaşan</span></label>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data"><caption className="visually-hidden">Belgeler</caption>
@@ -80,7 +98,7 @@ function DocRowView({ d, slug }: { d: DocRow; slug: string }) {
   return (
     <>
       <tr>
-        <td><div className="cell-main">{d.title}</div><div className="cell-sub">{d.kind_label} · {d.file_name} · {kb(d.size)}{d.retention_years != null && ` · saklama ${d.retention_years} yıl`}</div></td>
+        <td><div className="cell-person"><IconChip tone={d.warning === "expired" ? "danger" : d.warning ? "warn" : undefined}><KindIcon kind={d.kind} /></IconChip><div><div className="cell-main">{d.title}</div><div className="cell-sub">{d.kind_label} · {d.file_name} · {kb(d.size)}{d.retention_years != null && ` · saklama ${d.retention_years} yıl`}</div></div></div></td>
         <td className="small">{d.scope === "site" ? "Tüm site" : d.scope_name}<div><Badge tone={CONF[d.confidentiality]![1]}>{CONF[d.confidentiality]![0]}</Badge></div></td>
         <td className="small nowrap">{d.valid_until ? <>{formatDate(d.valid_until)}{d.warning && <div><Badge tone={d.warning === "expired" ? "danger" : "warn"}>{d.warning === "expired" ? "Süresi doldu" : `${d.days_left} gün kaldı`}</Badge></div>}</> : "—"}</td>
         <td className="small"><button className="btn btn--ghost btn--sm" type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>v{d.version}{d.versions.length > 1 ? ` · ${d.versions.length} sürüm` : ""}</button></td>
@@ -160,13 +178,22 @@ export function ReportCatalogPage() {
   return (
     <div className="stack">
       <PageHead title="Rapor kataloğu" subtitle="Yalnız yetkili olduğunuz raporlar görünür. Her metriğin nasıl hesaplandığı yanında yazar." />
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Rapor" tone="accent" icon={<BarChart3 aria-hidden="true" />} value={q.data.length} note="yetkinize açık" />
+          <Kpi label="Rapor grubu" icon={<Layers aria-hidden="true" />} value={new Set(q.data.map((r) => r.group)).size} note={[...new Set(q.data.map((r) => r.group))].slice(0, 3).join(", ")} />
+          <Kpi label="Tanımlı metrik" icon={<Info aria-hidden="true" />} value={q.data.reduce((a, r) => a + r.metrics.length, 0)} note="her birinin tek tanımı var" />
+        </div>
+      )}
       {s.rapor === "requests_sla" && <SlaReport onClose={() => set({ rapor: "" })} />}
-      <div className="field" style={{ maxWidth: "20rem" }}><label className="field__label" htmlFor="rc-q">Ara</label><input id="rc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value })} /></div>
+      <div className="filters" style={{ maxWidth: "24rem" }}><div className="field"><label className="field__label" htmlFor="rc-q">Ara</label><input id="rc-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value })} /></div></div>
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : groups.map((g) => (
         <div key={g} className="stack" style={{ gap: "var(--s-2)" }}>
           <div className="section-title">{g}</div>
           <div className="grid grid--2">{list.filter((r) => r.group === g).map((r) => (
-            <div key={r.key} className="card"><div className="card__head"><span className="card__title">{r.name}</span><Link className="btn btn--sm ml-auto" to={`/s/${site.slug}/${r.link}`}>Aç</Link></div>
+            <div key={r.key} className="card"><div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">{r.name}</span><Link className="btn btn--sm ml-auto" to={`/s/${site.slug}/${r.link}`}>Aç</Link></div>
               <div className="card__body stack" style={{ gap: 4 }}>{r.metrics.map((x) => <div key={x.name} className="small"><Info aria-hidden="true" style={{ width: 13, height: 13, verticalAlign: "-2px", color: "var(--fg-muted)" }} /> <strong>{x.name}:</strong> {x.definition}</div>)}</div>
             </div>
           ))}</div>
@@ -205,8 +232,29 @@ export function PrivacyPage() {
   return (
     <div className="stack">
       <PageHead title="KVKK" subtitle="İlgili kişi başvuruları 30 gün içinde yanıtlanır. Finansal kayıtlar yasal saklama süresince silinmez; gerekçesi yanıtta yazılır." />
+      <PrivacyKpis />
       {tabs([["basvuru", "Başvurular"], ["metin", "Aydınlatma metni"]], s.sekme, (k) => set({ sekme: k }), "KVKK")}
       {s.sekme === "metin" ? <Notices /> : <Requests />}
+    </div>
+  );
+}
+
+/** Bant altı göstergeler: başvuruların durumu ve 30 gün sayacı. Kaynak /privacy-requests (liste ile aynı sorgu). */
+function PrivacyKpis() {
+  const q = useSiteGet<PReq[]>("/privacy-requests");
+  const n = useSiteGet<Notice[]>("/privacy-notices");
+  if (q.isError) return null;
+  if (!q.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const open = q.data.filter((r) => r.status === "open");
+  const late = open.filter((r) => r.days_left < 0).length;
+  const near = open.filter((r) => r.days_left >= 0 && r.days_left <= 7).length;
+  const latest = n.data?.[0];
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Açık başvuru" tone={open.length > 0 ? "accent" : undefined} icon={<Inbox aria-hidden="true" />} value={open.length} note={`${q.data.length} başvurudan`} />
+      <Kpi label="Süresi yaklaşan" tone={near > 0 ? "warn" : undefined} icon={<Clock aria-hidden="true" />} value={near} note="7 gün ya da daha az kaldı" />
+      <Kpi label="Geciken" tone={late > 0 ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={late} note="30 günlük süre aşıldı" />
+      <Kpi label="Aydınlatma metni" icon={<FileText aria-hidden="true" />} value={latest ? `Sürüm ${latest.version}` : "Taslak"} small note={latest ? formatDate(latest.published_at) : "yayınlanmış sürüm yok"} />
     </div>
   );
 }
@@ -278,6 +326,16 @@ export function AuditPackagesPage() {
   return (
     <div className="stack">
       <PageHead title="Denetim kurulu paketi" subtitle="Dönem sonu finansal raporlar, bütçe–gerçekleşme, karar defteri özeti ve belgeler tek pakette; denetçi salt okunur inceler ve raporunu ekler." actions={can(P.chargePost) && <button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Paket hazırla</button>} />
+      {q.isError ? null : !q.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Paket" tone="accent" icon={<Package aria-hidden="true" />} value={q.data.length} note="hazırlanan denetim dosyası" />
+          <Kpi label="Denetim bekleyen" tone={q.data.some((p) => p.status !== "reviewed") ? "warn" : undefined} icon={<Clock aria-hidden="true" />} value={q.data.filter((p) => p.status !== "reviewed").length} note="denetçi raporu eklenmedi" />
+          <Kpi label="Denetlenen" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={q.data.filter((p) => p.status === "reviewed").length} note="raporu ekli" />
+          <Kpi label="Arşivdeki belge" icon={<FileText aria-hidden="true" />} value={docs.data ? docs.data.total : "—"} note="pakete eklenebilir" />
+        </div>
+      )}
       {adding && <PkgForm docs={docs.data?.items ?? []} onDone={() => setAdding(false)} />}
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Paket yok" /> : q.data.map((p) => <PkgCard key={p.id} p={p} docs={docs.data?.items ?? []} slug={site.slug} canReview={can(P.auditRead)} />)}
     </div>

@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeftRight, Copy, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeftRight, Building2, Car, Copy, Home, KeyRound, Package, Pencil, Percent, Plus, Trash2, User, UserCheck, UserPlus, Users, Wallet, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { CustomValuesCard } from "../../components/CustomValuesCard";
 import { MaskedContact } from "../../components/MaskedContact";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatArea, formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
+import { categoryIcon } from "../../lib/icons";
 import { formatPhone, isTrMobile, phoneDigits, phoneMask, toE164 } from "../../lib/input";
 import { accountKind, actorType, auditAction, householdPermission, householdStatus, packageStatus, partyRole, requestStatus, requestStatusTone, unitAttr, unitUsage, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
 import { M, P, useSite } from "../../site/SiteContext";
@@ -37,6 +38,8 @@ const WARN: Record<string, string> = {
 };
 const TABS = [["kisiler", "Kişiler"], ["finans", "Finans"], ["talepler", "Talepler"], ["araclar", "Araçlar"], ["guvenlik", "Güvenlik"], ["ozel", "Özel alanlar"], ["gecmis", "Geçmiş"]] as const;
 type Panel = "edit" | "transfer" | null;
+/** İlişki türü → ikon (dekoratif; metin yanında yazılı) */
+const ROLE_ICON: Record<string, typeof User> = { owner: KeyRound, tenant: Home, resident: User, proxy: UserCheck };
 
 /** Bölüm 360° (YAP-03): bir bölümle ilgili her şey tek kartta; kişisel veri maskeli, hızlı eylemler üstte. */
 export function UnitDetailPage() {
@@ -69,13 +72,14 @@ export function UnitDetailPage() {
           {manage && <button className="btn btn--primary" type="button" aria-expanded={panel === "transfer"} onClick={() => toggle("transfer")}><ArrowLeftRight aria-hidden="true" /> Satış / veraset</button>}
         </>}
       />
+      {ov.isPending && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)}</div>}
       {ov.data && (
-        <div className="grid grid--kpi">
-          <Kpi label="Bakiye" value={<Money value={ov.data.balance} tone="balance" />} note={Number(ov.data.balance) > 0.005 ? "Borç" : Number(ov.data.balance) < -0.005 ? "Alacak" : "Borç yok"} />
-          <Kpi label="Malik hissesi" value={`%${Number(ov.data.share_total).toLocaleString("tr-TR")}`} tone={shareOff ? "warn" : "ok"} note={shareOff ? "Toplam %100 olmalı" : "Tam"} />
-          <Kpi label="Araç" value={ov.data.vehicles} />
-          <Kpi label="Hane üyesi" value={ov.data.household} />
-          {security && <Kpi label="Bekleyen kargo" value={ov.data.packages_waiting} tone={ov.data.packages_waiting ? "accent" : undefined} />}
+        <div className="grid grid--kpi rise">
+          <Kpi label="Bakiye" icon={<Wallet aria-hidden="true" />} tone={Number(ov.data.balance) > 0.005 ? "danger" : "ok"} value={<Money value={ov.data.balance} tone="balance" />} note={Number(ov.data.balance) > 0.005 ? "Borç" : Number(ov.data.balance) < -0.005 ? "Alacak" : "Borç yok"} />
+          <Kpi label="Malik hissesi" icon={<Percent aria-hidden="true" />} value={`%${Number(ov.data.share_total).toLocaleString("tr-TR")}`} tone={shareOff ? "warn" : "ok"} note={shareOff ? "Toplam %100 olmalı" : "Tam"} />
+          <Kpi label="Araç" icon={<Car aria-hidden="true" />} value={ov.data.vehicles} note="kayıtlı plaka" />
+          <Kpi label="Hane üyesi" icon={<Users aria-hidden="true" />} value={ov.data.household} note="aile bireyi, yardımcı" />
+          {security && <Kpi label="Bekleyen kargo" icon={<Package aria-hidden="true" />} value={ov.data.packages_waiting} tone={ov.data.packages_waiting ? "accent" : undefined} note="güvenlikte" />}
         </div>
       )}
       {ov.data?.warnings.map((w) => <Alert key={w} tone="warn">{WARN[w] ?? w}</Alert>)}
@@ -83,18 +87,21 @@ export function UnitDetailPage() {
       {panel === "transfer" && <TransferForm u={u} onDone={() => setPanel(null)} />}
 
       <div className="card">
-        <div className="card__head"><span className="card__title">Bölüm bilgisi</span>{manage && <button className="btn btn--ghost btn--sm ml-auto" type="button" onClick={() => toggle("edit")}>Düzenle</button>}</div>
-        <div className="card__body grid grid--kpi">
-          <Kpi small label="Brüt alan" value={formatArea(u.gross_area)} />
-          <Kpi small label="Net alan" value={formatArea(u.net_area)} />
-          <Kpi small label="Arsa payı" value={u.land_share_numerator && u.land_share_denominator ? `${u.land_share_numerator} / ${u.land_share_denominator}` : "—"} />
-          <Kpi small label="Tip" value={u.unit_type?.name ?? "—"} />
-          {u.commercial_title && <Kpi small label="Ticari unvan" value={u.commercial_title} />}
+        <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Bölüm bilgisi</span>{manage && <button className="btn btn--ghost btn--sm ml-auto" type="button" onClick={() => toggle("edit")}>Düzenle</button>}</div>
+        <div className="card__body">
+          <dl className="facts">
+            <div><dt>Brüt alan</dt><dd>{formatArea(u.gross_area)}</dd></div>
+            <div><dt>Net alan</dt><dd>{formatArea(u.net_area)}</dd></div>
+            <div><dt>Arsa payı</dt><dd>{u.land_share_numerator && u.land_share_denominator ? `${u.land_share_numerator} / ${u.land_share_denominator}` : "—"}</dd></div>
+            <div><dt>Tip</dt><dd>{u.unit_type?.name ?? "—"}</dd></div>
+            <div><dt>Kullanım</dt><dd>{unitUsage(u.usage)}</dd></div>
+            {u.commercial_title && <div><dt>Ticari unvan</dt><dd>{u.commercial_title}</dd></div>}
+          </dl>
         </div>
       </div>
 
-      <div className="row" role="tablist" aria-label="Bölüm kartı" style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>
-        {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={sekme === k} className={`btn btn--sm${sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k })}>{l}</button>)}
+      <div className="tabs" role="tablist" aria-label="Bölüm kartı">
+        {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={sekme === k} onClick={() => set({ sekme: k })}>{l}</button>)}
       </div>
       {sekme === "kisiler" && <PeopleTab u={u} manage={manage} />}
       {sekme === "finans" && <FinanceTab u={u} />}
@@ -117,6 +124,7 @@ function PeopleTab({ u, manage }: { u: Unit; manage: boolean }) {
     <>
       <div className="card">
         <div className="card__head">
+          <span className="card__icon card__icon--accent"><Users aria-hidden="true" /></span>
           <span className="card__title">Malik ve oturanlar</span>
           {manage && <button className="btn btn--sm ml-auto" type="button" onClick={() => setAdding((v) => !v)} aria-expanded={adding}><UserPlus aria-hidden="true" /> Kişi ekle</button>}
         </div>
@@ -136,16 +144,19 @@ function PartyTable({ parties, unitId, canManage }: { parties: Party[]; unitId: 
     <div className="table-wrap"><table className="data">
       <caption className="visually-hidden">Bölümle ilişkili kişiler</caption>
       <thead><tr><th scope="col">Kişi</th><th scope="col">İlişki</th><th scope="col">İletişim</th><th scope="col">Başlangıç</th><th scope="col">Bitiş</th>{canManage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-      <tbody>{parties.map((p) => (
+      <tbody>{parties.map((p) => {
+        const RoleIcon = ROLE_ICON[p.role] ?? User;
+        return (
         <tr key={p.id}>
-          <td className="cell-main">{p.person.full_name}</td>
-          <td>{partyRole(p.role)}{p.role === "owner" && p.share_percent && p.share_percent !== "100.00" && <span className="small muted"> · %{p.share_percent}</span>}</td>
+          <td><div className="cell-person"><Avatar name={p.person.full_name} size="sm" soft /><span className="cell-main">{p.person.full_name}</span></div></td>
+          <td><div className="cell-chip"><IconChip><RoleIcon /></IconChip><span>{partyRole(p.role)}{p.role === "owner" && p.share_percent && p.share_percent !== "100.00" && <span className="small muted"> · %{p.share_percent}</span>}</span></div></td>
           <td><MaskedContact personId={p.person.id} phone={p.person.phone} email={p.person.email} /></td>
           <td className="small nowrap">{formatDate(p.start_date)}</td>
           <td className="small nowrap">{formatDate(p.end_date)}</td>
           {canManage && <td className="right"><EndPartyButton unitId={unitId} party={p} /></td>}
         </tr>
-      ))}</tbody>
+        );
+      })}</tbody>
     </table></div>
   );
 }
@@ -242,7 +253,7 @@ function HouseholdRow({ h, manage, onCopy }: { h: Household; manage: boolean; on
   const end = useSiteMutation<Record<string, never>, Household>("POST", `/household/${h.id}/end`);
   return (
     <tr style={h.status === "ended" ? { opacity: 0.6 } : undefined}>
-      <td><div className="cell-main">{h.full_name}</div><div className="cell-sub">{formatPhone(h.phone)}</div></td>
+      <td><div className="cell-person"><Avatar name={h.full_name} size="sm" soft /><div><div className="cell-main">{h.full_name}</div><div className="cell-sub">{formatPhone(h.phone)}</div></div></div></td>
       <td className="small">{PERMS.filter((p) => h.permissions[p]).map(householdPermission).join(", ") || "—"}</td>
       <td><Badge tone={h.status === "active" ? "ok" : h.status === "invited" ? "info" : "muted"}>{householdStatus(h.status)}</Badge></td>
       <td className="small">{h.invited_by}<div className="cell-sub">{formatDateTime(h.created_at)}</div></td>
@@ -276,7 +287,7 @@ function FinanceTab({ u }: { u: Unit }) {
   const q = useSiteGet<Page<Account>>("/accounts", { unit_id: u.id, page_size: 50 });
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Cari hesaplar</span></div>
+      <div className="card__head"><span className="card__icon card__icon--ok"><Wallet aria-hidden="true" /></span><span className="card__title">Cari hesaplar</span></div>
       <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Cari hesap yok" /> : (
           <div className="table-wrap"><table className="data">
@@ -284,7 +295,7 @@ function FinanceTab({ u }: { u: Unit }) {
             <thead><tr><th scope="col">Hesap</th><th scope="col">Referans</th><th scope="col" className="right">Bakiye</th><th scope="col">En eski vade</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
             <tbody>{q.data.items.map((a) => (
               <tr key={a.id}>
-                <td><div className="cell-main">{accountKind(a.kind)} {a.is_closed && <Badge>Kapalı</Badge>}</div>{a.person_name && <div className="cell-sub">{a.person_name}</div>}</td>
+                <td><div className="cell-chip"><IconChip tone={a.is_closed ? "muted" : undefined}><Wallet /></IconChip><div><div className="cell-main">{accountKind(a.kind)} {a.is_closed && <Badge>Kapalı</Badge>}</div>{a.person_name && <div className="cell-sub">{a.person_name}</div>}</div></div></td>
                 <td className="mono xs">{a.reference_code}</td>
                 <td className="right"><Money value={a.balance} tone="balance" /></td>
                 <td className="small nowrap">{formatDate(a.oldest_open_due_date)}</td>
@@ -304,20 +315,23 @@ function RequestsTab({ u }: { u: Unit }) {
   const q = useSiteGet<Page<Req>>("/requests", { unit_id: u.id, page_size: 50 });
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Talepler</span><span className="card__meta ml-auto">bu bölümden açılanlar</span></div>
+      <div className="card__head"><span className="card__icon card__icon--warn"><Wrench aria-hidden="true" /></span><span className="card__title">Talepler</span><span className="card__meta ml-auto">bu bölümden açılanlar</span></div>
       <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Talep yok" /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Bölümün talepleri</caption>
             <thead><tr><th scope="col">Talep</th><th scope="col">Durum</th><th scope="col">Açan</th><th scope="col">Tarih</th></tr></thead>
-            <tbody>{q.data.items.map((r) => (
+            <tbody>{q.data.items.map((r) => {
+              const CatIcon = categoryIcon(r.category);
+              return (
               <tr key={r.id}>
-                <td><Link className="cell-main" to={`/s/${site.slug}/talepler/${r.id}`}>{r.title}</Link><div className="cell-sub mono">{r.number}</div></td>
+                <td><div className="cell-chip"><IconChip><CatIcon /></IconChip><div><Link className="cell-main" to={`/s/${site.slug}/talepler/${r.id}`}>{r.title}</Link><div className="cell-sub mono">{r.number}</div></div></div></td>
                 <td><Badge tone={requestStatusTone(r.status)}>{requestStatus(r.status)}</Badge></td>
                 <td className="small">{r.reporter_name ?? r.created_by_name ?? "—"}</td>
                 <td className="small nowrap">{formatDateTime(r.created_at)}</td>
               </tr>
-            ))}</tbody>
+              );
+            })}</tbody>
           </table></div>
         )}
       </div>
@@ -497,7 +511,7 @@ function TransferForm({ u, onDone }: { u: Unit; onDone: () => void }) {
           <div className="row row--between"><span className="field__label">Yeni malikler</span><span className={`small ${Math.abs(total - 100) < 0.01 ? "muted" : "field__error"}`}>Hisse toplamı %{total.toLocaleString("tr-TR")} {Math.abs(total - 100) < 0.01 ? "" : "— tam %100 olmalı"}</span></div>
           {fieldError(m.error, "new_owners") && <span className="field__error" role="alert">{fieldError(m.error, "new_owners")}</span>}
           {owners.map((o, i) => (
-            <div key={i} className="stack" style={{ gap: "var(--s-2)", border: "1px solid var(--line)", borderRadius: "var(--r-md)", padding: "var(--s-3)" }}>
+            <div key={i} className="stack subcard" style={{ gap: "var(--s-2)" }}>
               <div className="row row--between">
                 <span className="strong small">{i + 1}. malik</span>
                 {owners.length > 1 && <button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${i + 1}. maliki kaldır`} onClick={() => setOwners((l) => l.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></button>}

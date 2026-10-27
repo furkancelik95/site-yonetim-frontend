@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Car, Plus } from "lucide-react";
+import { CalendarClock, Car, CircleOff, Clock, Plus } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { plateInput } from "../../lib/input";
@@ -30,13 +30,21 @@ export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?:
   const body = (
     <>
       {adding && <VehicleForm unitId={unitId} onDone={() => setAdding(false)} />}
-      {!embedded && (
-        <div className="filters">
-          <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value }); }} /></div>
-          <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
-        </div>
-      )}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        {!embedded && (
+          <div className="card__head">
+            <span className="card__icon card__icon--accent"><Car aria-hidden="true" /></span>
+            <div>
+              <div className="card__title">Plaka listesi</div>
+              {list.data && <div className="card__meta">{list.data.length} kayıt</div>}
+            </div>
+            <div className="card__tools">
+              <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value }); }} /></div>
+              <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
+            </div>
+          </div>
+        )}
+        <div className="card__body card__body--flush">
         {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.length === 0 ? (
           <Empty title="Kayıtlı araç yok" icon={<Car aria-hidden="true" />}>Kayıtlı plaka kapı ekranında görünür; sakinler kendi araçlarını uygulamadan ekler.</Empty>
         ) : (
@@ -60,8 +68,30 @@ export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?:
   return (
     <div className="stack">
       <PageHead title="Araçlar" subtitle="Sakinlerin plakaları; kapı ekranında sorgulanır. Plaka verisi KVKK kapsamındadır." actions={manage && <><Link className="btn" to={`/s/${site.slug}/iceri-aktar?tip=araclar`}>Excel'den aktar</Link><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((x) => !x)}><Plus aria-hidden="true" /> Araç ekle</button></>} />
+      <VehicleKpis />
       {manage && <VehicleSettingsCard />}
       {body}
+    </div>
+  );
+}
+
+/** Süzgeçsiz plaka listesinden sayılan özet: etkin, onay bekleyen, misafir, pasif. */
+function VehicleKpis() {
+  const all = useSiteGet<Vehicle[]>("/vehicles", {});
+  if (all.isError) return null;
+  if (!all.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)}</div>;
+  const v = all.data;
+  const active = v.filter((x) => x.status === "active").length;
+  const pending = v.filter((x) => x.status === "pending").length;
+  const guest = v.filter((x) => x.kind === "guest" && x.status !== "inactive").length;
+  const inactive = v.filter((x) => x.status === "inactive").length;
+  const units = new Set(v.filter((x) => x.status === "active").map((x) => x.unit_id)).size;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Etkin plaka" tone="accent" icon={<Car aria-hidden="true" />} value={active} note={`${units} bölümde`} />
+      <Kpi label="Onay bekleyen" icon={<Clock aria-hidden="true" />} tone={pending ? "warn" : undefined} value={pending} note={pending ? "sakin kaydı, onay gerekli" : "kuyruk boş"} />
+      <Kpi label="Misafir aracı" icon={<CalendarClock aria-hidden="true" />} value={guest} note="süreli kayıt" />
+      <Kpi label="Pasif" icon={<CircleOff aria-hidden="true" />} value={inactive} note="kapı ekranında görünmez" />
     </div>
   );
 }
@@ -70,9 +100,9 @@ function VehicleRow({ v, showUnit, manage, slug }: { v: Vehicle; showUnit: boole
   const upd = useSiteMutation<{ status: string }, Vehicle>("PATCH", `/vehicles/${v.id}`);
   return (
     <tr style={v.status === "inactive" ? { opacity: 0.6 } : undefined}>
-      <td><div className="cell-main mono">{v.plate_display}</div>{(v.brand_model || v.color) && <div className="cell-sub">{[v.brand_model, v.color].filter(Boolean).join(" · ")}</div>}</td>
+      <td><div className="cell-chip"><IconChip tone={v.status === "inactive" ? "muted" : v.status === "pending" ? "warn" : undefined}><Car /></IconChip><div><div className="cell-main mono">{v.plate_display}</div>{(v.brand_model || v.color) && <div className="cell-sub">{[v.brand_model, v.color].filter(Boolean).join(" · ")}</div>}</div></div></td>
       {showUnit && <td className="small"><Link to={`/s/${slug}/daireler/${v.unit_id}`}>{v.unit_name}</Link></td>}
-      <td className="small">{v.owner_name ?? "—"}</td>
+      <td className="small">{v.owner_name ? <div className="cell-person"><Avatar name={v.owner_name} size="sm" soft /><span>{v.owner_name}</span></div> : "—"}</td>
       <td className="small">{vehicleKind(v.kind)}{v.valid_until && <div className="cell-sub">{formatDate(v.valid_until)} tarihine kadar</div>}</td>
       <td><Badge tone={vehicleStatusTone(v.status)}>{vehicleStatus(v.status)}</Badge></td>
       {manage && (

@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, History, Undo2 } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Download, History, Rows3, Undo2, Wallet } from "lucide-react";
 import { api } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas, Written } from "../../api/types";
 import { ExcelButton } from "../../components/ExcelButton";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDateTime, formatDecimal, formatMoney, parseMoneyInput } from "../../lib/format";
+import { formatDate, formatDateTime, formatDecimal, formatMoney, parseMoneyInput } from "../../lib/format";
 import { downloadCsv } from "../../lib/csv";
 import { useUrlState } from "../../lib/hooks";
 import { importStatus, importType, unitUsage } from "../../lib/labels";
@@ -36,11 +36,30 @@ export function ImportPage() {
   return (
     <div className="stack">
       <PageHead title="İçeri aktarım" subtitle="Eski sistemden veri taşıma. Şablonu indirin, doldurun, yükleyin; önce önizleme gösterilir, onaylamadan hiçbir şey kaydedilmez." />
-      <div className="row" role="tablist" aria-label="Aktarım türü" style={{ gap: "var(--s-2)" }}>
-        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.tip === k} className={`btn btn--sm${s.tip === k ? " btn--primary" : ""}`} onClick={() => set({ tip: k })}>{l}</button>)}
+      <ImportKpis />
+      <div className="tabs" role="tablist" aria-label="Aktarım türü">
+        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.tip === k} onClick={() => set({ tip: k })}>{l}</button>)}
       </div>
       {s.tip === "araclar" ? <CsvImport key="v" type="vehicles" /> : s.tip === "acilis" ? <CsvImport key="o" type="opening-balances" /> : <UnitsImport />}
       <ImportHistory />
+    </div>
+  );
+}
+
+/** Bandın altındaki göstergeler: aktarım geçmişinden (/imports) okunur. */
+function ImportKpis() {
+  const q = useSiteGet<ImportBatch[]>("/imports");
+  if (q.isError) return null;
+  if (!q.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const done = q.data.filter((b) => b.status === "imported");
+  const lastB = [...q.data].sort((a, b) => a.created_at.localeCompare(b.created_at)).at(-1);
+  const last = lastB?.created_at;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Tamamlanan aktarım" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={done.length} note={`${q.data.length} dosya yüklendi`} />
+      <Kpi label="Oluşturulan kayıt" icon={<Rows3 aria-hidden="true" />} value={done.reduce((t, b) => t + b.created_count, 0)} note="bölüm, araç, bakiye" />
+      <Kpi label="Geri alınabilir" tone={q.data.some((b) => b.can_rollback) ? "accent" : undefined} icon={<Undo2 aria-hidden="true" />} value={q.data.filter((b) => b.can_rollback).length} note="7 gün içinde" />
+      <Kpi label="Son aktarım" icon={<History aria-hidden="true" />} value={last ? formatDate(last) : "—"} small note={lastB ? `${importType(lastB.type)} · ${lastB.created_by}` : "henüz yok"} />
     </div>
   );
 }
@@ -97,10 +116,10 @@ function UnitsImport() {
       {preview && (
         <>
           <div className="grid grid--kpi">
-            <Kpi label="Satır" value={preview.total_rows} />
-            <Kpi label="Aktarılacak" tone="ok" value={preview.importable_count} note={`${preview.new_count} yeni · ${preview.existing_count} zaten var`} />
-            <Kpi label="Hata" tone={preview.error_count > 0 ? "danger" : undefined} value={preview.error_count} />
-            <Kpi label="Uyarı" tone={preview.warning_count > 0 ? "warn" : undefined} value={preview.warning_count} />
+            <Kpi label="Satır" icon={<Rows3 aria-hidden="true" />} value={preview.total_rows} note="dosyada" />
+            <Kpi label="Aktarılacak" icon={<CheckCircle2 aria-hidden="true" />} tone="ok" value={preview.importable_count} note={`${preview.new_count} yeni · ${preview.existing_count} zaten var`} />
+            <Kpi label="Hata" icon={<AlertTriangle aria-hidden="true" />} tone={preview.error_count > 0 ? "danger" : undefined} value={preview.error_count} note="aktarılmaz" />
+            <Kpi label="Uyarı" icon={<AlertCircle aria-hidden="true" />} tone={preview.warning_count > 0 ? "warn" : undefined} value={preview.warning_count} note="aktarılır, kontrol edin" />
           </div>
           <Issues issues={preview.issues} />
           <div className="card">
@@ -208,10 +227,10 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
       {p && (
         <>
           <div className="grid grid--kpi">
-            <Kpi label="Satır" value={p.total_rows} />
-            <Kpi label="Aktarılacak" tone="ok" value={p.importable_count} />
-            <Kpi label="Hata" tone={errors > 0 ? "danger" : undefined} value={errors} />
-            {opening && <Kpi label="Yüklenen toplam" value={formatMoney(p.total_amount)} small />}
+            <Kpi label="Satır" icon={<Rows3 aria-hidden="true" />} value={p.total_rows} note="dosyada" />
+            <Kpi label="Aktarılacak" icon={<CheckCircle2 aria-hidden="true" />} tone="ok" value={p.importable_count} />
+            <Kpi label="Hata" icon={<AlertTriangle aria-hidden="true" />} tone={errors > 0 ? "danger" : undefined} value={errors} note="aktarılmaz" />
+            {opening && <Kpi label="Yüklenen toplam" icon={<Wallet aria-hidden="true" />} value={formatMoney(p.total_amount)} small />}
           </div>
           <Issues issues={p.issues} />
           <div className="card">
