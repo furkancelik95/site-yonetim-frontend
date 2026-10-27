@@ -90,7 +90,7 @@ export function MembersPage() {
 /** Erişimi açık kullanıcıları rol adına göre sayar (çoktan aza). */
 function roleSegments(list: Member[]) {
   const m = new Map<string, number>();
-  for (const x of list) if (x.is_active) m.set(x.role_name, (m.get(x.role_name) ?? 0) + 1);
+  for (const x of list) if (x.is_active) { const r = x.role_name ?? "—"; m.set(r, (m.get(r) ?? 0) + 1); }
   return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
 }
 
@@ -102,7 +102,7 @@ function MemberRow({ m, roles }: { m: Member; roles: Role[] }) {
       <td><div className="cell-person"><Avatar name={m.full_name} size="sm" soft={!m.is_active} /><div><div className="cell-main">{m.full_name}</div><div className="cell-sub mono">{m.email}</div></div></div></td>
       <td>
         {derived ? <span className="small">{m.role_name}</span> : (
-          <select aria-label={`${m.full_name} rolü`} className="field__input" style={{ minHeight: 36, padding: "4px 8px", width: "auto" }} value={m.role_key} disabled={upd.isPending || !m.is_active} onChange={(e) => upd.mutate({ role_key: e.target.value })}>
+          <select aria-label={`${m.full_name} rolü`} className="field__input" style={{ minHeight: 36, padding: "4px 8px", width: "auto" }} value={m.role_key ?? ""} disabled={upd.isPending || !m.is_active} onChange={(e) => upd.mutate({ role_key: e.target.value })}>
             {roles.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}
           </select>
         )}

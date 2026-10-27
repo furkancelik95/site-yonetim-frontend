@@ -9,6 +9,8 @@
 //
 // Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
+// Genel kurul 75–77 (hazırlık ve çağrı, hazirun/vekâlet/nisap/salonda oylama, tutanak ve karar
+// defteri) backend'de — sahte uçları silindi (27.10.2026).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -2231,213 +2233,6 @@ const iletisim: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// GENEL KURUL (Yazılım Dokümanı TOP-01, TOP-03 fiziki oylama, TOP-04) — servis istekleri 75–77
-// ============================================================================================
-interface DecisionType { code: string; name: string; base: "present" | "all"; num: number; den: number; strict: boolean; person: boolean; share: boolean }
-interface AssemblySettings { decision_types: DecisionType[]; quorum: { num: number; den: number; strict: boolean; person: boolean; share: boolean }; proxy_limit: number }
-interface RosterUnit { unit_id: string; unit_name: string; block_name: string; owners: string[]; key: string; share: number; share_den: number }
-interface Attendance { unit_id: string; mode: "self" | "proxy"; proxy_name: string | null; at: string }
-interface ItemVote { status: "none" | "open" | "closed"; ballots: Record<string, "for" | "against" | "abstain">; result: VoteResult | null; opened_at: string | null; closed_at: string | null }
-interface VoteResult { type_code: string; type_name: string; persons: { for: number; against: number; abstain: number; base: number }; shares: { for: number; against: number; abstain: number; base: number }; person_ok: boolean | null; share_ok: boolean | null; accepted: boolean }
-interface Assembly {
-  meeting_id: string; format: "physical" | "hybrid" | "prevote"; legal_ack: { by: string; at: string } | null; second_call: boolean; item_types: Record<string, string>;
-  invitation: { announcement_id: string; sent_at: string; by: string } | null; roster: RosterUnit[]; attendance: Attendance[]; votes: Record<string, ItemVote>;
-  minutes: { notes: Record<string, string>; decisions: Record<string, string>; opening: string; finalized_at: string | null; finalized_by: string | null; signed_file: string | null };
-}
-interface BookEntry { no: number; meeting_id: string; meeting_title: string; date: string; item_title: string; decision: string; result: string; type_name: string }
-const assemblySettings = loadMap<string, AssemblySettings>("assemblySettings");
-const assemblies = loadMap<string, Record<string, Assembly>>("assemblies");
-const decisionBook = loadMap<string, BookEntry[]>("decisionBook");
-const AS_DEFAULT: AssemblySettings = {
-  decision_types: [
-    { code: "ordinary", name: "Oy çokluğu (katılanların sayı ve arsa payı çoğunluğu)", base: "present", num: 1, den: 2, strict: true, person: true, share: true },
-    { code: "all_majority", name: "Tüm maliklerin sayı ve arsa payı çoğunluğu", base: "all", num: 1, den: 2, strict: true, person: true, share: true },
-    { code: "four_fifths", name: "Tüm maliklerin 4/5'i (sayı ve arsa payı)", base: "all", num: 4, den: 5, strict: false, person: true, share: true },
-    { code: "unanimous", name: "Oy birliği (tüm malikler)", base: "all", num: 1, den: 1, strict: false, person: true, share: false },
-  ],
-  quorum: { num: 1, den: 2, strict: true, person: true, share: true },
-  proxy_limit: 2,
-};
-const asOf = (slug: string) => { if (!assemblySettings.has(slug)) assemblySettings.set(slug, structuredClone(AS_DEFAULT)); return assemblySettings.get(slug)!; };
-const passes = (v: number, base: number, num: number, den: number, strict: boolean) => (strict ? v * den > base * num : v * den >= base * num - 1e-9);
-async function assemblyOf(request: Request, slug: string, meetingId: string): Promise<Assembly | Response> {
-  if (!assemblies.has(slug)) assemblies.set(slug, {});
-  const map = assemblies.get(slug)!;
-  if (map[meetingId]) return map[meetingId]!;
-  const m = await real<{ id: string; kind: string; agenda: { id: string }[] }>(request, `/api/v1/sites/${slug}/meetings/${meetingId}`);
-  if (m.status !== 200 || !m.body) return err(404, "not_found", "Toplantı bulunamadı.");
-  if (m.body.kind === "board") return err(409, "not_general", "Genel kurul işlemleri yalnız genel kurul toplantılarında.");
-  const units = await allPages<{ id: string; display_name: string; block: { name: string } | null; is_active: boolean; owner_names: string[]; land_share_numerator: number | null; land_share_denominator: number | null }>(request, `/api/v1/sites/${slug}/units`);
-  const roster: RosterUnit[] = units.filter((u) => u.is_active && u.owner_names?.length).map((u) => { const owners = [...u.owner_names].sort((a, b) => a.localeCompare(b, "tr")); return { unit_id: u.id, unit_name: u.display_name, block_name: u.block?.name ?? "—", owners, key: owners.join(" + ").toLocaleLowerCase("tr-TR"), share: u.land_share_numerator ?? 0, share_den: u.land_share_denominator ?? 1 }; });
-  const a: Assembly = { meeting_id: meetingId, format: "physical", legal_ack: null, second_call: false, item_types: Object.fromEntries(m.body.agenda.map((i) => [i.id, "ordinary"])), invitation: null, roster, attendance: [], votes: {}, minutes: { notes: {}, decisions: {}, opening: "", finalized_at: null, finalized_by: null, signed_file: null } };
-  map[meetingId] = a;
-  return a;
-}
-const frac = (u: RosterUnit) => u.share / (u.share_den || 1);
-function quorumOf(slug: string, a: Assembly) {
-  const q = asOf(slug).quorum;
-  const present = new Set(a.attendance.map((x) => x.unit_id));
-  const keysAll = new Set(a.roster.map((u) => u.key)), keysPresent = new Set(a.roster.filter((u) => present.has(u.unit_id)).map((u) => u.key));
-  const shareAll = a.roster.reduce((s, u) => s + frac(u), 0), sharePresent = a.roster.filter((u) => present.has(u.unit_id)).reduce((s, u) => s + frac(u), 0);
-  const person_ok = passes(keysPresent.size, keysAll.size, q.num, q.den, q.strict), share_ok = passes(sharePresent, shareAll, q.num, q.den, q.strict);
-  const ok = a.second_call || ((!q.person || person_ok) && (!q.share || share_ok));
-  return { persons_present: keysPresent.size, persons_total: keysAll.size, share_present: sharePresent, share_total: shareAll, person_ok, share_ok, ok, second_call: a.second_call };
-}
-function tally(slug: string, a: Assembly, itemId: string): VoteResult {
-  const t = asOf(slug).decision_types.find((x) => x.code === (a.item_types[itemId] ?? "ordinary")) ?? asOf(slug).decision_types[0]!;
-  const v = a.votes[itemId]!;
-  const present = new Set(a.attendance.map((x) => x.unit_id));
-  const pres = a.roster.filter((u) => present.has(u.unit_id));
-  const byKey = new Map<string, string>();
-  for (const u of pres) { const b = v.ballots[u.unit_id]; if (b) byKey.set(u.key, b); }
-  const pc = (k: string) => [...byKey.values()].filter((x) => x === k).length;
-  const sc = (k: string) => pres.filter((u) => v.ballots[u.unit_id] === k).reduce((s, u) => s + frac(u), 0);
-  const personBase = t.base === "present" ? new Set(pres.map((u) => u.key)).size : new Set(a.roster.map((u) => u.key)).size;
-  const shareBase = t.base === "present" ? pres.reduce((s, u) => s + frac(u), 0) : a.roster.reduce((s, u) => s + frac(u), 0);
-  const person_ok = t.person ? passes(pc("for"), personBase, t.num, t.den, t.strict) : null;
-  const share_ok = t.share ? passes(sc("for"), shareBase, t.num, t.den, t.strict) : null;
-  return { type_code: t.code, type_name: t.name, persons: { for: pc("for"), against: pc("against"), abstain: pc("abstain"), base: personBase }, shares: { for: sc("for"), against: sc("against"), abstain: sc("abstain"), base: shareBase }, person_ok, share_ok, accepted: person_ok !== false && share_ok !== false };
-}
-const assemblyOut = (slug: string, a: Assembly) => ({ ...a, settings: asOf(slug), quorum: quorumOf(slug, a), votes: Object.fromEntries(Object.entries(a.votes).map(([k, v]) => [k, { ...v, live: v.status === "open" ? tally(slug, a, k) : null }])) });
-
-const genelKurul: RequestHandler[] = [
-  http.get(`${API}/assembly-settings`, ({ params }) => HttpResponse.json(asOf(String(params.slug)))),
-  http.put(`${API}/assembly-settings`, async ({ request, params }) => {
-    const b = (await request.json()) as Partial<AssemblySettings>;
-    if (!(Number.isInteger(b.proxy_limit) && b.proxy_limit! >= 1 && b.proxy_limit! <= 20)) return err(422, "validation", VALIDATION, { proxy_limit: "Kişi başı vekâlet 1–20." });
-    const s = asOf(String(params.slug)); s.proxy_limit = b.proxy_limit!;
-    return HttpResponse.json({ data: s, message: "Genel kurul ayarları kaydedildi." });
-  }),
-  http.get(`${API}/meetings/:id/assembly`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id));
-    return a instanceof Response ? a : HttpResponse.json(assemblyOut(slug, a));
-  }),
-  // 75 — Hazırlık: format, karar türü, hukuki uyarı, çağrı
-  http.put(`${API}/meetings/:id/assembly/prep`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (a.attendance.length) return err(409, "started", "Hazirun başladıktan sonra format ve karar türü değiştirilemez.");
-    const b = (await request.json()) as { format?: Assembly["format"]; item_types?: Record<string, string>; second_call?: boolean };
-    const codes = asOf(slug).decision_types.map((t) => t.code);
-    if (b.format && !["physical", "hybrid", "prevote"].includes(b.format)) return err(422, "validation", VALIDATION, { format: "Format seçin." });
-    for (const [k, v] of Object.entries(b.item_types ?? {})) if (!codes.includes(v)) return err(422, "validation", VALIDATION, { [`item_types.${k}`]: "Karar türü seçin." });
-    if (b.format && b.format !== a.format) a.legal_ack = null;
-    Object.assign(a, { format: b.format ?? a.format, item_types: { ...a.item_types, ...(b.item_types ?? {}) }, second_call: b.second_call ?? a.second_call });
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "Toplantı hazırlığı kaydedildi." });
-  }),
-  http.post(`${API}/meetings/:id/assembly/legal-ack`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    a.legal_ack = { by: (await me(request)).name, at: new Date().toISOString() };
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "Hukuki geçerlilik uyarısı onaylandı." });
-  }),
-  http.post(`${API}/meetings/:id/assembly/invitation`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (a.format !== "physical" && !a.legal_ack) return err(409, "legal_ack_required", "Hibrit / ön oylama formatında önce hukuki geçerlilik uyarısını onaylayın.");
-    if (a.invitation) return err(409, "already_sent", "Çağrı zaten gönderildi.");
-    const b = (await request.json()) as { title?: string; body?: string; ack_hours?: number };
-    if ((b.title ?? "").trim().length < 3 || (b.body ?? "").trim().length < 10) return err(422, "validation", VALIDATION, { body: "Çağrı metnini yazın." });
-    const hours = Number(b.ack_hours ?? 72);
-    const r = await real<{ data?: { id: string; title: string; published_at: string | null } }>(request, `/api/v1/sites/${slug}/announcements`, { method: "POST", body: { title: b.title!.trim(), body: b.body!.trim(), importance: "important", audience: "owners_only", audience_block_ids: [], channels: ["in_app", "email", "sms"], expires_on: null, is_pinned: true } });
-    if (!r.body?.data) return HttpResponse.json(r.body, { status: r.status });
-    const pub = r.body.data.published_at ?? new Date().toISOString();
-    listOf(ackRules, slug).push({ announcement_id: r.body.data.id, title: r.body.data.title, requires_ack: true, ack_hours: hours, sms_fallback: true, published_at: pub, deadline: new Date(new Date(pub).getTime() + hours * 3600e3).toISOString() });
-    a.invitation = { announcement_id: r.body.data.id, sent_at: new Date().toISOString(), by: (await me(request)).name };
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "Çağrı maliklere okuma onaylı duyuru olarak gönderildi; ispat raporu duyurunun okuma raporundadır." });
-  }),
-  // 76 — Hazirun, fiziki vekâlet, oylama ve nisap
-  http.put(`${API}/meetings/:id/assembly/attendance`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (a.minutes.finalized_at) return err(409, "finalized", "Tutanak kesinleşti.");
-    if (Object.values(a.votes).some((v) => v.status === "open")) return err(409, "voting_open", "Açık oylama varken hazirun değişmez.");
-    const b = (await request.json()) as { unit_id?: string; mode?: "self" | "proxy" | null; proxy_name?: string };
-    const u = a.roster.find((x) => x.unit_id === b.unit_id);
-    if (!u) return err(404, "not_found", "Bölüm malik listesinde yok.");
-    a.attendance = a.attendance.filter((x) => x.unit_id !== u.unit_id);
-    if (b.mode === "self") a.attendance.push({ unit_id: u.unit_id, mode: "self", proxy_name: null, at: new Date().toISOString() });
-    if (b.mode === "proxy") {
-      const name = (b.proxy_name ?? "").trim().replace(/\s+/g, " ");
-      if (name.length < 3) return err(422, "validation", VALIDATION, { proxy_name: "Vekilin adını yazın." });
-      const keys = new Set(a.roster.filter((x) => a.attendance.some((t) => t.mode === "proxy" && t.proxy_name!.toLocaleLowerCase("tr-TR") === name.toLocaleLowerCase("tr-TR") && t.unit_id === x.unit_id)).map((x) => x.key));
-      keys.add(u.key);
-      if (keys.size > asOf(slug).proxy_limit) return err(409, "proxy_limit", `Vekâlet sınırı aşılıyor: bir kişi en fazla ${asOf(slug).proxy_limit} malikin vekili olabilir.`);
-      a.attendance.push({ unit_id: u.unit_id, mode: "proxy", proxy_name: name, at: new Date().toISOString() });
-    }
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: b.mode ? `${u.unit_name} hazirune eklendi.` : `${u.unit_name} hazirundan çıkarıldı.` });
-  }),
-  http.post(`${API}/meetings/:id/assembly/items/:itemId/:action`, async ({ request, params }) => {
-    const slug = String(params.slug); const action = String(params.action); if (!["open", "close"].includes(action)) return;
-    const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    const itemId = String(params.itemId);
-    if (!(itemId in a.item_types)) return err(404, "not_found", "Gündem maddesi bulunamadı.");
-    const v = a.votes[itemId] ?? (a.votes[itemId] = { status: "none", ballots: {}, result: null, opened_at: null, closed_at: null });
-    if (action === "open") {
-      if (v.status !== "none") return err(409, "invalid_status", "Bu maddenin oylaması zaten açıldı.");
-      if (Object.values(a.votes).some((x) => x.status === "open")) return err(409, "voting_open", "Önce açık oylamayı kapatın.");
-      const q = quorumOf(slug, a);
-      if (!q.ok) return err(409, "no_quorum", `Toplantı nisabı sağlanamadı (kişi ${q.persons_present}/${q.persons_total}${q.person_ok ? " ✓" : " ✗"}, arsa payı %${(q.share_present / q.share_total * 100).toLocaleString("tr-TR", { maximumFractionDigits: 2 })}${q.share_ok ? " ✓" : " ✗"}). İkinci toplantı kuralını uygulayın.`);
-      Object.assign(v, { status: "open", opened_at: new Date().toISOString() });
-      return HttpResponse.json({ data: assemblyOut(slug, a), message: "Oylama açıldı." });
-    }
-    if (v.status !== "open") return err(409, "invalid_status", "Açık oylama yok.");
-    const present = new Set(a.attendance.map((x) => x.unit_id));
-    const missing = a.roster.filter((u) => present.has(u.unit_id) && !v.ballots[u.unit_id]).length;
-    if (missing) return err(422, "missing_ballots", `${missing} katılımcının oyu girilmedi.`);
-    Object.assign(v, { status: "closed", closed_at: new Date().toISOString(), result: tally(slug, a, itemId) });
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: `Oylama kapandı: ${v.result!.accepted ? "KABUL" : "RET"}.` });
-  }),
-  http.put(`${API}/meetings/:id/assembly/items/:itemId/ballots`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    const v = a.votes[String(params.itemId)];
-    if (!v || v.status !== "open") return err(409, "invalid_status", "Oylama açık değil.");
-    const b = (await request.json()) as { ballots?: Record<string, "for" | "against" | "abstain" | null> };
-    const present = new Set(a.attendance.map((x) => x.unit_id));
-    const next = { ...v.ballots };
-    for (const [uid, val] of Object.entries(b.ballots ?? {})) {
-      if (!present.has(uid)) return err(422, "validation", VALIDATION, { [`ballots.${uid}`]: "Hazirunda olmayan bölüm oy kullanamaz." });
-      if (val === null) delete next[uid]; else if (["for", "against", "abstain"].includes(val)) next[uid] = val; else return err(422, "validation", VALIDATION, { [`ballots.${uid}`]: "Oy seçin." });
-    }
-    // Aynı malik (kişi) birden çok bölümünde farklı oy kullanamaz
-    const byKey = new Map<string, string>();
-    for (const u of a.roster) { const x = next[u.unit_id]; if (!x) continue; const prev = byKey.get(u.key); if (prev && prev !== x) return err(422, "owner_conflict", `${u.owners.join(", ")} birden çok bölümünde farklı oy kullanamaz.`); byKey.set(u.key, x); }
-    v.ballots = next;
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "Oylar kaydedildi." });
-  }),
-  // 77 — Tutanak ve karar defteri
-  http.put(`${API}/meetings/:id/assembly/minutes`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (a.minutes.finalized_at) return err(409, "finalized", "Tutanak kesinleşti; sonuç ve oy sayıları değiştirilemez.");
-    const b = (await request.json()) as { notes?: Record<string, string>; decisions?: Record<string, string>; opening?: string };
-    Object.assign(a.minutes, { notes: { ...a.minutes.notes, ...(b.notes ?? {}) }, decisions: { ...a.minutes.decisions, ...(b.decisions ?? {}) }, opening: b.opening ?? a.minutes.opening });
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "Tutanak taslağı kaydedildi." });
-  }),
-  http.post(`${API}/meetings/:id/assembly/minutes/finalize`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (a.minutes.finalized_at) return err(409, "finalized", "Tutanak zaten kesinleşti.");
-    const m = await real<{ id: string; title: string; agenda: { id: string; order: number; title: string }[] }>(request, `/api/v1/sites/${slug}/meetings/${a.meeting_id}`);
-    if (!m.body) return err(404, "not_found", "Toplantı bulunamadı.");
-    const open = m.body.agenda.filter((i) => a.votes[i.id]?.status !== "closed");
-    if (open.length) return err(422, "items_open", `Oylaması kapanmamış madde: ${open.map((i) => `${i.order}. ${i.title}`).join(", ")}.`);
-    const q = quorumOf(slug, a);
-    const att = `${q.persons_present}/${q.persons_total} malik (arsa payı %${(q.share_present / q.share_total * 100).toLocaleString("tr-TR", { maximumFractionDigits: 2 })}) katıldı veya vekille temsil edildi${a.second_call ? "; ikinci toplantı" : ""}.`;
-    const items = m.body.agenda.map((i) => { const r = a.votes[i.id]!.result!; return { id: i.id, result: r.accepted ? "accepted" : "rejected", decision: (a.minutes.decisions[i.id] ?? "").trim() || (r.accepted ? "Kabul edildi." : "Reddedildi."), votes_for: r.persons.for, votes_against: r.persons.against, votes_abstain: r.persons.abstain }; });
-    const w = await real(request, `/api/v1/sites/${slug}/meetings/${a.meeting_id}/decisions`, { method: "POST", body: { attendance_note: att, items } });
-    if (w.status >= 300) return HttpResponse.json(w.body as Record<string, unknown>, { status: w.status });
-    const book = listOf(decisionBook, slug);
-    for (const i of m.body.agenda) { const r = a.votes[i.id]!.result!; if (!r.accepted) continue; book.push({ no: book.length + 1, meeting_id: a.meeting_id, meeting_title: m.body.title, date: today(), item_title: i.title, decision: items.find((x) => x.id === i.id)!.decision, result: "Kabul", type_name: r.type_name }); }
-    Object.assign(a.minutes, { finalized_at: new Date().toISOString(), finalized_by: (await me(request)).name });
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: `Tutanak kesinleşti; ${items.filter((x) => x.result === "accepted").length} karar karar defterine işlendi.` });
-  }),
-  http.post(`${API}/meetings/:id/assembly/minutes/signed`, async ({ request, params }) => {
-    const slug = String(params.slug); const a = await assemblyOf(request, slug, String(params.id)); if (a instanceof Response) return a;
-    if (!a.minutes.finalized_at) return err(409, "not_finalized", "Önce tutanağı kesinleştirin.");
-    const b = (await request.json()) as { file_name?: string };
-    if (!/\.(pdf|jpg|jpeg|png)$/i.test(b.file_name ?? "")) return err(422, "validation", VALIDATION, { file_name: "PDF ya da görsel dosya adı." });
-    a.minutes.signed_file = b.file_name!;
-    return HttpResponse.json({ data: assemblyOut(slug, a), message: "İmzalı tutanak kaydedildi." });
-  }),
-  http.get(`${API}/decision-book`, ({ params }) => HttpResponse.json([...listOf(decisionBook, String(params.slug))].reverse())),
-];
-
-// ============================================================================================
 // RAPORLAR VE KVKK (Yazılım Dokümanı RAP-01, 04, 05) — servis istekleri 79–81
 // (78 belge arşivi backend'de: gerçek `…/documents`; denetim paketi belgeyi oradan okur)
 // ============================================================================================
@@ -2542,7 +2337,9 @@ const raporlar: RequestHandler[] = [
     if ((b.title ?? "").trim().length < 3) f.title = "Paket adını yazın.";
     if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihi."; if (!b.to || !DATE_RE.test(b.to) || (b.from && b.to < b.from)) f.to = "Bitiş başlangıçtan önce olamaz.";
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const decisions = listOf(decisionBook, slug).filter((e) => e.date >= b.from! && e.date <= b.to!).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
+    // Karar defteri gerçek backend'de (servis isteği 77)
+    const book = await allPages<{ no: number; item_title: string; decision: string; date: string }>(request, `/api/v1/sites/${slug}/decision-book`);
+    const decisions = book.filter((e) => e.date >= b.from! && e.date <= b.to!).sort((x, y) => x.no - y.no).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
     const known = new Set((await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).map((d) => d.id));
     const docIds = (b.document_ids ?? []).filter((id) => known.has(id));
     const p: AuditPkg = { id: crypto.randomUUID(), title: b.title!.trim(), from: b.from!, to: b.to!, created_by: (await me(request)).name, created_at: new Date().toISOString(), decisions, document_ids: docIds, status: "open", report_document_id: null, reviewed_by: null, reviewed_at: null, note: null };
@@ -2704,4 +2501,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...raporlar, ...platformDestek];

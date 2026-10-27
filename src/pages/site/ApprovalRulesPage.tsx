@@ -16,7 +16,7 @@ type Rule = Schemas["RuleOut"];
 type ActionTypeOut = Schemas["ActionTypeOut"];
 type RuleIn = Schemas["RuleIn"];
 type RuleWrite = Schemas["RuleWriteOut"];
-type SiteRole = Schemas["SiteRole"];
+type SiteRole = string; // P16a: backend rol adları artık veri (/roles); fe #40 bunu tam bağlar
 type Quorum = Schemas["QuorumKind"];
 type Simulated = Schemas["SimulateOut"];
 
