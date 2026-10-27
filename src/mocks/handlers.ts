@@ -9,6 +9,8 @@
 //
 // Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
+// Raporlar ve KVKK 79–81 backend'de (27.10.2026): rapor kataloğu, talep/SLA raporu, KVKK
+// başvurusu, aydınlatma metni sürümleri (P6 onayı), saklama politikası (K8), denetim paketi.
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
@@ -663,7 +665,7 @@ const nowHm = () => { const d = new Date(); return `${String(d.getHours()).padSt
 const weekday = (d: string) => (new Date(d + "T00:00:00").getDay() + 6) % 7; // 0 = pazartesi
 
 // Hizmetler paketi (servis istekleri 47–52) backend'de; aşağıdaki sahte uçlar (69 hizmet karnesi,
-// 79 talep/SLA raporu) gerçek talep satırındaki `sla` ve `feedback` alanlarını kullanır.
+// talep raporları) gerçek talep satırındaki `sla` ve `feedback` alanlarını kullanır.
 interface ReqRow { id: string; category: string; status: string; created_at: string; resolved_at: string | null; sla: { state: string } | null; feedback: { solved: boolean; score: number | null } | null }
 
 // ============================================================================================
@@ -2437,131 +2439,11 @@ const genelKurul: RequestHandler[] = [
   http.get(`${API}/decision-book`, ({ params }) => HttpResponse.json([...listOf(decisionBook, String(params.slug))].reverse())),
 ];
 
-// ============================================================================================
-// RAPORLAR VE KVKK (Yazılım Dokümanı RAP-01, 04, 05) — servis istekleri 79–81
-// (78 belge arşivi backend'de: gerçek `…/documents`; denetim paketi belgeyi oradan okur)
-// ============================================================================================
-interface PrivacyReq { id: string; kind: "access" | "rectify" | "erase" | "object"; detail: string; user_id: string; name: string; units: string[]; snapshot: unknown; status: "open" | "answered"; created_at: string; due_on: string; response: string | null; outcome: "fulfilled" | "partial" | "rejected" | null; retained: string | null; answered_by: string | null; answered_at: string | null }
-interface Notice { version: number; text: string; published_at: string; published_by: string; summary: string }
-interface AuditPkg { id: string; title: string; from: string; to: string; created_by: string; created_at: string; decisions: { no: number; item_title: string; decision: string; date: string }[]; document_ids: string[]; status: "open" | "reviewed"; report_document_id: string | null; reviewed_by: string | null; reviewed_at: string | null; note: string | null }
-const privacyReqs = loadMap<string, PrivacyReq[]>("privacyReqs");
-const notices = loadMap<string, Notice[]>("notices");
-const auditPkgs = loadMap<string, AuditPkg[]>("auditPkgs");
+/** /me'deki site izinleri (sahte destek uçları için). */
 async function permsOf(request: Request, slug: string) {
   const m = await real<{ sites: { slug: string; permissions: string[] }[] }>(request, "/api/v1/me");
   return new Set(m.body?.sites.find((s) => s.slug === slug)?.permissions ?? []);
 }
-const CATALOG = [
-  { key: "income_expense", name: "Gelir–gider", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Gelir", "Dönemde yapılan tahsilatlar (tahakkuk değil)."], ["Gider", "Dönemde kaydedilen, ters kaydı olmayan giderler; fon/kategori bazında."]] },
-  { key: "collections", name: "Tahsilat oranı ve trendi", group: "Finans", permission: "finance.reports.read", link: "raporlar", metrics: [["Tahsilat oranı", "Dönemde tahsil edilen / dönemde vadesi gelen."]] },
-  { key: "aging", name: "Borç yaşlandırma", group: "Finans", permission: "finance.read", link: "borclular", metrics: [["Yaş dilimi", "En eski açık borcun vadesinden bugüne gün: 0–30 / 31–60 / 61–90 / 90+."]] },
-  { key: "budget", name: "Bütçe–gerçekleşme", group: "Finans", permission: "finance.read", link: "isletme-projesi", metrics: [["Gerçekleşme oranı", "Kategoride bu yıl gerçekleşen gider / işletme projesindeki yıllık tutar."]] },
-  { key: "cash", name: "Kasa ve banka özeti", group: "Finans", permission: "finance.cash.read", link: "kasa", metrics: [["Bakiye", "Hesap hareketlerinden hesaplanır; saklanmaz."]] },
-  { key: "requests_sla", name: "Talep ve SLA", group: "Operasyon", permission: "requests.read", link: "rapor-katalogu?rapor=requests_sla", metrics: [["SLA uyumu", "Dönemde kapanan taleplerden SLA süresi içinde çözülenlerin oranı."], ["Ortalama çözüm süresi", "Açılıştan çözüme geçen takvim saati ortalaması."], ["Memnuniyet", "Sakin kapanış puanlarının ortalaması (1–5)."]] },
-  { key: "security", name: "Güvenlik ve devriye", group: "Operasyon", permission: "security.incidents", link: "guvenlik?sekme=devriye", metrics: [["Devriye tamamlama", "Okutulan nokta / plandaki nokta."]] },
-  { key: "hr", name: "Puantaj ve izin", group: "İK", permission: "staff.manage", link: "puantaj", metrics: [["Fazla mesai", "Vardiya süresini aşan çalışma saatleri."]] },
-  { key: "purchasing", name: "Satın alma ve sözleşme karnesi", group: "Satın alma", permission: "expenses.read", link: "satin-alma", metrics: [["Talep–sipariş süresi", "Talep açılışından siparişe gün."], ["Tedarikçi puanı", "Kabul puanlarının ortalaması."]] },
-  { key: "facility", name: "Tesis kullanımı", group: "Operasyon", permission: "requests.assign", link: "rezervasyon?sekme=rapor", metrics: [["Doluluk", "Kullanılan saat / açık saat × kapasite."], ["Gelmedi oranı", "Doğrulama yapılan alanlarda gelinmeyen / biten rezervasyon."]] },
-  { key: "meters", name: "Sayaç ve tüketim", group: "Operasyon", permission: "units.manage", link: "sayaclar", metrics: [["Tüketim", "(Endeks − önceki endeks) × çarpan."]] },
-  { key: "audit", name: "Denetim kaydı", group: "Yönetim", permission: "audit.read", link: "denetim", metrics: [["Kayıt", "Kim, ne zaman, neyi değiştirdi."]] },
-];
-
-const raporlar: RequestHandler[] = [
-  // 79 — Rapor kataloğu ve talep/SLA raporu
-  http.get(`${API}/reports/catalog`, async ({ request, params }) => {
-    const p = await permsOf(request, String(params.slug));
-    return HttpResponse.json(CATALOG.filter((r) => p.has(r.permission)).map((r) => ({ ...r, metrics: r.metrics.map(([name, definition]) => ({ name, definition })) })));
-  }),
-  http.get(`${API}/reports/requests-sla`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const p = await permsOf(request, slug);
-    if (!p.has("requests.read")) return err(403, "forbidden", "Bu raporu görme yetkiniz yok.");
-    const u = new URL(request.url).searchParams; const to = u.get("to") ?? today(), from = u.get("from") ?? addDays(to, -29);
-    const rows = (await allPages<ReqRow>(request, `/api/v1/sites/${slug}/requests`)).filter((r) => dayOf(r.created_at) >= from && dayOf(r.created_at) <= to);
-    const cats = [...new Set(rows.map((r) => r.category))];
-    const line = (list: ReqRow[]) => {
-      const closed = list.filter((r) => ["resolved", "closed"].includes(r.status) && r.resolved_at);
-      const met = closed.filter((r) => r.sla?.state === "met").length;
-      const hours = closed.map((r) => (new Date(r.resolved_at!).getTime() - new Date(r.created_at).getTime()) / 3600e3).filter((h) => h >= 0); // çözüm zamanı açılıştan önce olan (bozuk) kayıtlar ortalamaya girmez
-      const sc = list.map((r) => r.feedback?.score).filter((x): x is number => x != null);
-      return { total: list.length, open: list.filter((r) => !["resolved", "closed", "cancelled"].includes(r.status)).length, closed: closed.length, sla_rate: closed.length ? Math.round((met / closed.length) * 100) : null, avg_hours: hours.length ? Math.round((hours.reduce((s, x) => s + x, 0) / hours.length) * 10) / 10 : null, satisfaction: sc.length ? Math.round((sc.reduce((s, x) => s + x, 0) / sc.length) * 10) / 10 : null, rated: sc.length };
-    };
-    return HttpResponse.json({ from, to, total: line(rows), rows: cats.map((c) => ({ category: c, ...line(rows.filter((r) => r.category === c)) })).sort((a, b) => b.total - a.total) });
-  }),
-
-  // 80 — KVKK: ilgili kişi başvurusu ve aydınlatma metni sürümleri
-  http.post(`${API}/resident/privacy-requests`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { kind?: PrivacyReq["kind"]; detail?: string };
-    const f: Record<string, string> = {};
-    if (!["access", "rectify", "erase", "object"].includes(b.kind ?? "")) f.kind = "Başvuru türünü seçin.";
-    if ((b.detail ?? "").trim().length < (b.kind === "access" ? 0 : 10)) f.detail = "Talebinizi kısaca açıklayın.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const m0 = await me(request);
-    const home = await real<{ units: { unit_id: string; unit_name: string; role: string }[]; accounts: unknown[]; recent_entries: unknown[] }>(request, `/api/v1/sites/${slug}/resident/home`);
-    if (home.status !== 200) return err(403, "forbidden", "Başvuru sakin hesabıyla yapılır.");
-    if (listOf(privacyReqs, slug).some((x) => x.user_id === m0.id && x.kind === b.kind && x.status === "open")) return err(409, "already_open", "Aynı türde açık başvurunuz var.");
-    const profile = await real<Record<string, unknown>>(request, "/api/v1/me");
-    const r: PrivacyReq = { id: crypto.randomUUID(), kind: b.kind!, detail: (b.detail ?? "").trim(), user_id: m0.id, name: m0.name, units: home.body!.units.map((u) => u.unit_name), snapshot: { kisi: { ad: profile.body?.full_name, eposta: profile.body?.email ?? null }, bolumler: home.body!.units, hesaplar: home.body!.accounts, son_hareketler: home.body!.recent_entries, hazirlanma: new Date().toISOString() }, status: "open", created_at: new Date().toISOString(), due_on: addDays(today(), 30), response: null, outcome: null, retained: null, answered_by: null, answered_at: null };
-    listOf(privacyReqs, slug).push(r);
-    return HttpResponse.json({ data: { id: r.id, due_on: r.due_on }, message: `Başvurunuz alındı; en geç ${r.due_on.split("-").reverse().join(".")} tarihine kadar yanıtlanır (30 gün).` }, { status: 201 });
-  }),
-  http.get(`${API}/resident/privacy-requests`, async ({ request, params }) => { const id = (await me(request)).id; return HttpResponse.json(listOf(privacyReqs, String(params.slug)).filter((x) => x.user_id === id).map(({ snapshot: _s, ...x }) => x).reverse()); }),
-  http.get(`${API}/privacy-requests`, ({ params }) => HttpResponse.json(listOf(privacyReqs, String(params.slug)).map(({ snapshot: _s, ...x }) => ({ ...x, days_left: Math.round((new Date(x.due_on + "T00:00:00").getTime() - new Date(today() + "T00:00:00").getTime()) / 864e5) })).sort((a, b) => (a.status === b.status ? a.due_on.localeCompare(b.due_on) : a.status === "open" ? -1 : 1)))),
-  http.get(`${API}/privacy-requests/:id/data-package`, ({ params }) => { const r = listOf(privacyReqs, String(params.slug)).find((x) => x.id === params.id); return r ? HttpResponse.json(r.snapshot as Record<string, unknown>) : err(404, "not_found", "Başvuru bulunamadı."); }),
-  http.post(`${API}/privacy-requests/:id/answer`, async ({ request, params }) => {
-    const r = listOf(privacyReqs, String(params.slug)).find((x) => x.id === params.id);
-    if (!r) return err(404, "not_found", "Başvuru bulunamadı.");
-    if (r.status !== "open") return err(409, "invalid_status", "Başvuru yanıtlanmış.");
-    const b = (await request.json()) as { response?: string; outcome?: PrivacyReq["outcome"]; retained?: string };
-    const f: Record<string, string> = {};
-    if ((b.response ?? "").trim().length < 10) f.response = "Gerekçeli yanıt yazın.";
-    if (!["fulfilled", "partial", "rejected"].includes(b.outcome ?? "")) f.outcome = "Sonucu seçin.";
-    if (r.kind === "erase" && b.outcome !== "fulfilled" && !(b.retained ?? "").trim()) f.retained = "Saklanan kayıtları ve yasal dayanağı yazın (ör. finansal kayıtlar 10 yıl).";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    Object.assign(r, { status: "answered", response: b.response!.trim(), outcome: b.outcome, retained: b.retained?.trim() || null, answered_by: (await me(request)).name, answered_at: new Date().toISOString() });
-    return HttpResponse.json({ data: { ...r, snapshot: undefined }, message: "Başvuru yanıtlandı; kişiye bildirim gider (K5)." });
-  }),
-  http.get(`${API}/privacy-notices`, ({ params }) => HttpResponse.json([...listOf(notices, String(params.slug))].reverse())),
-  http.post(`${API}/privacy-notices`, async ({ request, params }) => {
-    const b = (await request.json()) as { text?: string; summary?: string };
-    if ((b.text ?? "").trim().length < 200) return err(422, "validation", VALIDATION, { text: "Aydınlatma metni çok kısa (en az 200 karakter)." });
-    if ((b.summary ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { summary: "Değişiklik özetini yazın." });
-    const l = listOf(notices, String(params.slug));
-    const n: Notice = { version: l.length + 1, text: b.text!.trim(), summary: b.summary!.trim(), published_at: new Date().toISOString(), published_by: (await me(request)).name };
-    l.push(n);
-    return HttpResponse.json({ data: n, message: `Aydınlatma metni sürüm ${n.version} yayınlandı; eski sürümler saklanır.` }, { status: 201 });
-  }),
-
-  // 81 — Denetim kurulu paketi
-  http.get(`${API}/audit-packages`, ({ params }) => HttpResponse.json([...listOf(auditPkgs, String(params.slug))].reverse())),
-  http.post(`${API}/audit-packages`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { title?: string; from?: string; to?: string; document_ids?: string[] };
-    const f: Record<string, string> = {};
-    if ((b.title ?? "").trim().length < 3) f.title = "Paket adını yazın.";
-    if (!b.from || !DATE_RE.test(b.from)) f.from = "Başlangıç tarihi."; if (!b.to || !DATE_RE.test(b.to) || (b.from && b.to < b.from)) f.to = "Bitiş başlangıçtan önce olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const decisions = listOf(decisionBook, slug).filter((e) => e.date >= b.from! && e.date <= b.to!).map((e) => ({ no: e.no, item_title: e.item_title, decision: e.decision, date: e.date }));
-    const known = new Set((await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).map((d) => d.id));
-    const docIds = (b.document_ids ?? []).filter((id) => known.has(id));
-    const p: AuditPkg = { id: crypto.randomUUID(), title: b.title!.trim(), from: b.from!, to: b.to!, created_by: (await me(request)).name, created_at: new Date().toISOString(), decisions, document_ids: docIds, status: "open", report_document_id: null, reviewed_by: null, reviewed_at: null, note: null };
-    listOf(auditPkgs, slug).push(p);
-    return HttpResponse.json({ data: p, message: `Denetim paketi hazırlandı: ${decisions.length} karar, ${docIds.length} belge.` }, { status: 201 });
-  }),
-  http.post(`${API}/audit-packages/:id/report`, async ({ request, params }) => {
-    const slug = String(params.slug); const p = listOf(auditPkgs, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Paket bulunamadı.");
-    if (p.status === "reviewed") return err(409, "invalid_status", "Denetim raporu zaten yüklendi.");
-    const perms = await permsOf(request, slug);
-    if (!perms.has("audit.read")) return err(403, "forbidden", "Denetim raporunu denetçi yükler.");
-    const b = (await request.json()) as { document_id?: string; note?: string };
-    const d = (await allPages<{ id: string }>(request, `/api/v1/sites/${slug}/documents`)).find((x) => x.id === b.document_id);
-    if (!d) return err(422, "validation", VALIDATION, { document_id: "Denetim raporu belgesini seçin." });
-    Object.assign(p, { status: "reviewed", report_document_id: d.id, reviewed_by: (await me(request)).name, reviewed_at: new Date().toISOString(), note: b.note?.trim() || null });
-    return HttpResponse.json({ data: p, message: "Denetim raporu pakete eklendi; paket arşivlendi." });
-  }),
-];
 
 // ============================================================================================
 // PLATFORM DESTEK (Yazılım Dokümanı PYN-04, PYN-06) — servis istekleri 82–84
@@ -2704,4 +2586,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...raporlar, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...finans, ...operasyon, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...platformDestek];

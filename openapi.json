@@ -233,7 +233,7 @@
           "kimlik"
         ],
         "summary": "Oturumdaki kullanıcı ve erişimleri",
-        "description": "Geçici paroladayken de çalışır (frontend yönlendirmeyi buradan yapar).",
+        "description": "Geçici paroladayken ve aydınlatma onayı beklerken de çalışır (frontend yönlendirmeyi\nburadan yapar).",
         "operationId": "me_api_v1_me_get",
         "responses": {
           "200": {
@@ -252,6 +252,119 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/me/consents": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Onay bekleyen aydınlatma metinleri ve onay geçmişim",
+        "description": "Onay beklerken de çalışır (girişten sonraki onay ekranı).",
+        "operationId": "my_consents_api_v1_me_consents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentStateOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Aydınlatma metnini onayla",
+        "operationId": "accept_consents_api_v1_me_consents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_ConsentStateOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/public/privacy-notice/{slug}": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Sitenin güncel aydınlatma metni (oturumsuz)",
+        "operationId": "public_notice_api_v1_public_privacy_notice__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicNoticeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/me/sessions": {
@@ -14611,6 +14724,1439 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/reports/catalog": {
+      "get": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Rapor kataloğu (yetki ve modüle göre süzülür)",
+        "operationId": "catalog_api_v1_sites__slug__reports_catalog_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogReportOut"
+                  },
+                  "title": "Response Catalog Api V1 Sites  Slug  Reports Catalog Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reports/requests-sla": {
+      "get": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Talep ve SLA raporu (kategori bazında)",
+        "operationId": "requests_sla_api_v1_sites__slug__reports_requests_sla_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boşsa bitişten 30 gün önce",
+              "title": "From"
+            },
+            "description": "boşsa bitişten 30 gün önce"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boşsa bugün",
+              "title": "To"
+            },
+            "description": "boşsa bugün"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/reports/{key}/export.xlsx": {
+      "get": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Katalog raporunu Excel'e aktar (özet, tablolar, metrik tanımları)",
+        "operationId": "export_report_api_v1_sites__slug__reports__key__export_xlsx_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boşsa bitişten 30 gün önce",
+              "title": "From"
+            },
+            "description": "boşsa bitişten 30 gün önce"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "boşsa bugün",
+              "title": "To"
+            },
+            "description": "boşsa bugün"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/audit-packages": {
+      "get": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Denetim paketleri (yeni üstte; sayfalı)",
+        "operationId": "list_packages_api_v1_sites__slug__audit_packages_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AuditPackageOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Denetim paketi hazırla",
+        "operationId": "create_package_api_v1_sites__slug__audit_packages_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditPackageIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AuditPackageOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/audit-packages/{package_id}/report": {
+      "post": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Denetim raporunu ekle (denetçi) → denetlendi",
+        "operationId": "add_report_api_v1_sites__slug__audit_packages__package_id__report_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_AuditPackageOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/audit-packages/{package_id}/export.xlsx": {
+      "get": {
+        "tags": [
+          "rapor"
+        ],
+        "summary": "Paketin dondurulmuş özeti (Excel)",
+        "operationId": "export_package_api_v1_sites__slug__audit_packages__package_id__export_xlsx_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "package_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Package Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/privacy-notices": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Aydınlatma metni sürümleri (yeni üstte; sayfalı)",
+        "operationId": "list_notices_api_v1_sites__slug__privacy_notices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PrivacyNoticeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Aydınlatma metninin yeni sürümünü yayınla (herkes yeniden onaylar)",
+        "operationId": "publish_notice_api_v1_sites__slug__privacy_notices_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyNoticeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PrivacyNoticeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/my-privacy": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Bu sitedeki onaylarım ve açık rızam",
+        "operationId": "my_privacy_api_v1_sites__slug__my_privacy_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyPrivacyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/my-privacy/explicit-consents/{purpose}": {
+      "put": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Açık rıza ver / geri çek (isteğe bağlı; hizmete şart değil)",
+        "operationId": "set_explicit_api_v1_sites__slug__my_privacy_explicit_consents__purpose__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExplicitPurpose"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplicitIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MyPrivacyOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/my-privacy/data-export": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Verilerimi indir (kişisel veri paketi, JSON)",
+        "operationId": "my_data_export_api_v1_sites__slug__my_privacy_data_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response My Data Export Api V1 Sites  Slug  My Privacy Data Export Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/privacy-requests": {
+      "post": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "KVKK başvurusu yap (sakin) — 30 gün sayacı başlar",
+        "operationId": "create_privacy_request_api_v1_sites__slug__resident_privacy_requests_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_MyPrivacyRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "KVKK başvurularım (sayfalı)",
+        "operationId": "my_privacy_requests_api_v1_sites__slug__resident_privacy_requests_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_MyPrivacyRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/privacy-requests": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "KVKK başvuruları (açıklar önce, son güne göre; sayfalı)",
+        "operationId": "list_privacy_requests_api_v1_sites__slug__privacy_requests_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivacyRequestStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "open · answered",
+              "title": "Status"
+            },
+            "description": "open · answered"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PrivacyRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/privacy-requests/{request_id}/data-package": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Kişisel veri paketi (JSON) — erişim başvurusu",
+        "operationId": "data_package_api_v1_sites__slug__privacy_requests__request_id__data_package_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Data Package Api V1 Sites  Slug  Privacy Requests  Request Id  Data Package Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/privacy-requests/{request_id}/answer": {
+      "post": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Başvuruyu gerekçeli yanıtla",
+        "operationId": "answer_privacy_request_api_v1_sites__slug__privacy_requests__request_id__answer_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyAnswerIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_PrivacyRequestOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/retention": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "KVKK saklama politikası (kategori × süre)",
+        "operationId": "retention_policy_api_v1_sites__slug__settings_retention_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Saklama sürelerini ve otomatik uygulamayı kaydet",
+        "operationId": "save_retention_api_v1_sites__slug__settings_retention_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RetentionOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/retention/{key}/apply": {
+      "post": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Süresi dolan kayıtları şimdi işle (silme/anonimleştirme raporu yazılır)",
+        "operationId": "apply_retention_api_v1_sites__slug__settings_retention__key__apply_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Key"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_RetentionRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/settings/retention/runs": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Silme/anonimleştirme raporu (yeni üstte; sayfalı)",
+        "operationId": "retention_runs_api_v1_sites__slug__settings_retention_runs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RetentionRunOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/data-inventory": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Kişisel veri envanteri (VERBİS dökümü)",
+        "operationId": "data_inventory_api_v1_sites__slug__data_inventory_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryRowOut"
+                  },
+                  "title": "Response Data Inventory Api V1 Sites  Slug  Data Inventory Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/data-inventory/export": {
+      "get": {
+        "tags": [
+          "kvkk"
+        ],
+        "summary": "Kişisel veri envanteri dışa aktarma (Excel ya da CSV)",
+        "operationId": "data_inventory_export_api_v1_sites__slug__data_inventory_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "xlsx",
+                "csv"
+              ],
+              "type": "string",
+              "default": "xlsx",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
+              "text/csv; charset=utf-8": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/dashboard": {
       "get": {
         "tags": [
@@ -24816,6 +26362,229 @@
         ],
         "title": "AuditOut"
       },
+      "AuditPackageIn": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          },
+          "document_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Document Ids"
+          }
+        },
+        "type": "object",
+        "title": "AuditPackageIn"
+      },
+      "AuditPackageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "from": {
+            "type": "string",
+            "format": "date",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "title": "To"
+          },
+          "created_by": {
+            "type": "string",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/PackageDecisionOut"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "document_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Document Ids"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/PackageDocumentOut"
+            },
+            "type": "array",
+            "title": "Documents"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot",
+            "description": "hazırlandığı andaki dönem özeti (dondurulmuş): income, expense, difference, months, categories, budget_year, budget, collections, cash, cash_total — para metin"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "open · reviewed"
+          },
+          "report_document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Document Id"
+          },
+          "report_document_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Document Title"
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "from",
+          "to",
+          "created_by",
+          "created_at",
+          "decisions",
+          "document_ids",
+          "documents",
+          "snapshot",
+          "status",
+          "report_document_id",
+          "report_document_title",
+          "reviewed_by",
+          "reviewed_at",
+          "note"
+        ],
+        "title": "AuditPackageOut"
+      },
+      "AuditReportIn": {
+        "properties": {
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "AuditReportIn"
+      },
       "AuthEventKind": {
         "type": "string",
         "enum": [
@@ -26138,6 +27907,54 @@
         ],
         "title": "CashSource"
       },
+      "CatalogReportOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "permission": {
+            "type": "string",
+            "title": "Permission"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link",
+            "description": "site altındaki ekran yolu"
+          },
+          "exportable": {
+            "type": "boolean",
+            "title": "Exportable",
+            "description": "Excel dışa aktarma ve planlı gönderim üreticisi var"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/MetricOut"
+            },
+            "type": "array",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "group",
+          "permission",
+          "link",
+          "exportable",
+          "metrics"
+        ],
+        "title": "CatalogReportOut"
+      },
       "CategoryIn": {
         "properties": {
           "name": {
@@ -27103,6 +28920,55 @@
           "rest"
         ],
         "title": "ConflictKind"
+      },
+      "ConsentIn": {
+        "properties": {
+          "notice_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Notice Ids",
+            "description": "onaylanan sürümler"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notice_ids"
+        ],
+        "title": "ConsentIn"
+      },
+      "ConsentStateOut": {
+        "properties": {
+          "consent_required": {
+            "type": "boolean",
+            "title": "Consent Required"
+          },
+          "pending": {
+            "items": {
+              "$ref": "#/components/schemas/PendingNoticeOut"
+            },
+            "type": "array",
+            "title": "Pending"
+          },
+          "given": {
+            "items": {
+              "$ref": "#/components/schemas/GivenConsentOut"
+            },
+            "type": "array",
+            "title": "Given",
+            "description": "onay geçmişi, yeni üstte"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consent_required",
+          "pending",
+          "given"
+        ],
+        "title": "ConsentStateOut"
       },
       "ContactOut": {
         "properties": {
@@ -29673,6 +31539,62 @@
         ],
         "title": "ExpiryWarning"
       },
+      "ExplicitConsentOut": {
+        "properties": {
+          "purpose": {
+            "$ref": "#/components/schemas/ExplicitPurpose"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "granted": {
+            "type": "boolean",
+            "title": "Granted"
+          },
+          "changed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purpose",
+          "label",
+          "granted",
+          "changed_at"
+        ],
+        "title": "ExplicitConsentOut"
+      },
+      "ExplicitIn": {
+        "properties": {
+          "granted": {
+            "type": "boolean",
+            "title": "Granted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "granted"
+        ],
+        "title": "ExplicitIn"
+      },
+      "ExplicitPurpose": {
+        "type": "string",
+        "enum": [
+          "communications"
+        ],
+        "title": "ExplicitPurpose",
+        "description": "Açık rıza amaçları (aydınlatmadan ayrı; isteğe bağlı)."
+      },
       "FinanceOut": {
         "properties": {
           "total_charged": {
@@ -30010,6 +31932,41 @@
           "is_active"
         ],
         "title": "GateOut"
+      },
+      "GivenConsentOut": {
+        "properties": {
+          "site_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Site Id"
+          },
+          "site_name": {
+            "type": "string",
+            "title": "Site Name"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Accepted At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site_id",
+          "site_name",
+          "version",
+          "source",
+          "accepted_at"
+        ],
+        "title": "GivenConsentOut"
       },
       "GoLiveOut": {
         "properties": {
@@ -31355,6 +33312,64 @@
         ],
         "title": "InternalNoteOut"
       },
+      "InventoryRowOut": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label"
+          },
+          "data": {
+            "type": "string",
+            "title": "Data"
+          },
+          "subjects": {
+            "type": "string",
+            "title": "Subjects"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
+          "legal_basis": {
+            "type": "string",
+            "title": "Legal Basis"
+          },
+          "retention": {
+            "type": "string",
+            "title": "Retention"
+          },
+          "recipients": {
+            "type": "string",
+            "title": "Recipients"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "records": {
+            "type": "integer",
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "category_label",
+          "data",
+          "subjects",
+          "purpose",
+          "legal_basis",
+          "retention",
+          "recipients",
+          "source",
+          "records"
+        ],
+        "title": "InventoryRowOut"
+      },
       "InvitationIn": {
         "properties": {
           "full_name": {
@@ -32536,6 +34551,12 @@
             "title": "Must Change Password",
             "description": "true: geçici parola — önce `POST /auth/change-password`"
           },
+          "consent_required": {
+            "type": "boolean",
+            "title": "Consent Required",
+            "description": "true: erişilen bir sitenin güncel aydınlatma metni onaylanmadı — önce `GET/POST /me/consents` (P6). Bu sürede diğer uçlar 403 `consent_required`",
+            "default": false
+          },
           "sites": {
             "items": {
               "$ref": "#/components/schemas/SiteAccessOut"
@@ -32940,6 +34961,29 @@
           "window_hours"
         ],
         "title": "MergeSuggestionsOut"
+      },
+      "MetricOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "definition"
+        ],
+        "title": "MetricOut"
       },
       "ModuleKey": {
         "type": "string",
@@ -33405,6 +35449,146 @@
           "items"
         ],
         "title": "MyPermitsOut"
+      },
+      "MyPrivacyOut": {
+        "properties": {
+          "notice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrivacyNoticeOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "sitenin güncel aydınlatma metni"
+          },
+          "accepted": {
+            "items": {
+              "$ref": "#/components/schemas/GivenConsentOut"
+            },
+            "type": "array",
+            "title": "Accepted"
+          },
+          "explicit": {
+            "items": {
+              "$ref": "#/components/schemas/ExplicitConsentOut"
+            },
+            "type": "array",
+            "title": "Explicit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notice",
+          "accepted",
+          "explicit"
+        ],
+        "title": "MyPrivacyOut"
+      },
+      "MyPrivacyRequestOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PrivacyRequestKind"
+          },
+          "kind_label": {
+            "type": "string",
+            "title": "Kind Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PrivacyRequestStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrivacyOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome Label"
+          },
+          "retained": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "kind_label",
+          "detail",
+          "status",
+          "created_at",
+          "due_on",
+          "response",
+          "outcome",
+          "outcome_label",
+          "retained",
+          "answered_at"
+        ],
+        "title": "MyPrivacyRequestOut"
       },
       "MyRequest": {
         "properties": {
@@ -34348,6 +36532,71 @@
         ],
         "title": "OwnershipTransferOut"
       },
+      "PackageDecisionOut": {
+        "properties": {
+          "no": {
+            "type": "integer",
+            "title": "No"
+          },
+          "meeting_title": {
+            "type": "string",
+            "title": "Meeting Title"
+          },
+          "item_title": {
+            "type": "string",
+            "title": "Item Title"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "no",
+          "meeting_title",
+          "item_title",
+          "decision",
+          "result",
+          "date"
+        ],
+        "title": "PackageDecisionOut"
+      },
+      "PackageDocumentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "PackageDocumentOut"
+      },
       "PackageIn": {
         "properties": {
           "unit_id": {
@@ -34621,6 +36870,37 @@
           "total"
         ],
         "title": "Page[AuditOut]"
+      },
+      "Page_AuditPackageOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditPackageOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[AuditPackageOut]"
       },
       "Page_BlockOut_": {
         "properties": {
@@ -35118,6 +37398,37 @@
         ],
         "title": "Page[MovementOut]"
       },
+      "Page_MyPrivacyRequestOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MyPrivacyRequestOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[MyPrivacyRequestOut]"
+      },
       "Page_OutageOut_": {
         "properties": {
           "items": {
@@ -35459,6 +37770,68 @@
         ],
         "title": "Page[PostedChargeOut]"
       },
+      "Page_PrivacyNoticeOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PrivacyNoticeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[PrivacyNoticeOut]"
+      },
+      "Page_PrivacyRequestOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PrivacyRequestOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[PrivacyRequestOut]"
+      },
       "Page_RegistrationOut_": {
         "properties": {
           "items": {
@@ -35582,6 +37955,37 @@
           "total"
         ],
         "title": "Page[ResidentDocumentOut]"
+      },
+      "Page_RetentionRunOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionRunOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "Page[RetentionRunOut]"
       },
       "Page_SiteUsageOut_": {
         "properties": {
@@ -37467,6 +39871,57 @@
         ],
         "title": "PaymentStatus"
       },
+      "PendingNoticeOut": {
+        "properties": {
+          "notice_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Notice Id"
+          },
+          "site_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Site Id"
+          },
+          "site_name": {
+            "type": "string",
+            "title": "Site Name"
+          },
+          "site_slug": {
+            "type": "string",
+            "title": "Site Slug"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notice_id",
+          "site_id",
+          "site_name",
+          "site_slug",
+          "version",
+          "text",
+          "summary",
+          "published_at"
+        ],
+        "title": "PendingNoticeOut"
+      },
       "PermitApplyIn": {
         "properties": {
           "unit_id": {
@@ -38686,6 +41141,311 @@
         ],
         "title": "PreferencesOut"
       },
+      "PrivacyAnswerIn": {
+        "properties": {
+          "response": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "retained": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained"
+          }
+        },
+        "type": "object",
+        "title": "PrivacyAnswerIn"
+      },
+      "PrivacyNoticeIn": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "title": "PrivacyNoticeIn"
+      },
+      "PrivacyNoticeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          },
+          "published_by": {
+            "type": "string",
+            "title": "Published By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "text",
+          "summary",
+          "published_at",
+          "published_by"
+        ],
+        "title": "PrivacyNoticeOut"
+      },
+      "PrivacyOutcome": {
+        "type": "string",
+        "enum": [
+          "fulfilled",
+          "partial",
+          "rejected"
+        ],
+        "title": "PrivacyOutcome"
+      },
+      "PrivacyRequestIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind",
+            "description": "access · rectify · erase · object"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "PrivacyRequestIn"
+      },
+      "PrivacyRequestKind": {
+        "type": "string",
+        "enum": [
+          "access",
+          "rectify",
+          "erase",
+          "object"
+        ],
+        "title": "PrivacyRequestKind"
+      },
+      "PrivacyRequestOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PrivacyRequestKind"
+          },
+          "kind_label": {
+            "type": "string",
+            "title": "Kind Label"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PrivacyRequestStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrivacyOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome Label"
+          },
+          "retained": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retained"
+          },
+          "answered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered At"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Units"
+          },
+          "days_left": {
+            "type": "integer",
+            "title": "Days Left",
+            "description": "eksi: gecikme günü"
+          },
+          "answered_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "kind_label",
+          "detail",
+          "status",
+          "created_at",
+          "due_on",
+          "response",
+          "outcome",
+          "outcome_label",
+          "retained",
+          "answered_at",
+          "name",
+          "units",
+          "days_left",
+          "answered_by"
+        ],
+        "title": "PrivacyRequestOut"
+      },
+      "PrivacyRequestStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "answered"
+        ],
+        "title": "PrivacyRequestStatus"
+      },
       "PropertyKind": {
         "type": "string",
         "enum": [
@@ -38855,6 +41615,11 @@
             "type": "string",
             "title": "Site Name"
           },
+          "site_slug": {
+            "type": "string",
+            "title": "Site Slug",
+            "description": "aydınlatma metni bağlantısı için (`/public/privacy-notice/{slug}`)"
+          },
           "full_name": {
             "type": "string",
             "title": "Full Name"
@@ -38888,6 +41653,7 @@
         "type": "object",
         "required": [
           "site_name",
+          "site_slug",
           "full_name",
           "unit_name",
           "relation",
@@ -38897,6 +41663,57 @@
           "email_required"
         ],
         "title": "PublicInvitationOut"
+      },
+      "PublicNoticeOut": {
+        "properties": {
+          "site_name": {
+            "type": "string",
+            "title": "Site Name"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "yayınlanmış sürüm yoksa null (taslak gösterilir)"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site_name",
+          "version",
+          "text",
+          "published_at"
+        ],
+        "title": "PublicNoticeOut"
       },
       "PublicSiteOut": {
         "properties": {
@@ -41743,6 +44560,268 @@
         "type": "object",
         "title": "ResubmitIn"
       },
+      "RetentionAction": {
+        "type": "string",
+        "enum": [
+          "anonymize",
+          "delete",
+          "keep"
+        ],
+        "title": "RetentionAction"
+      },
+      "RetentionCategoryOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "data": {
+            "type": "string",
+            "title": "Data"
+          },
+          "kvkk_category": {
+            "type": "string",
+            "title": "Kvkk Category"
+          },
+          "subjects": {
+            "type": "string",
+            "title": "Subjects"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/RetentionUnit"
+          },
+          "unit_label": {
+            "type": "string",
+            "title": "Unit Label"
+          },
+          "default_value": {
+            "type": "integer",
+            "title": "Default Value"
+          },
+          "max_value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Value"
+          },
+          "action": {
+            "$ref": "#/components/schemas/RetentionAction"
+          },
+          "action_label": {
+            "type": "string",
+            "title": "Action Label"
+          },
+          "adjustable": {
+            "type": "boolean",
+            "title": "Adjustable",
+            "description": "false: yasal saklama, otomatik işlem yok"
+          },
+          "auto_apply": {
+            "type": "boolean",
+            "title": "Auto Apply",
+            "description": "gece işi uygular (hukuki teyide kadar varsayılan kapalı)"
+          },
+          "needs_legal_review": {
+            "type": "boolean",
+            "title": "Needs Legal Review"
+          },
+          "legal_basis": {
+            "type": "string",
+            "title": "Legal Basis"
+          },
+          "cutoff": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff",
+            "description": "bu tarihten önceki kayıtların süresi doldu"
+          },
+          "pending": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pending",
+            "description": "süresi dolmuş, henüz işlenmemiş kayıt sayısı"
+          },
+          "last_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetentionRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "data",
+          "kvkk_category",
+          "subjects",
+          "value",
+          "unit",
+          "unit_label",
+          "default_value",
+          "max_value",
+          "action",
+          "action_label",
+          "adjustable",
+          "auto_apply",
+          "needs_legal_review",
+          "legal_basis",
+          "cutoff",
+          "pending",
+          "last_run"
+        ],
+        "title": "RetentionCategoryOut"
+      },
+      "RetentionIn": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionItemIn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "RetentionIn"
+      },
+      "RetentionItemIn": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Key"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "auto_apply": {
+            "type": "boolean",
+            "title": "Auto Apply",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "RetentionItemIn"
+      },
+      "RetentionOut": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionCategoryOut"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories"
+        ],
+        "title": "RetentionOut"
+      },
+      "RetentionRunOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label"
+          },
+          "action": {
+            "$ref": "#/components/schemas/RetentionAction"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/RunTrigger"
+          },
+          "cutoff": {
+            "type": "string",
+            "format": "date",
+            "title": "Cutoff"
+          },
+          "affected": {
+            "type": "integer",
+            "title": "Affected"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "category_label",
+          "action",
+          "trigger",
+          "cutoff",
+          "affected",
+          "actor",
+          "at"
+        ],
+        "title": "RetentionRunOut"
+      },
+      "RetentionUnit": {
+        "type": "string",
+        "enum": [
+          "day",
+          "month",
+          "year"
+        ],
+        "title": "RetentionUnit"
+      },
       "RevokedOut": {
         "properties": {
           "revoked": {
@@ -42145,6 +45224,14 @@
           "warnings"
         ],
         "title": "RuleWriteOut"
+      },
+      "RunTrigger": {
+        "type": "string",
+        "enum": [
+          "job",
+          "manual"
+        ],
+        "title": "RunTrigger"
       },
       "ScheduleIn": {
         "properties": {
@@ -44483,6 +47570,188 @@
           "message"
         ],
         "title": "SkippedOut"
+      },
+      "SlaLineOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "dönemde açılan"
+          },
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "description": "dönemde açılıp hâlâ açık"
+          },
+          "closed": {
+            "type": "integer",
+            "title": "Closed",
+            "description": "dönemde çözülen"
+          },
+          "sla_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Rate",
+            "description": "SLA uyumu %, metin (`92.5`); veri yoksa null"
+          },
+          "avg_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Hours",
+            "description": "ortalama çözüm (saat), metin"
+          },
+          "satisfaction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satisfaction",
+            "description": "kapanış puanı ortalaması (1–5), metin"
+          },
+          "rated": {
+            "type": "integer",
+            "title": "Rated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "open",
+          "closed",
+          "sla_rate",
+          "avg_hours",
+          "satisfaction",
+          "rated"
+        ],
+        "title": "SlaLineOut"
+      },
+      "SlaReportOut": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "title": "From"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "title": "To"
+          },
+          "total": {
+            "$ref": "#/components/schemas/SlaLineOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SlaRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "total",
+          "rows"
+        ],
+        "title": "SlaReportOut"
+      },
+      "SlaRowOut": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "dönemde açılan"
+          },
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "description": "dönemde açılıp hâlâ açık"
+          },
+          "closed": {
+            "type": "integer",
+            "title": "Closed",
+            "description": "dönemde çözülen"
+          },
+          "sla_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Rate",
+            "description": "SLA uyumu %, metin (`92.5`); veri yoksa null"
+          },
+          "avg_hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Hours",
+            "description": "ortalama çözüm (saat), metin"
+          },
+          "satisfaction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Satisfaction",
+            "description": "kapanış puanı ortalaması (1–5), metin"
+          },
+          "rated": {
+            "type": "integer",
+            "title": "Rated"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "open",
+          "closed",
+          "sla_rate",
+          "avg_hours",
+          "satisfaction",
+          "rated",
+          "category",
+          "category_name"
+        ],
+        "title": "SlaRowOut"
       },
       "SlaState": {
         "type": "string",
@@ -48550,6 +51819,23 @@
         ],
         "title": "Written[AttendanceSettingsOut]"
       },
+      "Written_AuditPackageOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuditPackageOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[AuditPackageOut]"
+      },
       "Written_BlockOut_": {
         "properties": {
           "data": {
@@ -48685,6 +51971,23 @@
           "message"
         ],
         "title": "Written[ConfirmOut]"
+      },
+      "Written_ConsentStateOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ConsentStateOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[ConsentStateOut]"
       },
       "Written_ContactOut_": {
         "properties": {
@@ -49179,6 +52482,40 @@
         ],
         "title": "Written[MovementOut]"
       },
+      "Written_MyPrivacyOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MyPrivacyOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[MyPrivacyOut]"
+      },
+      "Written_MyPrivacyRequestOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MyPrivacyRequestOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[MyPrivacyRequestOut]"
+      },
       "Written_NoneType_": {
         "properties": {
           "data": {
@@ -49554,6 +52891,40 @@
         ],
         "title": "Written[PreferencesOut]"
       },
+      "Written_PrivacyNoticeOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PrivacyNoticeOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PrivacyNoticeOut]"
+      },
+      "Written_PrivacyRequestOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PrivacyRequestOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[PrivacyRequestOut]"
+      },
       "Written_RecurringOut_": {
         "properties": {
           "data": {
@@ -49723,6 +53094,40 @@
           "message"
         ],
         "title": "Written[RestoreOut]"
+      },
+      "Written_RetentionOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RetentionOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[RetentionOut]"
+      },
+      "Written_RetentionRunOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RetentionRunOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[RetentionRunOut]"
       },
       "Written_RevokedOut_": {
         "properties": {

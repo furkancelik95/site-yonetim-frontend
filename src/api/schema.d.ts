@@ -135,9 +135,48 @@ export interface paths {
         };
         /**
          * Oturumdaki kullanıcı ve erişimleri
-         * @description Geçici paroladayken de çalışır (frontend yönlendirmeyi buradan yapar).
+         * @description Geçici paroladayken ve aydınlatma onayı beklerken de çalışır (frontend yönlendirmeyi
+         *     buradan yapar).
          */
         get: operations["me_api_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Onay bekleyen aydınlatma metinleri ve onay geçmişim
+         * @description Onay beklerken de çalışır (girişten sonraki onay ekranı).
+         */
+        get: operations["my_consents_api_v1_me_consents_get"];
+        put?: never;
+        /** Aydınlatma metnini onayla */
+        post: operations["accept_consents_api_v1_me_consents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/privacy-notice/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sitenin güncel aydınlatma metni (oturumsuz) */
+        get: operations["public_notice_api_v1_public_privacy_notice__slug__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3242,6 +3281,333 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/reports/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rapor kataloğu (yetki ve modüle göre süzülür) */
+        get: operations["catalog_api_v1_sites__slug__reports_catalog_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reports/requests-sla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Talep ve SLA raporu (kategori bazında) */
+        get: operations["requests_sla_api_v1_sites__slug__reports_requests_sla_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/reports/{key}/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Katalog raporunu Excel'e aktar (özet, tablolar, metrik tanımları) */
+        get: operations["export_report_api_v1_sites__slug__reports__key__export_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/audit-packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Denetim paketleri (yeni üstte; sayfalı) */
+        get: operations["list_packages_api_v1_sites__slug__audit_packages_get"];
+        put?: never;
+        /** Denetim paketi hazırla */
+        post: operations["create_package_api_v1_sites__slug__audit_packages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/audit-packages/{package_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Denetim raporunu ekle (denetçi) → denetlendi */
+        post: operations["add_report_api_v1_sites__slug__audit_packages__package_id__report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/audit-packages/{package_id}/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paketin dondurulmuş özeti (Excel) */
+        get: operations["export_package_api_v1_sites__slug__audit_packages__package_id__export_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/privacy-notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aydınlatma metni sürümleri (yeni üstte; sayfalı) */
+        get: operations["list_notices_api_v1_sites__slug__privacy_notices_get"];
+        put?: never;
+        /** Aydınlatma metninin yeni sürümünü yayınla (herkes yeniden onaylar) */
+        post: operations["publish_notice_api_v1_sites__slug__privacy_notices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/my-privacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bu sitedeki onaylarım ve açık rızam */
+        get: operations["my_privacy_api_v1_sites__slug__my_privacy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/my-privacy/explicit-consents/{purpose}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Açık rıza ver / geri çek (isteğe bağlı; hizmete şart değil) */
+        put: operations["set_explicit_api_v1_sites__slug__my_privacy_explicit_consents__purpose__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/my-privacy/data-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verilerimi indir (kişisel veri paketi, JSON) */
+        get: operations["my_data_export_api_v1_sites__slug__my_privacy_data_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/privacy-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KVKK başvurularım (sayfalı) */
+        get: operations["my_privacy_requests_api_v1_sites__slug__resident_privacy_requests_get"];
+        put?: never;
+        /** KVKK başvurusu yap (sakin) — 30 gün sayacı başlar */
+        post: operations["create_privacy_request_api_v1_sites__slug__resident_privacy_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/privacy-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KVKK başvuruları (açıklar önce, son güne göre; sayfalı) */
+        get: operations["list_privacy_requests_api_v1_sites__slug__privacy_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/privacy-requests/{request_id}/data-package": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kişisel veri paketi (JSON) — erişim başvurusu */
+        get: operations["data_package_api_v1_sites__slug__privacy_requests__request_id__data_package_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/privacy-requests/{request_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Başvuruyu gerekçeli yanıtla */
+        post: operations["answer_privacy_request_api_v1_sites__slug__privacy_requests__request_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KVKK saklama politikası (kategori × süre) */
+        get: operations["retention_policy_api_v1_sites__slug__settings_retention_get"];
+        /** Saklama sürelerini ve otomatik uygulamayı kaydet */
+        put: operations["save_retention_api_v1_sites__slug__settings_retention_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/retention/{key}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Süresi dolan kayıtları şimdi işle (silme/anonimleştirme raporu yazılır) */
+        post: operations["apply_retention_api_v1_sites__slug__settings_retention__key__apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/settings/retention/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Silme/anonimleştirme raporu (yeni üstte; sayfalı) */
+        get: operations["retention_runs_api_v1_sites__slug__settings_retention_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/data-inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kişisel veri envanteri (VERBİS dökümü) */
+        get: operations["data_inventory_api_v1_sites__slug__data_inventory_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/data-inventory/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kişisel veri envanteri dışa aktarma (Excel ya da CSV) */
+        get: operations["data_inventory_export_api_v1_sites__slug__data_inventory_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/dashboard": {
         parameters: {
             query?: never;
@@ -5838,6 +6204,79 @@ export interface components {
              */
             reason: string | null;
         };
+        /** AuditPackageIn */
+        AuditPackageIn: {
+            /** Title */
+            title?: string | null;
+            /** From */
+            from?: string | null;
+            /** To */
+            to?: string | null;
+            /** Document Ids */
+            document_ids?: string[];
+        };
+        /** AuditPackageOut */
+        AuditPackageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decisions */
+            decisions: components["schemas"]["PackageDecisionOut"][];
+            /** Document Ids */
+            document_ids: string[];
+            /** Documents */
+            documents: components["schemas"]["PackageDocumentOut"][];
+            /**
+             * Snapshot
+             * @description hazırlandığı andaki dönem özeti (dondurulmuş): income, expense, difference, months, categories, budget_year, budget, collections, cash, cash_total — para metin
+             */
+            snapshot: {
+                [key: string]: unknown;
+            };
+            /**
+             * Status
+             * @description open · reviewed
+             */
+            status: string;
+            /** Report Document Id */
+            report_document_id: string | null;
+            /** Report Document Title */
+            report_document_title: string | null;
+            /** Reviewed By */
+            reviewed_by: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Note */
+            note: string | null;
+        };
+        /** AuditReportIn */
+        AuditReportIn: {
+            /** Document Id */
+            document_id?: string | null;
+            /** Note */
+            note?: string | null;
+        };
         /**
          * AuthEventKind
          * @enum {string}
@@ -6359,6 +6798,29 @@ export interface components {
          * @enum {string}
          */
         CashSource: "manual" | "payment" | "expense" | "transfer" | "opening" | "refund";
+        /** CatalogReportOut */
+        CatalogReportOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Group */
+            group: string;
+            /** Permission */
+            permission: string;
+            /**
+             * Link
+             * @description site altındaki ekran yolu
+             */
+            link: string;
+            /**
+             * Exportable
+             * @description Excel dışa aktarma ve planlı gönderim üreticisi var
+             */
+            exportable: boolean;
+            /** Metrics */
+            metrics: components["schemas"]["MetricOut"][];
+        };
         /** CategoryIn */
         CategoryIn: {
             /** Name */
@@ -6772,6 +7234,26 @@ export interface components {
          * @enum {string}
          */
         ConflictKind: "overlap" | "leave" | "rest";
+        /** ConsentIn */
+        ConsentIn: {
+            /**
+             * Notice Ids
+             * @description onaylanan sürümler
+             */
+            notice_ids: string[];
+        };
+        /** ConsentStateOut */
+        ConsentStateOut: {
+            /** Consent Required */
+            consent_required: boolean;
+            /** Pending */
+            pending: components["schemas"]["PendingNoticeOut"][];
+            /**
+             * Given
+             * @description onay geçmişi, yeni üstte
+             */
+            given: components["schemas"]["GivenConsentOut"][];
+        };
         /** ContactOut */
         ContactOut: {
             /** Phone */
@@ -7775,6 +8257,27 @@ export interface components {
          * @enum {string}
          */
         ExpiryWarning: "60" | "30" | "expired";
+        /** ExplicitConsentOut */
+        ExplicitConsentOut: {
+            purpose: components["schemas"]["ExplicitPurpose"];
+            /** Label */
+            label: string;
+            /** Granted */
+            granted: boolean;
+            /** Changed At */
+            changed_at: string | null;
+        };
+        /** ExplicitIn */
+        ExplicitIn: {
+            /** Granted */
+            granted: boolean;
+        };
+        /**
+         * ExplicitPurpose
+         * @description Açık rıza amaçları (aydınlatmadan ayrı; isteğe bağlı).
+         * @enum {string}
+         */
+        ExplicitPurpose: "communications";
         /** FinanceOut */
         FinanceOut: {
             /**
@@ -7927,6 +8430,25 @@ export interface components {
             always_open: boolean;
             /** Is Active */
             is_active: boolean;
+        };
+        /** GivenConsentOut */
+        GivenConsentOut: {
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            /** Version */
+            version: number;
+            /** Source */
+            source: string;
+            /**
+             * Accepted At
+             * Format: date-time
+             */
+            accepted_at: string;
         };
         /** GoLiveOut */
         GoLiveOut: {
@@ -8449,6 +8971,29 @@ export interface components {
              */
             created_at: string;
         };
+        /** InventoryRowOut */
+        InventoryRowOut: {
+            /** Category */
+            category: string;
+            /** Category Label */
+            category_label: string;
+            /** Data */
+            data: string;
+            /** Subjects */
+            subjects: string;
+            /** Purpose */
+            purpose: string;
+            /** Legal Basis */
+            legal_basis: string;
+            /** Retention */
+            retention: string;
+            /** Recipients */
+            recipients: string;
+            /** Source */
+            source: string;
+            /** Records */
+            records: number;
+        };
         /** InvitationIn */
         InvitationIn: {
             /** Full Name */
@@ -8934,6 +9479,12 @@ export interface components {
              * @description true: geçici parola — önce `POST /auth/change-password`
              */
             must_change_password: boolean;
+            /**
+             * Consent Required
+             * @description true: erişilen bir sitenin güncel aydınlatma metni onaylanmadı — önce `GET/POST /me/consents` (P6). Bu sürede diğer uçlar 403 `consent_required`
+             * @default false
+             */
+            consent_required: boolean;
             /** Sites */
             sites: components["schemas"]["SiteAccessOut"][];
         };
@@ -9070,6 +9621,15 @@ export interface components {
             open_outages: components["schemas"]["OpenOutageBrief"][];
             /** Window Hours */
             window_hours: number;
+        };
+        /** MetricOut */
+        MetricOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Definition */
+            definition: string;
         };
         /**
          * ModuleKey
@@ -9267,6 +9827,48 @@ export interface components {
             rules: components["schemas"]["PermitRulesOut"];
             /** Items */
             items: components["schemas"]["PermitOut"][];
+        };
+        /** MyPrivacyOut */
+        MyPrivacyOut: {
+            /** @description sitenin güncel aydınlatma metni */
+            notice: components["schemas"]["PrivacyNoticeOut"] | null;
+            /** Accepted */
+            accepted: components["schemas"]["GivenConsentOut"][];
+            /** Explicit */
+            explicit: components["schemas"]["ExplicitConsentOut"][];
+        };
+        /** MyPrivacyRequestOut */
+        MyPrivacyRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["PrivacyRequestKind"];
+            /** Kind Label */
+            kind_label: string;
+            /** Detail */
+            detail: string;
+            status: components["schemas"]["PrivacyRequestStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /** Response */
+            response: string | null;
+            outcome: components["schemas"]["PrivacyOutcome"] | null;
+            /** Outcome Label */
+            outcome_label: string | null;
+            /** Retained */
+            retained: string | null;
+            /** Answered At */
+            answered_at: string | null;
         };
         /** MyRequest */
         MyRequest: {
@@ -9651,6 +10253,34 @@ export interface components {
             /** Approval Request Id */
             approval_request_id: string | null;
         };
+        /** PackageDecisionOut */
+        PackageDecisionOut: {
+            /** No */
+            no: number;
+            /** Meeting Title */
+            meeting_title: string;
+            /** Item Title */
+            item_title: string;
+            /** Decision */
+            decision: string;
+            /** Result */
+            result: string | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /** PackageDocumentOut */
+        PackageDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+        };
         /** PackageIn */
         PackageIn: {
             /**
@@ -9734,6 +10364,17 @@ export interface components {
         Page_AuditOut_: {
             /** Items */
             items: components["schemas"]["AuditOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[AuditPackageOut] */
+        Page_AuditPackageOut_: {
+            /** Items */
+            items: components["schemas"]["AuditPackageOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -9917,6 +10558,17 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[MyPrivacyRequestOut] */
+        Page_MyPrivacyRequestOut_: {
+            /** Items */
+            items: components["schemas"]["MyPrivacyRequestOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[OutageOut] */
         Page_OutageOut_: {
             /** Items */
@@ -10038,6 +10690,28 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[PrivacyNoticeOut] */
+        Page_PrivacyNoticeOut_: {
+            /** Items */
+            items: components["schemas"]["PrivacyNoticeOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[PrivacyRequestOut] */
+        Page_PrivacyRequestOut_: {
+            /** Items */
+            items: components["schemas"]["PrivacyRequestOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
         /** Page[RegistrationOut] */
         Page_RegistrationOut_: {
             /** Items */
@@ -10075,6 +10749,17 @@ export interface components {
         Page_ResidentDocumentOut_: {
             /** Items */
             items: components["schemas"]["ResidentDocumentOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[RetentionRunOut] */
+        Page_RetentionRunOut_: {
+            /** Items */
+            items: components["schemas"]["RetentionRunOut"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -10820,6 +11505,34 @@ export interface components {
          * @enum {string}
          */
         PaymentStatus: "pending" | "confirmed" | "cancelled";
+        /** PendingNoticeOut */
+        PendingNoticeOut: {
+            /**
+             * Notice Id
+             * Format: uuid
+             */
+            notice_id: string;
+            /**
+             * Site Id
+             * Format: uuid
+             */
+            site_id: string;
+            /** Site Name */
+            site_name: string;
+            /** Site Slug */
+            site_slug: string;
+            /** Version */
+            version: number;
+            /** Text */
+            text: string;
+            /** Summary */
+            summary: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+        };
         /** PermitApplyIn */
         PermitApplyIn: {
             /**
@@ -11280,6 +11993,112 @@ export interface components {
             /** Categories */
             categories: components["schemas"]["PreferenceRow"][];
         };
+        /** PrivacyAnswerIn */
+        PrivacyAnswerIn: {
+            /** Response */
+            response?: string | null;
+            /** Outcome */
+            outcome?: string | null;
+            /** Retained */
+            retained?: string | null;
+        };
+        /** PrivacyNoticeIn */
+        PrivacyNoticeIn: {
+            /** Text */
+            text?: string | null;
+            /** Summary */
+            summary?: string | null;
+        };
+        /** PrivacyNoticeOut */
+        PrivacyNoticeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
+            /** Text */
+            text: string;
+            /** Summary */
+            summary: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Published By */
+            published_by: string;
+        };
+        /**
+         * PrivacyOutcome
+         * @enum {string}
+         */
+        PrivacyOutcome: "fulfilled" | "partial" | "rejected";
+        /** PrivacyRequestIn */
+        PrivacyRequestIn: {
+            /**
+             * Kind
+             * @description access · rectify · erase · object
+             */
+            kind?: string | null;
+            /** Detail */
+            detail?: string | null;
+        };
+        /**
+         * PrivacyRequestKind
+         * @enum {string}
+         */
+        PrivacyRequestKind: "access" | "rectify" | "erase" | "object";
+        /** PrivacyRequestOut */
+        PrivacyRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["PrivacyRequestKind"];
+            /** Kind Label */
+            kind_label: string;
+            /** Detail */
+            detail: string;
+            status: components["schemas"]["PrivacyRequestStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /** Response */
+            response: string | null;
+            outcome: components["schemas"]["PrivacyOutcome"] | null;
+            /** Outcome Label */
+            outcome_label: string | null;
+            /** Retained */
+            retained: string | null;
+            /** Answered At */
+            answered_at: string | null;
+            /** Name */
+            name: string;
+            /** Units */
+            units: string[];
+            /**
+             * Days Left
+             * @description eksi: gecikme günü
+             */
+            days_left: number;
+            /** Answered By */
+            answered_by: string | null;
+        };
+        /**
+         * PrivacyRequestStatus
+         * @enum {string}
+         */
+        PrivacyRequestStatus: "open" | "answered";
         /**
          * PropertyKind
          * @enum {string}
@@ -11347,6 +12166,11 @@ export interface components {
         PublicInvitationOut: {
             /** Site Name */
             site_name: string;
+            /**
+             * Site Slug
+             * @description aydınlatma metni bağlantısı için (`/public/privacy-notice/{slug}`)
+             */
+            site_slug: string;
             /** Full Name */
             full_name: string;
             /** Unit Name */
@@ -11368,6 +12192,20 @@ export interface components {
              * @description giriş hesabı için e-posta istenir (davette e-posta yoksa)
              */
             email_required: boolean;
+        };
+        /** PublicNoticeOut */
+        PublicNoticeOut: {
+            /** Site Name */
+            site_name: string;
+            /**
+             * Version
+             * @description yayınlanmış sürüm yoksa null (taslak gösterilir)
+             */
+            version: number | null;
+            /** Text */
+            text: string | null;
+            /** Published At */
+            published_at: string | null;
         };
         /** PublicSiteOut */
         PublicSiteOut: {
@@ -12459,6 +13297,116 @@ export interface components {
             /** @description onay kuralı değişikliğinde: yeni öneri */
             rule?: components["schemas"]["RuleIn"] | null;
         };
+        /**
+         * RetentionAction
+         * @enum {string}
+         */
+        RetentionAction: "anonymize" | "delete" | "keep";
+        /** RetentionCategoryOut */
+        RetentionCategoryOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Data */
+            data: string;
+            /** Kvkk Category */
+            kvkk_category: string;
+            /** Subjects */
+            subjects: string;
+            /** Value */
+            value: number;
+            unit: components["schemas"]["RetentionUnit"];
+            /** Unit Label */
+            unit_label: string;
+            /** Default Value */
+            default_value: number;
+            /** Max Value */
+            max_value: number | null;
+            action: components["schemas"]["RetentionAction"];
+            /** Action Label */
+            action_label: string;
+            /**
+             * Adjustable
+             * @description false: yasal saklama, otomatik işlem yok
+             */
+            adjustable: boolean;
+            /**
+             * Auto Apply
+             * @description gece işi uygular (hukuki teyide kadar varsayılan kapalı)
+             */
+            auto_apply: boolean;
+            /** Needs Legal Review */
+            needs_legal_review: boolean;
+            /** Legal Basis */
+            legal_basis: string;
+            /**
+             * Cutoff
+             * @description bu tarihten önceki kayıtların süresi doldu
+             */
+            cutoff: string | null;
+            /**
+             * Pending
+             * @description süresi dolmuş, henüz işlenmemiş kayıt sayısı
+             */
+            pending: number | null;
+            last_run: components["schemas"]["RetentionRunOut"] | null;
+        };
+        /** RetentionIn */
+        RetentionIn: {
+            /** Items */
+            items: components["schemas"]["RetentionItemIn"][];
+        };
+        /** RetentionItemIn */
+        RetentionItemIn: {
+            /** Key */
+            key: string;
+            /** Value */
+            value: number;
+            /**
+             * Auto Apply
+             * @default false
+             */
+            auto_apply: boolean;
+        };
+        /** RetentionOut */
+        RetentionOut: {
+            /** Categories */
+            categories: components["schemas"]["RetentionCategoryOut"][];
+        };
+        /** RetentionRunOut */
+        RetentionRunOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Category */
+            category: string;
+            /** Category Label */
+            category_label: string;
+            action: components["schemas"]["RetentionAction"];
+            trigger: components["schemas"]["RunTrigger"];
+            /**
+             * Cutoff
+             * Format: date
+             */
+            cutoff: string;
+            /** Affected */
+            affected: number;
+            /** Actor */
+            actor: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /**
+         * RetentionUnit
+         * @enum {string}
+         */
+        RetentionUnit: "day" | "month" | "year";
         /** RevokedOut */
         RevokedOut: {
             /** Revoked */
@@ -12615,6 +13563,11 @@ export interface components {
              */
             warnings: string[];
         };
+        /**
+         * RunTrigger
+         * @enum {string}
+         */
+        RunTrigger: "job" | "manual";
         /** ScheduleIn */
         ScheduleIn: {
             /** Enabled */
@@ -13516,6 +14469,96 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /** SlaLineOut */
+        SlaLineOut: {
+            /**
+             * Total
+             * @description dönemde açılan
+             */
+            total: number;
+            /**
+             * Open
+             * @description dönemde açılıp hâlâ açık
+             */
+            open: number;
+            /**
+             * Closed
+             * @description dönemde çözülen
+             */
+            closed: number;
+            /**
+             * Sla Rate
+             * @description SLA uyumu %, metin (`92.5`); veri yoksa null
+             */
+            sla_rate: string | null;
+            /**
+             * Avg Hours
+             * @description ortalama çözüm (saat), metin
+             */
+            avg_hours: string | null;
+            /**
+             * Satisfaction
+             * @description kapanış puanı ortalaması (1–5), metin
+             */
+            satisfaction: string | null;
+            /** Rated */
+            rated: number;
+        };
+        /** SlaReportOut */
+        SlaReportOut: {
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            total: components["schemas"]["SlaLineOut"];
+            /** Rows */
+            rows: components["schemas"]["SlaRowOut"][];
+        };
+        /** SlaRowOut */
+        SlaRowOut: {
+            /**
+             * Total
+             * @description dönemde açılan
+             */
+            total: number;
+            /**
+             * Open
+             * @description dönemde açılıp hâlâ açık
+             */
+            open: number;
+            /**
+             * Closed
+             * @description dönemde çözülen
+             */
+            closed: number;
+            /**
+             * Sla Rate
+             * @description SLA uyumu %, metin (`92.5`); veri yoksa null
+             */
+            sla_rate: string | null;
+            /**
+             * Avg Hours
+             * @description ortalama çözüm (saat), metin
+             */
+            avg_hours: string | null;
+            /**
+             * Satisfaction
+             * @description kapanış puanı ortalaması (1–5), metin
+             */
+            satisfaction: string | null;
+            /** Rated */
+            rated: number;
+            /** Category */
+            category: string;
+            /** Category Name */
+            category_name: string;
         };
         /**
          * SlaState
@@ -14878,6 +15921,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[AuditPackageOut] */
+        Written_AuditPackageOut_: {
+            data: components["schemas"]["AuditPackageOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[BlockOut] */
         Written_BlockOut_: {
             data: components["schemas"]["BlockOut"];
@@ -14923,6 +15972,12 @@ export interface components {
         /** Written[ConfirmOut] */
         Written_ConfirmOut_: {
             data: components["schemas"]["ConfirmOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[ConsentStateOut] */
+        Written_ConsentStateOut_: {
+            data: components["schemas"]["ConsentStateOut"];
             /** Message */
             message: string;
         };
@@ -15100,6 +16155,18 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[MyPrivacyOut] */
+        Written_MyPrivacyOut_: {
+            data: components["schemas"]["MyPrivacyOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[MyPrivacyRequestOut] */
+        Written_MyPrivacyRequestOut_: {
+            data: components["schemas"]["MyPrivacyRequestOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[NoneType] */
         Written_NoneType_: {
             /** Data */
@@ -15233,6 +16300,18 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[PrivacyNoticeOut] */
+        Written_PrivacyNoticeOut_: {
+            data: components["schemas"]["PrivacyNoticeOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[PrivacyRequestOut] */
+        Written_PrivacyRequestOut_: {
+            data: components["schemas"]["PrivacyRequestOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[RecurringOut] */
         Written_RecurringOut_: {
             data: components["schemas"]["RecurringOut"];
@@ -15290,6 +16369,18 @@ export interface components {
         /** Written[RestoreOut] */
         Written_RestoreOut_: {
             data: components["schemas"]["RestoreOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RetentionOut] */
+        Written_RetentionOut_: {
+            data: components["schemas"]["RetentionOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[RetentionRunOut] */
+        Written_RetentionRunOut_: {
+            data: components["schemas"]["RetentionRunOut"];
             /** Message */
             message: string;
         };
@@ -15872,6 +16963,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    my_consents_api_v1_me_consents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentStateOut"];
+                };
+            };
+        };
+    };
+    accept_consents_api_v1_me_consents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_ConsentStateOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_notice_api_v1_public_privacy_notice__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicNoticeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -23526,6 +24701,788 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CollectionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalog_api_v1_sites__slug__reports_catalog_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogReportOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    requests_sla_api_v1_sites__slug__reports_requests_sla_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bitişten 30 gün önce */
+                from?: string | null;
+                /** @description boşsa bugün */
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlaReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_report_api_v1_sites__slug__reports__key__export_xlsx_get: {
+        parameters: {
+            query?: {
+                /** @description boşsa bitişten 30 gün önce */
+                from?: string | null;
+                /** @description boşsa bugün */
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_packages_api_v1_sites__slug__audit_packages_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuditPackageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_package_api_v1_sites__slug__audit_packages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditPackageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AuditPackageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_report_api_v1_sites__slug__audit_packages__package_id__report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                package_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuditReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_AuditPackageOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_package_api_v1_sites__slug__audit_packages__package_id__export_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                package_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notices_api_v1_sites__slug__privacy_notices_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PrivacyNoticeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_notice_api_v1_sites__slug__privacy_notices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyNoticeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PrivacyNoticeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_privacy_api_v1_sites__slug__my_privacy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyPrivacyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_explicit_api_v1_sites__slug__my_privacy_explicit_consents__purpose__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purpose: components["schemas"]["ExplicitPurpose"];
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExplicitIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MyPrivacyOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_data_export_api_v1_sites__slug__my_privacy_data_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_privacy_requests_api_v1_sites__slug__resident_privacy_requests_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_MyPrivacyRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_privacy_request_api_v1_sites__slug__resident_privacy_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_MyPrivacyRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_privacy_requests_api_v1_sites__slug__privacy_requests_get: {
+        parameters: {
+            query?: {
+                /** @description open · answered */
+                status?: components["schemas"]["PrivacyRequestStatus"] | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PrivacyRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_package_api_v1_sites__slug__privacy_requests__request_id__data_package_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_privacy_request_api_v1_sites__slug__privacy_requests__request_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_PrivacyRequestOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retention_policy_api_v1_sites__slug__settings_retention_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetentionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_retention_api_v1_sites__slug__settings_retention_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetentionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RetentionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_retention_api_v1_sites__slug__settings_retention__key__apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_RetentionRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retention_runs_api_v1_sites__slug__settings_retention_runs_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_RetentionRunOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_inventory_api_v1_sites__slug__data_inventory_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryRowOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_inventory_export_api_v1_sites__slug__data_inventory_export_get: {
+        parameters: {
+            query?: {
+                format?: "xlsx" | "csv";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                    "text/csv; charset=utf-8": unknown;
                 };
             };
             /** @description Validation Error */

@@ -41,6 +41,7 @@ export const P = {
   documentsRead: "documents.read",
   documentsManage: "documents.manage",
   documentsConfidential: "documents.confidential",
+  privacyManage: "privacy.manage",
 } as const;
 
 export const M = {

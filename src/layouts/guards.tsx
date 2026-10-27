@@ -7,7 +7,8 @@ import { ErrorState, Loading } from "../components/ui";
 import { makeSiteCtx, SiteContext, type SiteDetail } from "../site/SiteContext";
 import { AppShell } from "./AppShell";
 
-/** Oturum yoksa girişe gönderir; parola değişikliği zorunluysa önce oraya. */
+/** Oturum yoksa girişe gönderir; parola değişikliği zorunluysa önce oraya; güncel aydınlatma
+ * metni onaylanmadıysa (PM kararı P6) onay ekranına. */
 export function RequireAuth() {
   const { status, me } = useAuth();
   const location = useLocation();
@@ -19,8 +20,14 @@ export function RequireAuth() {
   if (me.must_change_password && location.pathname !== "/parola-degistir") {
     return <Navigate to="/parola-degistir" replace />;
   }
+  if (!me.must_change_password && me.consent_required && location.pathname !== CONSENT_PATH) {
+    const from = location.pathname + location.search;
+    return <Navigate to={`${CONSENT_PATH}${from !== "/" ? `?donus=${encodeURIComponent(from)}` : ""}`} replace />;
+  }
   return <Outlet />;
 }
+
+export const CONSENT_PATH = "/aydinlatma-onayi";
 
 export const siteKey = (slug: string) => ["site", slug] as const;
 

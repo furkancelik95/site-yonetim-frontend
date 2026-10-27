@@ -24,6 +24,7 @@ export class ApiError extends Error {
 
 let accessToken: string | null = null;
 let onSessionLost: (() => void) | null = null;
+let onConsentRequired: (() => void) | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -36,6 +37,12 @@ export function hasAccessToken() {
 /** Yenileme de başarısız olursa çağrılır (oturum düştü → giriş ekranı). */
 export function setSessionLostHandler(handler: (() => void) | null) {
   onSessionLost = handler;
+}
+
+/** Oturum sürerken aydınlatma metninin yeni sürümü yayınlanırsa (P6) backend 403
+ * `consent_required` döner; oturum durumu tazelenir ve onay ekranına gidilir. */
+export function setConsentRequiredHandler(handler: (() => void) | null) {
+  onConsentRequired = handler;
 }
 
 type Query = Record<string, string | number | boolean | null | undefined>;
@@ -145,7 +152,11 @@ async function request(method: string, path: string, opts: RequestOptions = {}):
       onSessionLost?.();
     }
   }
-  if (!res.ok) throw await toError(res);
+  if (!res.ok) {
+    const error = await toError(res);
+    if (error.code === "consent_required") onConsentRequired?.();
+    throw error;
+  }
   return res;
 }
 

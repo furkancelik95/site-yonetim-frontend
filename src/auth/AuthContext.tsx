@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { api, get, refreshSession, setAccessToken, setSessionLostHandler } from "../api/client";
+import { api, get, refreshSession, setAccessToken, setConsentRequiredHandler, setSessionLostHandler } from "../api/client";
 import type { Me, TokenResponse } from "../api/types";
 
 type Status = "loading" | "anonymous" | "authenticated";
@@ -58,6 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setSessionLostHandler(null);
   }, [reset]);
 
+  // Yeni aydınlatma metni sürümü (P6): /me tazelenir, RequireAuth onay ekranına yönlendirir.
+  useEffect(() => {
+    setConsentRequiredHandler(() => void reloadMe());
+    return () => setConsentRequiredHandler(null);
+  }, [reloadMe]);
+
   const login = useCallback(
     async (email: string, password: string) => {
       const token = await api<TokenResponse>("POST", "/auth/login", { body: { email, password } });
@@ -105,6 +111,7 @@ export function showsPortfolio(me: Me): boolean {
 /** Girişten sonra açılış ekranı (frontend docs/01 §1). */
 export function homePath(me: Me): string {
   if (me.must_change_password) return "/parola-degistir";
+  if (me.consent_required) return "/aydinlatma-onayi";
   if (me.is_platform_admin) return "/yonetim";
   if (me.kind === "resident") {
     const s = me.sites[0];
