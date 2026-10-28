@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { CalendarCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
+import { ResidentHead } from "../../components/ResidentHead";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { resStatus, resTone } from "../../lib/labels";
@@ -31,12 +32,17 @@ export function ResidentReservationPage() {
   const blocked = !!av.data?.blocked_until || !!av.data?.debt_block;
   const upcoming = (mine.data?.reservations ?? []).filter((r) => ["pending", "approved", "checked_in"].includes(r.status) && r.date >= todayIso());
   const past = (mine.data?.reservations ?? []).filter((r) => !upcoming.includes(r)).slice(0, 8);
+  const waitlist = mine.data?.waitlist ?? [];
   return (
     <>
-      {mine.isError && <ErrorState error={mine.error} />}
-      {(mine.data?.waitlist ?? []).map((w) => <WaitCard key={w.id} w={w} />)}
-      {upcoming.length > 0 && <div className="section-title">Yaklaşan rezervasyonlarım</div>}
-      {upcoming.map((r) => <ResCard key={r.id} r={r} />)}
+      <ResidentHead icon={<CalendarCheck />} tone="teal" title="Rezervasyon" sub="Ortak alanlar için gün ve saat seçin. Dolu saatte bekleme listesine girebilirsiniz; girişte kodu ya da QR'ı gösterin."
+        stats={mine.data && areas.data && [
+          { label: "Yaklaşan", value: upcoming.length, tone: upcoming.length ? "info" : undefined },
+          { label: "Bekleme listesi", value: waitlist.length, tone: waitlist.length ? "warn" : undefined },
+          { label: "Rezerve edilebilir alan", value: areas.data.length },
+        ]} />
+      <div className="r-split">
+      <div className="r-split__col">
       <div className="section-title">Yeni rezervasyon</div>
       {areas.isPending ? <Loading /> : areas.isError ? <ErrorState error={areas.error} /> : !area ? <Empty title="Rezervasyona açık alan yok" icon={<CalendarCheck aria-hidden="true" />} /> : (
         <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ area_id: area.id, date, start, people: Number(people), guests: Number(guests), waitlist: full }); }}>
@@ -57,6 +63,13 @@ export function ResidentReservationPage() {
           </div>
         </form>
       )}
+      </div>
+      <div className="r-split__col">
+      {mine.isError && <ErrorState error={mine.error} />}
+      {waitlist.map((w) => <WaitCard key={w.id} w={w} />)}
+      <div className="section-title">Yaklaşan rezervasyonlarım</div>
+      {mine.data && upcoming.length === 0 && waitlist.length === 0 && <Empty title="Yaklaşan rezervasyonunuz yok" icon={<CalendarCheck aria-hidden="true" />}>Yaptığınız rezervasyonlar giriş kodlarıyla burada görünür.</Empty>}
+      {upcoming.map((r) => <ResCard key={r.id} r={r} />)}
       {past.length > 0 && <div className="section-title">Geçmiş</div>}
       {past.map((r) => (
         <div key={r.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
@@ -64,6 +77,8 @@ export function ResidentReservationPage() {
           <div className="r-item__meta">{formatDate(r.date)} {r.start}–{r.end}{Number(r.fee) > 0 && <> · <Money value={r.fee} />{r.fee_refunded && " (iade edildi)"}</>}{r.reject_reason && ` · ${r.reject_reason}`}{r.status === "cancelled" && r.cancelled_late && Number(r.fee) > 0 && " · geç iptal"}</div>
         </div></div>
       ))}
+      </div>
+      </div>
     </>
   );
 }

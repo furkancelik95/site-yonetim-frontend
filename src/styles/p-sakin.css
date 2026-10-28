@@ -83,3 +83,64 @@
 .session-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .session-list li { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; padding: var(--s-3) var(--s-4); background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-lg); font-size: 0.8125rem; }
 .session-list__meta { color: var(--fg-muted); }
+/* --- Sakin alt ekranları: sayfa başı bandı + özet sayıları ---------------------------- */
+/* Yönetim panelindeki .hero--band'in sakin karşılığı; renkler aynı belirteçlerden. */
+.r-pagehead {
+  --band-a: #d6e4fa; --band-b: #eef4fd; --band-ink: var(--brand-600); --band-glow: rgb(59 130 246 / .22);
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; gap: var(--s-4);
+  padding: var(--s-5); border-radius: var(--r-xl); border: 1px solid rgb(255 255 255 / .9);
+  background:
+    radial-gradient(circle at 88% 30%, var(--band-glow) 0, transparent 34%),
+    linear-gradient(120deg, var(--band-a) 0%, var(--band-b) 100%);
+  box-shadow: var(--shadow-xs);
+}
+.r-pagehead--teal   { --band-a: #d3efec; --band-b: #eef9f8; --band-ink: #0f766e; --band-glow: rgb(20 184 166 / .2); }
+.r-pagehead--violet { --band-a: #e6defb; --band-b: #f4f0fe; --band-ink: #6d28d9; --band-glow: rgb(139 92 246 / .2); }
+.r-pagehead--danger { --band-a: #fbdcdc; --band-b: #fef3f3; --band-ink: var(--danger-solid); --band-glow: rgb(220 38 38 / .16); }
+.r-pagehead__mark {
+  position: absolute; z-index: -1; right: -10px; top: -10px;
+  width: 88px; height: 88px; color: var(--band-ink); opacity: .08; pointer-events: none;
+}
+.r-pagehead__mark svg { width: 100%; height: 100%; stroke-width: 1.25; }
+.r-pagehead__top { display: flex; align-items: flex-start; gap: var(--s-3); }
+.r-pagehead__icon {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg-raised); color: var(--band-ink); box-shadow: var(--shadow-xs);
+}
+.r-pagehead__icon svg { width: 20px; height: 20px; }
+.r-pagehead__text { min-width: 0; }
+.r-pagehead__title { font-size: 1.25rem; color: var(--fg); }
+.r-pagehead__sub { margin: var(--s-1) 0 0; font-size: 0.875rem; line-height: 1.5; color: var(--fg-muted); }
+.r-pagehead__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.75rem, 1fr)); gap: var(--s-2); margin: 0; }
+.r-stat {
+  display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px;
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-md);
+  background: rgb(255 255 255 / .78); border: 1px solid rgb(255 255 255 / .95);
+}
+.r-stat__v { margin: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; color: var(--fg); }
+.r-stat__l { font-size: 0.6875rem; line-height: 1.3; color: var(--fg-muted); }
+@media (min-width: 760px) { .r-stat__l { font-size: 0.75rem; } }
+.r-stat--ok .r-stat__v { color: var(--ok-fg); }
+.r-stat--warn .r-stat__v { color: var(--warn-fg); }
+.r-stat--danger .r-stat__v { color: var(--danger-fg); }
+.r-stat--info .r-stat__v { color: var(--info-fg); }
+
+/* İki bölmeli gövde: telefonda alt alta, geniş ekranda solda işlem (form), sağda liste */
+.r-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); align-items: start; }
+.r-split__col { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
+.r-split__col > .section-title { margin: var(--s-2) 0 0; }
+.r-split__col > .section-title:first-child { margin-top: 0; }
+.r-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
+
+@media (min-width: 760px) {
+  .r-body > .r-pagehead, .r-body > .r-split, .r-body > .r-wide { grid-column: 1 / -1; }
+  .r-pagehead { padding: var(--s-6); }
+  .r-pagehead__title { font-size: 1.5rem; }
+  .r-pagehead__mark { width: 150px; height: 150px; right: 4%; top: 50%; transform: translateY(-50%); opacity: .14; }
+  .r-stat { padding: var(--s-3); }
+  .r-pagehead__text { max-width: min(40rem, calc(100% - 11rem)); padding-right: 0; }
+  .r-pagehead__stats { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 11rem)); }
+  .r-split { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--s-5); }
+  .r-wide .r-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

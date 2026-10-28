@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Hammer, Star } from "lucide-react";
+import { Gauge, Hammer, KeyRound, Star } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { AuthImage } from "../../components/AuthImage";
+import { ResidentHead, type ResidentStat } from "../../components/ResidentHead";
 import { useSite } from "../../site/SiteContext";
 import type { Schemas } from "../../api/types";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
@@ -84,22 +85,40 @@ export function ResidentPermitsPage() {
   useDocumentTitle("Tadilat ve taşınma");
   const q = useSiteGet<Schemas["MyPermitsOut"]>("/resident/permits");
   const [adding, setAdding] = useState(false);
-  if (q.isPending) return <Loading />;
-  if (q.isError) return <ErrorState error={q.error} />;
+  const head = (stats?: ResidentStat[]) => <ResidentHead icon={<Hammer />} title="Tadilat ve taşınma" sub="Tadilat, taşınma ve taşınıp çıkma için yönetime izin başvurusu yapın; onay durumunu buradan izleyin." stats={stats} />;
+  if (q.isPending) return <>{head()}<Loading /></>;
+  if (q.isError) return <>{head()}<ErrorState error={q.error} /></>;
   const r = q.data.rules;
+  const waiting = q.data.items.filter((p) => p.status === "pending").length;
   return (
     <>
-      <div className="section-title">Tadilat ve taşınma</div>
-      <p className="small muted">Tadilat saatleri: hafta içi {r.weekday_hours}, cumartesi {r.saturday_hours || "yasak"}, pazar {r.sunday_allowed ? "serbest" : "yasak"}.{Number(r.deposit_amount) > 0 && ` Tadilatta ${formatMoney(r.deposit_amount)} depozito alınır, iş bitince iade edilir.`}</p>
-      <div className="stack" style={{ gap: "var(--s-3)" }}>
-        {adding ? <PermitForm onDone={() => setAdding(false)} /> : <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Hammer aria-hidden="true" /> Başvuru yap</button>}
-        {q.data.items.length === 0 ? <Empty title="Başvurunuz yok" /> : q.data.items.map((p) => (
-          <div key={p.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
-            <div className="r-item__title">{permitType(p.type)} <Badge tone={permitTone(p.status)}>{permitStatus(p.status)}</Badge></div>
-            <div className="r-item__meta">{p.unit_name} · {formatDate(p.date_from)}{p.date_to !== p.date_from && ` – ${formatDate(p.date_to)}`}{p.contractor && ` · ${p.contractor}`}</div>
-            <div className="r-item__body">{p.description}{p.reject_reason && <div>Ret gerekçesi: {p.reject_reason}</div>}{p.deposit && <div>Depozito: <Money value={p.deposit} />{p.deposit_refunded && " (iade edildi)"}</div>}</div>
-          </div></div>
-        ))}
+      {head([
+        { label: "Başvuru", value: q.data.items.length },
+        { label: "Onay bekleyen", value: waiting, tone: waiting ? "warn" : undefined },
+        { label: "Onaylanan", value: q.data.items.filter((p) => p.status === "approved").length },
+      ])}
+      <div className="r-split">
+        <div className="r-split__col">
+          {adding ? <PermitForm onDone={() => setAdding(false)} /> : <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Hammer aria-hidden="true" /> Başvuru yap</button>}
+          <div className="card"><div className="card__head"><span className="card__title">Site kuralları</span></div>
+            <div className="card__body">
+              <div className="kv"><span className="kv__k">Hafta içi</span><span className="kv__v">{r.weekday_hours}</span></div>
+              <div className="kv"><span className="kv__k">Cumartesi</span><span className="kv__v">{r.saturday_hours || "Yasak"}</span></div>
+              <div className="kv"><span className="kv__k">Pazar</span><span className="kv__v">{r.sunday_allowed ? "Serbest" : "Yasak"}</span></div>
+              {Number(r.deposit_amount) > 0 && <div className="kv"><span className="kv__k">Tadilat depozitosu</span><span className="kv__v">{formatMoney(r.deposit_amount)} · iş bitince iade</span></div>}
+            </div>
+          </div>
+        </div>
+        <div className="r-split__col">
+          <div className="section-title">Başvurularım</div>
+          {q.data.items.length === 0 ? <Empty title="Başvurunuz yok" icon={<Hammer aria-hidden="true" />}>Yaptığınız başvurular ve onay durumları burada görünür.</Empty> : q.data.items.map((p) => (
+            <div key={p.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
+              <div className="r-item__title">{permitType(p.type)} <Badge tone={permitTone(p.status)}>{permitStatus(p.status)}</Badge></div>
+              <div className="r-item__meta">{p.unit_name} · {formatDate(p.date_from)}{p.date_to !== p.date_from && ` – ${formatDate(p.date_to)}`}{p.contractor && ` · ${p.contractor}`}</div>
+              <div className="r-item__body">{p.description}{p.reject_reason && <div>Ret gerekçesi: {p.reject_reason}</div>}{p.deposit && <div>Depozito: <Money value={p.deposit} />{p.deposit_refunded && " (iade edildi)"}</div>}</div>
+            </div></div>
+          ))}
+        </div>
       </div>
     </>
   );
@@ -143,10 +162,19 @@ export function ResidentKeysMetersPage() {
   const [names, setNames] = useState("");
   const [until, setUntil] = useState(todayIso());
   const add = useSiteMutation<Record<string, unknown>, unknown>("POST", "/resident/deposited-keys", { onSuccess: () => setNames("") });
+  const held = (keys.data ?? []).filter((k) => k.status === "held").length;
+  const anomalies = (mtr.data ?? []).reduce((n, m) => n + m.readings.filter((r) => r.status === "anomaly").length, 0);
   return (
     <>
+      <ResidentHead icon={<KeyRound />} tone="teal" title="Emanet ve sayaçlar" sub="Anahtarınızı yönetime bırakın; yalnız yazdığınız kişilere kimlik kontrolüyle verilir. Sayaç okumalarınızı ve tüketiminizi izleyin."
+        stats={keys.data && mtr.data && [
+          { label: "Emanetteki anahtar", value: held },
+          { label: "Sayaç", value: mtr.data.length },
+          { label: "Onay bekleyen okuma", value: anomalies, tone: anomalies ? "warn" : undefined },
+        ]} />
+      <div className="r-split">
+      <div className="r-split__col">
       <div className="section-title">Emanet anahtar</div>
-      <p className="small muted">Anahtarınızı yönetime bırakın; yalnız yazdığınız kişilere kimlik kontrolüyle verilir.</p>
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ authorized: names.split(",").map((n) => ({ name: n.trim() })).filter((a) => a.name), valid_until: until }); }}>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={add.error} />
@@ -161,8 +189,10 @@ export function ResidentKeysMetersPage() {
           <div className="r-item__meta">Yetkili: {k.authorized.map((a) => a.name).join(", ")} · {formatDate(k.valid_until)} tarihine kadar</div>
         </div></div>
       ))}
+      </div>
+      <div className="r-split__col">
       <div className="section-title">Sayaçlarım</div>
-      {mtr.isPending ? <Loading /> : !mtr.data || mtr.data.length === 0 ? <Empty title="Bölümünüze bağlı sayaç yok" /> : mtr.data.map((m) => (
+      {mtr.isPending ? <Loading /> : !mtr.data || mtr.data.length === 0 ? <Empty title="Bölümünüze bağlı sayaç yok" icon={<Gauge aria-hidden="true" />} /> : mtr.data.map((m) => (
         <div key={m.meter.id} className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
           <div className="strong">{meterKind(m.meter.kind)} <span className="small muted mono">{m.meter.serial}</span></div>
           {m.readings.length === 0 ? <p className="small muted mb-0">Henüz okuma yok.</p> : m.readings.map((r) => (
@@ -172,6 +202,8 @@ export function ResidentKeysMetersPage() {
           <p className="xs muted mb-0">Okumaya itirazınız varsa Taleplerim ekranından talep açın.</p>
         </div></div>
       ))}
+      </div>
+      </div>
     </>
   );
 }

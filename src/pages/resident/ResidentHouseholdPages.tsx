@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Car, Copy, Plus, Users } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
+import { ResidentHead } from "../../components/ResidentHead";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
@@ -33,14 +34,23 @@ export function ResidentHouseholdPage() {
   const copy = (link: string) => navigator.clipboard?.writeText(`${window.location.origin}${link}`).then(() => toast("Davet bağlantısı kopyalandı."));
   return (
     <>
-      <div className="section-title">Hane üyeleri</div>
-      <p className="small muted">Aile bireyleri ve yardımcılar: ziyaretçi davet edebilir, kargo bildirimi alabilir. Davet bağlantısını kendilerine iletin. En fazla {HOUSEHOLD_LIMIT} üye.</p>
+      <ResidentHead icon={<Users />} title="Hane üyeleri" sub="Aile bireyleri ve yardımcılar ziyaretçi davet edebilir, kargo bildirimi alabilir. Davet bağlantısını kendilerine iletin."
+        stats={q.data && [
+          { label: "Etkin üye", value: `${active.filter((h) => h.status === "active").length} / ${HOUSEHOLD_LIMIT}` },
+          { label: "Davet bekleyen", value: active.filter((h) => h.status === "invited").length, tone: active.some((h) => h.status === "invited") ? "info" : undefined },
+        ]} />
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
-        <div className="stack" style={{ gap: "var(--s-3)" }}>
-          {adding ? <HouseholdForm units={home.data?.units ?? []} onDone={(h) => { setAdding(false); if (h?.invite_link) { setLinks((x) => ({ ...x, [h.id]: h.invite_link! })); copy(h.invite_link); } }} /> : (
-            <button className="btn btn--primary" style={{ width: "100%" }} type="button" disabled={active.length >= HOUSEHOLD_LIMIT} onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Hane üyesi davet et</button>
-          )}
-          {q.data.length === 0 ? <Empty title="Hane üyesi yok" icon={<Users aria-hidden="true" />} /> : q.data.map((h) => <HouseholdItem key={h.id} h={h} onCopy={links[h.id] ? () => copy(links[h.id]!) : undefined} />)}
+        <div className="r-split">
+          <div className="r-split__col">
+            {adding ? <HouseholdForm units={home.data?.units ?? []} onDone={(h) => { setAdding(false); if (h?.invite_link) { setLinks((x) => ({ ...x, [h.id]: h.invite_link! })); copy(h.invite_link); } }} /> : (
+              <button className="btn btn--primary" style={{ width: "100%" }} type="button" disabled={active.length >= HOUSEHOLD_LIMIT} onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Hane üyesi davet et</button>
+            )}
+            <p className="small muted mb-0">En fazla {HOUSEHOLD_LIMIT} üye. Yetkileri siz belirlersiniz; üyeliği istediğiniz zaman bitirebilirsiniz.</p>
+          </div>
+          <div className="r-split__col">
+            <div className="section-title">Üyeler</div>
+            {q.data.length === 0 ? <Empty title="Hane üyesi yok" icon={<Users aria-hidden="true" />}>Davet ettiğiniz kişiler burada görünür.</Empty> : q.data.map((h) => <HouseholdItem key={h.id} h={h} onCopy={links[h.id] ? () => copy(links[h.id]!) : undefined} />)}
+          </div>
         </div>
       )}
     </>
@@ -103,18 +113,27 @@ export function ResidentVehiclesPage() {
   const home = useSiteGet<Schemas["HomeOut"]>("/resident/home");
   const [adding, setAdding] = useState(false);
   const permanent = (q.data?.items ?? []).filter((v) => v.kind === "permanent").length;
+  const pendingCount = (q.data?.items ?? []).filter((v) => v.status === "pending").length;
   return (
     <>
-      <div className="section-title">Araçlarım</div>
-      <p className="small muted">Kayıtlı plaka kapı görevlisinin ekranında görünür; misafir aracı için geçerlilik tarihi girilir.</p>
+      <ResidentHead icon={<Car />} title="Araçlarım" sub="Kayıtlı plaka kapı görevlisinin ekranında görünür; misafir aracı için geçerlilik tarihi girilir."
+        stats={q.data && [
+          { label: "Kalıcı plaka", value: `${permanent} / ${q.data.limit}` },
+          { label: "Misafir aracı", value: q.data.items.length - permanent },
+          { label: "Onay bekleyen", value: pendingCount, tone: pendingCount ? "warn" : undefined },
+        ]} />
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
-        <div className="stack" style={{ gap: "var(--s-3)" }}>
-          {q.data.approval_required && <Alert tone="info">Eklediğiniz plaka site yönetimi onayladıktan sonra kapıda görünür.</Alert>}
-          {adding ? <VehicleForm units={home.data?.units ?? []} onDone={() => setAdding(false)} /> : (
-            <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Araç ekle</button>
-          )}
-          <div className="small muted">Kalıcı plaka: {permanent} / {q.data.limit}</div>
-          {q.data.items.length === 0 ? <Empty title="Kayıtlı aracınız yok" icon={<Car aria-hidden="true" />} /> : q.data.items.map((v) => <VehicleItem key={v.id} v={v} />)}
+        <div className="r-split">
+          <div className="r-split__col">
+            {q.data.approval_required && <Alert tone="info">Eklediğiniz plaka site yönetimi onayladıktan sonra kapıda görünür.</Alert>}
+            {adding ? <VehicleForm units={home.data?.units ?? []} onDone={() => setAdding(false)} /> : (
+              <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Araç ekle</button>
+            )}
+          </div>
+          <div className="r-split__col">
+            <div className="section-title">Kayıtlı araçlar</div>
+            {q.data.items.length === 0 ? <Empty title="Kayıtlı aracınız yok" icon={<Car aria-hidden="true" />}>Eklediğiniz plakalar burada görünür.</Empty> : q.data.items.map((v) => <VehicleItem key={v.id} v={v} />)}
+          </div>
         </div>
       )}
     </>
