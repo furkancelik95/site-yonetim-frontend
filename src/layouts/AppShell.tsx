@@ -43,6 +43,7 @@ import {
   Menu,
   MessageSquareText,
   Receipt,
+  Scale,
   ReceiptText,
   Rocket,
   Route,
@@ -138,6 +139,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
       </Group>
       {can(P.financeRead) && (
         <Group label="Finans yönetimi">
+          <Item to={`${base}/aidat-kurallari`} icon={<Scale aria-hidden="true" />} label="Aidat Kuralları" />
           <Item to={`${base}/odeme-planlari`} icon={<CalendarRange aria-hidden="true" />} label="Ödeme Planları" />
           <Item to={`${base}/ek-ucretler`} icon={<ReceiptText aria-hidden="true" />} label="Dönem Dışı Ücretler" />
           <Item to={`${base}/donem-kapanisi`} icon={<Lock aria-hidden="true" />} label="Dönem Kapanışı" />
