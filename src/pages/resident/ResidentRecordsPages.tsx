@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, ShieldCheck } from "lucide-react";
 import { download } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { ResidentHead } from "../../components/ResidentHead";
 import { Badge, Empty, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
@@ -17,14 +18,24 @@ export function ResidentDocumentsPage() {
   async function dl(id: string, name: string) { setErr(null); try { await download(`/sites/${site.slug}/resident/documents/${id}/download`, undefined, name); } catch (e) { setErr(e); } }
   return (
     <>
-      <div className="section-title">Belgeler</div>
-      <FormError error={err} />
-      {q.isPending ? <Loading /> : !q.data || q.data.items.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />} /> : q.data.items.map((d) => (
-        <div key={d.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
-          <div className="r-item__title">{d.title} {d.confidentiality === "unit" && <Badge tone="info">Bölümünüze özel</Badge>}</div>
-          <div className="r-item__meta">{d.kind_label} · sürüm {d.version} · {formatDate(d.updated_at)}{d.valid_until && ` · geçerlilik ${formatDate(d.valid_until)}`}</div>
-        </div><button className="btn btn--sm" type="button" onClick={() => dl(d.id, d.file_name)}><Download aria-hidden="true" /> İndir</button></div>
-      ))}
+      <ResidentHead icon={<FileText />} tone="violet" title="Belgeler" sub="Yönetimin sakinlerle paylaştığı belgeler ve yalnız bölümünüze özel olanlar. Her belgenin son sürümü indirilir."
+        stats={q.data && [
+          { label: "Belge", value: q.data.total },
+          { label: "Bölümünüze özel", value: q.data.items.filter((d) => d.confidentiality === "unit").length },
+        ]} />
+      <div className="r-wide stack" style={{ gap: "var(--s-3)" }}>
+        <FormError error={err} />
+        {q.isPending ? <Loading /> : !q.data || q.data.items.length === 0 ? <Empty title="Belge yok" icon={<FileText aria-hidden="true" />}>Yönetim bir belge paylaştığında burada görünür.</Empty> : (
+          <div className="r-list">
+            {q.data.items.map((d) => (
+              <div key={d.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
+                <div className="r-item__title">{d.title} {d.confidentiality === "unit" && <Badge tone="info">Bölümünüze özel</Badge>}</div>
+                <div className="r-item__meta">{d.kind_label} · sürüm {d.version} · {formatDate(d.updated_at)}{d.valid_until && ` · geçerlilik ${formatDate(d.valid_until)}`}</div>
+              </div><button className="btn btn--sm" type="button" onClick={() => dl(d.id, d.file_name)}><Download aria-hidden="true" /> İndir</button></div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -44,10 +55,18 @@ export function ResidentPrivacyPage() {
   const m = useSiteMutation<typeof f, unknown>("POST", "/resident/privacy-requests", { onSuccess: () => setF({ kind: "access", detail: "" }) });
   const consent = useSiteMutation<{ purpose: string; granted: boolean }, MyPrivacy>("PUT", (v) => `/my-privacy/explicit-consents/${v.purpose}`);
   async function exportMine() { setErr(null); try { await download(`/sites/${site.slug}/my-privacy/data-export`, undefined, `kisisel-verilerim-${site.slug}.json`); } catch (e) { setErr(e); } }
+  const openReqs = (q.data?.items ?? []).filter((r) => r.status === "open").length;
   return (
     <>
-      <div className="section-title">Kişisel verilerim</div>
-      <p className="small muted">KVKK kapsamında verilerinize erişim, düzeltme, silme ya da işlemeye itiraz başvurusu yapabilirsiniz; yönetim 30 gün içinde yanıtlar. <a href={`/aydinlatma?site=${encodeURIComponent(site.slug)}`} target="_blank" rel="noopener noreferrer">Aydınlatma metni</a></p>
+      <ResidentHead icon={<ShieldCheck />} tone="violet" title="Kişisel verilerim"
+        sub={<>KVKK kapsamında verilerinize erişim, düzeltme, silme ya da işlemeye itiraz başvurusu yapabilirsiniz; yönetim 30 gün içinde yanıtlar. <a href={`/aydinlatma?site=${encodeURIComponent(site.slug)}`} target="_blank" rel="noopener noreferrer">Aydınlatma metni</a></>}
+        stats={q.data && [
+          { label: "Yanıt bekleyen", value: openReqs, tone: openReqs ? "warn" : undefined },
+          { label: "Yanıtlanan", value: q.data.items.length - openReqs },
+        ]} />
+      <div className="r-split">
+      <div className="r-split__col">
+      <div className="section-title">Onaylar ve verileriniz</div>
       <div className="card">
         <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
           <FormError error={err ?? consent.error} />
@@ -63,6 +82,7 @@ export function ResidentPrivacyPage() {
           <div><button className="btn btn--sm" type="button" onClick={exportMine}><Download aria-hidden="true" /> Verilerimi indir (JSON)</button></div>
         </div>
       </div>
+      <div className="section-title">Yeni başvuru</div>
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate(f); }}>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={m.error} />
@@ -72,6 +92,10 @@ export function ResidentPrivacyPage() {
           <SubmitButton busy={m.isPending}>Başvur</SubmitButton>
         </div>
       </form>
+      </div>
+      <div className="r-split__col">
+      <div className="section-title">Başvurularım</div>
+      {q.isPending ? <Loading /> : (q.data?.items.length ?? 0) === 0 && <Empty title="Başvurunuz yok" icon={<ShieldCheck aria-hidden="true" />}>KVKK başvurularınız ve yönetimin yanıtları burada görünür.</Empty>}
       {(q.data?.items ?? []).map((r) => (
         <div key={r.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
           <div className="r-item__title">{r.kind_label} {r.status === "open" ? <Badge tone="warn">Yanıt bekleniyor</Badge> : <Badge tone="ok">{r.outcome_label ?? "Yanıtlandı"}</Badge>}</div>
@@ -79,6 +103,8 @@ export function ResidentPrivacyPage() {
           {r.response && <div className="r-item__body">{r.response}{r.retained && <div className="small">Saklanan: {r.retained}</div>}</div>}
         </div></div>
       ))}
+      </div>
+      </div>
     </>
   );
 }

@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { Copy, Plus, RefreshCw, UserRoundCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
+import { ResidentHead } from "../../components/ResidentHead";
 import { useToast } from "../../components/toast";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
@@ -27,28 +28,37 @@ export function ResidentVisitorsPage() {
   const [codes, setCodes] = useState<Record<string, string>>({});
   const keep = (i: Invite) => { if (i.code) setCodes((c) => ({ ...c, [i.id]: i.code! })); };
   const pending = (approvals.data ?? []).filter((a) => a.status === "awaiting" && !a.timed_out);
+  const decided = (approvals.data ?? []).filter((a) => a.status !== "awaiting");
+  const activeInvites = (q.data ?? []).filter((i) => i.status === "active").length;
   return (
     <>
-      {pending.length > 0 && (
-        <div className="stack" style={{ gap: "var(--s-2)" }}>
-          <div className="section-title">Kapıda bekleyen</div>
-          {pending.map((a) => <ApprovalCard key={a.id} a={a} />)}
-        </div>
-      )}
-      <div className="section-title">Ziyaretçi davetleri</div>
-      <p className="small muted">Davet edilen ziyaretçi kapıda 6 haneli kodu ya da QR'ı gösterir; beklemeden girer.</p>
-      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
-        <div className="stack" style={{ gap: "var(--s-3)" }}>
+      <ResidentHead icon={<UserRoundCheck />} title="Ziyaretçiler" sub="Davet edilen ziyaretçi kapıda 6 haneli kodu ya da QR'ı gösterir ve beklemeden girer. Habersiz gelen ziyaretçiyi buradan onaylarsınız."
+        stats={q.data && [
+          { label: "Kapıda bekleyen", value: pending.length, tone: pending.length ? "warn" : undefined },
+          { label: "Geçerli davet", value: activeInvites },
+          { label: "Bugünkü karar", value: decided.length },
+        ]} />
+      <div className="r-split">
+        <div className="r-split__col">
+          {pending.length > 0 && (
+            <>
+              <div className="section-title">Kapıda bekleyen</div>
+              {pending.map((a) => <ApprovalCard key={a.id} a={a} />)}
+            </>
+          )}
           {adding ? <InviteForm onDone={(i) => { setAdding(false); if (i) keep(i); }} /> : <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Ziyaretçi davet et</button>}
-          {q.data.length === 0 ? <Empty title="Davet yok" /> : q.data.map((i) => <InviteItem key={i.id} i={i} code={codes[i.id] ?? i.code} onCode={keep} />)}
         </div>
-      )}
-      {(approvals.data ?? []).filter((a) => a.status !== "awaiting").length > 0 && (
-        <details className="card"><summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">Bugün kapıdaki kararlar</span></summary>
-          <div className="card__body stack" style={{ gap: "var(--s-1)" }}>{approvals.data!.filter((a) => a.status !== "awaiting").map((a) => <div key={a.id} className="small">{a.full_name} · <Badge tone={a.status === "allowed" ? "ok" : "danger"}>{visitRequestStatus(a.status)}</Badge> <span className="muted">({a.decision_source === "resident" ? "sizin kararınız" : "görevli kararı"})</span></div>)}</div>
-        </details>
-      )}
-      <Delegates />
+        <div className="r-split__col">
+          <div className="section-title">Ziyaretçi davetleri</div>
+          {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Davet yok" icon={<UserRoundCheck aria-hidden="true" />}>Oluşturduğunuz davetler ve kodları burada görünür.</Empty> : q.data.map((i) => <InviteItem key={i.id} i={i} code={codes[i.id] ?? i.code} onCode={keep} />)}
+          {decided.length > 0 && (
+            <details className="card"><summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">Bugün kapıdaki kararlar</span></summary>
+              <div className="card__body stack" style={{ gap: "var(--s-1)" }}>{decided.map((a) => <div key={a.id} className="small">{a.full_name} · <Badge tone={a.status === "allowed" ? "ok" : "danger"}>{visitRequestStatus(a.status)}</Badge> <span className="muted">({a.decision_source === "resident" ? "sizin kararınız" : "görevli kararı"})</span></div>)}</div>
+            </details>
+          )}
+          <Delegates />
+        </div>
+      </div>
     </>
   );
 }

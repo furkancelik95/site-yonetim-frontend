@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { CheckCircle2, LifeBuoy, MapPin, Phone, Siren } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
+import { ResidentHead } from "../../components/ResidentHead";
 import { Alert, Field, FormError, Loading, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
@@ -66,16 +67,32 @@ export function ResidentEmergencyPage() {
     } catch { /* depolama kapalı olabilir */ }
   }, [card.data, site.slug]);
   const c = card.data ?? cached;
+  const active = !!em.data;
   return (
     <>
-      {em.data && <StatusCard e={em.data} />}
-      <div className="section-title">Acil bilgi kartı</div>
-      {!card.data && cached && <p className="small muted">İnternet yok — cihazdaki kopya gösteriliyor (sürüm {cached.version}{cached.updated_at && `, ${formatDateTime(cached.updated_at)}`}).</p>}
-      {!c ? (card.isPending ? <Loading /> : <p className="small muted">Kart henüz yüklenmedi; internet bağlantısı gelince kaydedilecek.</p>) : (
-        <div className="stack" style={{ gap: "var(--s-3)" }}>
+      <ResidentHead icon={<Siren />} tone={active ? "danger" : "blue"} title="Acil durum"
+        sub={active ? "Sitede acil durum ilan edildi. Durumunuzu bildirin; yardım gerekiyorsa ekip yönlendirilir." : "Acil telefonlar, toplanma alanları ve ne yapmanız gerektiği. Kart telefonunuza kaydedilir, internet yokken de açılır."}
+        stats={em.isSuccess ? [
+          { label: "Durum", value: active ? "Acil durum var" : "Normal", tone: active ? "danger" : "ok" },
+          ...(c ? [{ label: "Acil telefon", value: c.phones.length }, { label: "Toplanma alanı", value: c.muster_points.length }] : []),
+        ] : undefined} />
+      {!c ? (
+        <>
+          {em.data && <StatusCard e={em.data} />}
+          {card.isPending ? <Loading /> : <p className="small muted">Kart henüz yüklenmedi; internet bağlantısı gelince kaydedilecek.</p>}
+        </>
+      ) : (
+        <div className="r-split">
+          <div className="r-split__col">
+          {em.data && <StatusCard e={em.data} />}
+          <div className="section-title">Acil telefonlar</div>
+          {!card.data && cached && <p className="small muted mb-0">İnternet yok — cihazdaki kopya gösteriliyor (sürüm {cached.version}{cached.updated_at && `, ${formatDateTime(cached.updated_at)}`}).</p>}
           <div className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
             {c.phones.map((p, i) => <a key={i} className="btn" style={{ justifyContent: "flex-start" }} href={`tel:${p.number}`}><Phone aria-hidden="true" /> {p.label} · <strong>{p.number}</strong></a>)}
           </div></div>
+          </div>
+          <div className="r-split__col">
+          <div className="section-title">Acil bilgi kartı</div>
           {c.muster_points.length > 0 && <div className="card"><div className="card__head"><span className="card__title">Toplanma alanları</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
             {c.muster_points.map((m) => <div key={m.id}><div className="strong"><MapPin aria-hidden="true" style={{ width: 14, height: 14, verticalAlign: "-2px" }} /> {m.name}</div>{m.directions && <div className="small">{m.directions}</div>}{m.map && <img src={m.map} alt={`${m.name} krokisi`} style={{ maxWidth: "100%", borderRadius: 8, marginTop: 4 }} />}</div>)}
           </div></div>}
@@ -83,6 +100,7 @@ export function ResidentEmergencyPage() {
             {INSTR.filter(([k]) => c.instructions[k]).map(([k, l]) => <div key={k}><div className="strong small">{l}</div><div className="small">{c.instructions[k]}</div></div>)}
           </div></div>
           {c.block_notes.length > 0 && <div className="card"><div className="card__head"><span className="card__title">Blok tahliye notları</span></div><div className="card__body stack" style={{ gap: 4 }}>{c.block_notes.map((n) => <div key={n.block_id} className="small"><strong>{n.block_name}:</strong> {n.note}</div>)}</div></div>}
+          </div>
         </div>
       )}
     </>
