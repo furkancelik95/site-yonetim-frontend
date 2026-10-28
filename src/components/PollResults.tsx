@@ -13,22 +13,25 @@ export function pollPrivacy(p: Pick<Poll, "is_anonymous" | "one_per_unit">): str
   return `${p.is_anonymous ? "Anonim — kimin yanıtladığı tutulmaz" : "İsimli — yanıt verenin adı kaydedilir, yönetim görür"} · ${p.one_per_unit ? "bölüm başına bir yanıt" : "kişi başına bir yanıt"}`;
 }
 
-/** Seçim çubukları: değer çubuğun üstünde yazılı, renk tek başına anlam taşımaz; en çok oy alan kalın. */
+/**
+ * Seçim çubukları: değer çubuğun üstünde yazılı, renk tek başına anlam taşımaz; en çok oy alan
+ * kalın ve koyu mavi, diğerleri pastel. Kullanıcının kendi oyu metinle işaretlenir.
+ */
 function Bars({ q, total, mine, label }: { q: Question; total: number; mine?: string | null; label: string }) {
   const max = Math.max(0, ...q.options.map((o) => o.votes ?? 0));
   return (
-    <ul className="stack" style={{ gap: "var(--s-2)", listStyle: "none", padding: 0, margin: 0 }} aria-label={`${label} — sonuçlar`}>
+    <ul className="stack poll" style={{ gap: "var(--s-3)", listStyle: "none", padding: 0, margin: 0 }} aria-label={`${label} — sonuçlar`}>
       {q.options.map((o) => {
         const v = o.votes ?? 0;
         const pct = total ? Math.round((v / total) * 100) : 0;
         const lead = total > 0 && v === max;
         return (
           <li key={o.id}>
-            <div className="row row--between small" style={{ gap: "var(--s-2)" }}>
+            <div className="poll__row">
               <span className={lead ? "strong" : undefined}>{o.label}{mine === o.id && <span className="muted"> · sizin oyunuz</span>}</span>
-              <span className="nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{v} oy · %{pct}</span>
+              <span className="poll__pct"><span className="muted" style={{ fontWeight: 500 }}>{v} oy · </span>%{pct}</span>
             </div>
-            <div className="meter" aria-hidden="true"><div className={`meter__fill ${lead ? "meter__fill--ok" : ""}`} style={{ width: `${pct}%`, background: lead ? undefined : "var(--accent)" }} /></div>
+            <div className="meter" aria-hidden="true"><div className={`meter__fill ${lead ? "meter__fill--accent" : "meter__fill--soft"}`} style={{ width: `${pct}%` }} /></div>
           </li>
         );
       })}

@@ -33,7 +33,7 @@ export function ResidentLayout() {
           <div className="row row--between" style={{ flexWrap: "nowrap", gap: "var(--s-2)" }}>
             <div style={{ minWidth: 0 }}>
               <div className="r-header__site">{ctx.site.name}</div>
-              <div className="r-header__unit">{me?.full_name}</div>
+              <div className="r-header__unit" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{me?.full_name}</div>
             </div>
             <div className="row" style={{ flexWrap: "nowrap", gap: "var(--s-1)" }}>
               {isStaff && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}

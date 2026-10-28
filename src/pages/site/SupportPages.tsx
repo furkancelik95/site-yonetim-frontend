@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LifeBuoy, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BookOpen, Clock, LifeBuoy, MessageSquare, ShieldCheck, Smile, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useLocation } from "react-router";
 import { api, get } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
@@ -19,7 +19,7 @@ export const T_PRI: Record<string, [string, "danger" | "warn" | "muted"]> = { cr
 export const T_ST: Record<string, [string, "info" | "warn" | "ok" | "muted"]> = { open: ["Açık", "info"], answered: ["Yanıtlandı", "warn"], waiting_customer: ["Yanıtınız bekleniyor", "warn"], resolved: ["Çözüldü", "ok"], closed: ["Kapandı", "muted"] };
 export const S_ST: Record<string, [string, "warn" | "danger" | "muted" | "info"]> = { pending: ["Onay bekliyor", "warn"], active: ["Aktif", "danger"], rejected: ["Reddedildi", "muted"], expired: ["Sona erdi", "muted"] };
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
 );
 
 /** Destek (PYN-06 müşteri, PYN-04 onay): destek biletleri ve destek oturumu talepleri. */
@@ -31,8 +31,29 @@ export function SupportPage() {
   return (
     <div className="stack">
       <PageHead title="Destek" subtitle="Platform desteğine ekran bağlamıyla bilet açın. Destek ekibi verinize yalnız sizin onayınızla, süreli ve salt okunur erişir." />
+      <SupportKpis sessions={sess.data} />
       {tabs([["bilet", "Destek biletleri"], ["oturum", `Destek oturumları${pending ? ` (${pending})` : ""}`]], s.sekme, (k) => set({ sekme: k }), "Destek")}
       {s.sekme === "oturum" ? <Sessions canDecide={can(P.membersManage)} /> : <Tickets />}
+    </div>
+  );
+}
+
+/** Bant altı göstergeler: biletlerin durumu (liste ile aynı sorgu) ve destek oturumu talepleri. */
+function SupportKpis({ sessions }: { sessions: Session[] | undefined }) {
+  const q = useSiteGet<Ticket[]>("/support-tickets");
+  if (q.isError) return null;
+  if (!q.data || !sessions) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const open = q.data.filter((t) => t.status !== "resolved" && t.status !== "closed");
+  const waiting = q.data.filter((t) => t.status === "waiting_customer").length;
+  const breached = open.filter((t) => t.sla.first_breached || t.sla.resolve_breached).length;
+  const pendingS = sessions.filter((s) => s.status === "pending").length;
+  const activeS = sessions.filter((s) => s.status === "active").length;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Açık bilet" tone={open.length > 0 ? "accent" : undefined} icon={<LifeBuoy aria-hidden="true" />} value={open.length} note={`${q.data.length} biletten`} />
+      <Kpi label="Yanıtınız bekleniyor" tone={waiting > 0 ? "warn" : undefined} icon={<MessageSquare aria-hidden="true" />} value={waiting} note="destek ekibi sizden bilgi istedi" />
+      <Kpi label="SLA aşımı" tone={breached > 0 ? "danger" : "ok"} icon={<Clock aria-hidden="true" />} value={breached} note="açık biletlerde süre aşıldı" />
+      <Kpi label="Destek oturumu" tone={activeS > 0 ? "danger" : pendingS > 0 ? "warn" : undefined} icon={<ShieldCheck aria-hidden="true" />} value={activeS > 0 ? `${activeS} aktif` : pendingS} small={activeS > 0} note={pendingS > 0 ? `${pendingS} talep onayınızı bekliyor` : "onay bekleyen talep yok"} />
     </div>
   );
 }
@@ -73,7 +94,7 @@ function TicketCard({ t }: { t: Ticket }) {
     <details className="card" open={t.status === "waiting_customer" || t.status === "resolved"}>
       <summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">{t.number} · {t.title}</span><span className="card__meta">{T_CAT[t.category]}</span><span className="ml-auto row" style={{ gap: 4 }}><Badge tone={T_PRI[t.priority]![1]}>{T_PRI[t.priority]![0]}</Badge><Badge tone={T_ST[t.status]![1]}>{T_ST[t.status]![0]}</Badge></span></summary>
       <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
-        {t.messages.map((x, i) => <div key={i} className="small" style={{ background: x.side === "support" ? "var(--info-bg)" : "var(--bg-sunken)", borderRadius: 8, padding: "var(--s-2)" }}><strong>{x.by}</strong> · {formatDateTime(x.at)}<div style={{ whiteSpace: "pre-wrap" }}>{x.body}</div></div>)}
+        {t.messages.map((x, i) => <div key={i} className={`msg${x.side === "support" ? " msg--support" : ""}`}><strong>{x.by}</strong> · {formatDateTime(x.at)}<div className="msg__body">{x.body}</div></div>)}
         <div className="xs muted">Bağlam: {t.context.path} · {t.context.correlation_id}</div>
         <FormError error={reply.error ?? close.error} />
         {t.status === "resolved" && <div className="row" style={{ gap: "var(--s-2)", flexWrap: "wrap" }}><button className="btn btn--primary btn--sm" type="button" disabled={close.isPending} onClick={() => close.mutate({})}>Sorun çözüldü, kapat</button><span className="small muted">Çözülmediyse aşağıdan yazın; bilet yeniden açılır.</span></div>}
@@ -127,19 +148,34 @@ export function SupportSessionBanner() {
 export function HelpCenterPage() {
   const [s, set] = useUrlState({ q: "", ekran: "" });
   const q = useQuery({ queryKey: ["kb", s.q, s.ekran], queryFn: () => get<Article[]>("/knowledge-articles", { q: s.q || undefined, screen: s.ekran || undefined, audience: "staff" }) });
+  // Göstergeler süzgeçsiz listeden; arama boşken q ile aynı sorgu
+  const all = useQuery({ queryKey: ["kb", "", ""], queryFn: () => get<Article[]>("/knowledge-articles", { q: undefined, screen: undefined, audience: "staff" }) });
   const [sent, setSent] = useState<Record<string, boolean>>({});
   const [err, setErr] = useState<unknown>(null);
   async function fb(id: string, helpful: boolean) { setErr(null); try { await api("POST", `/knowledge-articles/${id}/feedback`, { body: { helpful } }); setSent((x) => ({ ...x, [id]: true })); } catch (e) { setErr(e); } }
   return (
     <div className="stack">
       <PageHead title="Yardım" subtitle="Ekranlarla ilgili kısa rehberler. Bulamadığınız konu için Destek'ten bilet açın." />
+      {all.isError ? null : !all.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (() => {
+        const yes = all.data.reduce((a, x) => a + x.helpful, 0);
+        const no = all.data.reduce((a, x) => a + x.not_helpful, 0);
+        return (
+          <div className="grid grid--kpi rise">
+            <Kpi label="Makale" tone="accent" icon={<BookOpen aria-hidden="true" />} value={all.data.length} note="personel için yazılmış rehber" />
+            <Kpi label="Faydalı bulundu" tone="ok" icon={<ThumbsUp aria-hidden="true" />} value={yes} note={`${no} kez faydalı bulunmadı`} />
+            <Kpi label="Memnuniyet" icon={<Smile aria-hidden="true" />} value={yes + no > 0 ? `%${Math.round((yes / (yes + no)) * 100)}` : "—"} note={yes + no > 0 ? `${yes + no} geri bildirimden` : "henüz geri bildirim yok"} />
+          </div>
+        );
+      })()}
       <div className="filters">
         <div className="field"><label className="field__label" htmlFor="kb-q">Ara</label><input id="kb-q" className="field__input" type="search" value={s.q} onChange={(e) => set({ q: e.target.value })} /></div>
         {s.ekran && <div className="field"><span className="field__label">Ekran</span><button className="btn btn--sm" type="button" onClick={() => set({ ekran: "" })}>{s.ekran} ✕</button></div>}
       </div>
       <FormError error={err} />
-      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Makale bulunamadı" /> : q.data.map((a) => (
-        <details key={a.id} className="card"><summary className="card__head" style={{ cursor: "pointer" }}><span className="card__title">{a.title}</span><span className="card__meta ml-auto">{formatDateTime(a.updated_at)}</span></summary>
+      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Makale bulunamadı" icon={<BookOpen aria-hidden="true" />} /> : q.data.map((a) => (
+        <details key={a.id} className="card"><summary className="card__head" style={{ cursor: "pointer" }}><span className="card__icon card__icon--accent"><BookOpen aria-hidden="true" /></span><span className="card__title">{a.title}</span><span className="card__meta ml-auto">{formatDateTime(a.updated_at)}</span></summary>
           <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
             <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{a.body}</p>
             {sent[a.id] ? <div className="small muted">Teşekkürler.</div> : <div className="row" style={{ gap: "var(--s-2)", alignItems: "center" }}><span className="small">Faydalı mı?</span><button className="btn btn--sm" type="button" aria-label="Faydalı" onClick={() => fb(a.id, true)}><ThumbsUp aria-hidden="true" /> Evet</button><button className="btn btn--sm" type="button" aria-label="Faydalı değil" onClick={() => fb(a.id, false)}><ThumbsDown aria-hidden="true" /> Hayır</button></div>}

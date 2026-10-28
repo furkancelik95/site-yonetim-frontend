@@ -24,6 +24,7 @@ export class ApiError extends Error {
 
 let accessToken: string | null = null;
 let onSessionLost: (() => void) | null = null;
+let onMfaRequired: (() => void) | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -38,7 +39,12 @@ export function setSessionLostHandler(handler: (() => void) | null) {
   onSessionLost = handler;
 }
 
-type Query = Record<string, string | number | boolean | null | undefined>;
+/** Oturum iki adımlı kod bekliyor (401 `mfa_required`): kod ekranına geçilir, yenileme denenmez. */
+export function setMfaRequiredHandler(handler: (() => void) | null) {
+  onMfaRequired = handler;
+}
+
+type Query = Record<string, string | number | boolean | null | undefined | readonly string[]>;
 
 export interface RequestOptions {
   query?: Query;
@@ -55,7 +61,9 @@ function buildUrl(path: string, query?: Query) {
   const url = new URL(BASE + path, window.location.origin);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+      // Dizi → tekrarlanan parametre (?roles=a&roles=b)
+      if (Array.isArray(v)) for (const item of v) url.searchParams.append(k, String(item));
+      else if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     }
   }
   return url.pathname + url.search;
@@ -86,6 +94,15 @@ function defaultMessage(status: number) {
   if (status === 429) return "Çok fazla deneme yapıldı. Biraz bekleyip tekrar deneyin.";
   if (status >= 500) return "Sunucuda bir sorun oluştu. Biraz sonra tekrar deneyin.";
   return "İstek tamamlanamadı.";
+}
+
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const body = await res.clone().json();
+    return body?.error?.code ?? null;
+  } catch {
+    return null;
+  }
 }
 
 let refreshing: Promise<boolean> | null = null;
@@ -138,6 +155,10 @@ async function send(method: string, path: string, opts: RequestOptions): Promise
 
 async function request(method: string, path: string, opts: RequestOptions = {}): Promise<Response> {
   let res = await send(method, path, opts);
+  if (res.status === 401 && (await errorCode(res)) === "mfa_required") {
+    onMfaRequired?.();
+    throw await toError(res);
+  }
   if (res.status === 401 && !path.startsWith("/auth/")) {
     if (await refreshSession()) {
       res = await send(method, path, opts);

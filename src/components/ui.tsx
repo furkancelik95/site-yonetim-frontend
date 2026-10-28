@@ -1,16 +1,24 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Info, Lock, SearchX } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Info, Lock, Minus, SearchX } from "lucide-react";
 import { ApiError } from "../api/client";
-import { formatMoney, moneySign } from "../lib/format";
+import { formatMoney, initials, moneySign } from "../lib/format";
 
 /* ---------- Durumlar: yükleniyor / hata / boş ---------- */
 
+/** Yükleniyor: dönen çark yerine sayfanın iskeleti (kart + satır biçimleri). */
 export function Loading({ label = "Yükleniyor…" }: { label?: string }) {
   return (
-    <div className="loading" role="status" aria-live="polite">
-      <span className="spinner" aria-hidden="true" />
-      <span>{label}</span>
+    <div className="skel" role="status" aria-live="polite">
+      <span className="visually-hidden">{label}</span>
+      <div className="skel__kpis" aria-hidden="true">
+        <div className="skeleton skel__kpi" />
+        <div className="skeleton skel__kpi" />
+        <div className="skeleton skel__kpi" />
+      </div>
+      <div className="skeleton skel__line" style={{ width: "62%" }} aria-hidden="true" />
+      <div className="skeleton skel__line" style={{ width: "84%" }} aria-hidden="true" />
+      <div className="skeleton skel__line" style={{ width: "48%" }} aria-hidden="true" />
     </div>
   );
 }
@@ -132,16 +140,52 @@ export function Badge({ tone = "muted", children }: { tone?: "ok" | "warn" | "da
 
 /* ---------- Sayfa başlığı ---------- */
 
-export function PageHead({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+/**
+ * Her sayfanın başlık bandı: açık mavi zemin, koyu yazı, sağda eylemler. Hemen altına
+ * `.grid--kpi` gelirse KPI kartları bandın alt kenarına biner (CSS: .hero + .grid--kpi).
+ */
+export function PageHead({ title, subtitle, actions, eyebrow, photo, band = true, children }: {
+  title: string; subtitle?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode; photo?: string;
+  /** Fotoğrafsız geniş bant: menü grubunun tonu + sağda sayfanın menü ikonu (büyük, soluk) */
+  band?: boolean; children?: ReactNode;
+}) {
   useDocumentTitle(title);
+  const auto = useNavGroupLabel(eyebrow === undefined);
+  const shown = eyebrow ?? auto;
+  const mark = useRef<HTMLSpanElement>(null);
+  const [tone, setTone] = useState("blue");
+  useEffect(() => {
+    if (!band) return;
+    // Ayrıntı sayfalarında (cari, makbuz…) site menüsünde eşleşen öğe yoktur; yalnızca "Siteler"
+    // listesindeki site bağlantısı etkin görünür. O bağlantı sayfanın kendisi olmadığından atlanır.
+    const groupOf = (el: Element) => el.closest(".sidebar__group")?.querySelector(".sidebar__label")?.textContent?.trim().toLocaleLowerCase("tr-TR") ?? "";
+    const active = [...document.querySelectorAll('.sidebar .navlink[aria-current="page"]')].find((el) => groupOf(el) !== "siteler");
+    const group = active ? groupOf(active) : "";
+    setTone(group.startsWith("operasyon") ? "teal" : group.startsWith("yönetim") ? "violet" : group.startsWith("finans") ? "indigo" : "blue");
+    // Menüdeki ikonun kopyası: aynı SVG düğümü klonlanır (HTML metni enjekte edilmez)
+    const svg = active?.querySelector("svg");
+    const host = mark.current;
+    if (svg && host) {
+      host.replaceChildren(svg.cloneNode(true));
+      return () => host.replaceChildren();
+    }
+  }, [band, title]);
+  const cls = photo ? "hero--photo hero--page" : band ? `hero--page hero--band hero--${tone}` : "hero--slim";
   return (
-    <div className="page-head">
-      <div>
-        <h1>{title}</h1>
-        {subtitle && <p className="muted mb-0">{subtitle}</p>}
+    <section className={`hero ${cls}`}>
+      {photo && <img className="hero__photo" src={photo} alt="" decoding="async" />}
+      {band && <span className="hero__mark" ref={mark} aria-hidden="true" />}
+      <div className="hero__veil" aria-hidden="true" />
+      <div className="hero__top">
+        <div className="hero__text">
+          {shown && <div className="hero__eyebrow">{shown}</div>}
+          <h1>{title}</h1>
+          {subtitle && <p className="hero__sub">{subtitle}</p>}
+        </div>
+        {actions && <div className="hero__actions">{actions}</div>}
       </div>
-      {actions && <div className="page-head__actions">{actions}</div>}
-    </div>
+      {children}
+    </section>
   );
 }
 
@@ -151,14 +195,150 @@ export function useDocumentTitle(title: string) {
   }, [title]);
 }
 
+/**
+ * Başlık bandının üst satırı için sayfanın menüdeki grubunu okur ("Finans yönetimi",
+ * "Operasyon", site adı…). Menü izin/modül süzgecinden geçtiği için grup adı kullanıcının
+ * gördüğü menüyle birebir aynıdır; menüde olmayan sayfalarda (ayrıntı ekranları) boş kalır.
+ */
+function useNavGroupLabel(enabled: boolean): string {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    if (!enabled) return;
+    const groupOf = (el: Element) => el.closest(".sidebar__group")?.querySelector(".sidebar__label")?.textContent?.trim() ?? "";
+    // "Siteler" listesindeki site bağlantısı ayrıntı sayfalarında da etkin görünür; grup adı sayılmaz
+    const active = [...document.querySelectorAll('.sidebar .navlink[aria-current="page"]')].find((el) => groupOf(el) !== "Siteler");
+    setLabel(active ? groupOf(active) : "");
+  }, [enabled]);
+  return label;
+}
+
+/* ---------- Sayfa başı bandı (hero) ---------- */
+
+/**
+ * Pano sayfalarının geniş başlık bandı: sağda fotoğraf (soldan beyaza erir), üst satır
+ * (eyebrow), başlık, alt başlık, sağda eylemler; `children` ikinci satır (dönem seçici vb.).
+ * Hemen altına gelen `.grid--kpi` bandın alt kenarından taşar.
+ */
+export function Hero({ eyebrow, title, subtitle, actions, photo, children }: { eyebrow?: ReactNode; title: string; subtitle?: ReactNode; actions?: ReactNode; photo?: string; children?: ReactNode }) {
+  useDocumentTitle(title);
+  return (
+    <section className={`hero${photo ? " hero--photo" : ""}`}>
+      {photo && <img className="hero__photo" src={photo} alt="" decoding="async" fetchPriority="high" />}
+      <div className="hero__veil" aria-hidden="true" />
+      <div className="hero__top">
+        <div className="hero__text">
+          {eyebrow && <div className="hero__eyebrow">{eyebrow}</div>}
+          <h1>{title}</h1>
+          {subtitle && <p className="hero__sub">{subtitle}</p>}
+        </div>
+        {actions && <div className="hero__actions">{actions}</div>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/* ---------- Dönem seçici ---------- */
+
+/** Hap biçimli seçenek grubu ("Bu ay | Toplam"). Seçili parça beyaz. */
+export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; label: string }) {
+  return (
+    <div className="seg" role="group" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.value} type="button" className="seg__btn" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Değişim rozeti ve ikon çipi ---------- */
+
+/** Yön oku + metin: yukarı yeşil, aşağı kırmızı, düz gri. `good` tersine çevirir (borç artışı kötüdür). */
+export function Delta({ dir, children, good = "up" }: { dir: "up" | "down" | "flat"; children: ReactNode; good?: "up" | "down" }) {
+  const tone = dir === "flat" ? "muted" : (dir === good ? "ok" : "danger");
+  const Icon = dir === "up" ? ArrowUpRight : dir === "down" ? ArrowDownRight : Minus;
+  return (
+    <span className={`badge badge--${tone}`}>
+      <Icon aria-hidden="true" />
+      {children}
+    </span>
+  );
+}
+
+/** Daire içinde ikon (tablo satırında kategori gibi). Dekoratif; metin yanında yazılır. */
+export function IconChip({ children, tone }: { children: ReactNode; tone?: "ok" | "warn" | "danger" | "muted" }) {
+  return (
+    <span className={`chip${tone ? ` chip--${tone}` : ""}`} aria-hidden="true">
+      {children}
+    </span>
+  );
+}
+
+/** Bugünün tarihi, uzun Türkçe biçim ("26 Ekim 2026 Pazartesi"). Hero üst satırı için. */
+export function todayLong(): string {
+  return new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+/* ---------- Avatar ---------- */
+
+/** Baş harfli avatar. Dekoratif: adın kendisi yanında metin olarak yazılır. */
+export function Avatar({ name, size, soft }: { name: string | null | undefined; size?: "sm"; soft?: boolean }) {
+  return (
+    <span className={`avatar${size ? ` avatar--${size}` : ""}${soft ? " avatar--soft" : ""}`} aria-hidden="true">
+      {initials(name)}
+    </span>
+  );
+}
+
 /* ---------- KPI ---------- */
 
-export function Kpi({ label, value, note, tone, small }: { label: string; value: ReactNode; note?: ReactNode; tone?: "ok" | "warn" | "danger" | "accent"; small?: boolean }) {
+/**
+ * KPI kartı. `icon` etiketin solundaki soluk daireye girer; `delta` notun başında rozet
+ * olarak gösterilir (ör. "bu ay %35,9"; `dir` verilirse ok ikonlu). İkisi de isteğe bağlı —
+ * eski çağrılar aynen çalışır.
+ */
+export function Kpi({
+  label,
+  value,
+  note,
+  tone,
+  small,
+  icon,
+  delta,
+}: {
+  label: string;
+  value: ReactNode;
+  note?: ReactNode;
+  tone?: "ok" | "warn" | "danger" | "accent";
+  small?: boolean;
+  icon?: ReactNode;
+  delta?: { tone: "ok" | "warn" | "danger" | "info" | "muted"; label: ReactNode; dir?: "up" | "down" | "flat" };
+}) {
+  const DeltaIcon = delta?.dir === "up" ? ArrowUpRight : delta?.dir === "down" ? ArrowDownRight : delta?.dir === "flat" ? Minus : null;
   return (
     <div className={`kpi${tone ? ` kpi--${tone}` : ""}`}>
-      <span className="kpi__label">{label}</span>
+      <span className="kpi__label">
+        {icon && (
+          <span className="kpi__icon" aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        {label}
+      </span>
       <span className={`kpi__value${small ? " kpi__value--sm" : ""}`}>{value}</span>
-      {note && <span className="kpi__note">{note}</span>}
+      {(note || delta) && (
+        <span className="kpi__note">
+          {delta && (
+            <Badge tone={delta.tone}>
+              {DeltaIcon && <DeltaIcon aria-hidden="true" />}
+              {delta.label}
+            </Badge>
+          )}
+          {note && <span>{note}</span>}
+        </span>
+      )}
     </div>
   );
 }

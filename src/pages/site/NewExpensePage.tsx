@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
+import { Inbox } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
 import { Field, FormError, PageHead, SubmitButton, fieldError } from "../../components/ui";
@@ -61,6 +62,7 @@ export function NewExpensePage() {
     <div className="stack page--narrow">
       <PageHead title="Yeni gider" actions={<Link className="btn" to={`/s/${site.slug}/giderler`}>Vazgeç</Link>} />
       <form className="card" onSubmit={submit} noValidate>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Inbox aria-hidden="true" /></span><span className="card__title">Gider bilgileri</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
           <FormError error={m.error} />
           <div className="grid grid--2">

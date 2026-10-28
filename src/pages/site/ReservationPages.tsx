@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { CalendarCheck, Settings2 } from "lucide-react";
+import { BarChart3, CalendarCheck, ClipboardCheck, Hourglass, PieChart, Settings2, UserCheck, Wallet } from "lucide-react";
 import { Link } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { BarChart, Donut } from "../../components/charts";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
@@ -23,7 +24,7 @@ interface Wait { id: string; area_name: string; date: string; start: string; uni
 interface Report { from: string; to: string; rows: { area_id: string; area_name: string; total: number; cancelled: number; checked_in: number; no_show: number; no_show_rate: number | null; occupancy: number; revenue: string }[] }
 
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <div className="tabs" role="tablist" aria-label={label}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className="tabs__tab" onClick={() => set(k)}>{l}</button>)}</div>
 );
 
 // ===================================================================== 60 Rezervasyon (yönetim, güvenlik)
@@ -37,10 +38,30 @@ export function ReservationsPage() {
   const items: [string, string][] = [["gun", "Günlük liste"], ...(manage ? ([["onay", `Onay bekleyen${pending.data?.length ? ` (${pending.data.length})` : ""}`], ["yeni", "Sakin adına"], ["rapor", "Kullanım raporu"]] as [string, string][]) : [])];
   return (
     <div className="stack">
-      <PageHead title="Rezervasyon" subtitle="Ortak alan takvimi, kapıda kullanım doğrulama, onay ve bekleme listesi."
-        actions={can(P.modulesManage) && <Link className="btn" to={`${base}/rezervasyon/alanlar`}><Settings2 aria-hidden="true" /> Alanlar ve kurallar</Link>} />
-      {tabs(items, s.sekme, (k) => set({ sekme: k }), "Rezervasyon")}
+      <PageHead title="Rezervasyon" eyebrow="Operasyon" subtitle="Ortak alan takvimi, kapıda kullanım doğrulama, onay ve bekleme listesi."
+        actions={can(P.modulesManage) && <Link className="btn" to={`${base}/rezervasyon/alanlar`}><Settings2 aria-hidden="true" /> Alanlar ve kurallar</Link>}>
+        {tabs(items, s.sekme, (k) => set({ sekme: k }), "Rezervasyon")}
+      </PageHead>
+      <ResKpis date={s.tarih} area={s.alan} pending={manage ? pending.data?.length : undefined} />
       {s.sekme === "onay" && manage ? <PendingList /> : s.sekme === "yeni" && manage ? <OnBehalf /> : s.sekme === "rapor" && manage ? <UsageReport /> : <DayList date={s.tarih} area={s.alan} onChange={(v) => set(v)} manage={manage} />}
+    </div>
+  );
+}
+
+/** Bandın altındaki göstergeler: seçili günün rezervasyonları (günlük listeyle aynı sorgu, önbellekten). */
+function ResKpis({ date, area, pending }: { date: string; area: string; pending: number | undefined }) {
+  const q = useSiteGet<Res[]>("/reservations", { date, area_id: area || undefined }, { refetchInterval: 30000 });
+  const wl = useSiteGet<Wait[]>("/waitlist");
+  if (!q.data) return q.isError ? null : <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const live = q.data.filter((r) => ["approved", "checked_in", "pending"].includes(r.status));
+  const came = live.filter((r) => r.status === "checked_in").length;
+  const waits = (wl.data ?? []).filter((w) => w.date === date);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Rezervasyon" icon={<CalendarCheck aria-hidden="true" />} value={live.length} note={formatDate(date)} />
+      <Kpi label="Geldi" icon={<UserCheck aria-hidden="true" />} value={came} tone={came ? "ok" : undefined} note="girişi doğrulanan" />
+      <Kpi label="Bekleme listesi" icon={<Hourglass aria-hidden="true" />} value={waits.length} tone={waits.length ? "warn" : undefined} note="sırada bekleyen bölüm" />
+      {pending !== undefined && <Kpi label="Onay bekleyen" icon={<ClipboardCheck aria-hidden="true" />} value={pending} tone={pending ? "warn" : undefined} note="tüm günler, yönetici kararı" />}
     </div>
   );
 }
@@ -49,20 +70,22 @@ function DayList({ date, area, onChange, manage }: { date: string; area: string;
   const areas = useSiteGet<ResArea[]>("/reservable-areas");
   const q = useSiteGet<Res[]>("/reservations", { date, area_id: area || undefined }, { refetchInterval: 30000 });
   const wl = useSiteGet<Wait[]>("/waitlist");
-  const live = (q.data ?? []).filter((r) => ["approved", "checked_in", "pending"].includes(r.status));
-  const came = live.filter((r) => r.status === "checked_in").length;
   const waits = (wl.data ?? []).filter((w) => w.date === date);
   return (
-    <div className="stack">
+    <>
       {date === todayIso() && <CodeCheck />}
-      <div className="filters">
-        <div className="field"><label className="field__label" htmlFor="rz-d">Tarih</label><input id="rz-d" className="field__input" type="date" value={date} onChange={(e) => onChange({ tarih: e.target.value })} /></div>
-        <div className="field"><label className="field__label" htmlFor="rz-a">Alan</label><select id="rz-a" className="field__input" value={area} onChange={(e) => onChange({ alan: e.target.value })}><option value="">Tümü</option>{(areas.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-      </div>
-      <div className="grid grid--kpi"><Kpi label="Rezervasyon" value={live.length} /><Kpi label="Geldi" value={came} tone={came ? "ok" : undefined} /><Kpi label="Bekleme listesi" value={waits.length} /></div>
       {areas.data && areas.data.length === 0 && <Empty title="Rezerve edilebilir alan yok" icon={<CalendarCheck aria-hidden="true" />}>Yapı → Ortak alanlar'da alanı "rezerve edilebilir" işaretleyin.</Empty>}
-      <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title={`${formatDate(date)} için rezervasyon yok`} /> : (
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><CalendarCheck aria-hidden="true" /></span>
+          <div><div className="card__title">Günlük liste</div>{q.data && <div className="card__meta">{formatDate(date)} · {q.data.length} kayıt</div>}</div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="rz-d">Tarih</label><input id="rz-d" className="field__input" type="date" value={date} onChange={(e) => onChange({ tarih: e.target.value })} /></div>
+            <div className="field"><label className="field__label" htmlFor="rz-a">Alan</label><select id="rz-a" className="field__input" value={area} onChange={(e) => onChange({ alan: e.target.value })}><option value="">Tümü</option>{(areas.data ?? []).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title={`${formatDate(date)} için rezervasyon yok`} icon={<CalendarCheck aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Günlük rezervasyon listesi</caption>
             <thead><tr><th scope="col">Saat</th><th scope="col">Alan</th><th scope="col">Bölüm / kişi</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
             <tbody>{q.data.map((r) => (
@@ -77,10 +100,10 @@ function DayList({ date, area, onChange, manage }: { date: string; area: string;
           </table></div>
         )}
       </div></div>
-      {waits.length > 0 && <div className="card"><div className="card__head"><span className="card__title">Bekleme listesi</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
+      {waits.length > 0 && <div className="card"><div className="card__head"><span className="card__icon card__icon--warn"><Hourglass aria-hidden="true" /></span><span className="card__title">Bekleme listesi</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
         {waits.map((w) => <div key={w.id} className="small">{w.start} · {w.area_name} · {w.unit_name} ({w.person_name}) — {w.status === "offered" ? <Badge tone="info">Teklif gitti</Badge> : <Badge tone="muted">Sırada</Badge>}</div>)}
       </div></div>}
-    </div>
+    </>
   );
 }
 
@@ -210,10 +233,36 @@ export function RulesSummary({ r }: { r: ResRules }) {
 function UsageReport() {
   const [to, setTo] = useState(todayIso());
   const q = useSiteGet<Report>("/reservations/report", { to });
+  const rows = q.data?.rows ?? [];
   return (
+    <>
+    {rows.length > 0 && (
+      <div className="ops-charts">
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">Alan doluluğu</span><span className="card__meta ml-auto">son 30 gün</span></div>
+          <div className="card__body ops-chart">
+            <BarChart label="Alan doluluk oranı" data={rows.map((r) => ({ label: r.area_name, value: r.occupancy, sub: `${r.total} rezervasyon` }))} format={(v) => `%${Math.round(v)}`} compact />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span><span className="card__title">Rezervasyon sonucu</span><span className="card__meta ml-auto">tüm alanlar</span></div>
+          <div className="card__body ops-pie">
+            <Donut label="Rezervasyon sonuçları" centerSub="rezervasyon" segments={[
+              { label: "Geldi", value: rows.reduce((a, r) => a + r.checked_in, 0), tone: "ok" },
+              { label: "Gelmedi", value: rows.reduce((a, r) => a + r.no_show, 0), tone: "danger" },
+              { label: "İptal", value: rows.reduce((a, r) => a + r.cancelled, 0), tone: "muted" },
+              { label: "Diğer", value: rows.reduce((a, r) => a + Math.max(0, r.total - r.checked_in - r.no_show - r.cancelled), 0), tone: "info" },
+            ]} />
+          </div>
+        </div>
+      </div>
+    )}
     <div className="card">
-      <div className="card__head"><span className="card__title">Kullanım raporu</span><span className="card__meta ml-auto">{q.data ? `${formatDate(q.data.from)} – ${formatDate(q.data.to)}` : ""}</span></div>
-      <div className="card__body" style={{ paddingBottom: 0 }}><div className="field" style={{ maxWidth: "12rem" }}><label className="field__label" htmlFor="rr-to">Bitiş (son 30 gün)</label><input id="rr-to" className="field__input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div></div>
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><CalendarCheck aria-hidden="true" /></span>
+        <div><div className="card__title">Kullanım raporu</div><div className="card__meta">{q.data ? `${formatDate(q.data.from)} – ${formatDate(q.data.to)}` : ""}</div></div>
+        <div className="card__tools"><div className="field"><label className="field__label" htmlFor="rr-to">Bitiş (son 30 gün)</label><input id="rr-to" className="field__input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div></div>
+      </div>
       <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.rows.length === 0 ? <Empty title="Alan yok" /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Alan kullanım raporu</caption>
@@ -224,6 +273,7 @@ function UsageReport() {
       </div>
       <div className="card__foot small muted">Doluluk = kullanılan saat / açık saat × kapasite. "Gelmedi" yalnız girişte doğrulama yapılan alanlarda sayılır.</div>
     </div>
+    </>
   );
 }
 
@@ -236,10 +286,18 @@ export function ReservationAreasPage() {
   const [open, setOpen] = useState<string | null>(null);
   return (
     <div className="stack">
-      <PageHead title="Rezervasyon alanları ve kuralları" subtitle={<>Alanları <Link to={`${base}/yapi?sekme=ortak`}>Yapı → Ortak alanlar</Link>'da "rezerve edilebilir" işaretleyin; burada saat, kapasite, ücret, onay ve doğrulama kurallarını belirleyin.</>} />
+      <PageHead title="Rezervasyon alanları ve kuralları" eyebrow="Operasyon · Ayarlar" subtitle={<>Alanları <Link to={`${base}/yapi?sekme=ortak`}>Yapı → Ortak alanlar</Link>'da "rezerve edilebilir" işaretleyin; burada saat, kapasite, ücret, onay ve doğrulama kurallarını belirleyin.</>} />
+      {q.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Alan" icon={<CalendarCheck aria-hidden="true" />} value={q.data.length} note="rezerve edilebilir işaretli" />
+          <Kpi label="Rezervasyona açık" tone="ok" icon={<UserCheck aria-hidden="true" />} value={q.data.filter((a) => a.rules.enabled).length} note="sakin ya da yönetim açabilir" />
+          <Kpi label="Ücretli" icon={<Wallet aria-hidden="true" />} value={q.data.filter((a) => a.rules.fee_type !== "free").length} note="ücret borca yansır" />
+          <Kpi label="Onaylı" icon={<ClipboardCheck aria-hidden="true" />} value={q.data.filter((a) => a.rules.approval === "manual").length} note="yönetici onayı gerektiren" />
+        </div>
+      ) : !q.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? <Empty title="Rezerve edilebilir alan yok" icon={<CalendarCheck aria-hidden="true" />} /> : q.data.map((a) => (
         <div key={a.id} className="card">
-          <div className="card__head"><span className="card__title">{a.name}</span>{a.block_name && <span className="card__meta">{a.block_name}</span>}<span className="ml-auto">{a.rules.enabled ? <Badge tone="ok">Açık</Badge> : <Badge tone="muted">Kapalı</Badge>}</span></div>
+          <div className="card__head"><span className="card__icon card__icon--accent"><CalendarCheck aria-hidden="true" /></span><span className="card__title">{a.name}</span>{a.block_name && <span className="card__meta">{a.block_name}</span>}<span className="ml-auto">{a.rules.enabled ? <Badge tone="ok">Açık</Badge> : <Badge tone="muted">Kapalı</Badge>}</span></div>
           {open === a.id ? <RulesForm a={a} onDone={() => setOpen(null)} /> : (
             <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
               <RulesSummary r={a.rules} />

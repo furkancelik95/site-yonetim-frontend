@@ -1,23 +1,20 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CheckCircle2, Circle, Lock } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, LockOpen, Unlock } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { Alert, Badge, ConfirmButton, ErrorState, Loading, PageHead } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, ErrorState, Kpi, Loading, PageHead } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { fiscalAction, fiscalStatus, fiscalStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import type { Schemas } from "../../api/types";
 
-/** Servis isteği 27'deki şekiller. */
-interface FiscalPeriod {
-  period: string; label: string; status: "open" | "closing" | "locked" | "temp_open"; is_past: boolean; exceptions: Record<string, string>; closing_started_by: string | null;
-  locked_by: string | null; locked_at: string | null; unlock_until: string | null; history: { at: string; by: string; action: string; note: string | null }[];
-}
-interface CheckItem { key: string; label: string; ok: boolean; detail: string; link: string | null; required: boolean; exception: string | null }
+type FiscalPeriod = Schemas["FiscalPeriodOut"];
+type Checklist = Schemas["CloseChecklistOut"];
 
 /**
  * Dönem kapanışı (FIN-13): kontrol listesi → kapanışta → kilitli (iki kişi). Kilitli dönem yalnız gerekçeyle
- * süreli açılır. Kilit, finans kayıtlarının o döneme yazılmasını engeller (servis gelince backend uygular).
+ * süreli açılır. Kilitli/kapanıştaki döneme backend hiçbir finansal kaydı yazmaz (409 `period_locked`).
  */
 export function FiscalPeriodsPage() {
   const [s, set] = useUrlState({ yil: String(new Date().getFullYear()), donem: "" });
@@ -25,14 +22,33 @@ export function FiscalPeriodsPage() {
   const selected = s.donem || q.data?.find((p) => p.is_past && p.status !== "locked")?.period || q.data?.[0]?.period || "";
   return (
     <div className="stack">
-      <PageHead title="Dönem kapanışı" subtitle="Ay sonunda kontrol listesiyle dönemi kapatın ve kilitleyin; kilitli döneme kayıt eklenmez, düzeltme ters kayıtla açık dönemde yapılır." />
+      <PageHead title="Dönem kapanışı" subtitle="Ay sonunda kontrol listesiyle dönemi kapatın ve kilitleyin; kilitli döneme kayıt eklenmez ve o döneme ait kayıt ters kaydedilemez; düzeltme gerekirse kilit gerekçeyle süreli açılır." />
+      {q.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Kilitli" tone="ok" icon={<Lock aria-hidden="true" />} value={q.data.filter((p) => p.status === "locked").length} note={`${s.yil} yılında`} />
+          <Kpi label="Kapanışta" tone="warn" icon={<Clock aria-hidden="true" />} value={q.data.filter((p) => p.status === "closing").length} note="ikinci yetkili kilitleyecek" />
+          <Kpi label="Açık geçmiş dönem" tone={q.data.some((p) => p.is_past && p.status === "open") ? "danger" : undefined} icon={<LockOpen aria-hidden="true" />} value={q.data.filter((p) => p.is_past && p.status === "open").length} note="ay bitti, henüz kapanmadı" />
+          <Kpi label="Süreli açık" icon={<Unlock aria-hidden="true" />} value={q.data.filter((p) => p.status === "temp_open").length} note="gerekçeyle açılan" />
+        </div>
+      ) : q.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : null}
       <div className="filters">
         <div className="field"><label className="field__label" htmlFor="fp-year">Yıl</label><select id="fp-year" className="field__input" value={s.yil} onChange={(e) => set({ yil: e.target.value, donem: "" })}>{[0, 1].map((d) => { const y = String(new Date().getFullYear() - d); return <option key={y} value={y}>{y}</option>; })}</select></div>
       </div>
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <div className="grid grid--2" style={{ alignItems: "start" }}>
           <div className="card">
-            <div className="card__head"><span className="card__title">Dönemler</span></div>
+            <div className="card__head">
+              <span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span>
+              <div>
+                <div className="card__title">Dönemler</div>
+                <div className="card__meta">{q.data.length} ay</div>
+              </div>
+              <div className="card__tools">
+                <div className="field"><label className="field__label" htmlFor="fp-year">Yıl</label><select id="fp-year" className="field__input" value={s.yil} onChange={(e) => set({ yil: e.target.value, donem: "" })}>{[0, 1].map((d) => { const y = String(new Date().getFullYear() - d); return <option key={y} value={y}>{y}</option>; })}</select></div>
+              </div>
+            </div>
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Mali dönemler</caption>
               <thead><tr><th scope="col">Dönem</th><th scope="col">Durum</th><th scope="col">Kilitleyen</th></tr></thead>
@@ -55,7 +71,7 @@ export function FiscalPeriodsPage() {
 function PeriodDetail({ period }: { period: string }) {
   const { can } = useSite();
   const manage = can(P.chargePost);
-  const q = useSiteGet<{ period: FiscalPeriod; items: CheckItem[] }>(`/fiscal-periods/${period}/close-checklist`);
+  const q = useSiteGet<Checklist>(`/fiscal-periods/${period}/close-checklist`);
   const [ex, setEx] = useState<Record<string, string>>({});
   const start = useSiteMutation<{ exceptions: Record<string, string> }, FiscalPeriod>("POST", `/fiscal-periods/${period}/start-close`);
   const lock = useSiteMutation<Record<string, never>, FiscalPeriod>("POST", `/fiscal-periods/${period}/lock`);
@@ -69,7 +85,7 @@ function PeriodDetail({ period }: { period: string }) {
   const blocking = items.filter((i) => i.required && !i.ok && (ex[i.key] ?? "").trim().length < 10);
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">{p.label}</span><span className="ml-auto"><Badge tone={fiscalStatusTone(p.status)}>{fiscalStatus(p.status)}</Badge></span></div>
+      <div className="card__head"><span className="card__icon card__icon--ok"><ClipboardCheck aria-hidden="true" /></span><div><div className="card__title">{p.label}</div><div className="card__meta">{items.filter((i) => i.ok).length}/{items.length} madde tamam</div></div><span className="ml-auto"><Badge tone={fiscalStatusTone(p.status)}>{fiscalStatus(p.status)}</Badge></span></div>
       <div className="card__body card__body--flush">
         <ul className="checklist">
           {items.map((i) => (
@@ -93,6 +109,7 @@ function PeriodDetail({ period }: { period: string }) {
       </div>
       <div className="card__foot stack" style={{ gap: "var(--s-3)" }}>
         {!p.is_past && <Alert tone="info">İçinde bulunulan dönem ay bitmeden kapatılamaz.</Alert>}
+        {p.unlock_request_id && <Alert tone="info" title="Süreli açma onay bekliyor">Talep Onaylar ekranında; onaylanınca dönem seçilen süre kadar açılır.</Alert>}
         {p.status === "temp_open" && <Alert tone="danger" title="Dönem süreli açık">{formatDateTime(p.unlock_until)} tarihine kadar kayıt eklenebilir; bu süredeki işlemler denetim kaydında "kilit açıkken" etiketli.</Alert>}
         {manage && (
           <div className="row" style={{ gap: "var(--s-2)" }}>
@@ -103,10 +120,10 @@ function PeriodDetail({ period }: { period: string }) {
               <ConfirmButton className="btn btn--primary" title={`${p.label} — kilitle`} confirmLabel="Kilitle" body="Kilitli döneme hiçbir finansal kayıt eklenemez ve değiştirilemez. Kapanışı başlatan kişi kilitleyemez (iki kişi kuralı)." onConfirm={() => lock.mutateAsync({})}><Lock aria-hidden="true" /> Kilitle</ConfirmButton>
             )}
             {p.status === "closing" && <button className="btn btn--ghost" type="button" disabled={reopen.isPending} onClick={() => reopen.mutate({})}>Açığa al</button>}
-            {p.status === "locked" && (
+            {p.status === "locked" && !p.unlock_request_id && (
               <ConfirmButton className="btn btn--ghost" danger title={`${p.label} — süreli aç`} confirmLabel="Süreli aç"
                 body={<div className="stack" style={{ gap: "var(--s-3)" }}>
-                  <p className="mb-0 small">İstisnai durum. Mümkünse düzeltmeyi açık dönemde ters kayıtla yapın. Servis gelince bu talep YK onayına düşecek.</p>
+                  <p className="mb-0 small">İstisnai durum. "Dönem kilidi açma" onay kuralı varsa (hazır şablon: YK çoğunluğu) talep onaya gider; onaylanınca dönem süreli açılır.</p>
                   <div className="field"><label className="field__label" htmlFor="ul-reason">Gerekçe * (en az 20 karakter)</label><textarea id="ul-reason" className="field__input" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} /></div>
                   <div className="field"><label className="field__label" htmlFor="ul-hours">Süre</label><select id="ul-hours" className="field__input" value={hours} onChange={(e) => setHours(e.target.value)}><option value="4">4 saat</option><option value="24">24 saat</option><option value="72">72 saat</option></select></div>
                 </div>}

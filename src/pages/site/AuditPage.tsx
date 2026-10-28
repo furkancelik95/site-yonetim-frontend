@@ -1,9 +1,9 @@
 import { Fragment, useState } from "react";
-import { History } from "lucide-react";
+import { Activity, CalendarDays, History, Trash2 } from "lucide-react";
 import { useSiteGet } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Badge, Empty, ErrorState, Loading, PageHead, Pager } from "../../components/ui";
-import { formatDateTime } from "../../lib/format";
+import { Avatar, Badge, Empty, ErrorState, Kpi, Loading, PageHead, Pager } from "../../components/ui";
+import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { actorType, auditAction } from "../../lib/labels";
 
@@ -11,6 +11,28 @@ type Audit = Schemas["AuditOut"];
 
 const ACTIONS = ["create", "update", "delete", "import", "download", "export", "contact_view"];
 const ACTORS = ["user", "system", "delegate"];
+
+/** Süzgeçten bağımsız sayılar: toplam, son 7 gün, bugün, silme (yalnız `total` okunur, page_size 1). */
+function AuditKpis() {
+  const today = todayIso();
+  const d = new Date(); d.setDate(d.getDate() - 6);
+  const weekAgo = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const all = useSiteGet<Page<Audit>>("/audit", { page_size: 1 });
+  const week = useSiteGet<Page<Audit>>("/audit", { from: weekAgo, page_size: 1 });
+  const day = useSiteGet<Page<Audit>>("/audit", { from: today, page_size: 1 });
+  const del = useSiteGet<Page<Audit>>("/audit", { action: "delete", page_size: 1 });
+  if (all.isError) return null;
+  if (!all.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const n = (q: { data?: Page<Audit> }) => q.data?.total ?? "…";
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Toplam kayıt" icon={<History aria-hidden="true" />} value={all.data.total.toLocaleString("tr-TR")} note="değiştirilemez iz" />
+      <Kpi label="Son 7 gün" tone="accent" icon={<CalendarDays aria-hidden="true" />} value={n(week)} note={`${formatDate(weekAgo)} sonrası`} />
+      <Kpi label="Bugün" icon={<Activity aria-hidden="true" />} value={n(day)} note={formatDate(today)} />
+      <Kpi label="Silme işlemi" tone={typeof del.data?.total === "number" && del.data.total > 0 ? "warn" : undefined} icon={<Trash2 aria-hidden="true" />} value={n(del)} note="tüm zamanlar" />
+    </div>
+  );
+}
 
 /** Denetim kaydı: değiştirilemez, silinemez (backend docs/09 §6). */
 export function AuditPage() {
@@ -21,30 +43,35 @@ export function AuditPage() {
   return (
     <div className="stack">
       <PageHead title="Denetim kaydı" subtitle="Kim, ne zaman, neyi değiştirdi. Kayıtlar değiştirilemez ve silinemez." />
-      <div className="filters">
-        <div className="field">
-          <label className="field__label" htmlFor="a-act">İşlem</label>
-          <select id="a-act" className="field__input" value={s.action} onChange={(e) => set({ action: e.target.value })}>
-            <option value="">Tümü</option>
-            {ACTIONS.map((a) => <option key={a} value={a}>{auditAction(a)}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="a-actor">Yapan</label>
-          <select id="a-actor" className="field__input" value={s.actor} onChange={(e) => set({ actor: e.target.value, page: "1" })}>
-            <option value="">Tümü</option>
-            {ACTORS.map((a) => <option key={a} value={a}>{actorType(a)}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="a-ent">Kayıt türü</label>
-          <input id="a-ent" className="field__input" value={s.entity} onChange={(e) => set({ entity: e.target.value })} placeholder="ör. payment" />
-        </div>
-        <div className="field"><label className="field__label" htmlFor="a-from">Başlangıç</label><input id="a-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} /></div>
-        <div className="field"><label className="field__label" htmlFor="a-to">Bitiş</label><input id="a-to" className="field__input" type="date" value={s.to} onChange={(e) => set({ to: e.target.value })} /></div>
-      </div>
+      <AuditKpis />
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><History aria-hidden="true" /></span>
+          <div><div className="card__title">Kayıtlar</div>{r.data && <div className="card__meta">{r.data.total} kayıt</div>}</div>
+          <div className="card__tools">
+            <div className="field">
+              <label className="field__label" htmlFor="a-act">İşlem</label>
+              <select id="a-act" className="field__input" value={s.action} onChange={(e) => set({ action: e.target.value })}>
+                <option value="">Tümü</option>
+                {ACTIONS.map((a) => <option key={a} value={a}>{auditAction(a)}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="a-actor">Yapan</label>
+              <select id="a-actor" className="field__input" value={s.actor} onChange={(e) => set({ actor: e.target.value, page: "1" })}>
+                <option value="">Tümü</option>
+                {ACTORS.map((a) => <option key={a} value={a}>{actorType(a)}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="a-ent">Kayıt türü</label>
+              <input id="a-ent" className="field__input" value={s.entity} onChange={(e) => set({ entity: e.target.value })} placeholder="ör. payment" />
+            </div>
+            <div className="field"><label className="field__label" htmlFor="a-from">Başlangıç</label><input id="a-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} /></div>
+            <div className="field"><label className="field__label" htmlFor="a-to">Bitiş</label><input id="a-to" className="field__input" type="date" value={s.to} onChange={(e) => set({ to: e.target.value })} /></div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {r.isPending ? <Loading /> : r.isError ? <div className="card__body"><ErrorState error={r.error} onRetry={() => r.refetch()} /></div> : r.data.items.length === 0 ? (
             <Empty title="Kayıt yok" icon={<History aria-hidden="true" />} />
@@ -58,7 +85,12 @@ export function AuditPage() {
                     <Fragment key={a.id}>
                       <tr>
                         <td className="small nowrap">{formatDateTime(a.at)}</td>
-                        <td className="small">{a.actor_name ?? "Sistem"}{a.actor_type !== "user" && <> <Badge tone={a.actor_type === "delegate" ? "warn" : "muted"}>{actorType(a.actor_type)}</Badge></>}{a.ip && <div className="cell-sub mono">{a.ip}</div>}</td>
+                        <td className="small">
+                          <div className="cell-person">
+                            <Avatar name={a.actor_name ?? "Sistem"} size="sm" soft />
+                            <div>{a.actor_name ?? "Sistem"}{a.actor_type !== "user" && <> <Badge tone={a.actor_type === "delegate" ? "warn" : "muted"}>{actorType(a.actor_type)}</Badge></>}{a.ip && <div className="cell-sub mono">{a.ip}</div>}</div>
+                          </div>
+                        </td>
                         <td><Badge tone={a.action === "delete" ? "danger" : a.action === "create" ? "ok" : "muted"}>{auditAction(a.action)}</Badge></td>
                         <td className="small"><span className="mono">{a.entity}</span>{a.entity_id && <div className="cell-sub mono">{a.entity_id.slice(0, 8)}…</div>}</td>
                         <td className="right">

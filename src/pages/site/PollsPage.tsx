@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { Plus, Trash2, Vote } from "lucide-react";
+import { CalendarClock, CheckCircle2, Plus, Trash2, Users, Vote } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { PollResults, QUESTION_KIND, pollPrivacy, type Poll } from "../../components/PollResults";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { pollAudience } from "../../lib/labels";
@@ -23,17 +23,19 @@ export function PollsPage() {
     <div className="stack">
       <PageHead
         title="Anketler"
+        eyebrow="İletişim"
         subtitle="Sakinlerin görüşünü alın. Anketin anonim mi isimli mi, bölüm başına mı kişi başına mı yanıtlanacağını siz seçersiniz."
         actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Anket aç</button>}
-      />
+      >
+        <div className="tabs" role="tablist" aria-label="Anket durumu">
+          {[["open", "Açık"], ["closed", "Kapanan"]].map(([k, l]) => (
+            <button key={k} type="button" role="tab" aria-selected={s.durum === k} className="tabs__tab" onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
+          ))}
+        </div>
+      </PageHead>
+      <PollKpis />
       <Alert tone="info">Anket sonucu danışma niteliğindedir; resmî oylama ve genel kurul kararı yerine geçmez. Bağlayıcı karar için toplantı planlayın.</Alert>
       {adding && <NewPoll onDone={() => setAdding(false)} />}
-
-      <div className="row" role="tablist" aria-label="Anket durumu" style={{ gap: "var(--s-2)" }}>
-        {[["open", "Açık"], ["closed", "Kapanan"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
-        ))}
-      </div>
 
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.items.length === 0 ? (
         <div className="card"><div className="card__body"><Empty title={s.durum === "open" ? "Açık anket yok" : "Kapanan anket yok"} icon={<Vote aria-hidden="true" />} /></div></div>
@@ -47,12 +49,34 @@ export function PollsPage() {
   );
 }
 
+/** Bant altı göstergeler: açık/kapanan anket sayısı, açık anketlerde verilen oy, en yakın bitiş. Kaynak /polls. */
+function PollKpis() {
+  const open = useSiteGet<Page<Poll>>("/polls", { status: "open", page: 1, page_size: 50 });
+  const closed = useSiteGet<Page<Poll>>("/polls", { status: "closed", page: 1, page_size: 1 });
+  if (open.isError || closed.isError) return null;
+  if (!open.data || !closed.data) {
+    return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  }
+  const votes = open.data.items.reduce((a, p) => a + (p.total_votes ?? 0), 0);
+  const next = open.data.items.map((p) => p.ends_on).filter(Boolean).sort()[0];
+  const days = next ? Math.ceil((new Date(next + "T23:59:59").getTime() - Date.now()) / 864e5) : null;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Açık anket" tone="accent" icon={<Vote aria-hidden="true" />} value={open.data.total} note="oylamaya açık" />
+      <Kpi label="Kapanan anket" icon={<CheckCircle2 aria-hidden="true" />} value={closed.data.total} note="sonucu sakinlere açık" />
+      <Kpi label="Verilen yanıt" icon={<Users aria-hidden="true" />} value={votes} note="açık anketlerde verilen yanıt" />
+      <Kpi label="En yakın bitiş" icon={<CalendarClock aria-hidden="true" />} value={next ? formatDate(next) : "—"} small note={days === null ? "açık anket yok" : days <= 0 ? "bugün bitiyor" : `${days} gün kaldı`} />
+    </div>
+  );
+}
+
 function PollCard({ p, manage }: { p: Poll; manage: boolean }) {
   const close = useSiteMutation<Record<string, never>, Poll>("POST", `/polls/${p.id}/close`);
   const [names, setNames] = useState(false);
   return (
     <div className="card">
       <div className="card__head">
+        <span className={`card__icon ${p.status === "open" ? "card__icon--accent" : "card__icon--ok"}`}><Vote aria-hidden="true" /></span>
         <span className="card__title">{p.question}</span>
         <span className="ml-auto row" style={{ gap: 4 }}>{!p.is_anonymous && <Badge tone="warn">İsimli</Badge>}{p.status === "open" ? <Badge tone="ok">Açık</Badge> : <Badge>Kapandı</Badge>}</span>
       </div>

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CheckCircle2, Circle, Rocket } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardCheck, ListChecks, ListOrdered, Rocket, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, ErrorState, Loading, PageHead } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, ErrorState, Kpi, Loading, PageHead } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
 
@@ -33,6 +33,8 @@ export function SetupPage() {
   const base = `/s/${site.slug}`;
   const required = s.checklist.filter((c) => c.required), optional = s.checklist.filter((c) => !c.required);
   const done = required.filter((c) => c.ok).length;
+  const optDone = optional.filter((c) => c.ok).length;
+  const pct = required.length ? Math.round((done / required.length) * 100) : 100;
   return (
     <div className="stack">
       <PageHead
@@ -42,13 +44,18 @@ export function SetupPage() {
           {s.status === "live" ? <Badge tone="ok">Canlı{s.went_live_at ? ` · ${formatDateTime(s.went_live_at)}` : ""}</Badge> : <Badge tone="warn">Kurulumda</Badge>}
         </>}
       />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Durum" icon={<Rocket aria-hidden="true" />} tone={s.status === "live" ? "ok" : "warn"} value={s.status === "live" ? "Canlı" : "Kurulumda"} note={s.went_live_at ? formatDateTime(s.went_live_at) : "sakin daveti kapalı"} />
+        <Kpi label="Zorunlu maddeler" icon={<ClipboardCheck aria-hidden="true" />} tone={s.ready ? "ok" : undefined} value={`${done}/${required.length}`} note={s.ready ? "tamam" : `%${pct} tamamlandı`} />
+        <Kpi label="İsteğe bağlı" icon={<ListChecks aria-hidden="true" />} value={`${optDone}/${optional.length}`} note="canlıya geçişi engellemez" />
+      </div>
       <div className="grid grid--2">
         <div className="card">
-          <div className="card__head"><span className="card__title">Adımlar</span></div>
+          <div className="card__head"><span className="card__icon card__icon--accent"><ListOrdered aria-hidden="true" /></span><span className="card__title">Adımlar</span></div>
           <div className="card__body"><ol className="setup-steps">{STEPS.map(([t, d, link], i) => <li key={t}><span className="setup-steps__no" aria-hidden="true">{i + 1}</span><div><div className="strong">{link ? <Link to={`${base}/${link}`}>{t}</Link> : t}</div><div className="small muted">{d}</div></div></li>)}</ol></div>
         </div>
         <div className="card">
-          <div className="card__head"><span className="card__title">Finans modu</span></div>
+          <div className="card__head"><span className="card__icon card__icon--ok"><Wallet aria-hidden="true" /></span><span className="card__title">Finans modu</span></div>
           <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
             <div className="kv"><span className="kv__k">Seçili mod</span><span className="kv__v"><Badge tone="info">Mod P — platform</Badge></span></div>
             <p className="small mb-0">Aidat, tahakkuk, cari, tahsilat ve makbuz platformda; muhasebeleştirme muhasebe programına fiş aktarımıyla (K7).</p>
@@ -58,7 +65,12 @@ export function SetupPage() {
       </div>
 
       <div className="card">
-        <div className="card__head"><span className="card__title">Canlıya geçiş kontrol listesi</span><span className="card__meta ml-auto">{done}/{required.length} zorunlu madde</span></div>
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><ClipboardCheck aria-hidden="true" /></span>
+          <span className="card__title">Canlıya geçiş kontrol listesi</span>
+          <span className="card__meta ml-auto">{done}/{required.length} zorunlu madde</span>
+          <div className="progress" role="img" aria-label={`Zorunlu maddelerin %${pct} tamamlandı`} style={{ width: "7rem" }}><div className="progress__fill" style={{ width: `${pct}%` }} /></div>
+        </div>
         <div className="card__body card__body--flush">
           <ul className="checklist">
             {[...required, ...optional].map((c) => (

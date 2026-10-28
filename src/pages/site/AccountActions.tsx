@@ -29,6 +29,7 @@ export function AccountActions({ accountId, balance }: { accountId: string; bala
   return (
     <div className="card">
       <div className="card__head">
+        <span className="card__icon card__icon--accent"><FileCheck2 aria-hidden="true" /></span>
         <span className="card__title">Hesap işlemleri</span>
       </div>
       <div className="card__body row" style={{ gap: "var(--s-2)" }}>
