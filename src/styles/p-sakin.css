@@ -1,0 +1,85 @@
+/* Sayfa grubu stilleri: sakin (telefon öncelikli PWA) ve platform. Yalnız belirteç (CSS
+   değişkeni) kullanılır, ham renk yok. Ortak bileşenler app.css'te; burada yalnız bu
+   gruba özgü düzenler durur. */
+
+/* --- Üst çubuk: cam zemin, ad başlık yazı tipinde ------------------------------------- */
+.r-header {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+.r-header__unit { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.015em; }
+.r-header .btn--sm { border-radius: var(--r-full); }
+
+/* --- Site fotoğraflı açık bant (ana sayfa) ------------------------------------------- */
+.r-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: 10rem; padding: var(--s-5);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  border-radius: var(--r-xl); border: 1px solid rgb(255 255 255 / .9);
+  background: var(--hero-bg); color: var(--hero-fg); box-shadow: var(--shadow-sm);
+}
+.r-hero__photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+.r-hero__veil {
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, rgb(237 243 251 / .25) 0%, rgb(237 243 251 / .55) 45%, rgb(237 243 251 / .96) 100%);
+}
+.r-hero__eyebrow { font-size: 0.6875rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--hero-fg-muted); margin-bottom: var(--s-1); }
+.r-hero__title { font-family: var(--font-display); font-size: 1.375rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.r-hero__sub { font-size: 0.875rem; color: var(--hero-fg-muted); margin-top: 2px; }
+@media (min-width: 760px) {
+  .r-body > .r-hero { grid-column: 1 / -1; min-height: 12rem; padding: var(--s-6); }
+  .r-hero__title { font-size: 1.75rem; }
+}
+
+/* --- Bölüm başlığı + "Tümü" bağlantısı ------------------------------------------------ */
+.r-section__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
+.r-section__head .section-title { margin: 0; }
+
+/* --- Hızlı eylem kutuları: daire ikonlu beyaz kartlar -------------------------------- */
+.quick { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr)); gap: var(--s-3); }
+.quick__tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-3);
+  min-height: 6.5rem; padding: var(--s-4);
+  background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-lg);
+  color: var(--fg); text-decoration: none; box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  touch-action: manipulation;
+}
+.quick__tile:hover { text-decoration: none; box-shadow: var(--shadow-md); transform: translateY(-1px); border-color: var(--line-strong); }
+.quick__tile:active { transform: scale(.98); }
+.quick__icon { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.quick__icon svg { width: 18px; height: 18px; }
+.quick__label { font-size: 0.8125rem; font-weight: 600; line-height: 1.25; }
+
+/* --- Duyuru / talep kartı: sol daire ikon, başlık, meta, gövde; sağda rozetler --------- */
+.ann {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  padding: var(--s-4); background: var(--bg-raised); border: 1px solid var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-xs);
+}
+/* minmax(0,1fr): içindeki form alanları (puan yıldızları, yorum kutusu) sütunu
+   kendi doğal genişliğine zorlayıp başlığı rozetin altına taşırmasın */
+.ann__main { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; }
+.ann__main .field { min-width: 0; }
+.ann__main .field__input { width: 100%; min-width: 0; }
+.ann__title { font-weight: 600; font-size: 0.9375rem; line-height: 1.3; }
+.ann__meta { font-size: 0.75rem; color: var(--fg-muted); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
+.ann__body { font-size: 0.875rem; color: var(--fg-muted); white-space: pre-wrap; margin-top: var(--s-1); line-height: 1.5; }
+.ann__side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+
+/* --- Hareket listesi (ekstre): tutar sağda, altında yürüyen bakiye ------------------- */
+.txn__right { text-align: right; flex: none; }
+.txn__right .xs { display: block; }
+/* Telefonda açıklama kesilmesin: en çok iki satıra sarar */
+.resident .txn__title {
+  white-space: normal; text-overflow: clip;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.resident .txn li { padding-left: var(--s-4); padding-right: var(--s-4); }
+
+/* --- Platform: plan dağılımı kartı yanında tablo --------------------------------------- */
+.plt-grid { display: grid; gap: var(--s-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .plt-grid { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; } }
+.session-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.session-list li { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; padding: var(--s-3) var(--s-4); background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-lg); font-size: 0.8125rem; }
+.session-list__meta { color: var(--fg-muted); }

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { IdCard, Plus } from "lucide-react";
+import { Building2, IdCard, KeyRound, Plus, Truck, Users } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { staffEmployer } from "../../lib/labels";
@@ -25,9 +25,14 @@ const nextDay = (d: string) => { const x = new Date(d + "T00:00:00"); x.setDate(
 export function StaffPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ durum: "aktif" });
-  const q = useSiteGet<StaffMember[]>("/staff", { active: s.durum === "aktif" ? "true" : "false" });
+  // Çalışan ve ayrılan listeleri ayrı okunur: üst sayılar çalışanlardan, tablo seçili sekmeden
+  const active = useSiteGet<StaffMember[]>("/staff", { active: "true" });
+  const left = useSiteGet<StaffMember[]>("/staff", { active: "false" });
+  const q = s.durum === "aktif" ? active : left;
   const [editing, setEditing] = useState<StaffMember | "new" | null>(null);
   const manage = can(P.staffManage);
+  const a = active.data ?? [];
+  const count = (f: (m: StaffMember) => boolean) => (active.data ? a.filter(f).length : "—");
   return (
     <div className="stack">
       <PageHead
@@ -35,12 +40,14 @@ export function StaffPage() {
         subtitle="Sitede çalışanlar ve görevleri. Sisteme giriş hesabı Kullanıcılar ekranından açılır; burada karta bağlanır ve ayrılışta kendiliğinden kapanır."
         actions={manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Personel ekle</button>}
       />
-      {editing && <StaffForm m={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
-      <div className="row" role="tablist" aria-label="Personel durumu" style={{ gap: "var(--s-2)" }}>
-        {[["aktif", "Çalışan"], ["ayrilan", "Ayrılan"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k! })}>{l}</button>
-        ))}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Çalışan" icon={<Users aria-hidden="true" />} value={active.data ? a.length : "—"} note={left.data ? `${left.data.length} ayrılan` : undefined} />
+        <Kpi label="Kadrolu" icon={<Building2 aria-hidden="true" />} value={count((m) => m.employer === "site")} note="site kadrosunda" />
+        <Kpi label="Taşeron" icon={<Truck aria-hidden="true" />} value={count((m) => m.employer === "contractor")} note="firma personeli" />
+        <Kpi label="Giriş hesabı bağlı" tone="accent" icon={<KeyRound aria-hidden="true" />} value={count((m) => !!m.user_id && !m.access_closed_at)} note="Vardiyam ve izin talebi açık" />
       </div>
+      {editing && <StaffForm m={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
+      <Segmented label="Personel durumu" value={s.durum} onChange={(k) => set({ durum: k })} options={[{ value: "aktif", label: "Çalışan" }, { value: "ayrilan", label: "Ayrılan" }]} />
       <div className="card">
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? (
@@ -53,7 +60,12 @@ export function StaffPage() {
                 <tbody>
                   {q.data.map((m) => (
                     <tr key={m.id}>
-                      <td className="cell-main">{m.full_name}{m.payroll_no ? <div className="cell-sub mono">Sicil {m.payroll_no}</div> : <div className="cell-sub">sicil no yok</div>}</td>
+                      <td>
+                        <div className="cell-person">
+                          <Avatar name={m.full_name} size="sm" soft />
+                          <div><div className="cell-main">{m.full_name}</div>{m.payroll_no ? <div className="cell-sub mono">Sicil {m.payroll_no}</div> : <div className="cell-sub">sicil no yok</div>}</div>
+                        </div>
+                      </td>
                       <td className="small">{m.position}{m.shift && <div className="cell-sub">{m.shift}</div>}</td>
                       <td>{m.employer === "site" ? <Badge tone="info">{staffEmployer(m.employer)}</Badge> : <span className="small">{m.contractor_name}<div className="cell-sub">{staffEmployer(m.employer)}</div></span>}</td>
                       <td className="small nowrap">{m.phone ? formatPhone(m.phone) : "—"}</td>

@@ -4,7 +4,7 @@ import { useSite } from "../site/SiteContext";
 import { useToast } from "../components/toast";
 import type { Written } from "./types";
 
-type Query = Record<string, string | number | boolean | null | undefined>;
+type Query = Record<string, string | number | boolean | null | undefined | readonly string[]>;
 
 /** Sitenin altındaki bir kaynağı okur: useSiteGet<T>("/debtors", { page }) → /sites/{slug}/debtors */
 export function useSiteGet<T>(path: string, query?: Query, opts?: { enabled?: boolean; refetchInterval?: number }) {

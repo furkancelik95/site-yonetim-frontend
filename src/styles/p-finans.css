@@ -1,0 +1,55 @@
+/* Sayfa grubu stilleri: finans. Yalnız belirteç (CSS değişkeni) kullanılır, ham renk yok.
+   Ortak bileşenler app.css'te; burada yalnız bu gruba özgü düzenler durur. */
+
+/* Yaşlandırma / tahsilat özeti: solda halka, sağda tablo; dar ekranda alt alta */
+.fin-aging { display: grid; gap: var(--s-5); align-items: start; }
+@media (min-width: 900px) { .fin-aging { grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); } }
+.fin-aging .table-wrap { border: 1px solid var(--line); border-radius: var(--r-lg); }
+
+/* Grafik altındaki ay tablosu: kartın içinde ikinci bölüm gibi durur */
+.fin-months { margin-top: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-lg); }
+.fin-months table.data th { position: static; }
+
+/* Çubuk grafik kabı: değer balonu dar ekranda sayfayı yatayda büyütmesin */
+.fin-chart { overflow: clip; }
+@media (max-width: 640px) {
+  /* Dar ekranda vurgulu çubuğun balonu kendiliğinden görünmez (kenara taşıp kırpılıyordu);
+     dokununca/odaklanınca çıkar, değerler zaten alttaki tabloda yazılı */
+  .fin-chart .barchart__col--hi:not(:hover):not(:focus-within) .barchart__tip { opacity: 0; }
+  .fin-chart .barchart__x span { font-size: 0.5625rem; letter-spacing: -0.02em; }
+}
+
+/* Dar sütundaki halka (kategori dağılımı): halka üstte, açıklama altında tam genişlikte */
+.fin-pie .donut { grid-template-columns: 1fr; justify-items: center; }
+.fin-pie .legend { width: 100%; }
+.fin-pie .legend__count, .fin-aging .legend__count { white-space: nowrap; }
+
+/* Tablo başlığındaki arama kutusu: tarih alanlarından geniş; dar ekranda tam satır */
+.card__tools .fin-search { min-width: 16rem; }
+@media (max-width: 640px) { .card__tools .fin-search { min-width: 0; flex-basis: 100%; } }
+
+/* Tam genişlik kartta halka: açıklama satırları ekranın öbür ucuna kaçmasın */
+.fin-share .donut { max-width: 44rem; }
+.fin-share .legend__count { white-space: nowrap; }
+@media (max-width: 640px) { .fin-share .donut { grid-template-columns: 1fr; justify-items: center; } .fin-share .legend { width: 100%; } }
+
+/* Toplu tahsilat satırları: hesap seçicinin açılır listesi için kap taşmaya açık (overflow: visible);
+   bu yüzden tablo kabın genişliğini aşmamalı. Sütunlar sabit oranlı, girdiler hücreye sığar. */
+.fin-bulk table.data { table-layout: fixed; width: 100%; }
+.fin-bulk table.data th:nth-child(1) { width: 30%; }
+.fin-bulk table.data th:nth-child(2) { width: 12%; }
+.fin-bulk table.data th:nth-child(5) { width: 18%; }
+.fin-bulk table.data th:nth-child(6) { width: 52px; }
+.fin-bulk .field__input { min-width: 0 !important; width: 100%; }
+.fin-bulk td[aria-live] { min-width: 0 !important; }
+@media (max-width: 900px) {
+  /* Dar ekranda sabit düzen sıkışır: kap kaydırmaya döner (seçici listesi hücre içinde kalır) */
+  .fin-bulk { overflow-x: auto !important; }
+  .fin-bulk table.data { table-layout: auto; min-width: 760px; }
+}
+
+/* Başlık bandındaki proje seçici: buton yüksekliğinde, beyaz */
+.hero__actions .fin-plan-sel { width: auto; min-height: 40px; background: var(--bg-raised); max-width: 22rem; }
+
+/* Kasa: solda hesap kartları, sağda bakiye dağılımı; kartlar dar sütunda iki sıra */
+.fin-cash .grid--sites { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }

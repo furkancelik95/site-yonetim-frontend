@@ -1,0 +1,75 @@
+/* Sayfa grubu stilleri: yapı (daireler, yapı tanımları, kişiler, araçlar, kullanıcılar, kayıt,
+   kurulum, modüller, aktarım, özel alanlar). Yalnız belirteç (CSS değişkeni) kullanılır, ham renk yok.
+   Ortak bileşenler app.css'te; burada yalnız bu gruba özgü düzenler durur. */
+
+/* Sekmeler: hap kabı, seçili parça beyaz (dönem seçiciyle aynı dil). role="tablist" + role="tab" korunur. */
+.tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; max-width: 100%;
+  background: rgb(15 23 42 / .06); border-radius: var(--r-md);
+}
+.tabs [role="tab"] {
+  min-height: 34px; padding: 0 var(--s-4); border: 0; border-radius: 8px;
+  background: transparent; color: var(--fg-muted); font: inherit; font-size: 0.8125rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.tabs [role="tab"]:hover { color: var(--fg); }
+.tabs [role="tab"][aria-selected="true"] { background: var(--bg-raised); color: var(--fg); box-shadow: var(--shadow-sm); }
+.tabs [role="tab"]:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+@media (max-width: 640px) { .tabs [role="tab"] { padding: 0 var(--s-3); min-height: 38px; } }
+
+/* Kart içinde alt kart: bekleyen başvuru, mükerrer grup, yeni malik bloğu */
+.subcard { border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s-4); background: var(--bg-inset); }
+
+/* Bilgi ızgarası: etiket üstte küçük, değer altta kalın (bölüm bilgisi) */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: var(--s-4) var(--s-5); margin: 0; }
+.facts > div { min-width: 0; }
+.facts dt, .facts__k { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-subtle); }
+.facts dd, .facts__v {
+  margin: 2px 0 0; font-family: var(--font-display); font-weight: 700; font-size: 1.0625rem;
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+
+/* Hücrede ikon çipi + metin; dar ekranda çip ve avatar gizlenir, metin kalır */
+.cell-chip { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.cell-chip > div, .cell-chip > span { min-width: 0; }
+@media (max-width: 640px) { .cell-chip .chip, table .cell-person .avatar { display: none; } }
+
+/* Modül kutucukları: ikon çipi, yumuşak köşe, açık modül mavi tonlu */
+.modules { gap: var(--s-4); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.module {
+  border-radius: var(--r-lg); padding: var(--s-4); gap: var(--s-3); align-items: center;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.module:hover { box-shadow: var(--shadow-sm); }
+.module--on { border-color: var(--brand-200); background: linear-gradient(180deg, var(--bg-raised), var(--accent-soft)); }
+.module__name { font-family: var(--font-display); font-size: 0.9375rem; }
+.module__main { flex: 1; min-width: 0; }
+
+/* Kurulum adımları: numaralı kartlar; numara marka gradyanında */
+.setup-steps { gap: var(--s-2); }
+.setup-steps li { align-items: center; padding: var(--s-3); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-raised); }
+.setup-steps__no { width: 32px; height: 32px; background: var(--brand-grad); color: #fff; box-shadow: 0 4px 10px -4px rgb(37 99 235 / .6); }
+.checklist__item { padding: var(--s-3) var(--s-5); }
+.checklist__item--ok { background: color-mix(in srgb, var(--ok-bg) 60%, transparent); }
+
+/* İlerleme çubuğu (zorunlu maddeler) */
+.progress { height: 8px; border-radius: var(--r-full); background: var(--bg-sunken); overflow: hidden; min-width: 7rem; }
+.progress__fill { height: 100%; border-radius: var(--r-full); background: var(--brand-grad); transition: width 600ms var(--ease); }
+
+/* Kayıt bağlantısı kodu: kart içinde kırılabilir, kopyala düğmesi yanında */
+.linkbox {
+  display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap;
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-md);
+  background: var(--bg-inset); border: 1px dashed var(--line-strong);
+}
+.linkbox code { flex: 1; min-width: 0; word-break: break-all; }
+
+/* Dar sütundaki halka (rol dağılımı): halka üstte, açıklama altında tam genişlikte */
+.yapi-pie .donut { grid-template-columns: 1fr; justify-items: center; }
+.yapi-pie .legend { width: 100%; }
+.yapi-pie .legend__count { white-space: nowrap; }
+
+/* Kart başlığındaki sekme + onay kutusu (özel alanlar) dar ekranda alt alta */
+@media (max-width: 640px) { .card__tools .tabs { width: 100%; } }

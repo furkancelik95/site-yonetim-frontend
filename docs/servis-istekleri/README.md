@@ -12,7 +12,7 @@ sahte servisle çalışan ekran, açıklamasında istek numarasını belirtir. S
 
 Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış sağlayıcı gerektirmeyen paketleri (01–05 ilk paket, 06–08 finans, 09–11 operasyon, 12–13 kullanıcı, 14–18 yönetim paketi); 19–26 Yazılım Dokümanı **Yapı, Kişiler ve Kayıt paketi** (YAP-01..YAP-10; YAP-09 şablon kopyalama/devir ertelendi).
 
-01–18 backend'de (15.10.2026); 35–39 insan kaynakları backend'de (26.10.2026, backend #68); 53–58 operasyon ve teknik varlık (HIZ-06/07, K28) backend'de (#73). **19–84'ün kalanı sahte serviste** (19–26 yapı: 24.10.2026; 27–34 finans, 40–46 güvenlik ve devriye, 47–52 hizmetler, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
+01–18, 19–26 (yapı, kişiler ve kayıt — backend #70), 35–39 (insan kaynakları — backend #68), 40–46 (güvenlik ve devriye — backend #69) 47–52 (hizmetler — backend #71) ve 53–58 (operasyon ve teknik varlık, HIZ-06/07, K28 — backend #73) backend'de (26.10.2026). **Kalanı sahte serviste** (27–34 finans, 59–61 rezervasyon, 62–67 satın alma, 68–70 sözleşme performansı, 71–74 iletişim ve acil durum, 75–77 genel kurul, 78–81 raporlar/belgeler/KVKK, 82–84 platform destek: 25.10.2026) — ortak kararı bekleyen parçalar dışarıda bırakıldı: finans sorumlusu (K22), borcun yeni malike devri (K10), SMS/e-posta gönderimi (K5), KiviERP modu (A-01), belge yükleme.
 
 | # | Konu | Uç nokta | Ekran | Durum |
 |---|---|---|---|---|
@@ -27,21 +27,21 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [09](09-olay-kaydi.md) | Güvenlik olay kaydı | `GET/POST …/incidents`, `POST …/incidents/{id}/close` | Güvenlik → Olaylar | **Backend'de** (#37) — izin `security.incidents` |
 | [10](10-kayip-esya.md) | Kayıp eşya | `GET/POST …/lost-items`, `POST …/lost-items/{id}/return` | Güvenlik → Kayıp eşya | **Backend'de** (#38) — izin `security.incidents` |
 | [11](11-talep-departmanlari.md) | Talep departmanları | `…/departments`, `POST …/requests/{id}/department`, talep yanıtına alan | Talepler, pano, talep ayrıntısı | **Backend'de** (#39) |
-| [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Backend'de** (#40) |
-| [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Backend'de** (#41) — onayda sakine giriş hesabı açılır, geçici parola bir kez gösterilir |
+| [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Backend'de** (#40); çoklu rol, siteye özel rol, kapsam ve süre (P18/K20): `POST/PATCH …/roles`, `…/members/{id}/role-assignments`, `GET …/role-assignments`, `GET /permissions` — ekranlar `/kullanicilar`, `/roller` (P16a) |
+| [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Backend'de** (#41) — onayda sakine **telefonla** giriş hesabı açılır (SMS koduyla girer; P16c, geçici parola yok) |
 | [14](14-toplantilar.md) | Toplantılar ve genel kurul | `…/meetings`, `…/meetings/{id}/decisions`, `…/cancel` | `/toplantilar` | **Backend'de** (#42) — modül `general-assembly` |
 | [15](15-anket.md) | Anket | `…/polls`, `…/resident/polls/{id}/vote` | `/anketler`, sakin Duyurular | **Backend'de** (#43) — modül `surveys` |
 | [16](16-sozlesmeler.md) | Hizmet sözleşmeleri | `GET/POST/PATCH …/contracts` | `/sozlesmeler` | **Backend'de** (#44) |
 | [17](17-demirbas-stok.md) | Demirbaş ve stok | `…/assets`, `…/stock-items`, `…/stock-items/{id}/moves` | `/demirbas` | **Backend'de** (#45) |
 | [18](18-personel.md) | Site personeli | `GET/POST/PATCH …/staff` | `/personel` | **Backend'de** (#46) — modül `staff` |
-| [19](19-yapi-tanimlari.md) | Yapı tanımları: ortak alanlar, bölüm tipi, yürürlük tarihli öznitelik, toplu düzenleme, yapı özeti | `…/common-areas`, `POST/PATCH …/unit-types`, `PATCH …/units/{id}/attributes`, `…/attribute-history`, `POST …/units/bulk-update`, `GET …/structure/summary` | `/yapi`, `/daireler`, bölüm kartı | Sahte servis |
-| [20](20-bolum-360.md) | Bölüm 360°: özet, maskeli iletişim + görüntüleme kaydı, `requests/visitors?unit_id`, hane üyeleri | `GET …/units/{id}/overview`, `POST …/people/{id}/contact-views`, `…/units/{id}/household`, `…/resident/household` | `/daireler/{id}`, `/kisiler`, sakin `/hane` | Sahte servis |
-| [21](21-kisiler.md) | Mükerrer kişi önerisi ve birleştirme, satış/veraset | `GET …/people/duplicates`, `POST …/people/merge`, `POST …/units/{id}/ownership-transfer` | `/kisiler`, bölüm kartı | Sahte servis — borç devri K10 |
-| [22](22-araclar.md) | Araçlar ve sakin "Araçlarım" | `…/settings/vehicles`, `…/vehicles`, `…/resident/vehicles` | `/araclar`, bölüm kartı, sakin `/araclar` | Sahte servis |
-| [23](23-kayit-yontemleri-davetler.md) | Kayıt yöntemleri, davetler, QR afiş önseçimi, herkese açık formda blok/bölüm | `…/settings/registration`, `…/invitations`, `/public/invitations/{token}`, `/public/registration/{code}` ek alanlar | `/kayit-basvurulari`, `/kayit-afisi`, `/davet/:token`, `/kayit/:code` | Sahte servis — SMS K5 |
-| [24](24-ozel-alanlar.md) | Özel alanlar (bölüm/kişi) | `…/custom-fields`, `…/units|people/{id}/custom-values` | `/ayarlar/ozel-alanlar`, bölüm kartı, kişi formu | Sahte servis |
-| [25](25-aktarim-gecmisi.md) | Aktarım geçmişi, araç ve açılış bakiyesi aktarımı (mutabakat), geri alma | `GET …/imports`, `POST …/imports/vehicles|opening-balances`, `…/imports/{id}/confirm|rollback` | `/iceri-aktar` | Sahte servis — yalnız .csv okur |
-| [26](26-kurulum-canliya-gecis.md) | Kurulum durumu ve canlıya geçiş kontrol listesi | `GET …/setup`, `POST …/setup/go-live` | `/kurulum` | Sahte servis — Mod K A-01 |
+| [19](19-yapi-tanimlari.md) | Yapı tanımları: ortak alanlar, bölüm tipi, yürürlük tarihli öznitelik, toplu düzenleme, yapı özeti | `…/common-areas`, `POST/PATCH …/unit-types`, `PATCH …/units/{id}/attributes`, `…/attribute-history`, `POST …/units/bulk-update`, `GET …/structure/summary` | `/yapi`, `/daireler`, bölüm kartı | **Backend'de** (#70) |
+| [20](20-bolum-360.md) | Bölüm 360°: özet, maskeli iletişim + görüntüleme kaydı, `requests/visitors?unit_id`, hane üyeleri | `GET …/units/{id}/overview`, `POST …/people/{id}/contact-views`, `…/units/{id}/household`, `…/resident/household` | `/daireler/{id}`, `/kisiler`, sakin `/hane` | **Backend'de** (#70) |
+| [21](21-kisiler.md) | Mükerrer kişi önerisi ve birleştirme, satış/veraset | `GET …/people/duplicates`, `POST …/people/merge`, `POST …/units/{id}/ownership-transfer` | `/kisiler`, bölüm kartı | **Backend'de** (#70) |
+| [22](22-araclar.md) | Araçlar ve sakin "Araçlarım" | `…/settings/vehicles`, `…/vehicles`, `…/resident/vehicles` | `/araclar`, bölüm kartı, sakin `/araclar` | **Backend'de** (#70) |
+| [23](23-kayit-yontemleri-davetler.md) | Kayıt yöntemleri, davetler, QR afiş önseçimi, herkese açık formda blok/bölüm | `…/settings/registration`, `…/invitations`, `/public/invitations/{token}`, `/public/registration/{code}` ek alanlar | `/kayit-basvurulari`, `/kayit-afisi`, `/davet/:token`, `/kayit/:code` | **Backend'de** (#70) |
+| [24](24-ozel-alanlar.md) | Özel alanlar (bölüm/kişi) | `…/custom-fields`, `…/units|people/{id}/custom-values` | `/ayarlar/ozel-alanlar`, bölüm kartı, kişi formu | **Backend'de** (#70) |
+| [25](25-aktarim-gecmisi.md) | Aktarım geçmişi, araç ve açılış bakiyesi aktarımı (mutabakat), geri alma | `GET …/imports`, `POST …/imports/vehicles|opening-balances`, `…/imports/{id}/confirm|rollback` | `/iceri-aktar` | **Backend'de** (#70) |
+| [26](26-kurulum-canliya-gecis.md) | Kurulum durumu ve canlıya geçiş kontrol listesi | `GET …/setup`, `POST …/setup/go-live` | `/kurulum` | **Backend'de** (#70) |
 | [27](27-donem-kapanisi.md) | Dönem kapanışı: kontrol listesi, kapanışta, kilit (iki kişi), süreli açma | `…/fiscal-periods`, `…/close-checklist`, `start-close`, `lock`, `reopen`, `unlock-requests` | `/donem-kapanisi` | Sahte servis — kilidin yazmaları engellemesi backend'de |
 | [28](28-kasa-gun-sonu.md) | Kasa gün sonu sayımı | `GET …/cash-accounts/{id}/days`, `POST …/days/close` | `/kasa/{id}` | Sahte servis |
 | [29](29-borc-takibi.md) | Borç takibi: yaşlandırma, hatırlatma/arama kaydı, ihtarname gönderim ve tebliğ | `…/receivables/aging`, `…/collection-status`, `…/collection-timeline`, `…/collection-actions`, `…/demand-letters` | `/borclular`, `/cari/{id}` | Sahte servis — gönderim K5 |
@@ -55,19 +55,19 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [37](37-izinler.md) | İzin kaydı ve onayı | `…/leave-requests`, `…/leave-balances` | `/izinler` | **Backend'de** (backend #68) — onay kuralı varsa onay mekanizması; kendi talebi `/me/leave-requests` |
 | [38](38-puantaj.md) | Günlük puantaj ve istisna düzeltme | `…/timesheets`, `…/timesheets/finalize` | `/puantaj` | **Backend'de** (backend #68) — QR/konumlu giriş-çıkış (`/me/attendance-events`, `/attendance-settings`) |
 | [39](39-puantaj-aktarimi.md) | Puantaj aktarımı (dosya) | `…/timesheet-exports(/preview)` | `/puantaj?sekme=aktarim` | **Backend'de** (backend #68) — dosya backend'den (CSV); Mod K A-01 sonrası |
-| [40](40-kapilar-guvenlik-ayarlari.md) | Kapılar ve güvenlik ayarları | `…/gates`, `…/settings/security` | `/ayarlar/guvenlik` | Sahte servis — saklama K8 |
-| [41](41-ziyaretci-on-davet.md) | Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş | `…/resident/visitor-invites`, `…/visitor-invites/expected`, `…/visitor-invites/check-in` | sakin `/ziyaretci`, Güvenlik › Kapı ekranı | Sahte servis |
-| [42](42-sakin-onayi.md) | Habersiz ziyaretçide sakin onayı, zaman aşımı, görevli kararı | `…/visit-requests`, `…/resident/visit-approvals` | Kapı ekranı, sakin `/ziyaretci` | Sahte servis — bildirim K5 |
-| [43](43-plaka-otopark-ihlali.md) | Plaka sorgu, giriş-çıkış kaydı, otopark ihlali | `…/plates/lookup`, `…/gate-logs`, `…/parking-violations` | Kapı ekranı | Sahte servis — park yeri/tahsis K30 |
-| [44](44-kargo-yetkili-uzun-bekleyen.md) | Kargo teslim yetkilisi, uzun bekleyen kargolar | `…/resident/parcel-delegates`, `…/units/{id}/parcel-delegates`, `…/packages/long-waiting` | sakin `/ziyaretci`, Güvenlik | Sahte servis — fotoğraf belge modülüyle |
-| [45](45-nobet-defteri.md) | Nöbet defteri ve vardiya devri | `…/shift-log`, `…/addenda`, `…/acknowledge` | Güvenlik › Nöbet defteri | Sahte servis |
-| [46](46-devriye.md) | Devriye: noktalar (QR etiket), tur planı, yürütme, sapma raporu | `…/patrol-points`, `…/patrol-plans`, `…/patrol-schedule`, `…/patrol-runs` | `/devriye`, Güvenlik › Devriye | Sahte servis — NFC mobilde |
-| [47](47-sla-calisma-takvimi.md) | Talep SLA'sı ve çalışma takvimi | `…/settings/requests`, `GET …/requests/sla` | `/talepler`, `/talepler/ayarlar` | Sahte servis |
-| [48](48-hazir-yanit-ic-not.md) | Hazır yanıt şablonları ve iç not | `…/reply-templates`, `…/requests/{id}/internal-notes` | talep ayrıntısı, `/talepler/ayarlar` | Sahte servis — K26 |
-| [49](49-ana-olay-birlestirme.md) | Ana olay ve birleştirme önerisi | `…/outages(/links, /unlink, /resolve)`, `…/requests/{id}/merge-suggestions` | talep ayrıntısı, `/talepler/ana-olaylar` | Sahte servis — K27 adı `outages` |
-| [50](50-kapanis-onayi-puan.md) | Sakin kapanış onayı ve puan; talepte yer seçimi | `…/resident/requests/{id}/confirm`, `…/resident/requests/extras` | sakin Taleplerim | Sahte servis |
-| [51](51-ucretli-hizmet.md) | Ücretli hizmet: tarife, teklif, sakin onayı | `…/service-tariffs`, `…/requests/{id}/quotes`, `…/resident/quotes/{id}/decision`, `…/quotes/{id}/complete` | talep ayrıntısı, sakin Taleplerim | Sahte servis |
-| [52](52-tadilat-tasinma.md) | Tadilat ve taşınma izinleri | `…/settings/permits`, `…/permits`, `…/resident/permits` | `/tadilat-tasinma`, sakin `/tadilat` | Sahte servis |
+| [40](40-kapilar-guvenlik-ayarlari.md) | Kapılar ve güvenlik ayarları | `…/gates`, `…/settings/security` | `/ayarlar/guvenlik` | **Backend'de** (#69) — saklama 6 ay site ayarı, gece anonimleştirme varsayılan kapalı (K8) |
+| [41](41-ziyaretci-on-davet.md) | Ziyaretçi ön daveti (sakin) ve kapıda kodla giriş | `…/resident/visitor-invites`, `…/visitor-invites/expected`, `…/visitor-invites/check-in` | sakin `/ziyaretci`, Güvenlik › Kapı ekranı | **Backend'de** (#69) — kod yalnız oluşturulunca gösterilir (özeti saklanır); `…/new-code` |
+| [42](42-sakin-onayi.md) | Habersiz ziyaretçide sakin onayı, zaman aşımı, görevli kararı | `…/visit-requests`, `…/resident/visit-approvals` | Kapı ekranı, sakin `/ziyaretci` | **Backend'de** (#69) — bildirim uygulama içi (K5) |
+| [43](43-plaka-otopark-ihlali.md) | Plaka sorgu, giriş-çıkış kaydı, otopark ihlali | `…/plates/lookup`, `…/gate-logs`, `…/parking-violations` | Kapı ekranı, Araçlar › Park yerleri | **Backend'de** (#69) — park yeri/tahsis K30 eklendi; kayıtlı araç sonucu P02 ile |
+| [44](44-kargo-yetkili-uzun-bekleyen.md) | Kargo teslim yetkilisi, uzun bekleyen kargolar | `…/resident/parcel-delegates`, `…/units/{id}/parcel-delegates`, `…/packages/long-waiting` | sakin `/ziyaretci`, Güvenlik | **Backend'de** (#69) — fotoğraf belge modülüyle |
+| [45](45-nobet-defteri.md) | Nöbet defteri ve vardiya devri | `…/shift-log`, `…/addenda`, `…/acknowledge` | Güvenlik › Nöbet defteri | **Backend'de** (#69) |
+| [46](46-devriye.md) | Devriye: noktalar (QR etiket), tur planı, yürütme, sapma raporu | `…/patrol-points`, `…/patrol-plans`, `…/patrol-schedule`, `…/patrol-runs` | `/devriye`, Güvenlik › Devriye | **Backend'de** (#69) — NFC mobilde |
+| [47](47-sla-calisma-takvimi.md) | Talep SLA'sı ve çalışma takvimi | `…/settings/requests`, `…/request-categories`; SLA `RequestOut.sla` alanında | `/talepler`, `/talepler/ayarlar` | **Backend'de** (#71) — kategoriler site tanımlı (D-26) |
+| [48](48-hazir-yanit-ic-not.md) | Hazır yanıt şablonları ve iç not | `…/reply-templates`, `…/requests/{id}/internal-notes` | talep ayrıntısı, `/talepler/ayarlar` | **Backend'de** (#71) — K26: iç not sakin kanalında hiç dönmez |
+| [49](49-ana-olay-birlestirme.md) | Ana olay ve birleştirme önerisi | `…/outages(/links, /unlink, /resolve)`, `…/requests/{id}/merge-suggestions` | talep ayrıntısı, `/talepler/ana-olaylar` | **Backend'de** (#71) — liste sayfalı |
+| [50](50-kapanis-onayi-puan.md) | Sakin kapanış onayı ve puan; talepte yer seçimi | `…/resident/requests/{id}/confirm`, `…/resident/requests/{id}/cancel`; ekler `RequestOut` alanlarında | sakin Taleplerim | **Backend'de** (#71) — K18 akışı |
+| [51](51-ucretli-hizmet.md) | Ücretli hizmet: tarife, teklif, sakin onayı | `…/service-tariffs`, `…/requests/{id}/quotes`, `…/resident/quotes/{id}/decision`, `…/quotes/{id}/complete` | talep ayrıntısı, sakin Taleplerim | **Backend'de** (#71) — tarife onay kuralına bağlı (202) |
+| [52](52-tadilat-tasinma.md) | Tadilat ve taşınma izinleri | `…/settings/permits`, `…/permits`, `…/resident/permits` | `/tadilat-tasinma`, sakin `/tadilat` | **Backend'de** (#71) — onay kuralına bağlı (202), liste sayfalı |
 | [53](53-anahtar-emanet.md) | Anahtar, kart ve emanet anahtar | `…/keys`, `…/key-loans`, `…/deposited-keys`, `…/resident/deposited-keys` | `/anahtarlar`, sakin `/emanet` | **Backend'de** (#73) |
 | [54](54-stok-sayimi.md) | Stok sayımı | `…/stock-counts` | `/demirbas?sekme=sayim` | **Backend'de** (#73) — fark onay kuralına bağlı (K21) |
 | [55](55-denetim-listeleri.md) | Denetim (kontrol) listeleri | `…/checklist-templates`, `…/inspections` | `/denetimler` | **Backend'de** (#73) |
@@ -108,3 +108,10 @@ Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 - **İhtar yazısı** (`/belge/ihtar/:accountId`) — `GET …/accounts/{id}/statement` (bakiye ve en eski vade). Yazı kaydedilmez; metni hukukçuya gösterilmeli.
 - **Hazirun listesi** (`/belge/hazirun`) — `GET …/units` sayfa sayfa (arsa payı, malik).
 - **Toplu tahsilat** (`/tahsilat/toplu`) — `POST …/payments` satır satır, satır başına `Idempotency-Key`.
+
+## P16c — kimlik ve bildirim gönderimi (servis isteği yok; Yazılım Dokümanı PLT-01/05/10, ILT-05, RAP-05)
+**Backend'de** (#75): telefon + SMS koduyla giriş, iki adımlı doğrulama (QR, yedek kodlar),
+parola sıfırlama, telefon değişikliği, hesap daveti (`/hesap-davet/:token`), SMS hesabı ve kota
+(`/s/:slug/sms-hesabi`), sessiz saatler (istek 71'in `communication-settings` kısmı), teslim
+kayıtları, planlı raporlar (rapor kataloğu), platform test gelen kutusu. Sağlayıcı K5'e kadar
+test sağlayıcısı.

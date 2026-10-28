@@ -1,19 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
-import { ArrowDown, ArrowUp, MapPin, Pencil, Plus, Printer, Route } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, CheckCircle2, MapPin, Pencil, Plus, Printer, Route } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDateTime, todayIso } from "../../lib/format";
+import type { Schemas } from "../../api/types";
+import { Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { patrolSlotStatus, patrolSlotTone, tagType } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
-/** Servis isteği 46'daki şekiller. */
-interface Point { id: string; name: string; location: string | null; area: string | null; tag: "qr" | "nfc" | "both"; code: string; is_active: boolean }
-interface Plan { id: string; name: string; point_ids: string[]; ordered: boolean; start_times: string[]; allowed_minutes: number; assignee: string | null; is_active: boolean }
-interface Report { missed: string[]; out_of_order: string[]; duration_minutes: number; overtime: boolean; late_start_minutes: number; total_points: number; scanned_points: number; ok: boolean }
-interface Slot { plan_id: string; plan_name: string; slot: string; status: string; report: Report | null }
-interface Run { id: string; plan_name: string; slot: string | null; started_by: string; started_at: string; finished_at: string | null; report: Report }
+type Point = Schemas["PatrolPointOut"];
+type Plan = Schemas["PatrolPlanOut"];
+type Report = Schemas["PatrolReportOut"];
+type Slot = Schemas["PatrolSlotOut"];
+type Run = Schemas["PatrolRunOut"];
 
 /**
  * Devriye (GUV-09, yönetim): kontrol noktaları ve QR etiketleri, tur planları (sıra, saatler, süre), bugünkü takvim
@@ -23,11 +23,31 @@ export function PatrolAdminPage() {
   const [s, set] = useUrlState({ sekme: "rapor", tarih: todayIso() });
   return (
     <div className="stack">
-      <PageHead title="Devriye" subtitle="Kontrol noktaları, tur planları ve sapma raporu. Kaçırılan nokta, geç başlayan ya da süresi aşan tur burada görünür." />
-      <div className="row" role="tablist" aria-label="Devriye" style={{ gap: "var(--s-2)" }}>
-        {[["rapor", "Takvim ve rapor"], ["nokta", "Kontrol noktaları"], ["plan", "Tur planları"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
-      </div>
+      <PageHead title="Devriye" eyebrow="Operasyon" subtitle="Kontrol noktaları, tur planları ve sapma raporu. Kaçırılan nokta, geç başlayan ya da süresi aşan tur burada görünür.">
+        <div className="tabs" role="tablist" aria-label="Devriye">
+          {[["rapor", "Takvim ve rapor"], ["nokta", "Kontrol noktaları"], ["plan", "Tur planları"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className="tabs__tab" onClick={() => set({ sekme: k! })}>{l}</button>)}
+        </div>
+      </PageHead>
+      <PatrolKpis date={s.tarih} />
       {s.sekme === "nokta" ? <Points /> : s.sekme === "plan" ? <Plans /> : <ReportView date={s.tarih} setDate={(tarih) => set({ tarih })} />}
+    </div>
+  );
+}
+
+/** Seçili günün takviminden tur sonuçları + etkin nokta/plan sayısı (rapor sekmesiyle aynı sorgular). */
+function PatrolKpis({ date }: { date: string }) {
+  const sched = useSiteGet<Slot[]>("/patrol-schedule", { date });
+  const pts = useSiteGet<Point[]>("/patrol-points");
+  const plans = useSiteGet<Plan[]>("/patrol-plans");
+  if (!sched.data || !pts.data || !plans.data) return sched.isError ? null : <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const n = (...st: string[]) => sched.data!.filter((x) => st.includes(x.status)).length;
+  const problems = n("done_with_deviation", "overdue", "not_started");
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Planlı tur" icon={<Route aria-hidden="true" />} value={sched.data.length} note={formatDate(date)} />
+      <Kpi label="Sorunsuz tamamlanan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={n("done")} note={`${n("running")} tur sürüyor`} />
+      <Kpi label="Sapma ya da kaçan" tone={problems ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={problems} note="sapmalı, süresi aşan, başlamayan" />
+      <Kpi label="Kontrol noktası" icon={<MapPin aria-hidden="true" />} value={pts.data.filter((p) => p.is_active).length} note={`${plans.data.filter((p) => p.is_active).length} etkin tur planı`} />
     </div>
   );
 }
@@ -37,9 +57,12 @@ function ReportView({ date, setDate }: { date: string; setDate: (d: string) => v
   const runs = useSiteGet<Run[]>("/patrol-runs", { date });
   return (
     <>
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="pt-d">Gün</label><input id="pt-d" className="field__input" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div></div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Planlı turlar</span></div>
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><CalendarClock aria-hidden="true" /></span>
+          <div><div className="card__title">Planlı turlar</div><div className="card__meta">{formatDate(date)}</div></div>
+          <div className="card__tools"><div className="field"><label className="field__label" htmlFor="pt-d">Gün</label><input id="pt-d" className="field__input" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div></div>
+        </div>
         <div className="card__body card__body--flush">
           {sched.isPending ? <Loading /> : !sched.data || sched.data.length === 0 ? <Empty title="Planlı tur yok" icon={<Route aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data">
@@ -57,9 +80,9 @@ function ReportView({ date, setDate }: { date: string; setDate: (d: string) => v
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Yürütülen turlar</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Route aria-hidden="true" /></span><span className="card__title">Yürütülen turlar</span>{runs.data && <span className="card__meta ml-auto">{runs.data.length} tur</span>}</div>
         <div className="card__body card__body--flush">
-          {!runs.data || runs.data.length === 0 ? <Empty title="Bu gün yürütülen tur yok" /> : (
+          {!runs.data || runs.data.length === 0 ? <Empty title="Bu gün yürütülen tur yok" icon={<Route aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Devriye yürütmeleri</caption>
               <thead><tr><th scope="col">Tur</th><th scope="col">Görevli</th><th scope="col" className="right">Nokta</th><th scope="col" className="right">Süre</th><th scope="col">Sonuç</th></tr></thead>
@@ -94,7 +117,9 @@ function Points() {
       </div>
       {editing && <PointForm p={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
       {print && q.data ? <Labels points={q.data.filter((p) => p.is_active && p.tag !== "nfc")} site={site.name} /> : (
-        <div className="card"><div className="card__body card__body--flush">
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><MapPin aria-hidden="true" /></span><span className="card__title">Kontrol noktaları</span>{q.data && <span className="card__meta ml-auto">{q.data.length} nokta</span>}</div>
+          <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Kontrol noktası yok" icon={<MapPin aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Kontrol noktaları</caption>
@@ -164,7 +189,9 @@ function Plans() {
     <>
       <div className="row"><button className="btn btn--primary" type="button" disabled={!pts.data?.length} onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Tur ekle</button>{!pts.data?.length && <span className="small muted">Önce kontrol noktası ekleyin.</span>}</div>
       {editing && <PlanForm p={editing === "new" ? null : editing} points={(pts.data ?? []).filter((x) => x.is_active)} onDone={() => setEditing(null)} />}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><Route aria-hidden="true" /></span><span className="card__title">Tur planları</span>{q.data && <span className="card__meta ml-auto">{q.data.length} plan</span>}</div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Tur planı yok" icon={<Route aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Tur planları</caption>

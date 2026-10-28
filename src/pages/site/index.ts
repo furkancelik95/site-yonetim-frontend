@@ -18,6 +18,7 @@ export { RequestDetailPage } from "./RequestDetailPage";
 export { RequestsPage } from "./RequestsPage";
 export { SecurityPage } from "./SecurityPage";
 export { MembersPage } from "./MembersPage";
+export { RolesPage } from "./RolesPage";
 export { RegistrationsPage } from "./RegistrationsPage";
 export { MeetingDetailPage, MeetingsPage } from "./MeetingsPage";
 export { PollsPage } from "./PollsPage";
@@ -62,3 +63,4 @@ export { EmergencyPage, NotificationTemplatesPage, ReadReportPage } from "./Comm
 export { DecisionBookPage, GeneralAssemblyPage } from "./AssemblyPages";
 export { AuditPackagesPage, DocumentsPage, PrivacyPage, ReportCatalogPage } from "./RecordsPages";
 export { HelpCenterPage, SupportPage } from "./SupportPages";
+export { SmsAccountPage } from "./MessagingPages";

@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import { BellOff, CheckCheck } from "lucide-react";
+import { Bell, BellDot, BellOff, CheckCheck, ShieldAlert, Siren } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../api/hooks";
 import type { Schemas } from "../api/types";
-import { Badge, Empty, ErrorState, Loading, PageHead, Pager, useDocumentTitle } from "../components/ui";
+import { Badge, Empty, ErrorState, Kpi, Loading, PageHead, Pager, useDocumentTitle } from "../components/ui";
 import { formatDateTime } from "../lib/format";
 import { useUrlState } from "../lib/hooks";
 import { notificationCategory } from "../lib/labels";
@@ -19,6 +19,25 @@ function linkOf(n: Notification, slug: string, staff: boolean): string | null {
   if (n.link_entity === "approval_requests" && n.link_id) return `/s/${slug}/onaylar/${n.link_id}`;
   if (n.link_entity === "approval_delegations") return `/s/${slug}/onaylar?sekme=devir`;
   return null;
+}
+
+/** Bant altı göstergeler (personel ekranı): toplam, okunmamış, acil ve güvenlik bildirimleri. Kaynak /notifications toplamları. */
+function NotificationKpis() {
+  const all = useSiteGet<NotificationPage>("/notifications", { page: 1, page_size: 1 });
+  const urgent = useSiteGet<NotificationPage>("/notifications", { category: "urgent", page: 1, page_size: 1 });
+  const security = useSiteGet<NotificationPage>("/notifications", { category: "security", page: 1, page_size: 1 });
+  if (all.isError || urgent.isError || security.isError) return null;
+  if (!all.data || !urgent.data || !security.data) {
+    return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  }
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Okunmamış" tone={all.data.unread_count > 0 ? "accent" : undefined} icon={<BellDot aria-hidden="true" />} value={all.data.unread_count} note={all.data.unread_count > 0 ? "sizi bekliyor" : "hepsi okundu"} />
+      <Kpi label="Toplam bildirim" icon={<Bell aria-hidden="true" />} value={all.data.total} note="bu sitede size gelen" />
+      <Kpi label="Acil" tone={urgent.data.total > 0 ? "danger" : undefined} icon={<Siren aria-hidden="true" />} value={urgent.data.total} note="acil kategorisinde" />
+      <Kpi label="Güvenlik" tone={security.data.total > 0 ? "warn" : undefined} icon={<ShieldAlert aria-hidden="true" />} value={security.data.total} note="güvenlik kategorisinde" />
+    </div>
+  );
 }
 
 /**
@@ -43,23 +62,32 @@ export function NotificationsPage({ staff }: { staff: boolean }) {
             <CheckCheck aria-hidden="true" /> Tümünü okundu say
           </button>
         )}
-      />
-      <div className="row" style={{ gap: "var(--s-2)", alignItems: "flex-end" }}>
-        <div className="row" role="tablist" aria-label="Bildirim durumu" style={{ gap: "var(--s-2)" }}>
-          {[["", "Tümü"], ["okunmamis", `Okunmamış${unread ? ` (${unread})` : ""}`]].map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
+      >
+        <div className="tabs" role="tablist" aria-label="Bildirim durumu">
+          {[["", "Tümü"], ["okunmamis", "Okunmamış"]].map(([k, l]) => (
+            <button key={k} type="button" role="tab" aria-selected={s.durum === k} className="tabs__tab" onClick={() => set({ durum: k!, page: "1" })}>{l}{k === "okunmamis" && unread > 0 && <span className="tabs__count" aria-label={`${unread} okunmamış`}>{unread}</span>}</button>
           ))}
         </div>
-        <div className="field" style={{ minWidth: "11rem", marginLeft: "auto" }}>
-          <label className="field__label" htmlFor="n-cat">Kategori</label>
-          <select id="n-cat" className="field__input" value={s.kategori} onChange={(e) => set({ kategori: e.target.value, page: "1" })}>
-            <option value="">Tümü</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{notificationCategory(c)}</option>)}
-          </select>
-        </div>
-      </div>
+      </PageHead>
+      {staff && <NotificationKpis />}
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Bell aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Bildirim listesi</div>
+            {q.data && <div className="card__meta">{q.data.total} bildirim</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field">
+              <label className="field__label" htmlFor="n-cat">Kategori</label>
+              <select id="n-cat" className="field__input" value={s.kategori} onChange={(e) => set({ kategori: e.target.value, page: "1" })}>
+                <option value="">Tümü</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{notificationCategory(c)}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.items.length === 0 ? (
           <div className="card__body"><Empty title={s.durum ? "Okunmamış bildirim yok" : "Bildirim yok"} icon={<BellOff aria-hidden="true" />} /></div>
         ) : (
