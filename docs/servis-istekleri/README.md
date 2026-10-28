@@ -28,7 +28,7 @@ Kaynak: Apsiyon yönetici paneli karşılaştırması — eksik listesinin dış
 | [10](10-kayip-esya.md) | Kayıp eşya | `GET/POST …/lost-items`, `POST …/lost-items/{id}/return` | Güvenlik → Kayıp eşya | **Backend'de** (#38) — izin `security.incidents` |
 | [11](11-talep-departmanlari.md) | Talep departmanları | `…/departments`, `POST …/requests/{id}/department`, talep yanıtına alan | Talepler, pano, talep ayrıntısı | **Backend'de** (#39) |
 | [12](12-site-kullanicilari.md) | Site kullanıcıları ve roller | `GET …/roles`, `GET/POST …/members`, `PATCH …/members/{id}` | `/kullanicilar` | **Backend'de** (#40); çoklu rol, siteye özel rol, kapsam ve süre (P18/K20): `POST/PATCH …/roles`, `…/members/{id}/role-assignments`, `GET …/role-assignments`, `GET /permissions` — ekranlar `/kullanicilar`, `/roller` (P16a) |
-| [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Backend'de** (#41) — onayda sakine giriş hesabı açılır, geçici parola bir kez gösterilir |
+| [13](13-sakin-kayit-basvurusu.md) | Sakinin kendini kaydetmesi + onay | `…/registration-link`, `…/registrations`, `/public/registration/{code}` | `/kayit/:code`, `/kayit-basvurulari` | **Backend'de** (#41) — onayda sakine **telefonla** giriş hesabı açılır (SMS koduyla girer; P16c, geçici parola yok) |
 | [14](14-toplantilar.md) | Toplantılar ve genel kurul | `…/meetings`, `…/meetings/{id}/decisions`, `…/cancel` | `/toplantilar` | **Backend'de** (#42) — modül `general-assembly` |
 | [15](15-anket.md) | Anket | `…/polls`, `…/resident/polls/{id}/vote` | `/anketler`, sakin Duyurular | **Backend'de** (#43) — modül `surveys` |
 | [16](16-sozlesmeler.md) | Hizmet sözleşmeleri | `GET/POST/PATCH …/contracts` | `/sozlesmeler` | **Backend'de** (#44) |
@@ -108,3 +108,10 @@ Yeni servis gerektirmeden yapılanlar (mevcut uçlarla):
 - **İhtar yazısı** (`/belge/ihtar/:accountId`) — `GET …/accounts/{id}/statement` (bakiye ve en eski vade). Yazı kaydedilmez; metni hukukçuya gösterilmeli.
 - **Hazirun listesi** (`/belge/hazirun`) — `GET …/units` sayfa sayfa (arsa payı, malik).
 - **Toplu tahsilat** (`/tahsilat/toplu`) — `POST …/payments` satır satır, satır başına `Idempotency-Key`.
+
+## P16c — kimlik ve bildirim gönderimi (servis isteği yok; Yazılım Dokümanı PLT-01/05/10, ILT-05, RAP-05)
+**Backend'de** (#75): telefon + SMS koduyla giriş, iki adımlı doğrulama (QR, yedek kodlar),
+parola sıfırlama, telefon değişikliği, hesap daveti (`/hesap-davet/:token`), SMS hesabı ve kota
+(`/s/:slug/sms-hesabi`), sessiz saatler (istek 71'in `communication-settings` kısmı), teslim
+kayıtları, planlı raporlar (rapor kataloğu), platform test gelen kutusu. Sağlayıcı K5'e kadar
+test sağlayıcısı.

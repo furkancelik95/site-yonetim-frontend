@@ -7,7 +7,8 @@
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
 //
-// Backend'e geçti, handler'ı kaldırıldı: İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
+// Backend'e geçti, handler'ı kaldırıldı: 71'in sessiz saat ayarı (`communication-settings`; P16c kimlik ve
+// bildirim gönderimi ile — SMS hesabı, teslim kayıtları, planlı raporlar). İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil).
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
@@ -2013,16 +2014,8 @@ function boardOf(e: Emergency, units: UnitLite[]) {
 
 const iletisim: RequestHandler[] = [
   // 71 — Okuma onayı, zamanlama, sessiz saat
-  http.get(`${API}/communication-settings`, ({ params }) => HttpResponse.json(commOf(String(params.slug)))),
-  http.put(`${API}/communication-settings`, async ({ request, params }) => {
-    const b = (await request.json()) as Partial<CommSettings>;
-    const f: Record<string, string> = {};
-    if (!TIME_RE.test(b.quiet_from ?? "")) f.quiet_from = "SS:DD"; if (!TIME_RE.test(b.quiet_to ?? "")) f.quiet_to = "SS:DD";
-    if (!f.quiet_from && !f.quiet_to && b.quiet_from === b.quiet_to) f.quiet_to = "Başlangıç ve bitiş aynı olamaz.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    commSettings.set(String(params.slug), { quiet_from: b.quiet_from!, quiet_to: b.quiet_to! });
-    return HttpResponse.json({ data: commOf(String(params.slug)), message: "Sessiz saatler kaydedildi." });
-  }),
+  // 71 — sessiz saatler (`communication-settings`) backend'de (P16c); aşağıdaki zamanlama sahtesi
+  // varsayılan 22:00–08:00 ile kaydırır.
   http.post(`${API}/announcements`, async ({ request, params }) => {
     const slug = String(params.slug);
     const raw = (await request.json()) as Record<string, unknown> & { publish_at?: string | null; requires_ack?: boolean; ack_hours?: number; sms_fallback?: boolean };

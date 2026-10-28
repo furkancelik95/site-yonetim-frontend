@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+
+// Test gelen kutusu yalnız geliştirme/demo derlemesinde menüde (backend üretimde 404 döner).
+const SHOW_TEST_INBOX = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
 import { Link, NavLink, useLocation } from "react-router";
 import {
   AlertTriangle,
@@ -156,6 +159,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           )}
           {(can(P.announcementsPublish) || can(P.securityIncidents) || can(P.visitors)) && <Item to={`${base}/acil-durum`} icon={<Siren aria-hidden="true" />} label="Acil Durum" />}
           {can(P.announcementsPublish) && <Item to={`${base}/bildirim-sablonlari`} icon={<MessageSquareText aria-hidden="true" />} label="Bildirim Şablonları" />}
+          {can(P.notificationsManage) && <Item to={`${base}/sms-hesabi`} icon={<MessageSquareText aria-hidden="true" />} label="SMS Hesabı ve Gönderim" />}
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
           {can(P.membersManage) && <Item to={`${base}/roller`} icon={<UserCog aria-hidden="true" />} label="Roller ve yetkiler" />}
@@ -252,6 +256,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                 <Item to="/yonetim/endeksler" icon={<BarChart3 aria-hidden="true" />} label="Endeks değerleri" />
                 <Item to="/yonetim/destek" icon={<LifeBuoy aria-hidden="true" />} label="Destek" />
                 <Item to="/yonetim/bilgi-bankasi" icon={<HelpCircle aria-hidden="true" />} label="Bilgi bankası" />
+                {SHOW_TEST_INBOX && <Item to="/yonetim/test-gelen-kutusu" icon={<MessageSquareText aria-hidden="true" />} label="Test gelen kutusu" />}
               </Group>
             ) : (
               <>

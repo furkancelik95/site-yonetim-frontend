@@ -4,7 +4,7 @@ import { Building2, Clock, History, PieChart, Plus, ShieldCheck, UserCheck, User
 import { Donut } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { OneTimePassword } from "../../components/OneTimePassword";
+import { InvitationNotice } from "../../components/InvitationNotice";
 import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
@@ -12,8 +12,7 @@ import { useSite } from "../../site/SiteContext";
 type Role = Schemas["RoleOut"];
 type Member = Schemas["MemberOut"];
 type MemberRole = Schemas["MemberRoleOut"];
-// Geçici: backend artık davet (SMS) gönderiyor; temporary_password kalktı (P16c ekranları #39 ile gelir).
-type Added = Schemas["AddedOut"] & { temporary_password?: string | null };
+type Added = Schemas["AddedOut"];
 type Block = Schemas["BlockOut"];
 type History = Schemas["RoleAssignmentHistoryOut"];
 
@@ -43,8 +42,8 @@ export function roleText(r: Pick<MemberRole, "role_name" | "scope_kind" | "block
  * Site kullanıcıları ve rolleri (PLT-09). Bir kişinin birden çok rolü olabilir; izinler birleşir
  * (P18). Rol tesis geneline ya da bir bloğa, isteğe bağlı başlangıç–bitiş tarihiyle atanır.
  * Kendi izninizden fazlasını içeren rolü atayamaz, kaldıramazsınız (backend 403). Yeni personel
- * geçici parolayla eklenir; parola bir kez gösterilir. Yönetim şirketinden gelen erişim burada
- * değiştirilemez.
+ * davet bağlantısıyla eklenir (72 saat geçerli); parolasını kendisi belirler (P5). Yönetim
+ * şirketinden gelen erişim burada değiştirilemez.
  */
 export function MembersPage() {
   const { site } = useSite();
@@ -137,12 +136,14 @@ function roleSegments(list: Member[]) {
 
 function MemberRow({ m, roles, blocks }: { m: Member; roles: Role[]; blocks: Block[] }) {
   const upd = useSiteMutation<{ is_active?: boolean }, Member>("PATCH", `/members/${m.id}`);
+  const resend = useSiteMutation<Record<string, never>, Schemas["MemberInvitationOut"]>("POST", `/members/${m.id}/resend-invitation`, { onSuccess: (d) => d && setInvite(d) });
+  const [invite, setInvite] = useState<Schemas["MemberInvitationOut"] | null>(null);
   const [assigning, setAssigning] = useState(false);
   const derived = m.source === "organization";
   return (
     <>
       <tr style={!m.is_active ? { opacity: 0.6 } : undefined}>
-        <td><div className="cell-person"><Avatar name={m.full_name} size="sm" soft={!m.is_active} /><div><div className="cell-main">{m.full_name}</div><div className="cell-sub mono">{m.email}</div></div></div></td>
+        <td><div className="cell-person"><Avatar name={m.full_name} size="sm" soft={!m.is_active} /><div><div className="cell-main">{m.full_name}{m.invitation_pending && <> <Badge tone="warn">Davet bekliyor</Badge></>}{m.mfa_enabled && <> <Badge tone="ok">2FA</Badge></>}</div><div className="cell-sub mono">{m.email}</div>{invite && <div className="stack small mt-2" style={{ gap: 4 }}><InvitationNotice invitation={invite} /></div>}</div></div></td>
         <td>
           <div className="row" style={{ gap: "var(--s-1)", flexWrap: "wrap" }}>
             {m.roles.length === 0 && <span className="small muted">Etkin rol yok</span>}
@@ -154,6 +155,9 @@ function MemberRow({ m, roles, blocks }: { m: Member; roles: Role[]; blocks: Blo
         </td>
         <td className="small nowrap">{m.last_login_at ? formatDateTime(m.last_login_at) : "Henüz girmedi"}</td>
         <td className="right nowrap">
+          {!derived && m.invitation_pending && m.is_active && (
+            <button className="btn btn--ghost btn--sm" type="button" disabled={resend.isPending} onClick={() => resend.mutate({})}>Daveti yeniden gönder</button>
+          )}
           {!derived && m.is_active && (
             <button className="btn btn--ghost btn--sm" type="button" aria-expanded={assigning} onClick={() => setAssigning((v) => !v)}><Plus aria-hidden="true" /> Rol ekle</button>
           )}
@@ -248,10 +252,10 @@ function AddMember({ roles, blocks, onDone }: { roles: Role[]; blocks: Block[]; 
       <div className="card">
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <Alert tone="ok" title={`${created.member.full_name} eklendi`}>Rol: {created.member.roles.map(roleText).join(", ") || created.member.role_name}</Alert>
-          {created.temporary_password ? (
-            <OneTimePassword email={created.member.email} password={created.temporary_password} />
+          {created.invitation ? (
+            <InvitationNotice invitation={created.invitation} />
           ) : (
-            <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut parolasıyla girer.</p>
+            <p className="small mb-0">Bu e-postanın zaten bir hesabı vardı; hesap bu siteye bağlandı, parolası değişmedi. Kişi mevcut hesabıyla girer.</p>
           )}
         </div>
         <div className="card__foot"><button className="btn" type="button" onClick={() => { m.reset(); setCreated(null); onDone(); }}>Tamam</button></div>
