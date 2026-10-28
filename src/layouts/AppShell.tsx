@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+
+// Test gelen kutusu yalnız geliştirme/demo derlemesinde menüde (backend üretimde 404 döner).
+const SHOW_TEST_INBOX = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
 import { Link, NavLink, useLocation } from "react-router";
 import {
   AlertTriangle,
@@ -40,6 +43,7 @@ import {
   Menu,
   MessageSquareText,
   Receipt,
+  Scale,
   ReceiptText,
   Rocket,
   Route,
@@ -58,6 +62,9 @@ import {
   Vote,
   Wallet,
   Wrench,
+  Cog,
+  UserCog,
+  FileBarChart,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
@@ -127,10 +134,12 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.expensesRead) && <Item to={`${base}/tedarikciler`} icon={<Truck aria-hidden="true" />} label="Tedarikçiler" />}
         {can(P.cashRead) && <Item to={`${base}/kasa`} icon={<Landmark aria-hidden="true" />} label="Kasa ve Banka" />}
         {can(P.reportsRead) && <Item to={`${base}/raporlar`} icon={<BarChart3 aria-hidden="true" />} label="Raporlar" />}
+        {(can(P.reportsRead) || can(P.transparencyManage)) && <Item to={`${base}/seffaflik-raporu`} icon={<FileBarChart aria-hidden="true" />} label="Şeffaflık Raporu" />}
         {can(P.unitsManage) && <Item to={`${base}/iceri-aktar`} icon={<FileSpreadsheet aria-hidden="true" />} label="İçeri Aktar" />}
       </Group>
       {can(P.financeRead) && (
         <Group label="Finans yönetimi">
+          <Item to={`${base}/aidat-kurallari`} icon={<Scale aria-hidden="true" />} label="Aidat Kuralları" />
           <Item to={`${base}/odeme-planlari`} icon={<CalendarRange aria-hidden="true" />} label="Ödeme Planları" />
           <Item to={`${base}/ek-ucretler`} icon={<ReceiptText aria-hidden="true" />} label="Dönem Dışı Ücretler" />
           <Item to={`${base}/donem-kapanisi`} icon={<Lock aria-hidden="true" />} label="Dönem Kapanışı" />
@@ -155,8 +164,10 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           )}
           {(can(P.announcementsPublish) || can(P.securityIncidents) || can(P.visitors)) && <Item to={`${base}/acil-durum`} icon={<Siren aria-hidden="true" />} label="Acil Durum" />}
           {can(P.announcementsPublish) && <Item to={`${base}/bildirim-sablonlari`} icon={<MessageSquareText aria-hidden="true" />} label="Bildirim Şablonları" />}
+          {can(P.notificationsManage) && <Item to={`${base}/sms-hesabi`} icon={<MessageSquareText aria-hidden="true" />} label="SMS Hesabı ve Gönderim" />}
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
+          {can(P.membersManage) && <Item to={`${base}/roller`} icon={<UserCog aria-hidden="true" />} label="Roller ve yetkiler" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.modulesManage) && shows(M.visitors, P.visitors) && <Item to={`${base}/ayarlar/guvenlik`} icon={<DoorOpen aria-hidden="true" />} label="Güvenlik Ayarları" />}
           {shows(M.visitors, P.securityIncidents) && can(P.modulesManage) && <Item to={`${base}/devriye`} icon={<Route aria-hidden="true" />} label="Devriye" />}
@@ -170,14 +181,15 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {meetings && <Item to={`${base}/toplantilar`} icon={<CalendarDays aria-hidden="true" />} label="Toplantılar" />}
           {meetings && <Item to={`${base}/karar-defteri`} icon={<BookOpen aria-hidden="true" />} label="Karar Defteri" />}
           {shows(M.documents, P.documentsRead) && <Item to={`${base}/dokumanlar`} icon={<FolderOpen aria-hidden="true" />} label="Belgeler" />}
-          {(can(P.financeRead) || can(P.requestsRead) || can(P.auditRead)) && <Item to={`${base}/rapor-katalogu`} icon={<BarChart3 aria-hidden="true" />} label="Rapor Kataloğu" />}
+          {(can(P.financeRead) || can(P.requestsRead) || can(P.auditRead) || can(P.expensesRead)) && <Item to={`${base}/rapor-katalogu`} icon={<BarChart3 aria-hidden="true" />} label="Rapor Kataloğu" />}
           {(can(P.chargePost) || can(P.auditRead)) && <Item to={`${base}/denetim-paketi`} icon={<FileCheck2 aria-hidden="true" />} label="Denetim Paketi" />}
-          {can(P.membersManage) && <Item to={`${base}/kvkk`} icon={<ShieldCheck aria-hidden="true" />} label="KVKK" />}
+          {can(P.privacyManage) && <Item to={`${base}/kvkk`} icon={<ShieldCheck aria-hidden="true" />} label="KVKK" />}
           {(can(P.membersManage) || can(P.financeRead) || can(P.modulesManage)) && <Item to={`${base}/destek`} icon={<LifeBuoy aria-hidden="true" />} label="Destek" />}
           <Item to={`${base}/yardim`} icon={<HelpCircle aria-hidden="true" />} label="Yardım" />
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {can(P.inventoryRead) && <Item to={`${base}/teknik-varliklar`} icon={<Cog aria-hidden="true" />} label="Teknik Varlıklar" />}
           {can(P.expensesRead) && <Item to={`${base}/sigorta`} icon={<Umbrella aria-hidden="true" />} label="Sigorta ve Hasar" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
           {staff && <Item to={`${base}/vardiya`} icon={<CalendarClock aria-hidden="true" />} label="Vardiya Planı" />}
@@ -216,8 +228,13 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
     return () => window.removeEventListener("keydown", onKey);
   }, [navOpen]);
 
-  // Site dışında (portföy) yönetim şirketindeki rol gösterilir
-  const siteRole = siteCtx?.site.role ?? me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  // Sitede: ana rol + diğer roller (P18 çoklu rol; tamamı ipucunda). Site dışında (portföy)
+  // yönetim şirketindeki rol gösterilir.
+  const siteRoles = siteCtx?.roles ?? [];
+  const siteRole = siteRoles.length
+    ? siteRoles[0] + (siteRoles.length > 1 ? ` +${siteRoles.length - 1}` : "")
+    : me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  const roleTitle = siteRoles.length > 1 ? `Rolleriniz: ${siteRoles.join(", ")}` : undefined;
   return (
     <>
       <a className="skip-link" href="#main">
@@ -245,6 +262,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                 <Item to="/yonetim/endeksler" icon={<BarChart3 aria-hidden="true" />} label="Endeks değerleri" />
                 <Item to="/yonetim/destek" icon={<LifeBuoy aria-hidden="true" />} label="Destek" />
                 <Item to="/yonetim/bilgi-bankasi" icon={<HelpCircle aria-hidden="true" />} label="Bilgi bankası" />
+                {SHOW_TEST_INBOX && <Item to="/yonetim/test-gelen-kutusu" icon={<MessageSquareText aria-hidden="true" />} label="Test gelen kutusu" />}
               </Group>
             ) : (
               <>
@@ -284,7 +302,8 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             {/* Ad alanı profile gider (oturumlar, güvenlik olayları, bildirim tercihleri) */}
             <Link to="/profil" className="userbox__link" title={`${me.full_name} — profil`}>
               <span className="userbox__name">{me.full_name}</span>
-              <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              <span className="userbox__role" title={roleTitle}>{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              {roleTitle && <span className="visually-hidden">{roleTitle}</span>}
               <span className="visually-hidden">Profil</span>
             </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>

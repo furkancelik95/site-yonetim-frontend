@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Package, Receipt, Users, Wrench } from "lucide-react";
-import { ApiError, openDocument } from "../../api/client";
+import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
+import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
-import { PollResults } from "../../components/PollResults";
+import { PollResults, pollPrivacy } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, IconChip, Loading, Money, Pager, Segmented, SubmitButton, fieldError, todayLong, useDocumentTitle } from "../../components/ui";
 import { heroUrl } from "../../lib/cover";
@@ -22,7 +22,6 @@ type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
 type Req = Schemas["RequestOut"];
 type MyPackage = Schemas["MyPackage"];
-type SiteExpenses = Schemas["SiteExpensesOut"];
 
 /** Personel sakin ekranını açarsa servis 403/404 döner; ne olduğunu açıkça söyle. */
 function StaffNotice({ error }: { error: unknown }) {
@@ -211,12 +210,11 @@ function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
           {a.is_pinned && <Badge tone="muted">Sabit</Badge>}
         </div>
         <div className="ann__body">{body}</div>
-        {!short && (a as AnnAck).requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={(a as AnnAck).acked_at} /></div>}
+        {!short && a.requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={a.acked_at} /></div>}
       </div>
     </article>
   );
 }
-type AnnAck = Ann & { requires_ack?: boolean; acked_at?: string | null };
 
 export function ResidentStatementPage() {
   useDocumentTitle("Borcum");
@@ -281,7 +279,8 @@ export function ResidentStatementPage() {
                           </span>
                           <div className="txn__main">
                             <div className="txn__title">{e.description}</div>
-                            <div className="txn__sub">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                            <div className="txn__sub">{formatDate(e.date)} · {e.source === "late_fee" ? <Badge tone="warn">Gecikme tazminatı</Badge> : ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                            {Number(e.advance_applied) > 0 && <div className="xs muted">Avanstan mahsup: {formatMoney(e.advance_applied)} (önceki fazla ödemenizden düşüldü)</div>}
                           </div>
                           <div className="txn__right">
                             <span className="txn__amount">{debit ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}</span>
@@ -305,7 +304,7 @@ export function ResidentStatementPage() {
 
 /** Ödeme planım (FIN-15): sakin yalnız kendi hesabının planını ve taksitlerini görür (servis isteği 30). */
 function ResidentPlans() {
-  const q = useSiteGet<{ id: string; unit_name: string; total: string; installment_count: number; status: string; installments: { no: number; due_date: string; amount: string; paid: string; status: string }[] }[]>("/resident/payment-plans");
+  const q = useSiteGet<Schemas["ResidentPaymentPlanOut"][]>("/resident/payment-plans");
   if (!q.data || q.data.length === 0) return null;
   return (
     <div>
@@ -408,64 +407,9 @@ export function ResidentRequestsPage() {
   );
 }
 
-/** Şeffaflık: sitenin gerçekleşen giderleri ve fatura görüntüsü. */
-export function ResidentExpensesPage() {
-  useDocumentTitle("Giderler");
-  const { site } = useSite();
-  const toast = useToast();
-  const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [page, setPage] = useState(1);
-  const q = useSiteGet<SiteExpenses>("/resident/expenses", { year, page, page_size: 30 });
-  if (q.isError) return <StaffNotice error={q.error} />;
-  return (
-    <>
-      <div className="row row--between">
-        <div className="section-title" style={{ margin: 0 }}>Sitenin giderleri</div>
-        <select aria-label="Yıl" className="field__input" style={{ width: "auto" }} value={year} onChange={(e) => { setYear(e.target.value); setPage(1); }}>
-          {[0, 1, 2].map((i) => String(new Date().getFullYear() - i)).map((y) => <option key={y}>{y}</option>)}
-        </select>
-      </div>
-      {q.isPending ? <Loading /> : (
-        <>
-          <div className="balance">
-            <div className="balance__label">{year} yılı toplam gider</div>
-            <div className="balance__value">{formatMoney(q.data.total_amount)}</div>
-            <div className="balance__due">{q.data.total} kayıt · aidatlarınızın nereye harcandığı</div>
-          </div>
-          <div className="card">
-            <div className="card__body card__body--flush">
-              {q.data.items.length === 0 ? (
-                <Empty title="Bu yıl gider kaydı yok" icon={<Package aria-hidden="true" />} />
-              ) : (
-                <ul className="txn">
-                  {q.data.items.map((e) => (
-                    <li key={e.id}>
-                      <span className="txn__icon" aria-hidden="true"><Inbox /></span>
-                      <div className="txn__main">
-                        <div className="txn__title">{e.description}</div>
-                        <div className="txn__sub">{formatDate(e.date)} · {e.category}{e.vendor ? ` · ${e.vendor}` : ""}</div>
-                        {e.document_id && (
-                          <button className="btn btn--ghost btn--sm" type="button" style={{ paddingLeft: 0, marginTop: 2 }} onClick={() => openDocument(`/sites/${site.slug}/resident/files/${e.document_id}`).catch(() => toast("Belge açılamadı.", "danger"))}>
-                            <FileText aria-hidden="true" /> Faturayı gör
-                          </button>
-                        )}
-                      </div>
-                      <span className="txn__amount"><Money value={e.amount} /></span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-
-/** Servis isteği 15: sakinin oy verdiği bölümler ve oyu. Sonuç oy verdikten ya da anket kapanınca görünür. */
+/** Servis isteği 15 + ILT-03 (K31): bölüm ya da kişi başına yanıt; sonuç yanıt verdikten ya da anket kapanınca görünür. */
 type ResidentPoll = Schemas["ResidentPollOut"];
+type Answer = { option_ids: string[]; rating: number | null; text: string };
 
 function ResidentPolls() {
   // Anket modülü kapalı sitede uç 404 döner; hiç sorulmaz
@@ -479,12 +423,22 @@ function ResidentPolls() {
 }
 
 function ResidentPollCard({ p }: { p: ResidentPoll }) {
-  const pending = p.status === "open" ? p.my_votes.filter((v) => !v.option_id) : [];
+  const pending = p.status === "open" && p.one_per_unit ? p.my_votes.filter((v) => !v.voted) : [];
   const [unitId, setUnitId] = useState(pending[0]?.unit_id ?? "");
-  const [choice, setChoice] = useState("");
-  const vote = useSiteMutation<{ unit_id: string; option_id: string }, { option_id: string }>("POST", `/resident/polls/${p.id}/vote`, { onSuccess: () => setChoice("") });
+  const empty = (): Record<string, Answer> => Object.fromEntries(p.questions.map((x) => [x.id, { option_ids: [], rating: null, text: "" }]));
+  const [answers, setAnswers] = useState(empty);
+  const vote = useSiteMutation<Record<string, unknown>, { option_id: string | null }>("POST", `/resident/polls/${p.id}/vote`, { onSuccess: () => setAnswers(empty()) });
   const voted = p.my_votes.find((v) => v.option_id)?.option_id ?? null;
   const unit = pending.find((v) => v.unit_id === unitId) ?? pending[0];
+  const set = (qid: string, patch: Partial<Answer>) => setAnswers((a) => ({ ...a, [qid]: { ...a[qid]!, ...patch } }));
+  const filled = p.questions.every((x) => !x.required || (x.kind === "rating" ? answers[x.id]?.rating : x.kind === "text" ? answers[x.id]?.text.trim() : answers[x.id]?.option_ids.length));
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    vote.mutate({
+      unit_id: p.one_per_unit ? unit?.unit_id ?? null : null,
+      answers: p.questions.map((x) => ({ question_id: x.id, option_ids: answers[x.id]!.option_ids, rating: answers[x.id]!.rating, text: answers[x.id]!.text.trim() || null })),
+    });
+  }
   return (
     <div className="card">
       <div className="card__head">
@@ -493,28 +447,42 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
       </div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         {p.description && <p className="small mb-0">{p.description}</p>}
-        {unit ? (
-          <form className="stack" style={{ gap: "var(--s-2)" }} onSubmit={(e) => { e.preventDefault(); if (choice) vote.mutate({ unit_id: unit.unit_id, option_id: choice }); }}>
-            {pending.length > 1 && (
+        <p className="xs muted mb-0">{pollPrivacy(p)}. {p.notice}</p>
+        {p.can_respond ? (
+          <form className="stack" style={{ gap: "var(--s-3)" }} onSubmit={submit} noValidate>
+            {p.one_per_unit && pending.length > 1 && unit && (
               <Field label="Hangi bölüm adına">{(fp) => <select {...fp} className="field__input" value={unit.unit_id} onChange={(e) => setUnitId(e.target.value)}>{pending.map((v) => <option key={v.unit_id} value={v.unit_id}>{v.unit_name}</option>)}</select>}</Field>
             )}
-            <fieldset className="stack" style={{ gap: "var(--s-1)", border: 0, padding: 0, margin: 0 }}>
-              <legend className="visually-hidden">{p.question}</legend>
-              {p.options.map((o) => (
-                <label key={o.id} className="check" style={{ minHeight: 44 }}>
-                  <input type="radio" name={`poll-${p.id}`} value={o.id} checked={choice === o.id} onChange={() => setChoice(o.id)} />
-                  <span>{o.label}</span>
-                </label>
-              ))}
-            </fieldset>
+            {p.questions.map((x) => {
+              const a = answers[x.id]!;
+              const err = fieldError(vote.error, `answers.${x.id}`);
+              return (
+                <fieldset key={x.id} className="stack" style={{ gap: "var(--s-1)", border: 0, padding: 0, margin: 0 }}>
+                  <legend className={p.questions.length > 1 ? "field__label" : "visually-hidden"}>{p.questions.length > 1 ? `${x.order}. ${x.text}` : p.question}{x.required ? "" : " (isteğe bağlı)"}</legend>
+                  {x.kind === "single" && x.options.map((o) => (
+                    <label key={o.id} className="check" style={{ minHeight: 44 }}><input type="radio" name={`poll-${p.id}-${x.id}`} checked={a.option_ids[0] === o.id} onChange={() => set(x.id, { option_ids: [o.id] })} /><span>{o.label}</span></label>
+                  ))}
+                  {x.kind === "multiple" && x.options.map((o) => (
+                    <label key={o.id} className="check" style={{ minHeight: 44 }}><input type="checkbox" checked={a.option_ids.includes(o.id)} onChange={() => set(x.id, { option_ids: a.option_ids.includes(o.id) ? a.option_ids.filter((y) => y !== o.id) : [...a.option_ids, o.id] })} /><span>{o.label}</span></label>
+                  ))}
+                  {x.kind === "rating" && (
+                    <div className="row" style={{ gap: "var(--s-1)" }} role="radiogroup" aria-label={x.text}>
+                      {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={a.rating === n} className={`btn btn--sm${a.rating === n ? " btn--primary" : ""}`} style={{ minWidth: 44, minHeight: 44 }} onClick={() => set(x.id, { rating: n })}>{n}</button>)}
+                    </div>
+                  )}
+                  {x.kind === "text" && <textarea className="field__input" aria-label={x.text} rows={2} maxLength={1000} value={a.text} onChange={(e) => set(x.id, { text: e.target.value })} />}
+                  {err && <span className="field__error" role="alert">{err}</span>}
+                </fieldset>
+              );
+            })}
             <FormError error={vote.error} />
-            <SubmitButton busy={vote.isPending} disabled={!choice}>{pending.length > 1 ? `${unit.unit_name} adına oy ver` : "Oy ver"}</SubmitButton>
-            <span className="small muted">Bitiş {formatDate(p.ends_on)} · Oyunuzu verdikten sonra değiştiremezsiniz.</span>
+            <SubmitButton busy={vote.isPending} disabled={!filled}>{p.one_per_unit && pending.length > 1 && unit ? `${unit.unit_name} adına gönder` : "Gönder"}</SubmitButton>
+            <span className="small muted">Bitiş {formatDate(p.ends_on)} · Yanıtınızı gönderdikten sonra değiştiremezsiniz.</span>
           </form>
         ) : p.total_votes != null ? (
           <PollResults p={p} mine={voted} />
         ) : (
-          <span className="small muted">Bu anket bölümünüzdeki rolünüze açık değil.</span>
+          <span className="small muted">{p.responded ? "Yanıtınız alındı; sonuç anket kapanınca açılır." : "Bu anket bölümünüzdeki rolünüze açık değil."}</span>
         )}
       </div>
     </div>
@@ -529,6 +497,7 @@ export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
+export { ResidentTransparencyPage } from "./ResidentTransparencyPage";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
 import { RequestExtrasBlock } from "./ResidentServicePages";
 import { useRequestCategories } from "../site/requestCategories";

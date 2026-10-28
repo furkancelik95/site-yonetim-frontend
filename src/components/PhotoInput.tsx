@@ -3,8 +3,8 @@ import { Camera, X } from "lucide-react";
 
 /**
  * Fotoğraf kanıtı (sayaç, denetim, görev). Telefonda kamerayı açar; seçilen görsel tarayıcıda küçültülür
- * (en uzun kenar 480 px, JPEG) ve veri adresi olarak döner. Kalıcı dosya deposu belge modülüyle gelecek
- * (servis gelince yükleme ucu kullanılır); sahte serviste küçük önizleme saklanır.
+ * (en uzun kenar 480 px, JPEG) ve veri adresi olarak döner. Backend içeriği doğrulayıp dosya deposuna
+ * yazar; kayıtlı fotoğraf yanıtta `photo_id` olarak gelir ve `AuthImage` ile yetkili uçtan gösterilir.
  */
 export function PhotoInput({ label = "Fotoğraf", required, value, onChange, error }: { label?: string; required?: boolean; value: string | null; onChange: (v: string | null) => void; error?: string }) {
   const id = useId();
