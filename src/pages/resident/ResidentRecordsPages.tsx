@@ -29,18 +29,40 @@ export function ResidentDocumentsPage() {
   );
 }
 
-interface MyReq { id: string; kind: string; detail: string; status: string; created_at: string; due_on: string; response: string | null; outcome: string | null; retained: string | null; answered_at: string | null }
+type MyReq = Schemas["MyPrivacyRequestOut"];
+type MyPrivacy = Schemas["MyPrivacyOut"];
 
-/** Kişisel verilerim (RAP-04, sakin): KVKK ilgili kişi başvurusu ve yanıtları. */
+/** Kişisel verilerim (RAP-04, sakin): KVKK ilgili kişi başvurusu ve yanıtları; aydınlatma metni
+ * onayları; isteğe bağlı açık rıza (ver / geri çek); "verilerimi indir". */
 export function ResidentPrivacyPage() {
   useDocumentTitle("Kişisel verilerim");
-  const q = useSiteGet<MyReq[]>("/resident/privacy-requests");
+  const { site } = useSite();
+  const q = useSiteGet<Page<MyReq>>("/resident/privacy-requests", { page_size: 50 });
+  const mine = useSiteGet<MyPrivacy>("/my-privacy");
   const [f, setF] = useState({ kind: "access", detail: "" });
+  const [err, setErr] = useState<unknown>(null);
   const m = useSiteMutation<typeof f, unknown>("POST", "/resident/privacy-requests", { onSuccess: () => setF({ kind: "access", detail: "" }) });
+  const consent = useSiteMutation<{ purpose: string; granted: boolean }, MyPrivacy>("PUT", (v) => `/my-privacy/explicit-consents/${v.purpose}`);
+  async function exportMine() { setErr(null); try { await download(`/sites/${site.slug}/my-privacy/data-export`, undefined, `kisisel-verilerim-${site.slug}.json`); } catch (e) { setErr(e); } }
   return (
     <>
       <div className="section-title">Kişisel verilerim</div>
-      <p className="small muted">KVKK kapsamında verilerinize erişim, düzeltme, silme ya da işlemeye itiraz başvurusu yapabilirsiniz; yönetim 30 gün içinde yanıtlar. <a href="/aydinlatma" target="_blank" rel="noopener noreferrer">Aydınlatma metni</a></p>
+      <p className="small muted">KVKK kapsamında verilerinize erişim, düzeltme, silme ya da işlemeye itiraz başvurusu yapabilirsiniz; yönetim 30 gün içinde yanıtlar. <a href={`/aydinlatma?site=${encodeURIComponent(site.slug)}`} target="_blank" rel="noopener noreferrer">Aydınlatma metni</a></p>
+      <div className="card">
+        <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+          <FormError error={err ?? consent.error} />
+          {mine.data && <>
+            <div className="small">{mine.data.notice ? <>Aydınlatma metni sürüm {mine.data.notice.version}{mine.data.accepted[0] ? ` · onayladınız: ${formatDateTime(mine.data.accepted[0].accepted_at)}` : ""}</> : "Site henüz aydınlatma metni yayınlamadı."}</div>
+            {mine.data.explicit.map((x) => (
+              <label key={x.purpose} className="check check--rich">
+                <input type="checkbox" checked={x.granted} disabled={consent.isPending} onChange={(e) => consent.mutate({ purpose: x.purpose, granted: e.target.checked })} />
+                <span><span className="strong">Açık rıza (isteğe bağlı)</span><br /><span className="small muted">{x.label}. İstediğiniz zaman geri çekebilirsiniz; hizmetler etkilenmez.{x.changed_at ? ` Son değişiklik: ${formatDateTime(x.changed_at)}.` : ""}</span></span>
+              </label>
+            ))}
+          </>}
+          <div><button className="btn btn--sm" type="button" onClick={exportMine}><Download aria-hidden="true" /> Verilerimi indir (JSON)</button></div>
+        </div>
+      </div>
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate(f); }}>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={m.error} />
@@ -50,9 +72,9 @@ export function ResidentPrivacyPage() {
           <SubmitButton busy={m.isPending}>Başvur</SubmitButton>
         </div>
       </form>
-      {(q.data ?? []).map((r) => (
+      {(q.data?.items ?? []).map((r) => (
         <div key={r.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
-          <div className="r-item__title">{PRIV_KIND[r.kind]} {r.status === "open" ? <Badge tone="warn">Yanıt bekleniyor</Badge> : <Badge tone="ok">Yanıtlandı</Badge>}</div>
+          <div className="r-item__title">{r.kind_label} {r.status === "open" ? <Badge tone="warn">Yanıt bekleniyor</Badge> : <Badge tone="ok">{r.outcome_label ?? "Yanıtlandı"}</Badge>}</div>
           <div className="r-item__meta">{formatDateTime(r.created_at)} · son gün {formatDate(r.due_on)}</div>
           {r.response && <div className="r-item__body">{r.response}{r.retained && <div className="small">Saklanan: {r.retained}</div>}</div>}
         </div></div>

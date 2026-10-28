@@ -14,7 +14,7 @@ import { P, useSite } from "../../site/SiteContext";
 type ListItem = Schemas["RequestListItem"];
 type Request = Schemas["ApprovalRequestOut"];
 type Delegation = Schemas["DelegationOut"];
-type Candidate = Schemas["CandidateOut"];
+type Candidates = Schemas["DelegationCandidatesOut"];
 
 const TABS = [
   { key: "bekleyen", api: "pending", label: "Kararımı bekleyen" },
@@ -167,36 +167,59 @@ function EndDelegation({ d }: { d: Delegation }) {
 
 const toIso = (local: string) => (local && !Number.isNaN(Date.parse(local)) ? new Date(local).toISOString() : "");
 
+/**
+ * Yetki devri (ONY-03): kendi onaycı rollerinizden birini ya da birkaçını, aynı ya da daha üst
+ * düzeyde role sahip birine devredersiniz (K20 rol sırası). Aday listesi seçtiğiniz rollere göre
+ * süzülür.
+ */
 function NewDelegation({ onDone }: { onDone: () => void }) {
-  const { site } = useSite();
-  const cands = useSiteGet<Candidate[]>("/delegations/candidates");
+  const cands = useSiteGet<Candidates>("/delegations/candidates");
+  const mine = cands.data?.my_roles ?? [];
+  const [roles, setRoles] = useState<string[] | null>(null);
+  const chosen = roles ?? mine.slice(0, 1);
   const [f, setF] = useState({ to_user_id: "", starts_at: "", ends_at: "", note: "" });
   const m = useSiteMutation<Record<string, unknown>, Delegation>("POST", "/delegations", { onSuccess: onDone });
+  const eligible = (cands.data?.candidates ?? []).filter((c) => chosen.every((r) => c.can_take.includes(r)));
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ to_user_id: f.to_user_id, roles: [site.role], starts_at: toIso(f.starts_at), ends_at: toIso(f.ends_at), note: f.note.trim() || null });
+    m.mutate({ to_user_id: f.to_user_id, roles: chosen, starts_at: toIso(f.starts_at), ends_at: toIso(f.ends_at), note: f.note.trim() || null });
   }
-  const none = cands.data && cands.data.length === 0;
+  function toggle(role: string, on: boolean) {
+    setRoles(on ? [...chosen, role] : chosen.filter((r) => r !== role));
+    setF((x) => ({ ...x, to_user_id: "" }));
+  }
+  const none = cands.data && (mine.length === 0 || cands.data.candidates.length === 0);
   return (
     <form className="card" onSubmit={submit} noValidate>
       <div className="card__head"><span className="card__title">Yetki devret</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
-        {none ? (
-          <Alert tone="info">Sitede sizinle aynı rolde ({site.role}) başka etkin kullanıcı yok; yetki yalnız aynı role devredilebilir.</Alert>
+        {cands.isPending ? <Loading /> : none ? (
+          <Alert tone="info">Sitede yetkinizi devredebileceğiniz kimse yok: devralan, sizinle aynı ya da daha üst düzeyde bir role sahip olmalı (rol sırası Roller ve yetkiler ekranında).</Alert>
         ) : (
-          <div className="grid grid--kpi">
-            <Field label="Devralacak kişi" required error={fieldError(m.error, "to_user_id")}>
-              {(p) => <select {...p} className="field__input" value={f.to_user_id} onChange={(e) => setF((x) => ({ ...x, to_user_id: e.target.value }))}><option value="">Seçin</option>{cands.data?.map((c) => <option key={c.user_id} value={c.user_id}>{c.name} · {c.role}</option>)}</select>}
-            </Field>
-            <Field label="Başlangıç" required error={fieldError(m.error, "starts_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={`${todayIso()}T00:00`} value={f.starts_at} onChange={(e) => setF((x) => ({ ...x, starts_at: e.target.value }))} />}</Field>
-            <Field label="Bitiş" required error={fieldError(m.error, "ends_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={f.starts_at || undefined} value={f.ends_at} onChange={(e) => setF((x) => ({ ...x, ends_at: e.target.value }))} />}</Field>
-            <Field label="Not" hint="ör. Yıllık izin">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={(e) => setF((x) => ({ ...x, note: e.target.value }))} />}</Field>
-          </div>
+          <>
+            {mine.length > 1 && (
+              <fieldset className="row" style={{ gap: "var(--s-2) var(--s-4)", border: 0, padding: 0, margin: 0 }}>
+                <legend className="field__label">Devredilecek rollerim</legend>
+                {mine.map((r) => (
+                  <label key={r} className="check"><input type="checkbox" checked={chosen.includes(r)} onChange={(e) => toggle(r, e.target.checked)} /><span>{r}</span></label>
+                ))}
+              </fieldset>
+            )}
+            {fieldError(m.error, "roles") && <span className="field__error" role="alert">{fieldError(m.error, "roles")}</span>}
+            <div className="grid grid--kpi">
+              <Field label="Devralacak kişi" required hint={mine.length === 1 ? `Rolünüz: ${mine[0]} — aynı ya da üst düzeydeki kişiler` : "Aynı ya da üst düzeydeki kişiler"} error={fieldError(m.error, "to_user_id")}>
+                {(p) => <select {...p} className="field__input" value={f.to_user_id} onChange={(e) => setF((x) => ({ ...x, to_user_id: e.target.value }))}><option value="">Seçin</option>{eligible.map((c) => <option key={c.user_id} value={c.user_id}>{c.name} · {c.roles.join(", ")}</option>)}</select>}
+              </Field>
+              <Field label="Başlangıç" required error={fieldError(m.error, "starts_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={`${todayIso()}T00:00`} value={f.starts_at} onChange={(e) => setF((x) => ({ ...x, starts_at: e.target.value }))} />}</Field>
+              <Field label="Bitiş" required error={fieldError(m.error, "ends_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={f.starts_at || undefined} value={f.ends_at} onChange={(e) => setF((x) => ({ ...x, ends_at: e.target.value }))} />}</Field>
+              <Field label="Not" hint="ör. Yıllık izin">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={(e) => setF((x) => ({ ...x, note: e.target.value }))} />}</Field>
+            </div>
+          </>
         )}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}>
-        {!none && <SubmitButton busy={m.isPending} disabled={!f.to_user_id || !f.starts_at || !f.ends_at}>Devret</SubmitButton>}
+        {!none && <SubmitButton busy={m.isPending} disabled={!f.to_user_id || !f.starts_at || !f.ends_at || chosen.length === 0}>Devret</SubmitButton>}
         <button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button>
       </div>
     </form>

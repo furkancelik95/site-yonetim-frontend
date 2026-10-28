@@ -304,24 +304,30 @@ export function NewSitePage() {
   );
 }
 
-/** Servis isteği 70'teki şekil. */
-interface IndexValue { period: string; tufe: number; ufe: number; entered_by: string; entered_at: string }
+/** Servis isteği 70 — backend şeması; oranlar ondalık metin ("33.50"). */
+type IndexValueRow = Schemas["IndexValueOut"];
+type IndexValue = Omit<IndexValueRow, "tufe" | "ufe"> & { tufe: number; ufe: number };
 
 /** Endeks değerleri (SAT-06, 15.3): TÜFE/ÜFE yıllık değişim oranı aylık girilir; tüm tesislerde sözleşme artışında kullanılır. */
 export function IndexValuesPage() {
   const qc = useQueryClient();
   const toast = useToast();
-  const q = useQuery({ queryKey: ["platform", "index-values"], queryFn: () => get<IndexValue[]>("/platform/index-values") });
+  const q = useQuery({
+    queryKey: ["platform", "index-values"],
+    queryFn: async () => (await get<Page<IndexValueRow>>("/platform/index-values", { page_size: 200 })).items.map((v): IndexValue => ({ ...v, tufe: Number(v.tufe), ufe: Number(v.ufe) })),
+  });
+  const missing = useQuery({ queryKey: ["platform", "index-values", "missing"], queryFn: () => get<Schemas["IndexMissingOut"][]>("/platform/index-values/missing") });
   const now = new Date();
   const [f, setF] = useState({ period: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`, tufe: "", ufe: "" });
   const m = useMutation({
-    mutationFn: () => api<Written<IndexValue>>("PUT", `/platform/index-values/${f.period}`, { body: { tufe: Number(f.tufe.replace(",", ".")), ufe: Number(f.ufe.replace(",", ".")) } }),
+    mutationFn: () => api<Written<IndexValueRow>>("PUT", `/platform/index-values/${f.period}`, { body: { tufe: f.tufe.replace(",", ".").trim() || null, ufe: f.ufe.replace(",", ".").trim() || null } }),
     onSuccess: (r) => { toast(r.message); setF((x) => ({ ...x, tufe: "", ufe: "" })); qc.invalidateQueries({ queryKey: ["platform", "index-values"] }); },
   });
   function submit(e: FormEvent) { e.preventDefault(); m.mutate(); }
   return (
     <div className="stack">
       <PageHead title="Endeks değerleri" subtitle="Sözleşmelerdeki TÜFE / ÜFE artış kuralları bu tablodan hesaplanır. Değer, TÜİK'in açıkladığı yıllık değişim oranıdır (%). TÜİK'ten otomatik çekme Faz 2." />
+      {missing.data && missing.data.length > 0 && <Alert tone="warn" title="Endeks değeri eksik">{missing.data.map((m) => `${m.period}: ${m.contracts} sözleşme (${m.sites} tesis)`).join(" · ")} — 30 gün içindeki artışlar bu dönemin değerini bekliyor.</Alert>}
       {q.isError ? null : !q.data ? (
         <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
       ) : (() => {
@@ -373,6 +379,49 @@ export function IndexValuesPage() {
           </table></div>
         )}
       </div></div>
+    </div>
+  );
+}
+
+type TestInbox = Schemas["TestInboxOut"];
+
+/**
+ * Test gelen kutusu (yalnız geliştirme/demo): SMS/e-posta sağlayıcısı seçilene dek (K5) giriş
+ * kodları, davet bağlantıları ve bildirimler dışarı gitmez; burada görünür. Üretimde backend 404.
+ */
+export function TestInboxPage() {
+  const [to, setTo] = useState("");
+  const q = useQuery({ queryKey: ["platform", "test-inbox", to], queryFn: () => get<TestInbox>("/platform/test-inbox", { to: to.trim() }), refetchInterval: 5000 });
+  return (
+    <div className="stack">
+      <PageHead title="Test gelen kutusu" subtitle="Test sağlayıcısının son mesajları — SMS, e-posta ve mobil bildirim dışarı gönderilmedi." />
+      <div className="field" style={{ maxWidth: "20rem" }}>
+        <label className="field__label" htmlFor="ti-to">Alıcı (telefon E.164 ya da e-posta)</label>
+        <input id="ti-to" className="field__input" value={to} placeholder="+905321234567" onChange={(e) => setTo(e.target.value)} />
+      </div>
+      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
+        <div className="card">
+          <div className="card__body card__body--flush">
+            {q.data.items.length === 0 ? <div className="card__body small muted">Mesaj yok.</div> : (
+              <div className="table-wrap">
+                <table className="data">
+                  <caption className="visually-hidden">Test sağlayıcısı mesajları</caption>
+                  <thead><tr><th scope="col">Zaman</th><th scope="col">Kanal</th><th scope="col">Alıcı</th><th scope="col">Mesaj</th></tr></thead>
+                  <tbody>{q.data.items.map((i) => (
+                    <tr key={i.id}>
+                      <td className="small nowrap">{new Date(i.at).toLocaleString("tr-TR")}</td>
+                      <td className="small">{i.channel}</td>
+                      <td className="mono small">{i.to}</td>
+                      <td className="small" style={{ wordBreak: "break-word" }}>{i.subject && <div className="strong">{i.subject}</div>}{i.body}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div className="card__foot"><p className="xs muted mb-0">{q.data.note}</p></div>
+        </div>
+      )}
     </div>
   );
 }
