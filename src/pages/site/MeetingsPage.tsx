@@ -191,6 +191,7 @@ export function MeetingDetailPage() {
 
       {m.status === "planned" && manage ? (
         <>
+          {m.kind !== "board" && <Alert tone="info" title="Genel kurul kararları">Genel kurulda hazirun, oylama (kişi + arsa payı) ve tutanak <Link to={`/s/${site.slug}/toplantilar/${m.id}/genel-kurul`}>Genel kurul</Link> ekranındadır; tutanak kesinleşince kararlar buraya kendiliğinden yazılır ve karar defterine işlenir. Aşağıdaki elle kayıt, hazirun başladıktan sonra kapanır.</Alert>}
           <Decisions m={m} />
           <div className="row print-hide">
             <ConfirmButton className="btn btn--ghost btn--sm" danger title="Toplantıyı iptal et" confirmLabel="İptal et"
