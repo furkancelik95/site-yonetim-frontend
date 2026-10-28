@@ -7,8 +7,10 @@
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
 //
-// Backend'e geçti, handler'ı kaldırıldı: 71'in sessiz saat ayarı (`communication-settings`; P16c kimlik ve
-// bildirim gönderimi ile — SMS hesabı, teslim kayıtları, planlı raporlar). Raporlar ve KVKK 79–81 (rapor kataloğu, talep/SLA raporu, KVKK başvurusu, aydınlatma
+// Backend'e geçti, handler'ı kaldırıldı: İletişim ve acil durum 71–74 (okuma onayı ve raporu, zamanlanmış
+// duyuru, bildirim/duyuru şablonları, acil durum modu ve pano, toplanma yoklaması, acil bilgi kartı) — P12;
+// 71'in sessiz saat ayarı (`communication-settings`; P16c kimlik ve bildirim gönderimi ile — SMS hesabı,
+// teslim kayıtları, planlı raporlar). Raporlar ve KVKK 79–81 (rapor kataloğu, talep/SLA raporu, KVKK başvurusu, aydınlatma
 // metni sürümleri, saklama politikası, denetim paketi). İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil); Finans Mod P 27–34
 // (dönem kapanışı ve kilit, kasa gün sonu, borç takibi, ödeme planı, dönem dışı ücretler, muhasebe
@@ -81,11 +83,6 @@ interface CommonArea { id: string; name: string; kind: string; block_id: string 
 interface Vehicle { id: string; plate: string; plate_display: string; unit_id: string; unit_name: string; owner_name: string | null; kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive" }
 const commonAreas = loadMap<string, CommonArea[]>("commonAreas");
 const vehicles = loadMap<string, Vehicle[]>("vehicles");
-
-async function myUnits(request: Request, slug: string) {
-  const h = await real<{ units: { unit_id: string; unit_name: string; role: string }[] }>(request, `/api/v1/sites/${slug}/resident/home`);
-  return { status: h.status, units: h.body?.units ?? [] };
-}
 
 /** Rezervasyon ve kapı sahte uçlarından önce gerçek ortak alan ve araç listesini önbelleğe alır. */
 async function syncShared(request: Request, slug: string) {
@@ -1079,275 +1076,6 @@ const sozlesme: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// İLETİŞİM VE ACİL DURUM (Yazılım Dokümanı ILT-01, 02, 04, 06) — servis istekleri 71–74
-// ============================================================================================
-interface CommSettings { quiet_from: string; quiet_to: string }
-interface AckRule { announcement_id: string; title: string; requires_ack: boolean; ack_hours: number; sms_fallback: boolean; deadline: string; published_at: string }
-interface Ack { announcement_id: string; user_id: string; name: string; units: string[]; at: string }
-interface Scheduled { id: string; payload: Record<string, unknown>; publish_at: string; requested_at: string; shifted: boolean; requires_ack: boolean; ack_hours: number; sms_fallback: boolean; status: "scheduled" | "published" | "cancelled"; announcement_id: string | null; created_by: string }
-interface TplVariant { lang: "tr" | "en"; subject: string | null; body: string }
-interface Tpl { code: string; name: string; channel: "push" | "sms" | "email"; variables: string[]; required: string[]; variants: TplVariant[]; version: number; history: { version: number; at: string; by: string }[]; customized: boolean }
-interface MusterPoint { id: string; name: string; directions: string; map: string | null }
-interface InfoCard { muster_points: MusterPoint[]; phones: { label: string; number: string }[]; instructions: Record<"earthquake" | "fire" | "flood" | "gas", string>; block_notes: { block_id: string; block_name: string; note: string }[]; version: number; updated_at: string | null; updated_by: string | null }
-interface EmStatus { unit_id: string; unit_name: string; block_id: string; status: "safe" | "help" | "muster"; note: string | null; muster_point: string | null; by: string; method: "app" | "list"; at: string }
-interface Emergency { id: string; kind: "earthquake" | "fire" | "flood" | "gas" | "other"; scope: "all" | "blocks"; block_ids: string[]; message: string; started_by: string; started_at: string; ended_at: string | null; ended_by: string | null; statuses: EmStatus[]; summary: { total: number; safe: number; muster: number; help: number; none: number } | null; purge_on: string | null; audit: { at: string; by: string; action: string }[]; units: { id: string; display_name: string; block: { id: string; name: string } | null; is_active: boolean }[] }
-const commSettings = loadMap<string, CommSettings>("commSettings");
-const ackRules = loadMap<string, AckRule[]>("ackRules");
-const acks = loadMap<string, Ack[]>("acks");
-const scheduledAnns = loadMap<string, Scheduled[]>("scheduledAnns");
-const notifTpls = loadMap<string, Tpl[]>("notifTpls");
-const infoCards = loadMap<string, InfoCard>("infoCards");
-const emergencies = loadMap<string, Emergency[]>("emergencies");
-const commOf = (slug: string) => { if (!commSettings.has(slug)) commSettings.set(slug, { quiet_from: "22:00", quiet_to: "08:00" }); return commSettings.get(slug)!; };
-const inQuiet = (hm: string, s: CommSettings) => (s.quiet_from > s.quiet_to ? hm >= s.quiet_from || hm < s.quiet_to : hm >= s.quiet_from && hm < s.quiet_to);
-const localHm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-function shiftOutOfQuiet(iso: string, s: CommSettings) {
-  const d = new Date(iso);
-  if (!inQuiet(localHm(d), s)) return { at: d.toISOString(), shifted: false };
-  const t = new Date(d); const [h, m] = s.quiet_to.split(":").map(Number);
-  t.setHours(h!, m!, 0, 0); if (t <= d) t.setDate(t.getDate() + 1);
-  return { at: t.toISOString(), shifted: true };
-}
-const SYS_TPLS: Omit<Tpl, "version" | "history" | "customized">[] = [
-  { code: "dues_reminder", name: "Aidat hatırlatma", channel: "sms", variables: ["sakin.ad", "bolum", "tutar", "vade", "site.ad"], required: ["tutar", "vade"], variants: [{ lang: "tr", subject: null, body: "Sayın {{sakin.ad}}, {{bolum}} için {{tutar}} tutarındaki aidatın vadesi {{vade}}. {{site.ad}} Yönetimi" }, { lang: "en", subject: null, body: "Dear {{sakin.ad}}, the dues of {{tutar}} for {{bolum}} are due on {{vade}}. {{site.ad}} Management" }] },
-  { code: "payment_received", name: "Tahsilat alındı", channel: "push", variables: ["sakin.ad", "tutar", "makbuz.no"], required: ["tutar"], variants: [{ lang: "tr", subject: null, body: "{{tutar}} ödemeniz alındı. Makbuz: {{makbuz.no}}" }, { lang: "en", subject: null, body: "Your payment of {{tutar}} was received. Receipt: {{makbuz.no}}" }] },
-  { code: "request_status", name: "Talep durumu", channel: "push", variables: ["talep.no", "talep.konu", "durum"], required: ["talep.no", "durum"], variants: [{ lang: "tr", subject: null, body: "#{{talep.no}} {{talep.konu}}: {{durum}}" }, { lang: "en", subject: null, body: "#{{talep.no}} {{talep.konu}}: {{durum}}" }] },
-  { code: "visitor_arrived", name: "Ziyaretçi geldi", channel: "push", variables: ["ziyaretci.ad", "kapi"], required: ["ziyaretci.ad"], variants: [{ lang: "tr", subject: null, body: "{{ziyaretci.ad}} {{kapi}} kapısında, onayınızı bekliyor." }, { lang: "en", subject: null, body: "{{ziyaretci.ad}} is at the {{kapi}} gate, waiting for your approval." }] },
-  { code: "package_arrived", name: "Kargo geldi", channel: "sms", variables: ["firma", "teslim.kodu"], required: ["teslim.kodu"], variants: [{ lang: "tr", subject: null, body: "{{firma}} kargonuz güvenlikte. Teslim kodu: {{teslim.kodu}}" }, { lang: "en", subject: null, body: "Your {{firma}} parcel is at security. Pickup code: {{teslim.kodu}}" }] },
-  { code: "ack_reminder", name: "Okuma onayı yedeği (SMS)", channel: "sms", variables: ["duyuru.baslik", "link"], required: ["duyuru.baslik", "link"], variants: [{ lang: "tr", subject: null, body: "Okuma onayı bekleyen duyuru: {{duyuru.baslik}} {{link}}" }, { lang: "en", subject: null, body: "Announcement awaiting acknowledgement: {{duyuru.baslik}} {{link}}" }] },
-  { code: "emergency", name: "Acil durum", channel: "sms", variables: ["tur", "mesaj", "link"], required: ["mesaj"], variants: [{ lang: "tr", subject: null, body: "ACİL DURUM ({{tur}}): {{mesaj}} Güvende misiniz? {{link}}" }, { lang: "en", subject: null, body: "EMERGENCY ({{tur}}): {{mesaj}} Are you safe? {{link}}" }] },
-];
-const tplsOf = (slug: string) => { const l = listOf(notifTpls, slug); if (l.length === 0) for (const t of SYS_TPLS) l.push({ ...structuredClone(t), version: 1, history: [{ version: 1, at: "2026-10-01T00:00:00.000Z", by: "Sistem" }], customized: false }); return l; };
-const GSM7 = /^[@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà^{}\\[~\]|€]*$/;
-const smsCount = (text: string) => { const gsm = GSM7.test(text); const len = text.length; const single = gsm ? 160 : 70, multi = gsm ? 153 : 67; return { encoding: gsm ? "GSM-7" : "Unicode", chars: len, segments: len === 0 ? 0 : len <= single ? 1 : Math.ceil(len / multi) }; };
-const cardOf = (slug: string) => { if (!infoCards.has(slug)) infoCards.set(slug, { muster_points: [], phones: [{ label: "Acil çağrı", number: "112" }], instructions: { earthquake: "Çök–kapan–tutun. Sarsıntı bitince merdivenle, asansör kullanmadan toplanma alanına gidin.", fire: "Asansör kullanmayın; yangın merdiveninden çıkın, kapıları kapatın, 112'yi arayın.", flood: "Elektriği kapatın, bodrum ve otoparktan uzaklaşın, üst katlara çıkın.", gas: "Elektrik düğmelerine dokunmayın, pencereleri açın, binayı terk edip 187'yi arayın." }, block_notes: [], version: 0, updated_at: null, updated_by: null }); return infoCards.get(slug)!; };
-const activeEm = (slug: string) => listOf(emergencies, slug).find((e) => !e.ended_at) ?? null;
-type UnitLite = { id: string; display_name: string; block: { id: string; name: string } | null; is_active: boolean };
-/** Kapsamdaki bölümler başlatma anında başlatanın yetkisiyle sabitlenir; sakin ve güvenlik bölüm listesini okuyamaz. */
-async function scopeUnits(request: Request, slug: string, scope: Emergency["scope"], blockIds: string[]) {
-  const all = (await allPages<UnitLite>(request, `/api/v1/sites/${slug}/units`)).filter((u) => u.is_active);
-  return (scope === "all" ? all : all.filter((u) => u.block && blockIds.includes(u.block.id))).map((u) => ({ id: u.id, display_name: u.display_name, block: u.block ? { id: u.block.id, name: u.block.name } : null, is_active: true }));
-}
-async function emUnits(_request: Request, _slug: string, e: Emergency) { return e.units ?? []; }
-function boardOf(e: Emergency, units: UnitLite[]) {
-  const byUnit = new Map(e.statuses.map((s) => [s.unit_id, s]));
-  const rows = units.map((u) => ({ unit_id: u.id, unit_name: u.display_name, block_id: u.block?.id ?? "", block_name: u.block?.name ?? "—", status: byUnit.get(u.id)?.status ?? "none", note: byUnit.get(u.id)?.note ?? null, muster_point: byUnit.get(u.id)?.muster_point ?? null, by: byUnit.get(u.id)?.by ?? null, at: byUnit.get(u.id)?.at ?? null }));
-  const count = (k: string) => rows.filter((r) => r.status === k).length;
-  return { rows, totals: { total: rows.length, safe: count("safe"), muster: count("muster"), help: count("help"), none: count("none") } };
-}
-
-const iletisim: RequestHandler[] = [
-  // 71 — Okuma onayı, zamanlama, sessiz saat
-  // 71 — sessiz saatler (`communication-settings`) backend'de (P16c); aşağıdaki zamanlama sahtesi
-  // varsayılan 22:00–08:00 ile kaydırır.
-  http.post(`${API}/announcements`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const raw = (await request.json()) as Record<string, unknown> & { publish_at?: string | null; requires_ack?: boolean; ack_hours?: number; sms_fallback?: boolean };
-    const { publish_at, requires_ack, ack_hours, sms_fallback, ...payload } = raw;
-    const f: Record<string, string> = {};
-    if (requires_ack && !(Number(ack_hours) >= 1 && Number(ack_hours) <= 720)) f.ack_hours = "Son onay süresi 1–720 saat.";
-    if (publish_at && (Number.isNaN(Date.parse(publish_at)) || publish_at < new Date().toISOString())) f.publish_at = "Yayın zamanı ileride olmalı.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const critical = payload.importance === "critical";
-    if (publish_at) {
-      const sh = critical ? { at: new Date(publish_at).toISOString(), shifted: false } : shiftOutOfQuiet(publish_at, commOf(slug));
-      const s: Scheduled = { id: crypto.randomUUID(), payload, publish_at: sh.at, requested_at: publish_at, shifted: sh.shifted, requires_ack: !!requires_ack, ack_hours: Number(ack_hours ?? 48), sms_fallback: !!sms_fallback, status: "scheduled", announcement_id: null, created_by: (await me(request)).name };
-      listOf(scheduledAnns, slug).push(s);
-      return HttpResponse.json({ data: s, message: `Duyuru ${new Date(s.publish_at).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })} için zamanlandı.${sh.shifted ? " Sessiz saatlere denk geldiği için sessiz saat bitişine kaydırıldı." : ""}` }, { status: 201 });
-    }
-    const r = await real<{ data?: { id: string; title: string; published_at: string | null } }>(request, `/api/v1/sites/${slug}/announcements`, { method: "POST", body: payload });
-    if (r.status >= 300 || !r.body?.data) return HttpResponse.json(r.body, { status: r.status });
-    if (requires_ack) { const pub = r.body.data.published_at ?? new Date().toISOString(); listOf(ackRules, slug).push({ announcement_id: r.body.data.id, title: r.body.data.title, requires_ack: true, ack_hours: Number(ack_hours), sms_fallback: !!sms_fallback, published_at: pub, deadline: new Date(new Date(pub).getTime() + Number(ack_hours) * 3600e3).toISOString() }); }
-    const quiet = !critical && inQuiet(nowHm(), commOf(slug)) && Array.isArray(payload.channels) && (payload.channels as string[]).some((c) => c !== "in_app");
-    return HttpResponse.json({ ...r.body, message: `${(r.body as { message?: string }).message ?? "Duyuru yayınlandı."}${requires_ack ? ` Okuma onayı ${ack_hours} saat içinde bekleniyor.` : ""}${quiet ? ` Sessiz saatler içinde: push/SMS/e-posta ${commOf(slug).quiet_to}'de gider.` : ""}` }, { status: r.status });
-  }),
-  http.get(`${API}/announcements`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    // Zamanlanmış iş: vakti gelen duyuruları yayınla
-    for (const s of listOf(scheduledAnns, slug)) {
-      if (s.status !== "scheduled" || s.publish_at > new Date().toISOString()) continue;
-      const r = await real<{ data?: { id: string; title: string; published_at: string | null } }>(request, `/api/v1/sites/${slug}/announcements`, { method: "POST", body: s.payload });
-      if (r.body?.data) { s.status = "published"; s.announcement_id = r.body.data.id; if (s.requires_ack) { const pub = r.body.data.published_at ?? new Date().toISOString(); listOf(ackRules, slug).push({ announcement_id: r.body.data.id, title: r.body.data.title, requires_ack: true, ack_hours: s.ack_hours, sms_fallback: s.sms_fallback, published_at: pub, deadline: new Date(new Date(pub).getTime() + s.ack_hours * 3600e3).toISOString() }); } }
-    }
-    const u = new URL(request.url);
-    const r = await real<Paged<{ id: string }>>(request, `/api/v1/sites/${slug}/announcements${u.search}`);
-    if (!r.body?.items) return HttpResponse.json(r.body, { status: r.status });
-    const rules = listOf(ackRules, slug), ack = listOf(acks, slug);
-    return HttpResponse.json({ ...r.body, items: r.body.items.map((a) => { const rule = rules.find((x) => x.announcement_id === a.id); return { ...a, requires_ack: !!rule, ack_deadline: rule?.deadline ?? null, ack_count: rule ? ack.filter((x) => x.announcement_id === a.id).length : null }; }) });
-  }),
-  http.get(`${API}/scheduled-announcements`, ({ params }) => HttpResponse.json(listOf(scheduledAnns, String(params.slug)).filter((s) => s.status === "scheduled").sort((a, b) => a.publish_at.localeCompare(b.publish_at)).map((s) => ({ id: s.id, title: s.payload.title, importance: s.payload.importance, publish_at: s.publish_at, requested_at: s.requested_at, shifted: s.shifted, requires_ack: s.requires_ack, created_by: s.created_by })))),
-  http.post(`${API}/scheduled-announcements/:id/cancel`, ({ params }) => {
-    const s = listOf(scheduledAnns, String(params.slug)).find((x) => x.id === params.id);
-    if (!s) return err(404, "not_found", "Zamanlanmış duyuru bulunamadı.");
-    if (s.status !== "scheduled") return err(409, "invalid_status", "Duyuru yayınlanmış ya da iptal edilmiş.");
-    s.status = "cancelled";
-    return HttpResponse.json({ data: s, message: "Zamanlanmış duyuru iptal edildi." });
-  }),
-  http.get(`${API}/announcements/:id/read-report`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const rule = listOf(ackRules, slug).find((x) => x.announcement_id === params.id);
-    const list = await real<Paged<{ id: string; title: string; published_at: string | null; recipient_count: number | null; read_count: number | null; audience: string }>>(request, `/api/v1/sites/${slug}/announcements?page_size=200`);
-    const a = list.body?.items.find((x) => x.id === params.id);
-    if (!a) return err(404, "not_found", "Duyuru bulunamadı.");
-    const ackList = listOf(acks, slug).filter((x) => x.announcement_id === a.id).sort((x, y) => x.at.localeCompare(y.at));
-    const recipients = a.recipient_count ?? 0;
-    const due = rule ? rule.deadline < new Date().toISOString() : false;
-    return HttpResponse.json({ id: a.id, title: a.title, audience: a.audience, published_at: a.published_at, generated_at: new Date().toISOString(), recipient_count: recipients, read_count: a.read_count ?? 0, requires_ack: !!rule, ack_deadline: rule?.deadline ?? null, acks: ackList.map((x) => ({ name: x.name, units: x.units, at: x.at, channel: "in_app" })), not_acked: rule ? Math.max(0, recipients - ackList.length) : null, sms_fallback: rule?.sms_fallback ? { due, count: due ? Math.max(0, recipients - ackList.length) : null, sent: false, note: "SMS sağlayıcısı seçilmedi (K5); gönderim kaydı tutulur." } : null });
-  }),
-  http.get(`${API}/resident/announcements`, async ({ request, params }) => {
-    const slug = String(params.slug); const u = new URL(request.url);
-    const r = await real<Paged<{ id: string }>>(request, `/api/v1/sites/${slug}/resident/announcements${u.search}`);
-    if (!r.body?.items) return HttpResponse.json(r.body, { status: r.status });
-    const meId = (await me(request)).id;
-    const rules = listOf(ackRules, slug), ack = listOf(acks, slug);
-    return HttpResponse.json({ ...r.body, items: r.body.items.map((a) => { const rule = rules.find((x) => x.announcement_id === a.id); return { ...a, requires_ack: !!rule, ack_deadline: rule?.deadline ?? null, acked_at: rule ? ack.find((x) => x.announcement_id === a.id && x.user_id === meId)?.at ?? null : null }; }) });
-  }),
-  http.get(`${API}/resident/pending-acks`, async ({ request, params }) => {
-    const slug = String(params.slug); const meId = (await me(request)).id;
-    const r = await real<Paged<{ id: string; title: string }>>(request, `/api/v1/sites/${slug}/resident/announcements?page_size=50`);
-    const visible = new Set((r.body?.items ?? []).map((x) => x.id));
-    return HttpResponse.json(listOf(ackRules, slug).filter((x) => visible.has(x.announcement_id) && !listOf(acks, slug).some((a) => a.announcement_id === x.announcement_id && a.user_id === meId)).map((x) => ({ announcement_id: x.announcement_id, title: x.title, deadline: x.deadline })));
-  }),
-  http.post(`${API}/resident/announcements/:id/acknowledge`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const rule = listOf(ackRules, slug).find((x) => x.announcement_id === params.id);
-    if (!rule) return err(404, "not_found", "Bu duyuru okuma onayı istemiyor.");
-    const m0 = await me(request); const mine = await myUnits(request, slug);
-    if (mine.status !== 200) return err(403, "forbidden", "Okuma onayı yalnız hedef kitledeki sakinden alınır.");
-    if (listOf(acks, slug).some((a) => a.announcement_id === rule.announcement_id && a.user_id === m0.id)) return err(409, "already", "Okuma onayınız zaten kayıtlı.");
-    await real(request, `/api/v1/sites/${slug}/announcements/${rule.announcement_id}/read`, { method: "POST", body: {} });
-    const a: Ack = { announcement_id: rule.announcement_id, user_id: m0.id, name: m0.name, units: mine.units.map((u) => u.unit_name), at: new Date().toISOString() };
-    listOf(acks, slug).push(a);
-    return HttpResponse.json({ data: a, message: "Okuma onayınız kaydedildi." }, { status: 201 });
-  }),
-
-  // 72 — Bildirim ve duyuru şablonları
-  http.get(`${API}/notification-templates`, ({ params }) => HttpResponse.json(tplsOf(String(params.slug)).map((t) => ({ ...t, sms: t.channel === "sms" ? t.variants.map((v) => ({ lang: v.lang, ...smsCount(v.body) })) : null })))),
-  http.put(`${API}/notification-templates/:code`, async ({ request, params }) => {
-    const slug = String(params.slug); const t = tplsOf(slug).find((x) => x.code === params.code);
-    if (!t) return err(404, "not_found", "Şablon bulunamadı.");
-    const b = (await request.json()) as { variants?: TplVariant[] };
-    const f: Record<string, string> = {};
-    const vs = (b.variants ?? []).filter((v) => ["tr", "en"].includes(v.lang));
-    if (!vs.some((v) => v.lang === "tr")) f.variants = "Türkçe metin zorunlu.";
-    for (const v of vs) {
-      const used = [...v.body.matchAll(/\{\{\s*([a-z.]+)\s*\}\}/g)].map((m) => m[1]!);
-      const missing = t.required.filter((x) => !used.includes(x));
-      const unknown = used.filter((x) => !t.variables.includes(x));
-      if (!v.body.trim()) f[`variants.${v.lang}`] = "Metin boş olamaz.";
-      else if (missing.length) f[`variants.${v.lang}`] = `Zorunlu değişken eksik: ${missing.map((x) => `{{${x}}}`).join(", ")}`;
-      else if (unknown.length) f[`variants.${v.lang}`] = `Tanımsız değişken: ${unknown.map((x) => `{{${x}}}`).join(", ")}`;
-      else if (t.channel === "sms" && smsCount(v.body).segments > 3) f[`variants.${v.lang}`] = "SMS en fazla 3 parça olabilir.";
-    }
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    t.variants = vs.map((v) => ({ lang: v.lang, subject: v.subject ?? null, body: v.body.trim() }));
-    t.version += 1; t.customized = true; t.history.push({ version: t.version, at: new Date().toISOString(), by: (await me(request)).name });
-    return HttpResponse.json({ data: t, message: `${t.name} şablonu kaydedildi (sürüm ${t.version}); yeni gönderimler bu sürümü kullanır.` });
-  }),
-  http.post(`${API}/notification-templates/:code/reset`, async ({ request, params }) => {
-    const slug = String(params.slug); const t = tplsOf(slug).find((x) => x.code === params.code); const sys = SYS_TPLS.find((x) => x.code === params.code);
-    if (!t || !sys) return err(404, "not_found", "Şablon bulunamadı.");
-    t.variants = structuredClone(sys.variants); t.version += 1; t.customized = false; t.history.push({ version: t.version, at: new Date().toISOString(), by: (await me(request)).name });
-    return HttpResponse.json({ data: t, message: "Sistem şablonuna dönüldü." });
-  }),
-
-  // 73 — Acil durum modu ve pano
-  http.get(`${API}/emergencies`, ({ params }) => HttpResponse.json([...listOf(emergencies, String(params.slug))].reverse().map(({ statuses: _s, units: _u, ...e }) => e))),
-  http.post(`${API}/emergencies`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    if (activeEm(slug)) return err(409, "already_active", "Zaten aktif bir acil durum var.");
-    const b = (await request.json()) as Partial<Emergency>;
-    const f: Record<string, string> = {};
-    if (!["earthquake", "fire", "flood", "gas", "other"].includes(b.kind ?? "")) f.kind = "Tür seçin.";
-    if ((b.message ?? "").trim().length < 5) f.message = "Kısa bir mesaj yazın.";
-    if (b.scope === "blocks" && !(b.block_ids ?? []).length) f.block_ids = "En az bir blok seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const who = (await me(request)).name;
-    const scope = b.scope === "blocks" ? "blocks" as const : "all" as const; const blockIds = scope === "blocks" ? b.block_ids! : [];
-    const units = await scopeUnits(request, slug, scope, blockIds);
-    if (units.length === 0) return err(422, "validation", VALIDATION, { block_ids: "Kapsamda bölüm yok." });
-    const e: Emergency = { id: crypto.randomUUID(), kind: b.kind!, scope, block_ids: blockIds, message: b.message!.trim(), started_by: who, started_at: new Date().toISOString(), ended_at: null, ended_by: null, statuses: [], summary: null, purge_on: null, audit: [{ at: new Date().toISOString(), by: who, action: "Acil durum başlatıldı" }], units };
-    listOf(emergencies, slug).push(e);
-    const n = units.length;
-    return HttpResponse.json({ data: { ...e, units: undefined, statuses: undefined }, message: `Acil durum başlatıldı: ${n} bölüme sessiz saat ve tercihleri aşan bildirim (push + SMS, K5). Uygulamada acil durum ekranı açıldı.` }, { status: 201 });
-  }),
-  http.get(`${API}/emergencies/active`, async ({ request, params }) => {
-    const slug = String(params.slug); const e = activeEm(slug);
-    if (!e) return HttpResponse.json(null);
-    const { statuses: _s, units: _u, ...rest } = e;
-    return HttpResponse.json({ ...rest, ...boardOf(e, await emUnits(request, slug, e)) });
-  }),
-  http.post(`${API}/emergencies/:id/muster-checks`, async ({ request, params }) => {
-    const slug = String(params.slug); const e = listOf(emergencies, slug).find((x) => x.id === params.id);
-    if (!e || e.ended_at) return err(409, "not_active", "Acil durum aktif değil.");
-    const b = (await request.json()) as { unit_ids?: string[]; muster_point?: string };
-    const units = await emUnits(request, slug, e);
-    const pick = units.filter((u) => (b.unit_ids ?? []).includes(u.id));
-    if (!pick.length) return err(422, "validation", VALIDATION, { unit_ids: "Bölüm seçin." });
-    if (!(b.muster_point ?? "").trim()) return err(422, "validation", VALIDATION, { muster_point: "Toplanma alanını seçin." });
-    const who = (await me(request)).name;
-    for (const u of pick) {
-      const prev = e.statuses.find((s) => s.unit_id === u.id);
-      if (prev?.status === "help") continue; // yardım isteyen bölüm yoklamayla kapanmaz, ekip yönlendirilir
-      const s: EmStatus = { unit_id: u.id, unit_name: u.display_name, block_id: u.block?.id ?? "", status: "muster", note: prev?.note ?? null, muster_point: b.muster_point!.trim(), by: who, method: "list", at: new Date().toISOString() };
-      if (prev) Object.assign(prev, s); else e.statuses.push(s);
-    }
-    return HttpResponse.json({ data: null, message: `${pick.length} bölüm "${b.muster_point}" toplanma alanında işaretlendi.` });
-  }),
-  http.post(`${API}/emergencies/:id/end`, async ({ request, params }) => {
-    const slug = String(params.slug); const e = listOf(emergencies, slug).find((x) => x.id === params.id);
-    if (!e || e.ended_at) return err(409, "not_active", "Acil durum aktif değil.");
-    const who = (await me(request)).name;
-    const board = boardOf(e, await emUnits(request, slug, e));
-    Object.assign(e, { ended_at: new Date().toISOString(), ended_by: who, summary: board.totals, purge_on: addDays(today(), 30) });
-    e.audit.push({ at: e.ended_at!, by: who, action: "Acil durum bitirildi" });
-    return HttpResponse.json({ data: e, message: `Acil durum bitirildi. Özet: ${board.totals.safe} güvende, ${board.totals.muster} toplanma alanında, ${board.totals.help} yardım, ${board.totals.none} yanıt yok. Ayrıntılı veriler 30 gün sonra silinir.` });
-  }),
-  http.get(`${API}/resident/emergency`, async ({ request, params }) => {
-    const slug = String(params.slug); const e = activeEm(slug);
-    if (!e) return HttpResponse.json(null);
-    const h = await real<{ units: { unit_id: string; unit_name: string }[] }>(request, `/api/v1/sites/${slug}/resident/home`);
-    const inScope = (await emUnits(request, slug, e)).filter((u) => (h.body?.units ?? []).some((m) => m.unit_id === u.id));
-    if (!inScope.length) return HttpResponse.json(null);
-    return HttpResponse.json({ id: e.id, kind: e.kind, message: e.message, started_at: e.started_at, units: inScope.map((u) => ({ unit_id: u.id, unit_name: u.display_name, status: e.statuses.find((s) => s.unit_id === u.id) ?? null })), muster_points: cardOf(slug).muster_points.map((m) => m.name) });
-  }),
-  http.post(`${API}/resident/emergency/status`, async ({ request, params }) => {
-    const slug = String(params.slug); const e = activeEm(slug);
-    if (!e) return err(409, "not_active", "Aktif acil durum yok.");
-    const b = (await request.json()) as { status?: "safe" | "help" | "muster"; note?: string; muster_point?: string };
-    if (!["safe", "help", "muster"].includes(b.status ?? "")) return err(422, "validation", VALIDATION, { status: "Durum seçin." });
-    if (b.status === "muster" && !(b.muster_point ?? "").trim()) return err(422, "validation", VALIDATION, { muster_point: "Toplanma alanını seçin." });
-    const h = await real<{ units: { unit_id: string }[] }>(request, `/api/v1/sites/${slug}/resident/home`);
-    const units = (await emUnits(request, slug, e)).filter((u) => (h.body?.units ?? []).some((m) => m.unit_id === u.id));
-    if (!units.length) return err(403, "forbidden", "Bölümünüz bu acil durumun kapsamında değil.");
-    const who = (await me(request)).name;
-    for (const u of units) {
-      const s: EmStatus = { unit_id: u.id, unit_name: u.display_name, block_id: u.block?.id ?? "", status: b.status!, note: b.note?.trim() || null, muster_point: b.status === "muster" ? b.muster_point!.trim() : null, by: who, method: "app", at: new Date().toISOString() };
-      const prev = e.statuses.find((x) => x.unit_id === u.id); if (prev) Object.assign(prev, s); else e.statuses.push(s);
-    }
-    return HttpResponse.json({ data: null, message: b.status === "help" ? "Yardım isteğiniz yönetime ve güvenliğe iletildi; ekip yönlendiriliyor." : b.status === "muster" ? "Toplanma alanında olduğunuz kaydedildi." : "Güvende olduğunuz kaydedildi." });
-  }),
-
-  // 74 — Acil bilgi kartı
-  http.get(`${API}/emergency-info-card`, ({ params }) => HttpResponse.json(cardOf(String(params.slug)))),
-  http.get(`${API}/resident/emergency-info-card`, ({ params }) => HttpResponse.json(cardOf(String(params.slug)))),
-  http.put(`${API}/emergency-info-card`, async ({ request, params }) => {
-    const slug = String(params.slug); const b = (await request.json()) as Partial<InfoCard>;
-    const f: Record<string, string> = {};
-    const mps = (b.muster_points ?? []).map((m) => ({ id: m.id || crypto.randomUUID(), name: (m.name ?? "").trim(), directions: (m.directions ?? "").trim(), map: m.map ?? null }));
-    mps.forEach((m, i) => { if (m.name.length < 2) f[`muster_points.${i}.name`] = "Alan adını yazın."; if (m.map && m.map.length > 400000) f[`muster_points.${i}.map`] = "Kroki çok büyük."; });
-    if (mps.length === 0) f.muster_points = "En az bir toplanma alanı tanımlayın.";
-    const phones = (b.phones ?? []).map((p) => ({ label: (p.label ?? "").trim(), number: (p.number ?? "").replace(/[^\d+]/g, "") }));
-    phones.forEach((p, i) => { if (!p.label) f[`phones.${i}.label`] = "Ad yazın."; if (!/^\+?\d{3,13}$/.test(p.number)) f[`phones.${i}.number`] = "Geçerli bir numara yazın."; });
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const cur = cardOf(slug);
-    const c: InfoCard = { muster_points: mps, phones, instructions: { ...cur.instructions, ...(b.instructions ?? {}) }, block_notes: (b.block_notes ?? []).filter((n) => n.note?.trim()).map((n) => ({ block_id: n.block_id, block_name: n.block_name, note: n.note.trim() })), version: cur.version + 1, updated_at: new Date().toISOString(), updated_by: (await me(request)).name };
-    infoCards.set(slug, c);
-    return HttpResponse.json({ data: c, message: `Acil bilgi kartı yayınlandı (sürüm ${c.version}); uygulamalar arka planda güncellenir.` });
-  }),
-];
-
-// ============================================================================================
 // GENEL KURUL (Yazılım Dokümanı TOP-01, TOP-03 fiziki oylama, TOP-04) — servis istekleri 75–77
 // ============================================================================================
 interface DecisionType { code: string; name: string; base: "present" | "all"; num: number; den: number; strict: boolean; person: boolean; share: boolean }
@@ -1453,10 +1181,9 @@ const genelKurul: RequestHandler[] = [
     const b = (await request.json()) as { title?: string; body?: string; ack_hours?: number };
     if ((b.title ?? "").trim().length < 3 || (b.body ?? "").trim().length < 10) return err(422, "validation", VALIDATION, { body: "Çağrı metnini yazın." });
     const hours = Number(b.ack_hours ?? 72);
-    const r = await real<{ data?: { id: string; title: string; published_at: string | null } }>(request, `/api/v1/sites/${slug}/announcements`, { method: "POST", body: { title: b.title!.trim(), body: b.body!.trim(), importance: "important", audience: "owners_only", audience_block_ids: [], channels: ["in_app", "email", "sms"], expires_on: null, is_pinned: true } });
+    // Okuma onayı backend'de (P12): çağrı okuma onaylı duyuru olarak gerçek uca gider
+    const r = await real<{ data?: { id: string; title: string; published_at: string | null } }>(request, `/api/v1/sites/${slug}/announcements`, { method: "POST", body: { title: b.title!.trim(), body: b.body!.trim(), importance: "important", audience: "owners_only", audience_block_ids: [], channels: ["in_app", "email", "sms"], expires_on: null, is_pinned: true, requires_ack: true, ack_hours: hours, sms_fallback: true } });
     if (!r.body?.data) return HttpResponse.json(r.body, { status: r.status });
-    const pub = r.body.data.published_at ?? new Date().toISOString();
-    listOf(ackRules, slug).push({ announcement_id: r.body.data.id, title: r.body.data.title, requires_ack: true, ack_hours: hours, sms_fallback: true, published_at: pub, deadline: new Date(new Date(pub).getTime() + hours * 3600e3).toISOString() });
     a.invitation = { announcement_id: r.body.data.id, sent_at: new Date().toISOString(), by: (await me(request)).name };
     return HttpResponse.json({ data: assemblyOut(slug, a), message: "Çağrı maliklere okuma onaylı duyuru olarak gönderildi; ispat raporu duyurunun okuma raporundadır." });
   }),
@@ -1701,4 +1428,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...rezervasyon, ...satinalma, ...sozlesme, ...iletisim, ...genelKurul, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...rezervasyon, ...satinalma, ...sozlesme, ...genelKurul, ...platformDestek];
