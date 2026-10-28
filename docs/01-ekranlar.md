@@ -102,7 +102,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/satin-alma/{id}` | **Satın alma talebi** — bütçe, teklif karşılaştırma, tedarikçi linki, istisna, onay, sipariş (SAT-01..03) | `expenses.read` | istek 64 | R (sahte servis) |
 | `/s/{slug}/satin-alma/siparis/{id}` | **Sipariş** — sipariş formu, mal/hizmet kabul, fatura üçlü eşleşme (SAT-03..05) | `expenses.read` | istek 65, 66 | R (sahte servis) |
 | `/s/{slug}/tedarikciler` | **Tedarikçiler** — tedarikçi kartı, maskeli IBAN, puan (SAT-06) | `expenses.read` | istek 62 | R (sahte servis) |
-| `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | istek 68–70 | R (sahte servis) |
+| `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | `GET /contracts/{id}`, `…/performance`, `…/scorecards/{dönem}`, `…/escalation` (istek 68–70) | R |
 | `/s/{slug}/duyurular/{id}/okuma-raporu` | **Okuma raporu** — alıcı/okuyan/onaylayan, zaman damgalı, yazdır (ILT-01) | `announcements.publish` | istek 71 | R (sahte servis) |
 | `/s/{slug}/bildirim-sablonlari` | **Bildirim şablonları** — TR/EN, değişken, SMS parça hesabı, sürüm (ILT-02) | `announcements.publish` | istek 72 | R (sahte servis) |
 | `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | `emergencies*`, `emergency-info-card`, `emergency-settings` | R |
@@ -149,7 +149,7 @@ etmemek yanlış müşterinin verisine dokunmakla biter).
 | `/yonetim` | Genel bakış — müşteri, site, bölüm sayısı, tavan aşımı; müşteri tablosu; site tablosu (kullanım çubuğu, satır içinde plan değiştir) | R |
 | `/yonetim/musteri-ekle` | Müşteri + ilk yetkili; kayıt sonrası **geçici parola bir kez gösterilir** | R |
 | `/yonetim/site-ac` | Site aç — açılışta ne kurulacağı bilgi kutusunda yazılı | R |
-| `/yonetim/endeksler` | **Endeks değerleri** — TÜFE/ÜFE aylık giriş, tüm tesislerde sözleşme artışı (SAT-06, istek 70) | R (sahte servis) |
+| `/yonetim/endeksler` | **Endeks değerleri** — TÜFE/ÜFE aylık giriş, tüm tesislerde sözleşme artışı (SAT-06, istek 70; eksik endeks uyarısı `/platform/index-values/missing`) | R |
 | `/yonetim/destek` | **Destek** — tüm tesislerin biletleri, SLA, yanıt; destek oturumu talebi (PYN-04/06, istek 82, 84) | R (sahte servis) |
 | `/yonetim/bilgi-bankasi` | **Bilgi bankası** — makale yazma, faydalı/faydasız (PYN-06, istek 83) | R (sahte servis) |
 
