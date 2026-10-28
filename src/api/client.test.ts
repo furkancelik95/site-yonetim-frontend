@@ -1,4 +1,4 @@
-import { ApiError, get, setMfaRequiredHandler, setSessionLostHandler } from "./client";
+import { ApiError, VIEW_AS_HEADER, get, setMfaRequiredHandler, setSessionLostHandler, setViewAsSession, viewAsSession } from "./client";
 import { safeBack } from "../pages/auth/authParts";
 
 function json(status: number, body: unknown) {
@@ -32,5 +32,32 @@ describe("safeBack", () => {
     expect(safeBack("//kotu.example")).toBeNull();
     expect(safeBack("https://kotu.example")).toBeNull();
     expect(safeBack(null)).toBeNull();
+  });
+});
+
+describe("sakin olarak görüntüleme başlığı (PLT-12)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    setViewAsSession(null);
+  });
+  const headerOf = (call: unknown[]) => (call[1] as RequestInit & { headers: Record<string, string> }).headers[VIEW_AS_HEADER];
+
+  it("yalnız o sitenin isteklerine X-View-As-Session eklenir", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(json(200, {})));
+    vi.stubGlobal("fetch", fetchMock);
+    setViewAsSession("aksu", "s-1");
+    await get("/sites/aksu/resident/home");
+    await get("/sites/baska/resident/home");
+    await get("/me");
+    expect(headerOf(fetchMock.mock.calls[0]!)).toBe("s-1");
+    expect(headerOf(fetchMock.mock.calls[1]!)).toBeUndefined();
+    expect(headerOf(fetchMock.mock.calls[2]!)).toBeUndefined();
+  });
+
+  it("403 view_as_ended oturumu bırakır", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(403, { error: { code: "view_as_ended", message: "Sona erdi.", fields: null } })));
+    setViewAsSession("aksu", "s-1");
+    await expect(get("/sites/aksu/resident/home")).rejects.toBeInstanceOf(ApiError);
+    expect(viewAsSession()).toBeNull();
   });
 });
