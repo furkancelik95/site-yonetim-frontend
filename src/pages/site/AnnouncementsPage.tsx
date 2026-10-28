@@ -1,17 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { ClipboardCheck, Megaphone, Pin, Plus } from "lucide-react";
+import { AlertTriangle, BarChart3, CalendarClock, ClipboardCheck, Eye, Megaphone, MoonStar, Pin, Plus } from "lucide-react";
 import { Link } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatDateTime } from "../../lib/format";
+import { BarChart } from "../../components/charts";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatDateTime, formatPercent } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { audience, channel, importance, importanceTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 71: okuma onayı alanları liste yanıtına eklenir. */
-type Ann = Schemas["AnnouncementOut"] & { requires_ack?: boolean; ack_deadline?: string | null; ack_count?: number | null };
-interface Sched { id: string; title: string; importance: string; publish_at: string; requested_at: string; shifted: boolean; requires_ack: boolean; created_by: string }
+/** Servis isteği 71: okuma onayı ve zamanlama alanları backend yanıtında. */
+type Ann = Schemas["AnnouncementOut"];
+type Sched = Schemas["ScheduledAnnouncementOut"];
 interface Comm { quiet_from: string; quiet_to: string }
 type Block = Schemas["BlockOut"];
 
@@ -28,16 +29,19 @@ export function AnnouncementsPage() {
     <div className="stack">
       <PageHead
         title="Duyurular"
+        eyebrow="İletişim"
         subtitle="Sabitlenmiş duyurular üstte, sonra en yeni."
         actions={can(P.announcementsPublish) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Duyuru yayınla</button>}
-      />
+      >
+        {can(P.announcementsPublish) && (
+          <div className="tabs" role="tablist" aria-label="Duyurular">
+            {[["", "Yayındakiler"], ["zaman", "Zamanlanmış"], ["ayar", "Sessiz saatler"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className="tabs__tab" onClick={() => set({ sekme: k! })}>{l}</button>)}
+          </div>
+        )}
+      </PageHead>
+      <AnnKpis canPublish={can(P.announcementsPublish)} />
       {adding && <NewAnnouncementForm onDone={() => setAdding(false)} />}
-      {can(P.announcementsPublish) && (
-        <div className="row" role="tablist" aria-label="Duyurular" style={{ gap: "var(--s-2)" }}>
-          {[["", "Yayındakiler"], ["zaman", "Zamanlanmış"], ["ayar", "Sessiz saatler"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
-        </div>
-      )}
-      {s.sekme === "zaman" ? <ScheduledList /> : s.sekme === "ayar" ? <QuietHours /> : null}
+      {s.sekme === "zaman" ? <ScheduledList /> : s.sekme === "ayar" ? <QuietHours /> : <ReadChart />}
 
       {s.sekme ? null : r.isPending ? (
         <Loading />
@@ -50,15 +54,16 @@ export function AnnouncementsPage() {
           {r.data.items.map((a) => (
             <article key={a.id} className="card">
               <div className="card__head">
-                {a.is_pinned && <span className="card__icon card__icon--accent" title="Sabitlendi"><Pin aria-hidden="true" /></span>}
-                <h2 className="card__title" style={{ margin: 0 }}>{a.title}</h2>
+                <span className={`card__icon ${a.importance === "critical" ? "card__icon--danger" : a.importance === "important" ? "card__icon--warn" : "card__icon--accent"}`} title={a.is_pinned ? "Sabitlendi" : undefined}>{a.is_pinned ? <Pin aria-hidden="true" /> : <Megaphone aria-hidden="true" />}</span>
+                <h2 className="card__title ann__title">{a.title}</h2>
                 {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+                {a.is_pinned && <Badge tone="info">Sabit</Badge>}
                 <span className="card__meta ml-auto">{formatDateTime(a.published_at)}</span>
               </div>
               <div className="card__body">
                 <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{a.body}</p>
               </div>
-              <div className="card__foot row small muted" style={{ gap: "var(--s-3)" }}>
+              <div className="card__foot ann__foot small muted">
                 <span>{audience(a.audience)}</span>
                 {a.published_by && <span>· {a.published_by}</span>}
                 {a.expires_on && <span>· {formatDate(a.expires_on)} tarihine kadar</span>}
@@ -73,6 +78,47 @@ export function AnnouncementsPage() {
           <Pager page={r.data.page} pageSize={r.data.page_size} total={r.data.total} onPage={(p) => set({ page: String(p) })} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** Göstergeler: en yeni 20 duyurudan (liste ilk sayfasıyla aynı sorgu) + zamanlanmış sayısı. */
+function AnnKpis({ canPublish }: { canPublish: boolean }) {
+  const r = useSiteGet<Page<Ann>>("/announcements", { page: "1", page_size: 20 });
+  const sc = useSiteGet<Sched[]>("/scheduled-announcements", undefined, { enabled: canPublish });
+  if (!r.data) return r.isError ? null : <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const items = r.data.items;
+  const withRc = items.filter((a) => a.recipient_count != null && a.recipient_count > 0);
+  const rec = withRc.reduce((x, a) => x + (a.recipient_count ?? 0), 0);
+  const read = withRc.reduce((x, a) => x + (a.read_count ?? 0), 0);
+  const rate = rec > 0 ? (read / rec) * 100 : null;
+  const critical = items.filter((a) => a.importance !== "normal").length;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Yayındaki duyuru" icon={<Megaphone aria-hidden="true" />} value={r.data.total} note={`${items.filter((a) => a.is_pinned).length} tanesi sabit`} />
+      <Kpi label="Okunma oranı" tone={rate == null ? undefined : rate >= 70 ? "ok" : rate >= 40 ? "warn" : "danger"} icon={<Eye aria-hidden="true" />} value={rate == null ? "—" : formatPercent(rate)} note={`son ${items.length} duyuruda ${read} / ${rec} okuma`} />
+      <Kpi label="Önemli ya da kritik" tone={critical ? "warn" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={critical} note={`son ${items.length} duyurudan`} />
+      {canPublish && <Kpi label="Zamanlanmış" icon={<CalendarClock aria-hidden="true" />} value={sc.data ? sc.data.length : "…"} note="yayın saatini bekliyor" />}
+    </div>
+  );
+}
+
+/** Son duyuruların okunma oranı (alıcı sayısı olanlar). */
+function ReadChart() {
+  const r = useSiteGet<Page<Ann>>("/announcements", { page: "1", page_size: 20 });
+  // Liste sabitler önde sıralı gelir; grafik yayın tarihine göre eskiden yeniye
+  const rows = (r.data?.items ?? [])
+    .filter((a) => a.recipient_count != null && a.recipient_count > 0 && a.published_at)
+    .sort((a, b) => String(b.published_at).localeCompare(String(a.published_at)))
+    .slice(0, 8)
+    .reverse();
+  if (rows.length < 2) return null;
+  return (
+    <div className="card">
+      <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">Son duyuruların okunma oranı</span><span className="card__meta ml-auto">son {rows.length} duyuru</span></div>
+      <div className="card__body ops-chart">
+        <BarChart label="Duyuru okunma oranı" data={rows.map((a) => ({ label: formatDate(a.published_at).slice(0, 5), value: ((a.read_count ?? 0) / (a.recipient_count ?? 1)) * 100, sub: a.title }))} format={(v) => formatPercent(v)} highlight={rows.length - 1} compact />
+      </div>
     </div>
   );
 }
@@ -109,7 +155,7 @@ function NewAnnouncementForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Yeni duyuru</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Plus aria-hidden="true" /></span><span className="card__title">Yeni duyuru</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Başlık" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={up("title")} />}</Field>
@@ -170,7 +216,7 @@ function ScheduledList() {
   const q = useSiteGet<Sched[]>("/scheduled-announcements");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
-  if (q.data.length === 0) return <div className="card"><Empty title="Zamanlanmış duyuru yok" /></div>;
+  if (q.data.length === 0) return <div className="card"><Empty title="Zamanlanmış duyuru yok" icon={<CalendarClock aria-hidden="true" />} /></div>;
   return <div className="stack" style={{ gap: "var(--s-2)" }}>{q.data.map((x) => <SchedItem key={x.id} x={x} />)}</div>;
 }
 function SchedItem({ x }: { x: Sched }) {
@@ -194,13 +240,14 @@ function QuietForm({ c }: { c: Comm }) {
   const m = useSiteMutation<Comm, Comm>("PUT", "/communication-settings");
   return (
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate(f); }}>
+      <div className="card__head"><span className="card__icon card__icon--accent"><MoonStar aria-hidden="true" /></span><span className="card__title">Sessiz saatler</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="row" style={{ gap: "var(--s-3)", flexWrap: "wrap" }}>
           <Field label="Başlangıç" error={fieldError(m.error, "quiet_from")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_from} onChange={(e) => setF((x) => ({ ...x, quiet_from: e.target.value }))} />}</Field>
           <Field label="Bitiş" error={fieldError(m.error, "quiet_to")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_to} onChange={(e) => setF((x) => ({ ...x, quiet_to: e.target.value }))} />}</Field>
         </div>
-        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı ve kota ayarı sağlayıcı seçilince eklenecek (K5).</p>
+        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı, kota ve teslim kayıtları "SMS Hesabı ve Gönderim" ekranında.</p>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
     </form>

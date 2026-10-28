@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
+import { CircleDot, Flag, History, ListChecks, MessageSquare, Timer, UserCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Avatar, Badge, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { priorityTone, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { categoryIcon } from "../../lib/icons";
+import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone, slaState, slaTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentAssign } from "./Departments";
 import { ExtrasCard, InternalNotes, MergeCard, SlaCard } from "./RequestExtras";
@@ -22,24 +24,28 @@ export function RequestDetailPage() {
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const r = q.data;
+  const CatIcon = categoryIcon(r.category);
+  const catName = r.category_name || requestCategory(r.category);
 
   return (
     <div className="stack">
       <PageHead
-        title={`#${r.number} ${r.title}`}
-        subtitle={<>{r.category_name} · {r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
-        actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>}
+        eyebrow={`Talep #${r.number} · ${catName}`}
+        title={r.title}
+        subtitle={<>{r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
+        actions={<><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge><Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link></>}
       />
+      <DetailKpis r={r} />
 
       <div className="grid grid--2">
         <div className="card">
-          <div className="card__head"><span className="card__title">Talep</span></div>
+          <div className="card__head"><IconChip><CatIcon /></IconChip><span className="card__title">Talep</span><span className="card__meta ml-auto">{catName}</span></div>
           <div className="card__body">
             <div className="kv"><span className="kv__k">Durum</span><span className="kv__v"><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Öncelik</span><span className="kv__v"><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge></span></div>
-            <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ?? "—"}</span></div>
+            <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.reporter_name ?? r.created_by_name} size="sm" soft /><span>{r.reporter_name ?? r.created_by_name}</span></span> : "—"}</span></div>
             <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
-            <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ?? "—"}</span></div>
+            <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.assigned_to} size="sm" soft /><span>{r.assigned_to}</span></span> : "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
             <SlaCard s={r.sla} />
             {r.resolution && <div className="kv"><span className="kv__k">Çözüm</span><span className="kv__v">{r.resolution}</span></div>}
@@ -58,7 +64,7 @@ export function RequestDetailPage() {
       {can(P.requestsAssign) && <InternalNotes id={r.id} />}
 
       <div className="card">
-        <div className="card__head"><span className="card__title">Geçmiş</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><MessageSquare aria-hidden="true" /></span><span className="card__title">Geçmiş ve yanıtlar</span><span className="card__meta ml-auto">{r.events.length} hareket</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
           <ul className="timeline">
             {r.events.map((e) => (
@@ -79,6 +85,22 @@ export function RequestDetailPage() {
   );
 }
 
+/** Talebin durumu, önceliği, SLA'sı ve hareket sayısı. Kaynak: talep ayrıntısı (SLA içinde gelir). */
+function DetailKpis({ r }: { r: Detail }) {
+  const s = r.sla;
+  const ageH = Math.max(0, Math.round((Date.now() - new Date(r.created_at).getTime()) / 3_600_000));
+  const age = ageH >= 48 ? `${Math.floor(ageH / 24)} gün` : `${ageH} saat`;
+  const statusTone = requestStatusTone(r.status);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Durum" tone={statusTone === "danger" ? "danger" : statusTone === "warn" ? "warn" : statusTone === "ok" ? "ok" : "accent"} icon={<CircleDot aria-hidden="true" />} value={r.status_label || requestStatus(r.status)} small note={r.assigned_to ? `atanan: ${r.assigned_to}` : "henüz atanmadı"} />
+      <Kpi label="Öncelik" tone={r.priority === "urgent" ? "danger" : r.priority === "high" ? "warn" : undefined} icon={<Flag aria-hidden="true" />} value={requestPriority(r.priority)} small note={r.category_name || requestCategory(r.category)} />
+      <Kpi label="SLA" tone={s ? (slaTone(s.state) === "ok" ? "ok" : slaTone(s.state) === "warn" ? "warn" : "danger") : undefined} icon={<Timer aria-hidden="true" />} value={s ? slaState(s.state) : "—"} small note={s ? `hedef ${s.target_hours} sa · ${formatDateTime(s.due_at)}` : "bu talep için SLA yok"} />
+      <Kpi label="Açık kalma" icon={<History aria-hidden="true" />} value={age} small note={`${r.events.length} hareket`} />
+    </div>
+  );
+}
+
 /** Yalnız dokümandaki akışta izin verilen geçişler (backend `allowed_transitions`, K18). */
 function StatusForm({ r }: { r: Detail }) {
   const [status, setStatus] = useState<Detail["status"]>(r.allowed_transitions[0] ?? r.status);
@@ -93,7 +115,7 @@ function StatusForm({ r }: { r: Detail }) {
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Durumu değiştir</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><ListChecks aria-hidden="true" /></span><span className="card__title">Durumu değiştir</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Yeni durum">
@@ -114,7 +136,7 @@ function AssignForm({ r }: { r: Detail }) {
   const m = useSiteMutation<{ assignee: string }, Detail>("POST", `/requests/${r.id}/assign`);
   return (
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ assignee: who.trim() }); }}>
-      <div className="card__head"><span className="card__title">Ata</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><UserCheck aria-hidden="true" /></span><span className="card__title">Ata</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Personel ya da firma" error={fieldError(m.error, "assignee")}>

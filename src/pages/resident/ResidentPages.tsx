@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
-import { ApiError, openDocument } from "../../api/client";
+import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
+import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
-import { PollResults } from "../../components/PollResults";
+import { PollResults, pollPrivacy } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, IconChip, Loading, Money, Pager, Segmented, SubmitButton, fieldError, todayLong, useDocumentTitle } from "../../components/ui";
+import { heroUrl } from "../../lib/cover";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
+import { categoryIcon } from "../../lib/icons";
 import { installmentStatus, installmentTone, planStatus, planStatusTone } from "../../lib/labels";
-import { accountKind, importance, importanceTone, ledgerSource, priorityTone, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { M, useSite } from "../../site/SiteContext";
 import { NotificationsPage } from "../NotificationsPage";
 import { ProfilePage } from "../ProfilePage";
@@ -20,7 +22,6 @@ type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
 type Req = Schemas["RequestOut"];
 type MyPackage = Schemas["MyPackage"];
-type SiteExpenses = Schemas["SiteExpensesOut"];
 
 /** Personel sakin ekranını açarsa servis 403/404 döner; ne olduğunu açıkça söyle. */
 function StaffNotice({ error }: { error: unknown }) {
@@ -47,9 +48,19 @@ export function ResidentHomePage() {
   const balance = new Decimal(h.total_balance);
   const nextDue = h.accounts.map((a) => a.oldest_open_due_date).filter(Boolean).sort()[0];
   const base = `/sakin/${site.slug}`;
+  // Bant alt satırı: sakinin bölümleri (gerçek veri; selamlama ya da uydurma metin yok)
+  const unitNames = [...new Set(h.accounts.map((a) => a.unit_name))].join(" · ");
 
   return (
     <>
+      {/* Site fotoğraflı açık bant: yazı koyu, fotoğraf alta doğru zemine erir */}
+      <section className="r-hero" aria-label={site.name}>
+        <img className="r-hero__photo" src={heroUrl(site.id)} alt="" decoding="async" fetchPriority="high" />
+        <div className="r-hero__veil" aria-hidden="true" />
+        <div className="r-hero__eyebrow">{todayLong()}</div>
+        <div className="r-hero__title">{site.name}</div>
+        {unitNames && <div className="r-hero__sub">{unitNames}</div>}
+      </section>
       <ResidentAlerts />
       {/* Borç kartı — sakinin uygulamayı açma sebebinin çoğu bu */}
       <div className="balance">
@@ -121,22 +132,20 @@ export function ResidentHomePage() {
         </div>
       </div>
 
-      {/* Hane üyeleri ve araçlar (YAP-04/05): sakin kendisi yönetir */}
-      <div className="card">
-        <div className="card__body">
-          <div className="section-title">Hanem</div>
-          <div className="row" style={{ gap: "var(--s-2)" }}>
-            <Link className="btn" to={`${base}/hane`}><Users aria-hidden="true" /> Hane üyeleri</Link>
-            <Link className="btn" to={`${base}/araclar`}><Car aria-hidden="true" /> Araçlarım</Link>
-            <Link className="btn" to={`${base}/ziyaretci`}><UserRoundCheck aria-hidden="true" /> Ziyaretçiler</Link>
-            <Link className="btn" to={`${base}/tadilat`}><Hammer aria-hidden="true" /> Tadilat ve taşınma</Link>
-            <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
-            <Link className="btn" to={`${base}/rezervasyon`}><CalendarCheck aria-hidden="true" /> Rezervasyon</Link>
-            <Link className="btn" to={`${base}/acil-durum`}><Siren aria-hidden="true" /> Acil durum bilgileri</Link>
-            {shows(M.documents) && <Link className="btn" to={`${base}/belgeler`}><FileText aria-hidden="true" /> Belgeler</Link>}
-            <Link className="btn" to={`${base}/kvkk`}><ShieldCheck aria-hidden="true" /> Kişisel verilerim</Link>
-          </div>
-        </div>
+      {/* Hane üyeleri ve araçlar (YAP-04/05): sakin kendisi yönetir — daire ikonlu kutular */}
+      <div>
+        <div className="section-title">Hanem</div>
+        <nav className="quick" aria-label="Hanem">
+          <Link className="quick__tile" to={`${base}/hane`}><span className="quick__icon" aria-hidden="true"><Users /></span><span className="quick__label">Hane üyeleri</span></Link>
+          <Link className="quick__tile" to={`${base}/araclar`}><span className="quick__icon" aria-hidden="true"><Car /></span><span className="quick__label">Araçlarım</span></Link>
+          <Link className="quick__tile" to={`${base}/ziyaretci`}><span className="quick__icon" aria-hidden="true"><UserRoundCheck /></span><span className="quick__label">Ziyaretçiler</span></Link>
+          <Link className="quick__tile" to={`${base}/tadilat`}><span className="quick__icon" aria-hidden="true"><Hammer /></span><span className="quick__label">Tadilat ve taşınma</span></Link>
+          <Link className="quick__tile" to={`${base}/emanet`}><span className="quick__icon" aria-hidden="true"><KeyRound /></span><span className="quick__label">Emanet ve sayaçlar</span></Link>
+          <Link className="quick__tile" to={`${base}/rezervasyon`}><span className="quick__icon" aria-hidden="true"><CalendarCheck /></span><span className="quick__label">Rezervasyon</span></Link>
+          <Link className="quick__tile" to={`${base}/acil-durum`}><span className="quick__icon" aria-hidden="true"><Siren /></span><span className="quick__label">Acil durum bilgileri</span></Link>
+          {shows(M.documents) && <Link className="quick__tile" to={`${base}/belgeler`}><span className="quick__icon" aria-hidden="true"><FileText /></span><span className="quick__label">Belgeler</span></Link>}
+          <Link className="quick__tile" to={`${base}/kvkk`}><span className="quick__icon" aria-hidden="true"><ShieldCheck /></span><span className="quick__label">Kişisel verilerim</span></Link>
+        </nav>
       </div>
 
       {pk.data && pk.data.length > 0 && (
@@ -150,21 +159,36 @@ export function ResidentHomePage() {
       {/* Modül kapalıysa servis null döner; bölüm gösterilmez */}
       {h.announcements && (
         <div>
-          <div className="section-title">Duyurular</div>
+          <div className="r-section__head">
+            <div className="section-title">Duyurular</div>
+            <Link className="card__more" to={`${base}/duyurular`}>Tümü <ChevronRight aria-hidden="true" size={14} /></Link>
+          </div>
           <div className="stack" style={{ gap: "var(--s-3)" }}>
             {h.announcements.length === 0 && <p className="small muted">Duyuru yok.</p>}
             {h.announcements.map((a) => <AnnouncementItem key={a.id} a={a} short />)}
           </div>
-          <Link className="btn mt-4" style={{ width: "100%" }} to={`${base}/duyurular`}>Tüm duyurular <ChevronRight aria-hidden="true" /></Link>
         </div>
       )}
 
       {h.open_requests && <div>
         <div className="section-title">Taleplerim</div>
         {h.open_requests.length > 0 ? (
-          <Alert tone="info" title={`${h.open_requests.length} açık talebiniz var`}>Durumunu Taleplerim sekmesinden izleyebilirsiniz.</Alert>
+          <Link className="attn__card attn__card--info" to={`${base}/taleplerim`}>
+            <span className="attn__icon" aria-hidden="true"><Wrench /></span>
+            <span className="attn__main">
+              <span className="attn__title">{h.open_requests.length} açık talebiniz var</span>
+              <span className="attn__body">Durumunu Taleplerim sekmesinden izleyebilirsiniz.</span>
+              <span className="attn__link">Taleplerime git <ChevronRight aria-hidden="true" /></span>
+            </span>
+          </Link>
         ) : (
-          <div className="r-item"><div style={{ flex: 1 }}><div className="r-item__title">Açık talebiniz yok</div><div className="r-item__body">Arıza ya da isteğinizi buradan iletebilirsiniz.</div></div></div>
+          <div className="attn__card attn__card--ok" role="status">
+            <span className="attn__icon" aria-hidden="true"><Wrench /></span>
+            <span className="attn__main">
+              <span className="attn__title">Açık talebiniz yok</span>
+              <span className="attn__body">Arıza ya da isteğinizi buradan iletebilirsiniz.</span>
+            </span>
+          </div>
         )}
         <Link className="btn btn--primary mt-4" style={{ width: "100%" }} to={`${base}/taleplerim`}><Wrench aria-hidden="true" /> Talep oluştur</Link>
       </div>}
@@ -174,20 +198,23 @@ export function ResidentHomePage() {
 
 function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
   const body = short && a.body.length > 110 ? a.body.slice(0, 110) + "…" : a.body;
+  const tone = a.importance === "normal" ? undefined : importanceTone(a.importance);
   return (
-    <div className="r-item">
-      <div style={{ flex: 1 }}>
-        <div className="r-item__title">{a.title}</div>
-        <div className="r-item__meta">
-          {formatDateTime(a.published_at)} {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+    <article className="ann">
+      <IconChip tone={tone === "danger" || tone === "warn" ? tone : undefined}><Megaphone /></IconChip>
+      <div className="ann__main">
+        <div className="ann__title">{a.title}</div>
+        <div className="ann__meta">
+          <span>{formatDateTime(a.published_at)}</span>
+          {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+          {a.is_pinned && <Badge tone="muted">Sabit</Badge>}
         </div>
-        <div className="r-item__body" style={{ whiteSpace: "pre-wrap" }}>{body}</div>
-        {!short && (a as AnnAck).requires_ack && <AckButton id={a.id} ackedAt={(a as AnnAck).acked_at} />}
+        <div className="ann__body">{body}</div>
+        {!short && a.requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={a.acked_at} /></div>}
       </div>
-    </div>
+    </article>
   );
 }
-type AnnAck = Ann & { requires_ack?: boolean; acked_at?: string | null };
 
 export function ResidentStatementPage() {
   useDocumentTitle("Borcum");
@@ -205,13 +232,12 @@ export function ResidentStatementPage() {
   return (
     <>
       {accounts.length > 1 && (
-        <div className="row" role="group" aria-label="Hesap" style={{ gap: "var(--s-2)" }}>
-          {accounts.map((a) => (
-            <button key={a.id} type="button" className={`btn btn--sm${a.id === accountId ? " btn--primary" : ""}`} aria-pressed={a.id === accountId} onClick={() => { setAccount(a.id); setPage(1); }}>
-              {a.unit_name} · {accountKind(a.kind)}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Hesap"
+          value={accountId}
+          onChange={(v) => { setAccount(v); setPage(1); }}
+          options={accounts.map((a) => ({ value: a.id, label: `${a.unit_name} · ${accountKind(a.kind)}` }))}
+        />
       )}
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <>
@@ -238,21 +264,35 @@ export function ResidentStatementPage() {
 
           <div>
             <div className="section-title">Hareketler</div>
-            <div className="stack" style={{ gap: "var(--s-2)" }}>
-              {q.data.entries.items.map((e) => (
-                <div key={e.id} className="r-item">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="r-item__title">{e.description}</div>
-                    <div className="r-item__meta">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
-                  </div>
-                  <div className="right">
-                    {Number(e.debit) !== 0 ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}
-                    <div className="xs muted">bakiye <Money value={e.running_balance} /></div>
-                  </div>
-                </div>
-              ))}
+            <div className="card">
+              <div className="card__body card__body--flush">
+                {q.data.entries.items.length === 0 ? (
+                  <p className="small muted" style={{ padding: "var(--s-5)", margin: 0 }}>Bu hesapta hareket yok.</p>
+                ) : (
+                  <ul className="txn">
+                    {q.data.entries.items.map((e) => {
+                      const debit = Number(e.debit) !== 0;
+                      return (
+                        <li key={e.id}>
+                          <span className={`txn__icon ${debit ? "txn__icon--warn" : "txn__icon--ok"}`} aria-hidden="true">
+                            {debit ? <Receipt /> : <Inbox />}
+                          </span>
+                          <div className="txn__main">
+                            <div className="txn__title">{e.description}</div>
+                            <div className="txn__sub">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                          </div>
+                          <div className="txn__right">
+                            <span className="txn__amount">{debit ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}</span>
+                            <span className="xs muted">bakiye <Money value={e.running_balance} /></span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+              <Pager page={q.data.entries.page} pageSize={q.data.entries.page_size} total={q.data.entries.total} onPage={setPage} />
             </div>
-            <Pager page={q.data.entries.page} pageSize={q.data.entries.page_size} total={q.data.entries.total} onPage={setPage} />
           </div>
         </>
       )}
@@ -263,7 +303,7 @@ export function ResidentStatementPage() {
 
 /** Ödeme planım (FIN-15): sakin yalnız kendi hesabının planını ve taksitlerini görür (servis isteği 30). */
 function ResidentPlans() {
-  const q = useSiteGet<{ id: string; unit_name: string; total: string; installment_count: number; status: string; installments: { no: number; due_date: string; amount: string; paid: string; status: string }[] }[]>("/resident/payment-plans");
+  const q = useSiteGet<Schemas["ResidentPaymentPlanOut"][]>("/resident/payment-plans");
   if (!q.data || q.data.length === 0) return null;
   return (
     <div>
@@ -339,20 +379,25 @@ export function ResidentRequestsPage() {
         <div className="section-title">Taleplerim</div>
         {q.isPending ? <Loading /> : q.data.items.length === 0 ? <p className="small muted">Henüz talebiniz yok.</p> : (
           <div className="stack" style={{ gap: "var(--s-2)" }}>
-            {q.data.items.map((r) => (
-              <div key={r.id} className="r-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="r-item__title">#{r.number} {r.title}</div>
-                  <div className="r-item__meta">{r.category_name} · {formatDateTime(r.created_at)}</div>
-                  {r.resolution && <div className="r-item__body">Çözüm: {r.resolution}</div>}
-                  <RequestExtrasBlock r={r} />
-                </div>
-                <div className="stack" style={{ gap: 4, alignItems: "flex-end" }}>
-                  <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
-                  {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
-                </div>
-              </div>
-            ))}
+            {q.data.items.map((r) => {
+              const Icon = categoryIcon(r.category);
+              const done = r.status === "resolved" || r.status === "closed";
+              return (
+                <article key={r.id} className="ann">
+                  <IconChip tone={done ? "ok" : r.priority === "urgent" ? "danger" : r.priority === "high" ? "warn" : undefined}><Icon /></IconChip>
+                  <div className="ann__main">
+                    <div className="ann__title">#{r.number} {r.title}</div>
+                    <div className="ann__meta"><span>{r.category_name || requestCategory(r.category)}</span><span>·</span><span>{formatDateTime(r.created_at)}</span></div>
+                    {r.resolution && <div className="ann__body">Çözüm: {r.resolution}</div>}
+                    <RequestExtrasBlock r={r} />
+                  </div>
+                  <div className="ann__side">
+                    <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
+                    {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
+                  </div>
+                </article>
+              );
+            })}
             <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
           </div>
         )}
@@ -361,56 +406,9 @@ export function ResidentRequestsPage() {
   );
 }
 
-/** Şeffaflık: sitenin gerçekleşen giderleri ve fatura görüntüsü. */
-export function ResidentExpensesPage() {
-  useDocumentTitle("Giderler");
-  const { site } = useSite();
-  const toast = useToast();
-  const [year, setYear] = useState(String(new Date().getFullYear()));
-  const [page, setPage] = useState(1);
-  const q = useSiteGet<SiteExpenses>("/resident/expenses", { year, page, page_size: 30 });
-  if (q.isError) return <StaffNotice error={q.error} />;
-  return (
-    <>
-      <div className="row row--between">
-        <div className="section-title" style={{ margin: 0 }}>Sitenin giderleri</div>
-        <select aria-label="Yıl" className="field__input" style={{ width: "auto" }} value={year} onChange={(e) => { setYear(e.target.value); setPage(1); }}>
-          {[0, 1, 2].map((i) => String(new Date().getFullYear() - i)).map((y) => <option key={y}>{y}</option>)}
-        </select>
-      </div>
-      {q.isPending ? <Loading /> : (
-        <>
-          <div className="balance">
-            <div className="balance__label">{year} yılı toplam gider</div>
-            <div className="balance__value">{formatMoney(q.data.total_amount)}</div>
-            <div className="balance__due">{q.data.total} kayıt · aidatlarınızın nereye harcandığı</div>
-          </div>
-          <div className="stack" style={{ gap: "var(--s-2)" }}>
-            {q.data.items.length === 0 && <Empty title="Bu yıl gider kaydı yok" icon={<Package aria-hidden="true" />} />}
-            {q.data.items.map((e) => (
-              <div key={e.id} className="r-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="r-item__title">{e.description}</div>
-                  <div className="r-item__meta">{formatDate(e.date)} · {e.category}{e.vendor ? ` · ${e.vendor}` : ""}</div>
-                  {e.document_id && (
-                    <button className="btn btn--ghost btn--sm" type="button" style={{ paddingLeft: 0 }} onClick={() => openDocument(`/sites/${site.slug}/resident/files/${e.document_id}`).catch(() => toast("Belge açılamadı.", "danger"))}>
-                      <FileText aria-hidden="true" /> Faturayı gör
-                    </button>
-                  )}
-                </div>
-                <Money value={e.amount} />
-              </div>
-            ))}
-            <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-
-/** Servis isteği 15: sakinin oy verdiği bölümler ve oyu. Sonuç oy verdikten ya da anket kapanınca görünür. */
+/** Servis isteği 15 + ILT-03 (K31): bölüm ya da kişi başına yanıt; sonuç yanıt verdikten ya da anket kapanınca görünür. */
 type ResidentPoll = Schemas["ResidentPollOut"];
+type Answer = { option_ids: string[]; rating: number | null; text: string };
 
 function ResidentPolls() {
   // Anket modülü kapalı sitede uç 404 döner; hiç sorulmaz
@@ -424,12 +422,22 @@ function ResidentPolls() {
 }
 
 function ResidentPollCard({ p }: { p: ResidentPoll }) {
-  const pending = p.status === "open" ? p.my_votes.filter((v) => !v.option_id) : [];
+  const pending = p.status === "open" && p.one_per_unit ? p.my_votes.filter((v) => !v.voted) : [];
   const [unitId, setUnitId] = useState(pending[0]?.unit_id ?? "");
-  const [choice, setChoice] = useState("");
-  const vote = useSiteMutation<{ unit_id: string; option_id: string }, { option_id: string }>("POST", `/resident/polls/${p.id}/vote`, { onSuccess: () => setChoice("") });
+  const empty = (): Record<string, Answer> => Object.fromEntries(p.questions.map((x) => [x.id, { option_ids: [], rating: null, text: "" }]));
+  const [answers, setAnswers] = useState(empty);
+  const vote = useSiteMutation<Record<string, unknown>, { option_id: string | null }>("POST", `/resident/polls/${p.id}/vote`, { onSuccess: () => setAnswers(empty()) });
   const voted = p.my_votes.find((v) => v.option_id)?.option_id ?? null;
   const unit = pending.find((v) => v.unit_id === unitId) ?? pending[0];
+  const set = (qid: string, patch: Partial<Answer>) => setAnswers((a) => ({ ...a, [qid]: { ...a[qid]!, ...patch } }));
+  const filled = p.questions.every((x) => !x.required || (x.kind === "rating" ? answers[x.id]?.rating : x.kind === "text" ? answers[x.id]?.text.trim() : answers[x.id]?.option_ids.length));
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    vote.mutate({
+      unit_id: p.one_per_unit ? unit?.unit_id ?? null : null,
+      answers: p.questions.map((x) => ({ question_id: x.id, option_ids: answers[x.id]!.option_ids, rating: answers[x.id]!.rating, text: answers[x.id]!.text.trim() || null })),
+    });
+  }
   return (
     <div className="card">
       <div className="card__head">
@@ -438,28 +446,42 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
       </div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         {p.description && <p className="small mb-0">{p.description}</p>}
-        {unit ? (
-          <form className="stack" style={{ gap: "var(--s-2)" }} onSubmit={(e) => { e.preventDefault(); if (choice) vote.mutate({ unit_id: unit.unit_id, option_id: choice }); }}>
-            {pending.length > 1 && (
+        <p className="xs muted mb-0">{pollPrivacy(p)}. {p.notice}</p>
+        {p.can_respond ? (
+          <form className="stack" style={{ gap: "var(--s-3)" }} onSubmit={submit} noValidate>
+            {p.one_per_unit && pending.length > 1 && unit && (
               <Field label="Hangi bölüm adına">{(fp) => <select {...fp} className="field__input" value={unit.unit_id} onChange={(e) => setUnitId(e.target.value)}>{pending.map((v) => <option key={v.unit_id} value={v.unit_id}>{v.unit_name}</option>)}</select>}</Field>
             )}
-            <fieldset className="stack" style={{ gap: "var(--s-1)", border: 0, padding: 0, margin: 0 }}>
-              <legend className="visually-hidden">{p.question}</legend>
-              {p.options.map((o) => (
-                <label key={o.id} className="check" style={{ minHeight: 44 }}>
-                  <input type="radio" name={`poll-${p.id}`} value={o.id} checked={choice === o.id} onChange={() => setChoice(o.id)} />
-                  <span>{o.label}</span>
-                </label>
-              ))}
-            </fieldset>
+            {p.questions.map((x) => {
+              const a = answers[x.id]!;
+              const err = fieldError(vote.error, `answers.${x.id}`);
+              return (
+                <fieldset key={x.id} className="stack" style={{ gap: "var(--s-1)", border: 0, padding: 0, margin: 0 }}>
+                  <legend className={p.questions.length > 1 ? "field__label" : "visually-hidden"}>{p.questions.length > 1 ? `${x.order}. ${x.text}` : p.question}{x.required ? "" : " (isteğe bağlı)"}</legend>
+                  {x.kind === "single" && x.options.map((o) => (
+                    <label key={o.id} className="check" style={{ minHeight: 44 }}><input type="radio" name={`poll-${p.id}-${x.id}`} checked={a.option_ids[0] === o.id} onChange={() => set(x.id, { option_ids: [o.id] })} /><span>{o.label}</span></label>
+                  ))}
+                  {x.kind === "multiple" && x.options.map((o) => (
+                    <label key={o.id} className="check" style={{ minHeight: 44 }}><input type="checkbox" checked={a.option_ids.includes(o.id)} onChange={() => set(x.id, { option_ids: a.option_ids.includes(o.id) ? a.option_ids.filter((y) => y !== o.id) : [...a.option_ids, o.id] })} /><span>{o.label}</span></label>
+                  ))}
+                  {x.kind === "rating" && (
+                    <div className="row" style={{ gap: "var(--s-1)" }} role="radiogroup" aria-label={x.text}>
+                      {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={a.rating === n} className={`btn btn--sm${a.rating === n ? " btn--primary" : ""}`} style={{ minWidth: 44, minHeight: 44 }} onClick={() => set(x.id, { rating: n })}>{n}</button>)}
+                    </div>
+                  )}
+                  {x.kind === "text" && <textarea className="field__input" aria-label={x.text} rows={2} maxLength={1000} value={a.text} onChange={(e) => set(x.id, { text: e.target.value })} />}
+                  {err && <span className="field__error" role="alert">{err}</span>}
+                </fieldset>
+              );
+            })}
             <FormError error={vote.error} />
-            <SubmitButton busy={vote.isPending} disabled={!choice}>{pending.length > 1 ? `${unit.unit_name} adına oy ver` : "Oy ver"}</SubmitButton>
-            <span className="small muted">Bitiş {formatDate(p.ends_on)} · Oyunuzu verdikten sonra değiştiremezsiniz.</span>
+            <SubmitButton busy={vote.isPending} disabled={!filled}>{p.one_per_unit && pending.length > 1 && unit ? `${unit.unit_name} adına gönder` : "Gönder"}</SubmitButton>
+            <span className="small muted">Bitiş {formatDate(p.ends_on)} · Yanıtınızı gönderdikten sonra değiştiremezsiniz.</span>
           </form>
         ) : p.total_votes != null ? (
           <PollResults p={p} mine={voted} />
         ) : (
-          <span className="small muted">Bu anket bölümünüzdeki rolünüze açık değil.</span>
+          <span className="small muted">{p.responded ? "Yanıtınız alındı; sonuç anket kapanınca açılır." : "Bu anket bölümünüzdeki rolünüze açık değil."}</span>
         )}
       </div>
     </div>
@@ -474,6 +496,7 @@ export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
+export { ResidentTransparencyPage } from "./ResidentTransparencyPage";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
 import { RequestExtrasBlock } from "./ResidentServicePages";
 import { useRequestCategories } from "../site/requestCategories";

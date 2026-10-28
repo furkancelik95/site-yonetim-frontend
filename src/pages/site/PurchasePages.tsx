@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Copy, FileText, Link2, Plus, Printer, ShoppingCart, Star, Trash2, Truck } from "lucide-react";
+import { AlertTriangle, Ban, CheckCircle2, Copy, FileText, Hourglass, Inbox, Landmark, Link2, PackageCheck, Plus, Printer, ReceiptText, ShoppingCart, Star, Trash2, Truck, Users, Wallet } from "lucide-react";
 import { Link, useParams } from "react-router";
 import Decimal from "decimal.js";
 import { api, openDocument } from "../../api/client";
@@ -8,8 +8,8 @@ import type { CashAccounts, Page, Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
 import { PhotoInput } from "../../components/PhotoInput";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
-import { formatDate, formatDateTime, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { formatDate, formatDateTime, formatMoney, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { invoiceStatus, invoiceTone, poStatus, poTone, prStatus, prTone, vendorStatus, vendorTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
@@ -30,7 +30,7 @@ type LinkCreated = Schemas["QuoteLinkCreated"];
 type FileOut = Schemas["PurchaseFileOut"];
 
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
 );
 const money = (v: string) => Number(v).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 /** Miktar metni ("2.5") → ekranda "2,5". */
@@ -82,8 +82,33 @@ export function PurchasePage() {
   return (
     <div className="stack">
       <PageHead title="Satın alma" subtitle="Talep → teklif → onay → sipariş → kabul → fatura eşleşmesi → ödeme. Onaysız sipariş verilmez; talep eden kendi talebini onaylayamaz." />
+      <PurchaseKpis />
       {tabs(items, s.sekme, (k) => set({ sekme: k, page: "1", durum: "" }), "Satın alma")}
       {s.sekme === "siparis" ? <Orders page={page} onPage={onPage} /> : s.sekme === "fatura" ? <Invoices page={page} onPage={onPage} /> : s.sekme === "odenecek" ? <Payables /> : s.sekme === "ayar" ? <SettingsForm /> : <Requests status={s.durum} onStatus={(v) => set({ durum: v, page: "1" })} page={page} onPage={onPage} />}
+    </div>
+  );
+}
+
+const OPEN_PR = ["quoting", "exception_pending", "approval_pending", "approved"];
+
+/** Bandın altındaki dört gösterge: talep, onay, sipariş ve ödenecek tutarı aynı uçlardan okur (son 200 talep/sipariş). */
+function PurchaseKpis() {
+  const prs = useSiteGet<Page<PrRow>>("/purchase-requests", { page_size: 200 });
+  const pos = useSiteGet<Page<PoRow>>("/purchase-orders", { page_size: 200 });
+  const pay = useSiteGet<Payables>("/payables");
+  if (prs.isError || pos.isError || pay.isError) return null;
+  if (!prs.data || !pos.data || !pay.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const open = prs.data.items.filter((p) => OPEN_PR.includes(p.status));
+  const waiting = prs.data.items.filter((p) => p.status === "exception_pending" || p.status === "approval_pending");
+  const openPo = pos.data.items.filter((o) => o.status === "sent" || o.status === "partial");
+  const overdue = pay.data.invoices.filter((i) => i.overdue).length;
+  const sum = (xs: string[]) => xs.reduce((t, x) => t.plus(x), new Decimal(0)).toFixed(2);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Açık talep" icon={<ShoppingCart aria-hidden="true" />} value={open.length} note={`${formatMoneyShort(sum(open.map((p) => p.estimated_total)))} tahmini`} />
+      <Kpi label="Onay bekleyen" tone={waiting.length ? "warn" : undefined} icon={<Hourglass aria-hidden="true" />} value={waiting.length} note="istisna ya da satın alma onayı" />
+      <Kpi label="Teslim bekleyen sipariş" icon={<Truck aria-hidden="true" />} value={openPo.length} note={`${formatMoneyShort(sum(openPo.map((o) => o.total)))} sipariş tutarı`} />
+      <Kpi label="Ödenecek" tone={overdue ? "danger" : "accent"} icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(pay.data.total)} note={overdue ? `${overdue} fatura vadesi geçti` : `${pay.data.invoices.length} fatura + siparişsiz gider`} />
     </div>
   );
 }
@@ -96,12 +121,20 @@ function Requests({ status, onStatus, page, onPage }: { status: string; onStatus
   const canOpen = can(P.expensesManage) || can(P.requestsAssign);
   return (
     <div className="stack">
-      <div className="row" style={{ gap: "var(--s-2)", alignItems: "flex-end", flexWrap: "wrap" }}>
-        {canOpen && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Satın alma talebi</button>}
-        <div className="field ml-auto"><label className="field__label" htmlFor="pr-st">Durum</label><select id="pr-st" className="field__input" value={status} onChange={(e) => onStatus(e.target.value)}><option value="">Tümü</option>{["quoting", "exception_pending", "approval_pending", "approved", "ordered", "rejected", "cancelled"].map((k) => <option key={k} value={k}>{prStatus(k)}</option>)}</select></div>
-      </div>
       {adding && <NewRequest onDone={() => setAdding(false)} />}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><ShoppingCart aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Satın alma talepleri</div>
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="pr-st">Durum</label><select id="pr-st" className="field__input" value={status} onChange={(e) => onStatus(e.target.value)}><option value="">Tümü</option>{["quoting", "exception_pending", "approval_pending", "approved", "ordered", "rejected", "cancelled"].map((k) => <option key={k} value={k}>{prStatus(k)}</option>)}</select></div>
+            {canOpen && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Satın alma talebi</button>}
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Satın alma talebi yok" icon={<ShoppingCart aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Satın alma talepleri</caption>
             <thead><tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col" className="right">Tahmini</th><th scope="col">Teklif</th><th scope="col">Durum</th></tr></thead>
@@ -190,6 +223,12 @@ export function PurchaseRequestPage() {
   return (
     <div className="stack">
       <PageHead title={`${p.number} · ${p.title}`} subtitle={<><Link to={`${base}/satin-alma`}>Satın alma</Link> · {p.category_name} · {p.created_by}, {formatDateTime(p.created_at)}</>} actions={<Badge tone={prTone(p.status)}>{prStatus(p.status)}</Badge>} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Tahmini toplam" tone="accent" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(p.estimated_total)} note={`${p.items.length} kalem`} />
+        <Kpi label="Teklif" tone={p.quotes.length < p.required_quotes ? "warn" : "ok"} icon={<ReceiptText aria-hidden="true" />} value={`${p.quotes.length}/${p.required_quotes}`} note={p.quotes.length < p.required_quotes ? "eksik teklif" : "yeterli"} />
+        <Kpi label="En düşük teklif" icon={<Star aria-hidden="true" />} value={p.quotes.length ? formatMoneyShort(Math.min(...p.quotes.map((x) => Number(x.total))).toFixed(2)) : "—"} note={p.quotes.length ? p.quotes.reduce((a, b) => (Number(b.total) < Number(a.total) ? b : a)).vendor_name : "henüz teklif yok"} />
+        <Kpi label="Kalan bütçe" tone={p.over_budget ? "danger" : undefined} icon={<Landmark aria-hidden="true" />} value={p.budget ? formatMoneyShort(p.budget.remaining) : "—"} note={p.budget ? (p.over_budget ? "bütçe aşımı" : "talep anında") : "kategoride bütçe yok"} />
+      </div>
       {p.status === "rejected" && <Alert tone="danger" title="Reddedildi">{p.reject_reason}</Alert>}
       <div className="grid grid--2">
         <div className="card"><div className="card__head"><span className="card__title">Kalemler</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
@@ -370,7 +409,13 @@ function Orders({ page, onPage }: { page: number; onPage: (p: number) => void })
   const q = useSiteGet<Page<PoRow>>("/purchase-orders", { page, page_size: 50 });
   return (
     <div className="stack">
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Truck aria-hidden="true" /></span>
+          <span className="card__title">Siparişler</span>
+          {q.data && <span className="card__meta ml-auto">{q.data.total} kayıt</span>}
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Sipariş yok" icon={<Truck aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Siparişler</caption>
             <thead><tr><th scope="col">Sipariş</th><th scope="col">Tedarikçi</th><th scope="col" className="right">Tutar</th><th scope="col">Durum</th></tr></thead>
@@ -400,7 +445,15 @@ export function PurchaseOrderPage() {
     <div className="stack">
       <PageHead title={`${o.number} · ${o.vendor_name}`} subtitle={<><Link to={`${base}/satin-alma?sekme=siparis`}>Siparişler</Link> · <Link to={`${base}/satin-alma/${o.pr_id}`}>{o.pr_number}</Link> · {o.created_by}, {formatDateTime(o.created_at)}</>}
         actions={<><Badge tone={poTone(o.status)}>{poStatus(o.status)}</Badge> <button className="btn btn--sm print-hide" type="button" onClick={() => window.print()}><Printer aria-hidden="true" /> Sipariş formu</button></>} />
-      <div className="card"><div className="card__body card__body--flush"><div className="table-wrap"><table className="data"><caption className="visually-hidden">Sipariş kalemleri</caption>
+      <div className="grid grid--kpi rise print-hide">
+        <Kpi label="Sipariş tutarı" tone="accent" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(o.total)} note={`${o.lines.length} kalem`} />
+        <Kpi label="Teslim alınan kalem" tone={o.lines.every((l) => new Decimal(l.received).greaterThanOrEqualTo(l.qty)) ? "ok" : "warn"} icon={<PackageCheck aria-hidden="true" />} value={`${o.lines.filter((l) => new Decimal(l.received).greaterThanOrEqualTo(l.qty)).length}/${o.lines.length}`} note="tam teslim" />
+        <Kpi label="Kabul kaydı" icon={<Truck aria-hidden="true" />} value={o.receipts.length} note={o.receipts.length ? `son: ${formatDate(o.receipts.map((r) => r.at).sort().at(-1))}` : "henüz kabul yok"} />
+        <Kpi label="Fatura" tone={o.invoices.some((i) => i.status === "diff_pending" || i.status === "disputed") ? "danger" : undefined} icon={<ReceiptText aria-hidden="true" />} value={o.invoices.length} note={o.invoices.length ? invoiceStatus(o.invoices[o.invoices.length - 1]!.status) : "kabulden sonra girilir"} />
+      </div>
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><ShoppingCart aria-hidden="true" /></span><span className="card__title">Sipariş kalemleri</span></div>
+        <div className="card__body card__body--flush"><div className="table-wrap"><table className="data"><caption className="visually-hidden">Sipariş kalemleri</caption>
         <thead><tr><th scope="col">Kalem</th><th scope="col" className="right">Miktar</th><th scope="col" className="right">Birim fiyat</th><th scope="col" className="right">Tutar</th><th scope="col" className="right">Teslim alınan</th><th scope="col" className="right print-hide">Faturalanan</th></tr></thead>
         <tbody>{o.lines.map((l) => { const done = new Decimal(l.received).greaterThanOrEqualTo(l.qty); const some = new Decimal(l.received).greaterThan(0); return <tr key={l.id}><td className="cell-main">{l.description}{l.stock_item_id && <div className="cell-sub">stoklu</div>}</td><td className="right num">{qtyText(l.qty)} {l.unit}</td><td className="right num">{money(l.unit_price)}</td><td className="right"><Money value={l.total} /></td><td className="right num">{done ? <Badge tone="ok">{qtyText(l.received)}</Badge> : some ? <Badge tone="warn">{qtyText(l.received)}</Badge> : "0"}</td><td className="right num print-hide">{qtyText(l.invoiced)}</td></tr>; })}
           <tr><td colSpan={3} className="right strong">Toplam</td><td className="right strong"><Money value={o.total} /></td><td /><td className="print-hide" /></tr></tbody>
@@ -515,8 +568,18 @@ function Invoices({ page, onPage }: { page: number; onPage: (p: number) => void 
   const q = useSiteGet<Page<Invoice>>("/vendor-invoices", { status: st || undefined, page, page_size: 50 });
   return (
     <div className="stack">
-      <div className="field" style={{ maxWidth: "16rem" }}><label className="field__label" htmlFor="vi-st">Durum</label><select id="vi-st" className="field__input" value={st} onChange={(e) => { setSt(e.target.value); onPage(1); }}><option value="">Tümü</option>{["diff_pending", "matched", "paid", "disputed"].map((k) => <option key={k} value={k}>{invoiceStatus(k)}</option>)}</select></div>
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><ReceiptText aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Tedarikçi faturaları</div>
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="vi-st">Durum</label><select id="vi-st" className="field__input" value={st} onChange={(e) => { setSt(e.target.value); onPage(1); }}><option value="">Tümü</option>{["diff_pending", "matched", "paid", "disputed"].map((k) => <option key={k} value={k}>{invoiceStatus(k)}</option>)}</select></div>
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Tedarikçi faturası yok">Fatura, siparişin ayrıntısından kabulden sonra girilir.</Empty> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Tedarikçi faturaları</caption>
             <thead><tr><th scope="col">Fatura</th><th scope="col">Tedarikçi</th><th scope="col" className="right">Tutar</th><th scope="col">Vade</th><th scope="col">Durum</th></tr></thead>
@@ -538,9 +601,17 @@ function Payables() {
   const overdue = q.data.invoices.filter((i) => i.overdue);
   return (
     <div className="stack">
-      <div className="grid grid--kpi"><Kpi label="Ödenecek fatura" value={q.data.invoices.length} /><Kpi label="Toplam" value={<Money value={q.data.total} />} /><Kpi label="Vadesi geçen" value={overdue.length} tone={overdue.length ? "danger" : undefined} /><Kpi label="Siparişsiz gider" value={q.data.direct_expenses.count} note={<Link to={`${base}/giderler`}>{formatMoney(q.data.direct_expenses.total)} · Giderler</Link>} /></div>
-      <div className="card"><div className="card__body card__body--flush">
-        {q.data.invoices.length === 0 ? <Empty title="Ödenecek fatura yok" /> : (
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--warn"><Wallet aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Ödeme bekleyen faturalar</div>
+            <div className="card__meta">{q.data.invoices.length} fatura · toplam {formatMoney(q.data.total)}{overdue.length > 0 && <> · <Badge tone="danger"><AlertTriangle aria-hidden="true" /> {overdue.length} vadesi geçti</Badge></>}</div>
+          </div>
+          <span className="card__meta ml-auto"><Inbox aria-hidden="true" style={{ width: 14, height: 14, verticalAlign: "-2px" }} /> {q.data.direct_expenses.count} siparişsiz gider · <Link to={`${base}/giderler`}>Giderler</Link></span>
+        </div>
+        <div className="card__body card__body--flush">
+        {q.data.invoices.length === 0 ? <Empty title="Ödenecek fatura yok" icon={<CheckCircle2 aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Ödenecekler</caption>
             <thead><tr><th scope="col">Vade</th><th scope="col">Tedarikçi / fatura</th><th scope="col" className="right">Tutar</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
             <tbody>{q.data.invoices.map((i) => <tr key={i.id}><td className="small">{formatDate(i.due_date)}{i.overdue && <div><Badge tone="danger">Vadesi geçti</Badge></div>}</td><td><div className="cell-main">{i.vendor_name}</div><div className="cell-sub">{i.number} · <Link to={`${base}/satin-alma/siparis/${i.order_id}`}>{i.order_number}</Link></div></td><td className="right"><Money value={i.total} /></td><td className="right">{can(P.expensesManage) && <MarkPaid i={i} />}</td></tr>)}</tbody>
@@ -610,22 +681,42 @@ export function VendorsPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ q: "", durum: "", page: "1" });
   const q = useSiteGet<Page<VendorRow>>("/vendors", { q: s.q || undefined, status: s.durum || undefined, page: s.page, page_size: 50 });
+  const all = useSiteGet<Page<VendorRow>>("/vendors", { page_size: 200 });
   const [edit, setEdit] = useState<VendorRow | "new" | null>(null);
+  const vs = all.data?.items ?? [];
+  const rated = vs.filter((v) => v.rating_avg != null && v.rating_count > 0);
+  const avg = rated.length ? rated.reduce((t, v) => t + Number(v.rating_avg ?? 0) * v.rating_count, 0) / rated.reduce((t, v) => t + v.rating_count, 0) : null;
   return (
     <div className="stack">
       <PageHead title="Tedarikçiler" subtitle="Teklif, sipariş ve faturada kullanılan tedarikçi kartları. IBAN yalnız ödeme için tutulur ve maskeli gösterilir."
         actions={can(P.expensesManage) && <button className="btn btn--primary" type="button" onClick={() => setEdit("new")}><Plus aria-hidden="true" /> Tedarikçi ekle</button>} />
+      {!all.isError && (all.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Aktif tedarikçi" tone="ok" icon={<Users aria-hidden="true" />} value={vs.filter((v) => v.status === "active").length} note={`toplam ${vs.length} kart`} />
+          <Kpi label="Pasif / kara liste" tone={vs.some((v) => v.status === "blacklist") ? "danger" : undefined} icon={<Ban aria-hidden="true" />} value={vs.filter((v) => v.status !== "active").length} note={`${vs.filter((v) => v.status === "blacklist").length} kara listede`} />
+          <Kpi label="Ortalama puan" icon={<Star aria-hidden="true" />} value={avg != null ? avg.toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "—"} note={`${rated.reduce((t, v) => t + v.rating_count, 0)} kabul değerlendirmesi`} />
+          <Kpi label="Sipariş" icon={<Truck aria-hidden="true" />} value={vs.reduce((t, v) => t + v.order_count, 0)} note="tüm tedarikçilere verilen" />
+        </div>
+      ) : <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>)}
       {edit && <VendorForm v={edit === "new" ? null : edit} onDone={() => setEdit(null)} />}
-      <div className="filters">
-        <div className="field"><label className="field__label" htmlFor="vd-q">Ara</label><input id="vd-q" className="field__input" type="search" placeholder="Unvan ya da vergi no" value={s.q} onChange={(e) => set({ q: e.target.value, page: "1" })} /></div>
-        <div className="field"><label className="field__label" htmlFor="vd-s">Durum</label><select id="vd-s" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select></div>
-      </div>
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Truck aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Tedarikçi kartları</div>
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="vd-q">Ara</label><input id="vd-q" className="field__input" type="search" placeholder="Unvan ya da vergi no" value={s.q} onChange={(e) => set({ q: e.target.value, page: "1" })} /></div>
+            <div className="field"><label className="field__label" htmlFor="vd-s">Durum</label><select id="vd-s" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select></div>
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Tedarikçi yok" /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Tedarikçiler</caption>
             <thead><tr><th scope="col">Tedarikçi</th><th scope="col">İletişim</th><th scope="col">Puan</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
             <tbody>{q.data.items.map((v) => <tr key={v.id}>
-              <td><div className="cell-main">{v.name}</div><div className="cell-sub">VKN {v.tax_no}{v.category && ` · ${v.category}`}{v.iban_masked && ` · ${v.iban_masked}`}</div></td>
+              <td><div className="cell-person"><Avatar name={v.name} size="sm" soft /><div><div className="cell-main">{v.name}</div><div className="cell-sub">VKN {v.tax_no}{v.category && ` · ${v.category}`}{v.iban_masked && ` · ${v.iban_masked}`}</div></div></div></td>
               <td className="small">{v.phone && <div>{v.phone}</div>}{v.email && <div>{v.email}</div>}</td>
               <td className="small">{v.rating_avg != null ? <><Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {v.rating_avg.replace(".", ",")} ({v.rating_count})</> : "—"}<div className="cell-sub">{v.order_count} sipariş</div></td>
               <td><Badge tone={vendorTone(v.status)}>{vendorStatus(v.status)}</Badge></td>

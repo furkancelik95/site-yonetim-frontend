@@ -43,8 +43,8 @@ export function InviteAcceptPage() {
   }
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 560 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 560px)" }}>
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">SY</span>
           <span><span className="sidebar__name">{inv.data?.site_name ?? "SiteYönetimi"}</span><br /><span className="sidebar__sub">Davetle kayıt</span></span>
@@ -83,7 +83,7 @@ export function InviteAcceptPage() {
                   {(p) => <input {...p} data-field="email" className="field__input" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setErrs((x) => ({ ...x, email: undefined })); }} />}
                 </Field>
               )}
-              <p className="small mb-0">Kişisel verilerinizin işlenmesine ilişkin <Link to="/aydinlatma" target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.</p>
+              <p className="small mb-0">Kişisel verilerinizin işlenmesine ilişkin <Link to={inv.data ? `/aydinlatma?site=${encodeURIComponent(inv.data.site_slug)}` : "/aydinlatma"} target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.</p>
               <div>
                 <label className="check check--rich">
                   <input id="inv-kvkk_ack" type="checkbox" checked={ack} aria-invalid={err("kvkk_ack") ? true : undefined} onChange={(e) => { setAck(e.target.checked); if (e.target.checked) setErrs((x) => ({ ...x, kvkk_ack: undefined })); }} />

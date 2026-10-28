@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, NavLink, Outlet, useLocation, useParams } from "react-router";
-import { ArrowLeft, Home, Inbox, Megaphone, Wallet, Wrench } from "lucide-react";
+import { ArrowLeft, FileBarChart, Home, Megaphone, Wallet, Wrench } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { NotificationBell } from "../components/NotificationBell";
 import { ErrorState, Loading } from "../components/ui";
@@ -33,7 +33,7 @@ export function ResidentLayout() {
           <div className="row row--between" style={{ flexWrap: "nowrap", gap: "var(--s-2)" }}>
             <div style={{ minWidth: 0 }}>
               <div className="r-header__site">{ctx.site.name}</div>
-              <div className="r-header__unit">{me?.full_name}</div>
+              <div className="r-header__unit" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{me?.full_name}</div>
             </div>
             <div className="row" style={{ flexWrap: "nowrap", gap: "var(--s-1)" }}>
               {isStaff && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}
@@ -52,7 +52,7 @@ export function ResidentLayout() {
         <NavLink className="tabbar__item" to={`${base}/borcum`}><Wallet aria-hidden="true" /> <span>Borcum</span></NavLink>
         <NavLink className="tabbar__item" to={`${base}/duyurular`}><Megaphone aria-hidden="true" /> <span>Duyurular</span></NavLink>
         <NavLink className="tabbar__item" to={`${base}/taleplerim`}><Wrench aria-hidden="true" /> <span>Taleplerim</span></NavLink>
-        <NavLink className="tabbar__item" to={`${base}/giderler`}><Inbox aria-hidden="true" /> <span>Giderler</span></NavLink>
+        <NavLink className="tabbar__item" to={`${base}/seffaflik`}><FileBarChart aria-hidden="true" /> <span>Şeffaflık</span></NavLink>
       </nav>
     </SiteContext.Provider>
   );

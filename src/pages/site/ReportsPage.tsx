@@ -1,22 +1,26 @@
+import { useState } from "react";
 import Decimal from "decimal.js";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Info, Landmark, PieChart, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { Link } from "react-router";
 import { useSiteGet } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
+import { BarChart, Donut } from "../../components/charts";
 import { ExcelButton } from "../../components/ExcelButton";
-import { Badge, ErrorState, Kpi, Loading, Money, PageHead } from "../../components/ui";
+import { Badge, ErrorState, Kpi, Loading, Money, PageHead, Segmented } from "../../components/ui";
 import { formatMoney, formatMoneyShort, formatPercent } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
 
 type Report = Schemas["IncomeExpenseOut"];
 type Collections = Schemas["CollectionsOut"];
+type Series = "income" | "expense";
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+const MONTHS_SHORT = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 
-/** Çubuk genişliği yüzdesi. Görsel oran için; tutarın kendisi metin olarak yanında yazılı. */
-function pct(v: string, max: Decimal): string {
-  return max.isZero() ? "0" : new Decimal(v).div(max).mul(100).toFixed(1);
-}
+/** Para metni → grafik için sayı; grafik etiketi yine formatMoneyShort ile yazılır. */
+const num = (v: string) => Number(new Decimal(v).toFixed(2));
+const short = (v: number) => formatMoneyShort(v.toFixed(2));
 
 export function ReportsPage() {
   const { site, can } = useSite();
@@ -49,103 +53,128 @@ export function ReportsPage() {
         <ReportBody d={r.data} />
       )}
 
-      {c.data && (
-        <div className="card">
-          <div className="card__head"><span className="card__title">Aidat tahsilat özeti — {c.data.year}</span><span className="card__meta ml-auto">genel oran {formatPercent(c.data.rate)}</span></div>
-          <div className="card__body card__body--flush">
-            <div className="table-wrap">
-              <table className="data">
-                <caption className="visually-hidden">Dönem bazında tahakkuk ve tahsilat</caption>
-                <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">Tahakkuk</th><th scope="col" className="right">Tahsil edilen</th><th scope="col" className="right">Kalan</th><th scope="col" className="right">Oran</th></tr></thead>
-                <tbody>
-                  {c.data.periods.map((p) => (
-                    <tr key={p.period}>
-                      <td className="cell-main">{MONTHS[p.month - 1]} {p.year}</td>
-                      <td className="right"><Money value={p.charged} /></td>
-                      <td className="right"><Money value={p.collected} /></td>
-                      <td className="right"><Money value={p.outstanding} tone="balance" /></td>
-                      <td className="right"><Badge tone={Number(p.rate) >= 90 ? "ok" : Number(p.rate) >= 70 ? "warn" : "danger"}>{formatPercent(p.rate)}</Badge></td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot><tr><td>Toplam</td><td className="right"><Money value={c.data.total_charged} /></td><td className="right"><Money value={c.data.total_collected} /></td><td /><td className="right">{formatPercent(c.data.rate)}</td></tr></tfoot>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      {c.data && <CollectionsCard c={c.data} />}
+      <MetricDefinitions slug={site.slug} />
+    </div>
+  );
+}
+
+/** "Bu metrik nasıl hesaplanır" — tek kaynak backend metrik sözlüğü (RAP-01, servis isteği 79). */
+function MetricDefinitions({ slug }: { slug: string }) {
+  const q = useSiteGet<Schemas["CatalogReportOut"][]>("/reports/catalog");
+  const metrics = (q.data ?? []).filter((x) => x.key === "income_expense" || x.key === "collections").flatMap((x) => x.metrics);
+  if (metrics.length === 0) return null;
+  return (
+    <div className="card">
+      <div className="card__head"><span className="card__icon"><Info aria-hidden="true" /></span><span className="card__title">Bu metrikler nasıl hesaplanır?</span><Link className="btn btn--ghost btn--sm ml-auto" to={`/s/${slug}/rapor-katalogu`}>Rapor kataloğu</Link></div>
+      <div className="card__body stack" style={{ gap: 4 }}>{metrics.map((m) => <div key={m.key} className="small"><strong>{m.name}:</strong> {m.definition}</div>)}</div>
     </div>
   );
 }
 
 function ReportBody({ d }: { d: Report }) {
-  const max = d.months.reduce((m, x) => Decimal.max(m, x.income, x.expense), new Decimal(0));
   const diffPositive = !new Decimal(d.difference).isNegative();
+  const [series, setSeries] = useState<Series>("income");
+  const bars = d.months.map((m) => ({
+    label: MONTHS_SHORT[m.month - 1] ?? String(m.month),
+    value: num(series === "income" ? m.income : m.expense),
+    sub: series === "income" ? `gider ${formatMoneyShort(m.expense)}` : `gelir ${formatMoneyShort(m.income)}`,
+  }));
+  const hasAny = d.months.some((m) => !new Decimal(m.income).isZero() || !new Decimal(m.expense).isZero());
 
   return (
     <>
       <div className="grid grid--kpi">
-        <Kpi label="Gelir" tone="ok" value={formatMoneyShort(d.total_income)} note={formatMoney(d.total_income)} />
-        <Kpi label="Gider" tone="danger" value={formatMoneyShort(d.total_expense)} note={formatMoney(d.total_expense)} />
-        <Kpi label="Fark" tone={diffPositive ? "ok" : "danger"} value={formatMoneyShort(d.difference)} note={diffPositive ? "gelir fazlası" : "gider fazlası"} />
-        <Kpi label="Kasa ve banka" tone="accent" value={formatMoneyShort(d.cash_balance)} note="bugünkü toplam" />
+        <Kpi label="Gelir" tone="ok" icon={<TrendingUp aria-hidden="true" />} value={formatMoneyShort(d.total_income)} note={formatMoney(d.total_income)} />
+        <Kpi label="Gider" tone="danger" icon={<TrendingDown aria-hidden="true" />} value={formatMoneyShort(d.total_expense)} note={formatMoney(d.total_expense)} />
+        <Kpi label="Fark" tone={diffPositive ? "ok" : "danger"} icon={<Scale aria-hidden="true" />} value={formatMoneyShort(d.difference)} note={diffPositive ? "gelir fazlası" : "gider fazlası"} />
+        <Kpi label="Kasa ve banka" tone="accent" icon={<Landmark aria-hidden="true" />} value={formatMoneyShort(d.cash_balance)} note="bugünkü toplam" />
       </div>
 
-      <div className="grid grid--2">
+      <div className="grid grid--main">
         <div className="card">
           <div className="card__head">
             <span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span>
             <span className="card__title">Ay ay</span>
+            <div className="ml-auto">
+              <Segmented
+                label="Seri"
+                value={series}
+                onChange={setSeries}
+                options={[
+                  { value: "income", label: "Gelir" },
+                  { value: "expense", label: "Gider" },
+                ]}
+              />
+            </div>
           </div>
           <div className="card__body">
-            <div className="row" style={{ gap: "var(--s-4)", marginBottom: "var(--s-4)" }}>
-              <span className="row small" style={{ gap: 6, alignItems: "center" }}><span className="legend-dot" style={{ background: "var(--ok-solid)" }} /> Gelir</span>
-              <span className="row small" style={{ gap: 6, alignItems: "center" }}><span className="legend-dot" style={{ background: "var(--danger-solid)" }} /> Gider</span>
-            </div>
-            <div className="stack" style={{ gap: "var(--s-3)" }}>
-              {d.months.map((m) => {
-                const empty = new Decimal(m.income).isZero() && new Decimal(m.expense).isZero();
-                return (
-                  <div key={m.month} style={empty ? { opacity: 0.45 } : undefined}>
-                    <div className="row row--between small" style={{ marginBottom: 4 }}>
-                      <span>{MONTHS[m.month - 1]}</span>
-                      <span className="num">
-                        <span style={{ color: "var(--ok-fg)" }}>{formatMoney(m.income)}</span> <span className="muted">/</span>{" "}
-                        <span style={{ color: "var(--danger-fg)" }}>{formatMoney(m.expense)}</span>
-                      </span>
-                    </div>
-                    <div className="bars" aria-hidden="true">
-                      <div className="bars__row"><div className="bars__fill" style={{ width: `${pct(m.income, max)}%`, background: "var(--ok-solid)" }} /></div>
-                      <div className="bars__row"><div className="bars__fill" style={{ width: `${pct(m.expense, max)}%`, background: "var(--danger-solid)" }} /></div>
-                    </div>
-                  </div>
-                );
-              })}
+            {hasAny ? (
+              <div className="fin-chart">
+                <BarChart label={`Aylık ${series === "income" ? "gelir" : "gider"}`} data={bars} format={short} />
+              </div>
+            ) : (
+              <p className="small muted mb-0">Bu yıl kayıt yok.</p>
+            )}
+            <div className="table-wrap fin-months">
+              <table className="data">
+                <caption className="visually-hidden">Ay bazında gelir ve gider</caption>
+                <thead><tr><th scope="col">Ay</th><th scope="col" className="right">Gelir</th><th scope="col" className="right">Gider</th><th scope="col" className="right">Fark</th></tr></thead>
+                <tbody>
+                  {d.months.map((m) => {
+                    const empty = new Decimal(m.income).isZero() && new Decimal(m.expense).isZero();
+                    const diff = new Decimal(m.income).minus(m.expense);
+                    return (
+                      <tr key={m.month} style={empty ? { opacity: 0.5 } : undefined}>
+                        <td className="cell-main">{MONTHS[m.month - 1]}</td>
+                        <td className="right"><Money value={m.income} /></td>
+                        <td className="right"><Money value={m.expense} /></td>
+                        <td className="right"><span className={`num ${diff.isNegative() ? "amount-pos" : diff.isZero() ? "amount-zero" : "amount-neg"}`}>{formatMoney(diff.toFixed(2))}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
         <div className="stack">
           <div className="card">
-            <div className="card__head"><span className="card__title">Kategori dağılımı</span></div>
-            <div className="card__body card__body--flush">
-              <div className="table-wrap">
-                <table className="data">
-                  <caption className="visually-hidden">Gider kategorileri</caption>
-                  <thead><tr><th scope="col">Kategori</th><th scope="col" className="right">Kayıt</th><th scope="col" className="right">Pay</th><th scope="col" className="right">Tutar</th></tr></thead>
-                  <tbody>
-                    {d.categories.length === 0 && <tr><td colSpan={4} className="small muted">Bu yıl gider yok.</td></tr>}
-                    {d.categories.map((c) => (
-                      <tr key={c.category_id}>
-                        <td className="cell-main">{c.name}</td>
-                        <td className="right num">{c.count}</td>
-                        <td className="right num small">{formatPercent(c.share)}</td>
-                        <td className="right"><Money value={c.amount} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="card__head">
+              <span className="card__icon card__icon--warn"><PieChart aria-hidden="true" /></span>
+              <span className="card__title">Kategori dağılımı</span>
+            </div>
+            <div className="card__body fin-pie">
+              {d.categories.length === 0 ? (
+                <p className="small muted mb-0">Bu yıl gider yok.</p>
+              ) : (
+                <>
+                  <Donut
+                    label="Gider kategorileri"
+                    centerSub="toplam gider"
+                    center={formatMoneyShort(d.total_expense)}
+                    format={short}
+                    segments={d.categories.map((x) => ({ label: x.name, value: num(x.amount) }))}
+                  />
+                  <div className="table-wrap fin-months">
+                    <table className="data">
+                      <caption className="visually-hidden">Gider kategorileri</caption>
+                      <thead><tr><th scope="col">Kategori</th><th scope="col" className="right">Kayıt</th><th scope="col" className="right">Pay</th><th scope="col" className="right">Tutar</th></tr></thead>
+                      <tbody>
+                        {d.categories.map((x) => (
+                          <tr key={x.category_id}>
+                            <td className="cell-main">{x.name}</td>
+                            <td className="right num">{x.count}</td>
+                            <td className="right num small">{formatPercent(x.share)}</td>
+                            <td className="right"><Money value={x.amount} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -164,7 +193,7 @@ function ReportBody({ d }: { d: Report }) {
                       <div className="meter" role="img" aria-label={`${b.name} bütçesinin yüzde ${formatPercent(b.usage)} kadarı kullanıldı`}>
                         <div className={`meter__fill ${b.is_over ? "meter__fill--danger" : usage > 80 ? "meter__fill--warn" : "meter__fill--ok"}`} style={{ width: `${Math.min(100, usage)}%` }} />
                       </div>
-                      {b.is_over && <div className="small" style={{ color: "var(--danger-fg)", marginTop: 4 }}>Bütçe {formatMoney(new Decimal(b.difference).abs().toFixed(2))} aşıldı</div>}
+                      {b.is_over && <div className="small amount-pos" style={{ marginTop: 4 }}>Bütçe {formatMoney(new Decimal(b.difference).abs().toFixed(2))} aşıldı</div>}
                     </div>
                   );
                 })}
@@ -174,5 +203,49 @@ function ReportBody({ d }: { d: Report }) {
         </div>
       </div>
     </>
+  );
+}
+
+/** Aidat tahsilat özeti: halka (tahsil edilen / kalan) + dönem tablosu */
+function CollectionsCard({ c }: { c: Collections }) {
+  const outstanding = Decimal.max(new Decimal(c.total_charged).minus(c.total_collected), 0);
+  return (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--ok"><TrendingUp aria-hidden="true" /></span>
+        <span className="card__title">Aidat tahsilat özeti — {c.year}</span>
+        <span className="card__meta ml-auto">genel oran {formatPercent(c.rate)}</span>
+      </div>
+      <div className="card__body fin-aging">
+        <Donut
+          label="Yıllık tahsilat"
+          center={formatPercent(c.rate)}
+          centerSub="tahsil edildi"
+          format={short}
+          segments={[
+            { label: "Tahsil edilen", value: num(c.total_collected), tone: "ok" },
+            { label: "Kalan", value: Number(outstanding.toFixed(2)), color: "var(--chart-3)" },
+          ]}
+        />
+        <div className="table-wrap">
+          <table className="data">
+            <caption className="visually-hidden">Dönem bazında tahakkuk ve tahsilat</caption>
+            <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">Tahakkuk</th><th scope="col" className="right">Tahsil edilen</th><th scope="col" className="right">Kalan</th><th scope="col" className="right">Oran</th></tr></thead>
+            <tbody>
+              {c.periods.map((p) => (
+                <tr key={p.period}>
+                  <td className="cell-main">{MONTHS[p.month - 1]} {p.year}</td>
+                  <td className="right"><Money value={p.charged} /></td>
+                  <td className="right"><Money value={p.collected} /></td>
+                  <td className="right"><Money value={p.outstanding} tone="balance" /></td>
+                  <td className="right"><Badge tone={Number(p.rate) >= 90 ? "ok" : Number(p.rate) >= 70 ? "warn" : "danger"}>{formatPercent(p.rate)}</Badge></td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot><tr><td>Toplam</td><td className="right"><Money value={c.total_charged} /></td><td className="right"><Money value={c.total_collected} /></td><td /><td className="right">{formatPercent(c.rate)}</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }

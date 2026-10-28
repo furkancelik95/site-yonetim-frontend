@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Building2, Plus } from "lucide-react";
+import { Building2, Car, Home, Layers, Percent, Plus, Store, UserX, Warehouse } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDecimal } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { unitUsage } from "../../lib/labels";
@@ -15,6 +15,8 @@ type Block = Schemas["BlockOut"];
 type UnitType = Schemas["UnitTypeOut"];
 
 const PAGE_SIZE = 50;
+/** Kullanım türü → satır başındaki ikon (dekoratif; metin yanında yazılı) */
+const USAGE_ICON: Record<string, typeof Home> = { residential: Home, commercial: Store, storage: Warehouse, parking: Car };
 
 export function UnitsPage() {
   const { site, can } = useSite();
@@ -52,6 +54,21 @@ export function UnitsPage() {
           </>
         )}
       />
+      {/* Izgara özet yüklenirken de durur (iskelet): başlık bandı KPI'lara yer ayırır, sayfa zıplamaz */}
+      {manage && !sum.isError && (
+        <div className={`grid grid--kpi${sum.data ? " rise" : ""}`}>
+          {sum.data ? (
+            <>
+              <Kpi label="Bölüm" icon={<Building2 aria-hidden="true" />} value={sum.data.active_unit_count} note={sum.data.unit_count !== sum.data.active_unit_count ? `${sum.data.unit_count - sum.data.active_unit_count} pasif` : "tümü etkin"} />
+              <Kpi label="Blok" icon={<Layers aria-hidden="true" />} value={sum.data.block_count} note={`${sum.data.common_area_count} ortak alan`} />
+              <Kpi label="Maliksiz bölüm" icon={<UserX aria-hidden="true" />} tone={sum.data.units_without_owner.length ? "danger" : "ok"} value={sum.data.units_without_owner.length} note={sum.data.units_shares_incomplete.length ? `${sum.data.units_shares_incomplete.length} bölümde hisse eksik` : "hisseler tam"} />
+              <Kpi label="Arsa payı" icon={<Percent aria-hidden="true" />} tone={sum.data.land_share_mismatch ? "warn" : undefined} value={sum.data.land_share_denominator ? `${sum.data.land_share_sum} / ${sum.data.land_share_denominator}` : "—"} note={sum.data.land_share_mismatch ? "toplam paydaya eşit değil" : sum.data.units_without_land_share ? `${sum.data.units_without_land_share} bölümde yok` : "tamam"} />
+            </>
+          ) : (
+            [0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)
+          )}
+        </div>
+      )}
       {sum.data && (sum.data.units_without_owner.length > 0 || sum.data.land_share_mismatch) && (
         <Alert tone="warn" title="Yapı kontrolü">
           {sum.data.units_without_owner.length > 0 && <>{sum.data.units_without_owner.length} bölümün maliki yok: {sum.data.units_without_owner.slice(0, 6).map((u) => <Link key={u.id} to={u.id}>{u.display_name}</Link>).reduce<React.ReactNode[]>((acc, el, i) => (i ? [...acc, ", ", el] : [el]), [])}{sum.data.units_without_owner.length > 6 && "…"}. </>}
@@ -61,20 +78,6 @@ export function UnitsPage() {
       )}
 
       {adding && <NewUnitForm blocks={blocks.data?.items ?? []} onDone={() => setAdding(false)} />}
-
-      <div className="filters">
-        <div className="field">
-          <label className="field__label" htmlFor="unit-q">Ara</label>
-          <input id="unit-q" className="field__input" type="search" placeholder="Bölüm, malik ya da kiracı adı" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="unit-block">Blok</label>
-          <select id="unit-block" className="field__input" value={s.block} onChange={(e) => set({ block: e.target.value, page: "1" })}>
-            <option value="">Tümü</option>
-            {blocks.data?.items.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </div>
-      </div>
 
       {manage && sel.length > 0 && (
         <div className="bulkbar" role="region" aria-label="Seçim">
@@ -86,6 +89,26 @@ export function UnitsPage() {
       {manage && bulk && sel.length > 0 && <BulkForm ids={sel} onDone={() => { setBulk(false); setSel([]); }} />}
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Bağımsız bölümler</div>
+            {units.data && <div className="card__meta">{units.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field">
+              <label className="field__label" htmlFor="unit-q">Ara</label>
+              <input id="unit-q" className="field__input" type="search" placeholder="Bölüm, malik ya da kiracı adı" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="unit-block">Blok</label>
+              <select id="unit-block" className="field__input" value={s.block} onChange={(e) => set({ block: e.target.value, page: "1" })}>
+                <option value="">Tümü</option>
+                {blocks.data?.items.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {units.isPending ? (
             <Loading />
@@ -111,26 +134,42 @@ export function UnitsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {units.data.items.map((u) => (
-                    <tr key={u.id}>
-                      {manage && <td><input type="checkbox" aria-label={`${u.display_name} seç`} checked={sel.includes(u.id)} onChange={() => toggleOne(u.id)} /></td>}
-                      <td>
-                        <Link to={u.id} className="cell-main">{u.display_name}</Link>
-                        <div className="cell-sub">
-                          {u.floor !== null && u.floor !== undefined ? `${u.floor}. kat · ` : ""}
-                          {unitUsage(u.usage)}
-                          {!u.is_active && " · Pasif"}
-                        </div>
-                      </td>
-                      <td className="small">{u.unit_type?.name ?? "—"}</td>
-                      <td className="right num">{formatDecimal(u.gross_area)}</td>
-                      <td className="right num small">
-                        {u.land_share_numerator && u.land_share_denominator ? `${u.land_share_numerator}/${u.land_share_denominator}` : "—"}
-                      </td>
-                      <td className="small">{u.owner_names.join(", ") || <span className="field__error">Malik yok</span>}</td>
-                      <td className="small">{u.tenant_names.join(", ") || "—"}</td>
-                    </tr>
-                  ))}
+                  {units.data.items.map((u) => {
+                    const UsageIcon = USAGE_ICON[u.usage] ?? Building2;
+                    return (
+                      <tr key={u.id} style={!u.is_active ? { opacity: 0.6 } : undefined}>
+                        {manage && <td><input type="checkbox" aria-label={`${u.display_name} seç`} checked={sel.includes(u.id)} onChange={() => toggleOne(u.id)} /></td>}
+                        <td>
+                          <div className="cell-chip">
+                            <IconChip tone={u.is_active ? undefined : "muted"}><UsageIcon /></IconChip>
+                            <div>
+                              <Link to={u.id} className="cell-main">{u.display_name}</Link>
+                              <div className="cell-sub">
+                                {u.floor !== null && u.floor !== undefined ? `${u.floor}. kat · ` : ""}
+                                {unitUsage(u.usage)}
+                                {!u.is_active && " · Pasif"}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="small">{u.unit_type?.name ?? "—"}</td>
+                        <td className="right num">{formatDecimal(u.gross_area)}</td>
+                        <td className="right num small">
+                          {u.land_share_numerator && u.land_share_denominator ? `${u.land_share_numerator}/${u.land_share_denominator}` : "—"}
+                        </td>
+                        <td className="small">
+                          {u.owner_names.length > 0 ? (
+                            <div className="cell-person"><Avatar name={u.owner_names[0]} size="sm" soft /><span>{u.owner_names.join(", ")}</span></div>
+                          ) : <span className="field__error">Malik yok</span>}
+                        </td>
+                        <td className="small">
+                          {u.tenant_names.length > 0 ? (
+                            <div className="cell-person"><Avatar name={u.tenant_names[0]} size="sm" soft /><span>{u.tenant_names.join(", ")}</span></div>
+                          ) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

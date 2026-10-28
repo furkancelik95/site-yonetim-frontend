@@ -1,13 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Columns3, Plus, Wrench } from "lucide-react";
+import { AlertTriangle, BarChart3, Columns3, Hourglass, Inbox, PieChart, Plus, Wrench } from "lucide-react";
+import { BarChart, Donut } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Avatar, Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
-import { PRIORITIES, REQUEST_STATUSES, priorityTone, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { categoryIcon } from "../../lib/icons";
+import { PRIORITIES, REQUEST_STATUSES, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentFilter, DepartmentManager } from "./Departments";
 import { SlaBadge } from "./RequestExtras";
@@ -15,57 +17,92 @@ import { useRequestCategories } from "./requestCategories";
 
 type Req = Schemas["RequestOut"];
 
+/** Kategori hücresi: daire içinde ikon + kategori adı (ikon dekoratif, ad metin olarak yazılı).
+ *  Ad sitenin tanımlı kategorisinden gelir (`category_name`); verilmezse varsayılan ad. */
+export function CategoryCell({ category, name }: { category: string; name?: string | null }) {
+  const Icon = categoryIcon(category);
+  return (
+    <span className="req-cat">
+      <IconChip><Icon /></IconChip>
+      <span className="req-cat__name">{name || requestCategory(category)}</span>
+    </span>
+  );
+}
+
 export function RequestsPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ status: "", category: "", priority: "", departman: "", sla: "", page: "1" });
   const categories = useRequestCategories();
   const r = useSiteGet<Page<Req>>("/requests", { status: s.status, category: s.category, priority: s.priority, department_id: s.departman, sla_breached: s.sla === "breached" ? "true" : undefined, page: s.page, page_size: 50 });
+  // Üstteki sayılar süzgeçten bağımsız: durum başına toplam (yalnız sayı istenir, page_size 1)
+  const open = useSiteGet<Page<Req>>("/requests", { status: "open", page_size: 1 });
+  const asg = useSiteGet<Page<Req>>("/requests", { status: "assigned", page_size: 1 });
+  const prog = useSiteGet<Page<Req>>("/requests", { status: "in_progress", page_size: 1 });
+  const wait = useSiteGet<Page<Req>>("/requests", { status: "waiting", page_size: 1 });
+  const urgent = useSiteGet<Page<Req>>("/requests", { status: "open", priority: "urgent", page_size: 1 });
   const [adding, setAdding] = useState(false);
   const [managing, setManaging] = useState(false);
+  const n = (q: { data?: Page<Req> }) => q.data?.total ?? "…";
 
   return (
     <div className="stack">
       <PageHead
+        band
         title="Talepler"
+        eyebrow="Operasyon"
         subtitle={r.data ? `${r.data.total} talep` : undefined}
         actions={<>{can(P.requestsAssign) && <button className="btn" type="button" aria-expanded={managing} onClick={() => setManaging((v) => !v)}>Departmanlar</button>}<Link className="btn" to="pano"><Columns3 aria-hidden="true" /> Pano görünümü</Link><Link className="btn" to="ana-olaylar">Ana olaylar</Link>{can(P.requestsAssign) && <Link className="btn" to="ayarlar">SLA ve şablonlar</Link>}{can(P.requestsCreate) && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Yeni talep</button>}</>}
       />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Açık" icon={<Inbox aria-hidden="true" />} value={n(open)} note="yeni gelen talepler" />
+        <Kpi label="Atandı / işlemde" tone="accent" icon={<Wrench aria-hidden="true" />} value={asg.data && prog.data ? asg.data.total + prog.data.total : "…"} note={asg.data ? `${asg.data.total} atandı, ekip üzerinde` : "ekip üzerinde çalışıyor"} />
+        <Kpi label="Beklemede" tone="warn" icon={<Hourglass aria-hidden="true" />} value={n(wait)} note="parça, firma ya da sakin bekleniyor" />
+        <Kpi label="Acil" tone={typeof urgent.data?.total === "number" && urgent.data.total > 0 ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={n(urgent)} note="açık ve acil öncelikli" />
+      </div>
       {managing && <DepartmentManager onClose={() => setManaging(false)} />}
       {adding && <NewRequestForm onDone={() => setAdding(false)} />}
 
-      <div className="filters">
-        <div className="field">
-          <label className="field__label" htmlFor="r-status">Durum</label>
-          <select id="r-status" className="field__input" value={s.status} onChange={(e) => set({ status: e.target.value })}>
-            <option value="">Tümü</option>
-            {REQUEST_STATUSES.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="r-cat">Kategori</label>
-          <select id="r-cat" className="field__input" value={s.category} onChange={(e) => set({ category: e.target.value })}>
-            <option value="">Tümü</option>
-            {categories.map((c) => <option key={c.key} value={c.key}>{c.name}{c.is_active ? "" : " (pasif)"}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="r-pri">Öncelik</label>
-          <select id="r-pri" className="field__input" value={s.priority} onChange={(e) => set({ priority: e.target.value })}>
-            <option value="">Tümü</option>
-            {PRIORITIES.map((x) => <option key={x} value={x}>{requestPriority(x)}</option>)}
-          </select>
-        </div>
-        <DepartmentFilter id="r-dep" value={s.departman} onChange={(v) => set({ departman: v })} />
-        <div className="field">
-          <label className="field__label" htmlFor="r-sla">SLA</label>
-          <select id="r-sla" className="field__input" value={s.sla} onChange={(e) => set({ sla: e.target.value, page: "1" })}>
-            <option value="">Tümü</option>
-            <option value="breached">Süresi geçmiş açık talepler</option>
-          </select>
-        </div>
-      </div>
+      <RequestCharts />
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--warn"><Wrench aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Talep listesi</div>
+            {r.data && <div className="card__meta">{r.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field">
+              <label className="field__label" htmlFor="r-status">Durum</label>
+              <select id="r-status" className="field__input" value={s.status} onChange={(e) => set({ status: e.target.value })}>
+                <option value="">Tümü</option>
+                {REQUEST_STATUSES.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="r-cat">Kategori</label>
+              <select id="r-cat" className="field__input" value={s.category} onChange={(e) => set({ category: e.target.value })}>
+                <option value="">Tümü</option>
+                {categories.map((c) => <option key={c.key} value={c.key}>{c.name}{c.is_active ? "" : " (pasif)"}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="r-pri">Öncelik</label>
+              <select id="r-pri" className="field__input" value={s.priority} onChange={(e) => set({ priority: e.target.value })}>
+                <option value="">Tümü</option>
+                {PRIORITIES.map((x) => <option key={x} value={x}>{requestPriority(x)}</option>)}
+              </select>
+            </div>
+            <DepartmentFilter id="r-dep" value={s.departman} onChange={(v) => set({ departman: v })} />
+            <div className="field">
+              <label className="field__label" htmlFor="r-sla">SLA</label>
+              <select id="r-sla" className="field__input" value={s.sla} onChange={(e) => set({ sla: e.target.value, page: "1" })}>
+                <option value="">Tümü</option>
+                <option value="breached">Süresi geçmiş açık talepler</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {r.isPending ? (
             <Loading />
@@ -78,23 +115,39 @@ export function RequestsPage() {
               <table className="data">
                 <caption className="visually-hidden">Talepler</caption>
                 <thead>
-                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum</th><th scope="col">Departman / atanan</th><th scope="col">Açılış</th><th scope="col">SLA</th></tr>
+                  <tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col">Durum ve öncelik</th><th scope="col">SLA</th><th scope="col" className="hide-sm">Departman / atanan</th><th scope="col" className="hide-sm">Açılış</th></tr>
                 </thead>
                 <tbody>
                   {r.data.items.map((q) => (
                     <tr key={q.id}>
-                      <td>
+                      <td className="req-title">
                         <Link to={q.id} className="cell-main">#{q.number} {q.title}</Link>
                         <div className="cell-sub">{q.unit_name ?? q.location ?? "Ortak alan"}{q.reporter_name ? ` · ${q.reporter_name}` : ""}</div>
                       </td>
-                      <td className="small">{q.category_name}</td>
+                      <td><CategoryCell category={q.category} name={q.category_name} /></td>
                       <td>
-                        <Badge tone={requestStatusTone(q.status)}>{q.status_label || requestStatus(q.status)}</Badge>
-                        {(q.priority === "high" || q.priority === "urgent") && <div style={{ marginTop: 4 }}><Badge tone={priorityTone(q.priority)}>{requestPriority(q.priority)}</Badge></div>}
+                        <div className="req-badges">
+                          <Badge tone={requestStatusTone(q.status)}>{q.status_label || requestStatus(q.status)}</Badge>
+                          {(q.priority === "high" || q.priority === "urgent") && <Badge tone={priorityTone(q.priority)}>{requestPriority(q.priority)}</Badge>}
+                        </div>
                       </td>
-                      <td className="small">{q.department_name && <Badge tone="info">{q.department_name}</Badge>}<div>{q.assigned_to ?? (q.department_name ? null : <span className="subtle">—</span>)}</div></td>
-                      <td className="small nowrap">{formatDateTime(q.created_at)}</td>
                       <td><SlaBadge s={q.sla} /></td>
+                      <td className="hide-sm">
+                        {q.assigned_to ? (
+                          <div className="cell-person">
+                            <Avatar name={q.assigned_to} size="sm" soft />
+                            <div>
+                              <div className="cell-main">{q.assigned_to}</div>
+                              {q.department_name && <div className="cell-sub">{q.department_name}</div>}
+                            </div>
+                          </div>
+                        ) : q.department_name ? (
+                          <Badge tone="info">{q.department_name}</Badge>
+                        ) : (
+                          <span className="subtle">—</span>
+                        )}
+                      </td>
+                      <td className="small nowrap muted hide-sm">{formatDateTime(q.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -107,6 +160,63 @@ export function RequestsPage() {
             <Pager page={r.data.page} pageSize={r.data.page_size} total={r.data.total} onPage={(p) => set({ page: String(p) })} />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Kategori dağılımı (halka) ve son 6 ayda açılan talep sayısı (çubuk). Süzgeçten bağımsız:
+ * en yeni 200 talep okunur; daha fazlası varsa kart başlığı bunu söyler (sayı uydurulmaz).
+ */
+function RequestCharts() {
+  const all = useSiteGet<Page<Req>>("/requests", { page_size: 200 });
+  if (all.isError) return null;
+  if (!all.data) {
+    return <div className="ops-charts">{[0, 1].map((i) => <div key={i} className="skeleton" style={{ height: 260, borderRadius: "var(--r-xl)" }} />)}</div>;
+  }
+  const items = all.data.items;
+  if (items.length === 0) return null;
+  const partial = all.data.total > items.length;
+
+  const byCat = new Map<string, number>();
+  const names = new Map<string, string>();
+  for (const q of items) { byCat.set(q.category, (byCat.get(q.category) ?? 0) + 1); if (q.category_name) names.set(q.category, q.category_name); }
+  const cats = [...byCat.entries()].sort((a, b) => b[1] - a[1]);
+  // 5'ten fazla dilim okunmaz: ilk 4 + "Diğer"
+  const top = cats.slice(0, 4).map(([k, v]) => ({ label: names.get(k) ?? requestCategory(k), value: v }));
+  const rest = cats.slice(4).reduce((a, [, v]) => a + v, 0);
+  const segments = rest > 0 ? [...top, { label: "Diğer", value: rest }] : top;
+
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => new Date(now.getFullYear(), now.getMonth() - 5 + i, 1));
+  const bars = months.map((m) => ({
+    label: m.toLocaleDateString("tr-TR", { month: "short" }),
+    value: items.filter((q) => { const d = new Date(q.created_at); return d.getFullYear() === m.getFullYear() && d.getMonth() === m.getMonth(); }).length,
+  }));
+  const meta = partial ? `son ${items.length} talep` : `${items.length} talep`;
+
+  return (
+    <div className="ops-charts">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span>
+          <span className="card__title">Kategoriye göre</span>
+          <span className="card__meta ml-auto">{meta}</span>
+        </div>
+        <div className="card__body ops-pie">
+          <Donut label="Talep kategorileri" segments={segments} centerSub="talep" />
+        </div>
+      </div>
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span>
+          <span className="card__title">Aylık açılan talep</span>
+          <span className="card__meta ml-auto">son 6 ay</span>
+        </div>
+        <div className="card__body ops-chart">
+          <BarChart label="Aylık açılan talep" data={bars} highlight={5} />
+        </div>
       </div>
     </div>
   );
@@ -131,7 +241,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Yeni talep</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Plus aria-hidden="true" /></span><span className="card__title">Yeni talep</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Başlık" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={up("title")} placeholder="ör. B blok asansörü çalışmıyor" />}</Field>
