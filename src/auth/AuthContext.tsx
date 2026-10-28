@@ -1,6 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError, api, get, refreshSession, setAccessToken, setMfaRequiredHandler, setSessionLostHandler } from "../api/client";
+import {
+  ApiError,
+  api,
+  get,
+  refreshSession,
+  setAccessToken,
+  setConsentRequiredHandler,
+  setMfaRequiredHandler,
+  setSessionLostHandler,
+} from "../api/client";
 import type { Me, TokenResponse } from "../api/types";
 
 /**
@@ -76,6 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMfaRequiredHandler(null);
     };
   }, [reset]);
+
+  // Yeni aydınlatma metni sürümü (P6): /me tazelenir, RequireAuth onay ekranına yönlendirir.
+  useEffect(() => {
+    setConsentRequiredHandler(() => void reloadMe());
+    return () => setConsentRequiredHandler(null);
+  }, [reloadMe]);
 
   /** Jetonu alır; 2FA bekleniyorsa `null` (kod ekranı), değilse `/me`. */
   const afterToken = useCallback(
@@ -163,6 +178,7 @@ export function showsPortfolio(me: Me): boolean {
 export function homePath(me: Me): string {
   if (me.must_change_password) return "/parola-degistir";
   if (me.mfa_setup_required) return "/iki-adimli-dogrulama";
+  if (me.consent_required) return "/aydinlatma-onayi";
   if (me.is_platform_admin) return "/yonetim";
   if (me.kind === "resident") {
     const s = me.sites[0];
