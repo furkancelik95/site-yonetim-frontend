@@ -2,33 +2,38 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { CalendarCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Schemas } from "../../api/types";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { resStatus, resTone } from "../../lib/labels";
-import { RulesSummary, SlotPicker, type ResArea, type Slot } from "../site/ReservationPages";
+import { RulesSummary, SlotPicker, type ResArea } from "../site/ReservationPages";
 
-interface MyRes { id: string; area_name: string; date: string; start: string; end: string; people: number; guests: number; status: string; code: string; fee: string; reject_reason: string | null; cancel_reason: string | null; cancelled_late: boolean; verify: string; cancel_hours: number; channel: string; created_by: string }
-interface MyWait { id: string; area_name: string; date: string; start: string; end: string; status: string; offered_until: string | null }
+type MyRes = Schemas["ResidentReservationOut"];
+type MyWait = Schemas["WaitlistEntryOut"];
+type Mine = Schemas["ResidentReservationsOut"];
+type Availability = Schemas["ResidentAvailabilityOut"];
 
 /** Rezervasyon (REZ-02, sakin): alan ve saat seçimi, dolu saatte bekleme listesi, rezervasyonlarım (kod/QR), iptal, bekleme teklifi. */
 export function ResidentReservationPage() {
   useDocumentTitle("Rezervasyon");
   const areas = useSiteGet<ResArea[]>("/resident/reservable-areas");
-  const mine = useSiteGet<{ reservations: MyRes[]; waitlist: MyWait[] }>("/resident/reservations", undefined, { refetchInterval: 60000 });
+  const mine = useSiteGet<Mine>("/resident/reservations", undefined, { refetchInterval: 60000 });
   const [areaId, setAreaId] = useState("");
   const [date, setDate] = useState(todayIso());
   const [start, setStart] = useState("");
   const [people, setPeople] = useState("2");
   const [guests, setGuests] = useState("0");
   const area = (areas.data ?? []).find((a) => a.id === areaId) ?? areas.data?.[0];
-  const av = useSiteGet<{ slots: Slot[]; blocked_until: string | null }>(`/resident/reservable-areas/${area?.id}/availability`, { date }, { enabled: !!area });
+  const av = useSiteGet<Availability>(`/resident/reservable-areas/${area?.id}/availability`, { date }, { enabled: !!area });
   const slot = av.data?.slots.find((s) => s.start === start);
   const full = !!slot && slot.taken >= slot.capacity;
-  const m = useSiteMutation<Record<string, unknown>, unknown>("POST", "/resident/reservations", { onSuccess: () => setStart("") });
+  const m = useSiteMutation<Record<string, unknown>, Schemas["BookingOut"]>("POST", "/resident/reservations", { money: true, onSuccess: () => setStart("") });
+  const blocked = !!av.data?.blocked_until || !!av.data?.debt_block;
   const upcoming = (mine.data?.reservations ?? []).filter((r) => ["pending", "approved", "checked_in"].includes(r.status) && r.date >= todayIso());
   const past = (mine.data?.reservations ?? []).filter((r) => !upcoming.includes(r)).slice(0, 8);
   return (
     <>
+      {mine.isError && <ErrorState error={mine.error} />}
       {(mine.data?.waitlist ?? []).map((w) => <WaitCard key={w.id} w={w} />)}
       {upcoming.length > 0 && <div className="section-title">Yaklaşan rezervasyonlarım</div>}
       {upcoming.map((r) => <ResCard key={r.id} r={r} />)}
@@ -40,6 +45,7 @@ export function ResidentReservationPage() {
             <Field label="Alan">{(p) => <select {...p} className="field__input" value={area.id} onChange={(e) => { setAreaId(e.target.value); setStart(""); }}>{areas.data.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
             <RulesSummary r={area.rules} />
             {av.data?.blocked_until && <div className="alert alert--danger" role="alert">Gelinmeyen rezervasyonlarınız nedeniyle {formatDate(av.data.blocked_until)} tarihine kadar bu alanı rezerve edemezsiniz.</div>}
+            {av.data?.debt_block && <div className="alert alert--danger" role="alert">{av.data.debt_block}</div>}
             <Field label="Tarih" error={fieldError(m.error, "date")}>{(p) => <input {...p} className="field__input" type="date" min={todayIso()} value={date} onChange={(e) => { setDate(e.target.value); setStart(""); }} />}</Field>
             <SlotPicker slots={av.data?.slots} value={start} onChange={setStart} error={fieldError(m.error, "start")} allowFull={area.rules.waitlist} />
             <div className="grid grid--2">
@@ -47,7 +53,7 @@ export function ResidentReservationPage() {
               <Field label="Misafir" error={fieldError(m.error, "guests")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={guests} onChange={(e) => setGuests(e.target.value.replace(/\D/g, ""))} />}</Field>
             </div>
             {full && <p className="small mb-0">Bu saat dolu. Bekleme listesine girerseniz yer açıldığında size {area.rules.waitlist_minutes} dakika geçerli teklif gelir.</p>}
-            <SubmitButton busy={m.isPending} disabled={!start || !!av.data?.blocked_until}>{full ? "Bekleme listesine gir" : area.rules.approval === "manual" ? "Rezervasyon iste" : "Rezervasyon yap"}</SubmitButton>
+            <SubmitButton busy={m.isPending} disabled={!start || blocked}>{full ? "Bekleme listesine gir" : area.rules.approval === "manual" ? "Rezervasyon iste" : "Rezervasyon yap"}</SubmitButton>
           </div>
         </form>
       )}
@@ -55,7 +61,7 @@ export function ResidentReservationPage() {
       {past.map((r) => (
         <div key={r.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
           <div className="r-item__title">{r.area_name} <Badge tone={resTone(r.status)}>{resStatus(r.status)}</Badge></div>
-          <div className="r-item__meta">{formatDate(r.date)} {r.start}–{r.end}{Number(r.fee) > 0 && <> · <Money value={r.fee} /></>}{r.reject_reason && ` · ${r.reject_reason}`}{r.status === "cancelled" && r.cancelled_late && Number(r.fee) > 0 && " · geç iptal"}</div>
+          <div className="r-item__meta">{formatDate(r.date)} {r.start}–{r.end}{Number(r.fee) > 0 && <> · <Money value={r.fee} />{r.fee_refunded && " (iade edildi)"}</>}{r.reject_reason && ` · ${r.reject_reason}`}{r.status === "cancelled" && r.cancelled_late && Number(r.fee) > 0 && " · geç iptal"}</div>
         </div></div>
       ))}
     </>
@@ -79,6 +85,7 @@ function ResCard({ r }: { r: MyRes }) {
         </div>
       )}
       {r.status === "checked_in" && <div className="small">Girişiniz kaydedildi.</div>}
+      <FormError error={cancel.error} />
       {["pending", "approved"].includes(r.status) && (
         <div><ConfirmButton className="btn btn--sm btn--ghost" title="Rezervasyonu iptal et" confirmLabel="İptal et" danger
           body={<p className="mb-0">{r.area_name}, {formatDate(r.date)} {r.start}.{Number(r.fee) > 0 && (late ? ` Son iptal süresi (${r.cancel_hours} saat) geçti; ücret iade edilmeyebilir.` : " Ücret borcunuzdan düşülür.")}</p>}

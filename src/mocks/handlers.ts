@@ -7,6 +7,9 @@
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
 //
+// Rezervasyon 59–61 (alanlar ve kurallar, sakin/sakin adına rezervasyon, bekleme listesi, kod/QR ile giriş,
+// no-show, kullanım raporu; K11 borçlu bölüm kısıtı) backend'de — sahte uçları silindi (27.10.2026).
+//
 // Backend'e geçti, handler'ı kaldırıldı: Satın alma 62–67 (tedarikçi kartı, ayar ve bütçe, talep/
 // teklif/tedarikçi linki/onay, sipariş ve kabul, tedarikçi faturası ve üçlü eşleşme, ödenecekler).
 // İletişim ve acil durum 71–74 (okuma onayı ve raporu, zamanlanmış
@@ -58,7 +61,6 @@ const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 const today = () => iso(new Date());
 /** ISO zaman damgasının YEREL günü (UTC'de .slice(0, 10) gece yarısından sonra bir önceki günü verir). */
 const dayOf = (ts: string) => iso(new Date(ts));
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 async function me(request: Request) {
   const r = await real<{ full_name: string; user_id: string }>(request, "/api/v1/me");
@@ -80,14 +82,14 @@ async function allPages<T>(request: Request, path: string): Promise<T[]> {
 // ============================================================================================
 // Yapı, Kişiler ve Kayıt paketi (servis istekleri 19–26) backend'de. Diğer sahte paketlerin
 // kullandığı ortak alanlar ve araçlar gerçek uçlardan okunup buraya önbelleğe alınır
-// (rezervasyon ve kapı/plaka sahte uçları bu listeye bakar).
+// (kapı/plaka sahte uçları bu listeye bakar).
 // ============================================================================================
 interface CommonArea { id: string; name: string; kind: string; block_id: string | null; block_name: string | null; is_reservable: boolean; is_active: boolean; note: string | null }
 interface Vehicle { id: string; plate: string; plate_display: string; unit_id: string; unit_name: string; owner_name: string | null; kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive" }
 const commonAreas = loadMap<string, CommonArea[]>("commonAreas");
 const vehicles = loadMap<string, Vehicle[]>("vehicles");
 
-/** Rezervasyon ve kapı sahte uçlarından önce gerçek ortak alan ve araç listesini önbelleğe alır. */
+/** Kapı sahte uçlarından önce gerçek ortak alan ve araç listesini önbelleğe alır. */
 async function syncShared(request: Request, slug: string) {
   const areas = await real<CommonArea[]>(request, `/api/v1/sites/${slug}/common-areas`);
   if (areas.status === 200 && areas.body) commonAreas.set(slug, areas.body);
@@ -95,7 +97,7 @@ async function syncShared(request: Request, slug: string) {
   const probe = await real<Paged<Vehicle>>(request, `/api/v1/sites/${slug}/vehicles?status=active&page_size=1`);
   if (probe.status === 200) vehicles.set(slug, await allPages<Vehicle>(request, `/api/v1/sites/${slug}/vehicles?status=active`));
 }
-const SYNC_PATHS = /\/(reservable-areas|reservations|resident\/reservable-areas|resident\/reservations|reservation-waitlist|plates\/lookup|gate-logs|parking-violations)(\/|$|\?)/;
+const SYNC_PATHS = /\/(plates\/lookup|gate-logs|parking-violations)(\/|$|\?)/;
 
 const ortakOnbellek: RequestHandler[] = [
   http.all(`${API}/*`, async ({ request, params }) => {
@@ -105,333 +107,15 @@ const ortakOnbellek: RequestHandler[] = [
 ];
 
 // ============================================================================================
-// Ortak yardımcılar — Finans Mod P (27–34) gerçek backend'e geçti. Aşağıdaki sahte modüller (ücretli
-// hizmet, rezervasyon, tadilat izni) ücreti hâlâ kendi sahte deposuna yazar; o paketler backend'e
-// geçince backend iç servisi (`ad_hoc_charges.create`) ile gerçek cariye bağlanacak.
+// Ortak yardımcılar — Finans Mod P (27–34) ve rezervasyon (59–61) gerçek backend'e geçti.
 // ============================================================================================
 const cents = (v: unknown) => Math.round(Number(v ?? 0) * 100);
 const tl = (c: number) => (c / 100).toFixed(2);
 const addMonths = (d: string, n: number) => { const x = new Date(d + "T00:00:00"); const day = x.getDate(); x.setDate(1); x.setMonth(x.getMonth() + n); const last = new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate(); x.setDate(Math.min(day, last)); return iso(x); };
-const addDays = (d: string, n: number) => { const x = new Date(d + "T00:00:00"); x.setDate(x.getDate() + n); return iso(x); };
-type AdHocSource = "reservation" | "service" | "renovation" | "penalty" | "other";
-interface AdHocSettings { sources: Record<AdHocSource, { mode: "immediate" | "next_period"; due_days: number }> }
-interface AdHocCharge { id: string; unit_id: string; unit_name: string; account_id: string; account_kind: string; reference_code: string; person_name: string | null; source: AdHocSource; description: string; amount: string; due_date: string; mode: "immediate" | "next_period"; status: "posted" | "waiting_next_run" | "cancelled"; created_by: string; created_at: string; cancel_reason: string | null }
-const adHocSettings = loadMap<string, AdHocSettings>("adHocSettings");
-const adHocCharges = loadMap<string, AdHocCharge[]>("adHocCharges");
-const AD_HOC_SOURCES: AdHocSource[] = ["reservation", "service", "renovation", "penalty", "other"];
-const adHocOf = (slug: string) => { if (!adHocSettings.has(slug)) adHocSettings.set(slug, { sources: Object.fromEntries(AD_HOC_SOURCES.map((s) => [s, { mode: "immediate", due_days: 10 }])) as AdHocSettings["sources"] }); return adHocSettings.get(slug)!; };
-
-// Ortak saat yardımcıları (İnsan kaynakları paketi 35–39 gerçek backend'e geçti; aşağıdaki sahte uçlar kullanıyor)
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-const weekStart = (d: string) => { const x = new Date(d + "T00:00:00"); const w = (x.getDay() + 6) % 7; x.setDate(x.getDate() - w); return iso(x); };
-
-// Güvenlik ve devriye paketi (servis istekleri 40–46) backend'de; aşağıdaki yardımcılar diğer
-// sahte uçlarda (rutin görev, rezervasyon, iletişim) kullanılıyor.
-const randCode = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
-const nowHm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 
 // Hizmetler paketi (servis istekleri 47–52) backend'de; aşağıdaki sahte uçlar (69 hizmet karnesi,
 // talep raporları) gerçek talep satırındaki `sla` ve `feedback` alanlarını kullanır.
 interface ReqRow { id: string; category: string; status: string; created_at: string; resolved_at: string | null; sla: { state: string } | null; feedback: { solved: boolean; score: number | null } | null }
-
-// ============================================================================================
-// REZERVASYON PAKETİ (Yazılım Dokümanı REZ-01..03) — servis istekleri 59–61
-// ============================================================================================
-interface ResRules {
-  enabled: boolean; open_from: string; open_to: string; slot_minutes: number; capacity: number; max_people: number; max_guests: number;
-  weekly_limit: number; cancel_hours: number; late_cancel_refund: boolean;
-  fee_type: "free" | "fixed" | "hourly" | "per_guest"; fee_amount: string;
-  channel: "resident" | "staff" | "both"; approval: "auto" | "manual"; verify: "none" | "qr" | "code" | "staff";
-  waitlist: boolean; waitlist_minutes: number; noshow: { enabled: boolean; months: number; count: number; block_days: number };
-}
-interface Reservation {
-  id: string; area_id: string; area_name: string; date: string; start: string; end: string; unit_id: string; unit_name: string; person_name: string;
-  people: number; guests: number; status: "pending" | "approved" | "rejected" | "cancelled" | "checked_in" | "no_show" | "completed";
-  code: string; channel: "resident" | "staff"; created_by: string; created_at: string; fee: string; charge_id: string | null;
-  account: { id: string; kind: string; reference_code: string; person_name: string | null } | null;
-  reject_reason: string | null; cancel_reason: string | null; cancelled_late: boolean; checked_in_at: string | null; checked_in_by: string | null; decided_by: string | null;
-}
-interface WaitEntry { id: string; area_id: string; area_name: string; date: string; start: string; end: string; unit_id: string; unit_name: string; person_name: string; people: number; guests: number; status: "waiting" | "offered" | "accepted" | "expired" | "left"; offered_until: string | null; created_at: string; account: Reservation["account"] }
-const RES_DEFAULT: ResRules = { enabled: true, open_from: "09:00", open_to: "22:00", slot_minutes: 60, capacity: 1, max_people: 10, max_guests: 5, weekly_limit: 2, cancel_hours: 24, late_cancel_refund: false, fee_type: "free", fee_amount: "0.00", channel: "both", approval: "auto", verify: "code", waitlist: true, waitlist_minutes: 30, noshow: { enabled: false, months: 3, count: 2, block_days: 14 } };
-const resRules = loadMap<string, Record<string, ResRules>>("resRules"); // slug → area_id → kurallar
-const reservations = loadMap<string, Reservation[]>("reservations");
-const waitlist = loadMap<string, WaitEntry[]>("waitlist");
-const rulesOf = (slug: string, areaId: string) => { if (!resRules.has(slug)) resRules.set(slug, {}); const m = resRules.get(slug)!; if (!m[areaId]) m[areaId] = { ...RES_DEFAULT, noshow: { ...RES_DEFAULT.noshow } }; return m[areaId]!; };
-const resAreas = (slug: string) => listOf(commonAreas, slug).filter((a) => a.is_reservable && a.is_active);
-const hm2m = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-const m2hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-const slotsOf = (r: ResRules) => { const out: { start: string; end: string }[] = []; for (let m = hm2m(r.open_from); m + r.slot_minutes <= hm2m(r.open_to); m += r.slot_minutes) out.push({ start: m2hm(m), end: m2hm(m + r.slot_minutes) }); return out; };
-const LIVE: Reservation["status"][] = ["pending", "approved", "checked_in"];
-const feeOf = (r: ResRules, guests: number) => r.fee_type === "free" ? 0 : r.fee_type === "fixed" ? cents(r.fee_amount) : r.fee_type === "hourly" ? Math.round(cents(r.fee_amount) * r.slot_minutes / 60) : cents(r.fee_amount) * guests;
-const resEndIso = (x: { date: string; end: string }) => new Date(`${x.date}T${x.end}:00`).toISOString();
-const resStartMs = (x: { date: string; start: string }) => new Date(`${x.date}T${x.start}:00`).getTime();
-
-/** Okuma anında zamanlanmış işleri işletir: biten rezervasyonu kapatır (doğrulama varsa no-show), süresi geçen bekleme teklifini sıradakine geçirir. */
-function resTick(slug: string) {
-  const now = new Date().toISOString();
-  for (const r of listOf(reservations, slug)) {
-    if (r.status !== "approved" || resEndIso(r) > now) continue;
-    r.status = rulesOf(slug, r.area_id).verify === "none" ? "completed" : "no_show";
-  }
-  for (const w of listOf(waitlist, slug)) if (w.status === "offered" && w.offered_until! < now) { w.status = "expired"; offerNext(slug, w); }
-}
-function offerNext(slug: string, slot: { area_id: string; date: string; start: string }) {
-  const r = rulesOf(slug, slot.area_id);
-  const taken = listOf(reservations, slug).filter((x) => x.area_id === slot.area_id && x.date === slot.date && x.start === slot.start && LIVE.includes(x.status)).length;
-  const offered = listOf(waitlist, slug).filter((w) => w.area_id === slot.area_id && w.date === slot.date && w.start === slot.start && w.status === "offered").length;
-  if (taken + offered >= r.capacity) return null;
-  const next = listOf(waitlist, slug).find((w) => w.area_id === slot.area_id && w.date === slot.date && w.start === slot.start && w.status === "waiting");
-  if (!next) return null;
-  Object.assign(next, { status: "offered", offered_until: new Date(Date.now() + r.waitlist_minutes * 60000).toISOString() });
-  return next;
-}
-function blockedUntil(slug: string, unitId: string, areaId: string) {
-  const r = rulesOf(slug, areaId);
-  if (!r.noshow.enabled || r.verify === "none") return null;
-  const from = addMonths(today(), -r.noshow.months);
-  const ns = listOf(reservations, slug).filter((x) => x.unit_id === unitId && x.area_id === areaId && x.status === "no_show" && x.date >= from).sort((a, b) => a.date.localeCompare(b.date));
-  if (ns.length < r.noshow.count) return null;
-  const until = addDays(ns.at(-1)!.date, r.noshow.block_days);
-  return until >= today() ? until : null;
-}
-function billReservation(slug: string, r: Reservation) {
-  if (cents(r.fee) <= 0 || !r.account || r.charge_id) return;
-  const set = adHocOf(slug).sources.reservation;
-  const c: AdHocCharge = { id: crypto.randomUUID(), unit_id: r.unit_id, unit_name: r.unit_name, account_id: r.account.id, account_kind: r.account.kind, reference_code: r.account.reference_code, person_name: r.account.person_name, source: "reservation", description: `Rezervasyon — ${r.area_name} ${r.date.split("-").reverse().join(".")} ${r.start}`, amount: r.fee, due_date: addDays(today(), set.due_days), mode: set.mode, status: set.mode === "immediate" ? "posted" : "waiting_next_run", created_by: "Sistem", created_at: new Date().toISOString(), cancel_reason: null };
-  listOf(adHocCharges, slug).push(c);
-  r.charge_id = c.id;
-}
-type ResInput = { area_id?: string; date?: string; start?: string; people?: number; guests?: number; waitlist?: boolean };
-/** Ortak rezervasyon akışı (REZ-02): yetki, no-show kısıtı, sınırlar, çakışma, bekleme listesi, onay, ücret. */
-function createReservation(slug: string, b: ResInput, who: { unit_id: string; unit_name: string; person_name: string; account: Reservation["account"]; channel: "resident" | "staff"; by: string }): Response {
-  resTick(slug);
-  const area = resAreas(slug).find((a) => a.id === b.area_id);
-  if (!area) return err(422, "validation", VALIDATION, { area_id: "Alan seçin." });
-  const r = rulesOf(slug, area.id);
-  if (!r.enabled) return err(409, "area_closed", `${area.name} rezervasyona kapalı.`);
-  if (who.channel === "resident" && r.channel === "staff") return err(409, "channel", `${area.name} için rezervasyonu yönetim açar; lütfen yönetimi arayın.`);
-  if (who.channel === "staff" && r.channel === "resident") return err(409, "channel", `${area.name} için rezervasyonu sakin kendisi yapar.`);
-  const f: Record<string, string> = {};
-  if (!b.date || !DATE_RE.test(b.date) || b.date < today()) f.date = "Bugün ya da ileri bir tarih seçin.";
-  const slot = slotsOf(r).find((s) => s.start === b.start);
-  if (!slot) f.start = "Saat seçin.";
-  else if (b.date === today() && slot.start <= nowHm()) f.start = "Geçmiş saat seçilemez.";
-  const people = Number(b.people ?? 1), guests = Number(b.guests ?? 0);
-  if (!Number.isInteger(people) || people < 1 || people > r.max_people) f.people = `Kişi sayısı 1–${r.max_people}.`;
-  if (!Number.isInteger(guests) || guests < 0 || guests > r.max_guests) f.guests = `Misafir en fazla ${r.max_guests}.`;
-  if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-  const until = blockedUntil(slug, who.unit_id, area.id);
-  if (until) return err(409, "noshow_blocked", `Gelinmeyen rezervasyonlar nedeniyle ${until.split("-").reverse().join(".")} tarihine kadar ${area.name} rezervasyonu yapamazsınız.`);
-  const all = listOf(reservations, slug);
-  const ws = weekStart(b.date!);
-  const weekCount = all.filter((x) => x.unit_id === who.unit_id && x.area_id === area.id && LIVE.concat(["completed", "no_show"]).includes(x.status) && x.date >= ws && x.date < addDays(ws, 7)).length;
-  if (r.weekly_limit > 0 && weekCount >= r.weekly_limit) return err(409, "limit", `Haftalık sınır aşıldı: bölüm başına haftada ${r.weekly_limit} rezervasyon (${area.name}).`);
-  if (all.some((x) => x.unit_id === who.unit_id && x.area_id === area.id && x.date === b.date && x.start === slot!.start && LIVE.includes(x.status))) return err(409, "duplicate", "Bu saat için rezervasyonunuz var.");
-  const taken = all.filter((x) => x.area_id === area.id && x.date === b.date && x.start === slot!.start && LIVE.includes(x.status)).length;
-  const offered = listOf(waitlist, slug).filter((w) => w.area_id === area.id && w.date === b.date && w.start === slot!.start && w.status === "offered").length;
-  if (taken + offered >= r.capacity) {
-    const free = slotsOf(r).filter((s) => !(b.date === today() && s.start <= nowHm()) && all.filter((x) => x.area_id === area.id && x.date === b.date && x.start === s.start && LIVE.includes(x.status)).length < r.capacity).map((s) => s.start).slice(0, 4);
-    if (r.waitlist && b.waitlist) {
-      const wl = listOf(waitlist, slug);
-      if (wl.some((w) => w.unit_id === who.unit_id && w.area_id === area.id && w.date === b.date && w.start === slot!.start && ["waiting", "offered"].includes(w.status))) return err(409, "already_waiting", "Bu saat için zaten bekleme listesindesiniz.");
-      const w: WaitEntry = { id: crypto.randomUUID(), area_id: area.id, area_name: area.name, date: b.date!, start: slot!.start, end: slot!.end, unit_id: who.unit_id, unit_name: who.unit_name, person_name: who.person_name, people, guests, status: "waiting", offered_until: null, created_at: new Date().toISOString(), account: who.account };
-      wl.push(w);
-      const pos = wl.filter((x) => x.area_id === area.id && x.date === b.date && x.start === slot!.start && x.status === "waiting").length;
-      return HttpResponse.json({ data: w, message: `Bekleme listesine eklendiniz; sıranız ${pos}. Yer açılınca ${r.waitlist_minutes} dakika geçerli teklif gelir.` }, { status: 201 });
-    }
-    return err(409, "slot_full", `Bu saat dolu.${free.length ? ` Boş saatler: ${free.join(", ")}.` : " Bu gün boş saat yok."}${r.waitlist ? " Bekleme listesine girebilirsiniz." : ""}`);
-  }
-  const res: Reservation = { id: crypto.randomUUID(), area_id: area.id, area_name: area.name, date: b.date!, start: slot!.start, end: slot!.end, unit_id: who.unit_id, unit_name: who.unit_name, person_name: who.person_name, people, guests, status: r.approval === "auto" ? "approved" : "pending", code: randCode(6), channel: who.channel, created_by: who.by, created_at: new Date().toISOString(), fee: tl(feeOf(r, guests)), charge_id: null, account: who.account, reject_reason: null, cancel_reason: null, cancelled_late: false, checked_in_at: null, checked_in_by: null, decided_by: r.approval === "auto" ? "Otomatik" : null };
-  all.push(res);
-  if (res.status === "approved") billReservation(slug, res);
-  const feeTxt = cents(res.fee) > 0 ? ` Ücret ${Number(res.fee).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ borca yansıdı.` : "";
-  return HttpResponse.json({ data: res, message: res.status === "approved" ? `Rezervasyon onaylandı.${feeTxt}${who.channel === "staff" ? " Sakine bildirim gider (K5)." : ""}` : "Rezervasyon alındı; yönetici onayı bekleniyor." }, { status: 201 });
-}
-function cancelReservation(slug: string, r: Reservation, reason: string | null): Response {
-  if (!["pending", "approved"].includes(r.status)) return err(409, "invalid_status", "Bu rezervasyon iptal edilemez.");
-  const rules = rulesOf(slug, r.area_id);
-  const late = resStartMs(r) - Date.now() < rules.cancel_hours * 3600000;
-  Object.assign(r, { status: "cancelled", cancel_reason: reason, cancelled_late: late });
-  let feeTxt = "";
-  if (r.charge_id) {
-    const c = listOf(adHocCharges, slug).find((x) => x.id === r.charge_id);
-    if (c && c.status !== "cancelled" && (!late || rules.late_cancel_refund)) { Object.assign(c, { status: "cancelled", cancel_reason: "Rezervasyon iptali (ters kayıt)" }); feeTxt = " Ücret ters kayıtla kapatıldı."; }
-    else if (c) feeTxt = ` Son iptal süresi (${rules.cancel_hours} saat) geçtiği için ücret iade edilmez.`;
-  }
-  const o = rules.waitlist ? offerNext(slug, r) : null;
-  return HttpResponse.json({ data: r, message: `Rezervasyon iptal edildi.${feeTxt}${o ? ` Bekleme listesindeki ${o.unit_name} bölümüne teklif gitti.` : ""}` });
-}
-async function residentWho(request: Request, slug: string, unitId?: string) {
-  const h = await real<{ units: { unit_id: string; unit_name: string; role: string }[]; accounts: { id: string; kind: string; reference_code: string; unit_id: string; person_name: string | null; is_closed: boolean }[] }>(request, `/api/v1/sites/${slug}/resident/home`);
-  if (h.status !== 200 || !h.body) return null;
-  const u = h.body.units.find((x) => x.unit_id === unitId) ?? h.body.units[0];
-  if (!u) return null;
-  const accs = h.body.accounts.filter((a) => a.unit_id === u.unit_id && !a.is_closed);
-  const acc = accs.find((a) => a.kind === (u.role === "tenant" ? "tenant" : "owner")) ?? accs[0] ?? null;
-  const m = await me(request);
-  return { unit_id: u.unit_id, unit_name: u.unit_name, person_name: m.name, account: acc ? { id: acc.id, kind: acc.kind, reference_code: acc.reference_code, person_name: acc.person_name } : null, channel: "resident" as const, by: m.name };
-}
-function availability(slug: string, areaId: string, date: string, unitId?: string) {
-  const r = rulesOf(slug, areaId);
-  const all = listOf(reservations, slug).filter((x) => x.area_id === areaId && x.date === date && LIVE.includes(x.status));
-  const wl = listOf(waitlist, slug).filter((w) => w.area_id === areaId && w.date === date && ["waiting", "offered"].includes(w.status));
-  return slotsOf(r).map((s) => {
-    const taken = all.filter((x) => x.start === s.start).length + wl.filter((w) => w.start === s.start && w.status === "offered").length;
-    return { ...s, capacity: r.capacity, taken, past: date < today() || (date === today() && s.start <= nowHm()), mine: unitId ? all.some((x) => x.start === s.start && x.unit_id === unitId) : false, waiting: wl.filter((w) => w.start === s.start && w.status === "waiting").length };
-  });
-}
-const resOut = (slug: string, a: CommonArea) => ({ id: a.id, name: a.name, kind: a.kind, block_name: a.block_name, rules: rulesOf(slug, a.id) });
-
-const rezervasyon: RequestHandler[] = [
-  // 59 — Alanlar ve kurallar
-  http.get(`${API}/reservable-areas`, ({ params }) => HttpResponse.json(resAreas(String(params.slug)).map((a) => resOut(String(params.slug), a)))),
-  http.put(`${API}/reservable-areas/:id/rules`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const a = resAreas(slug).find((x) => x.id === params.id);
-    if (!a) return err(404, "not_found", "Rezerve edilebilir alan bulunamadı (Yapı → Ortak alanlar'da işaretleyin).");
-    const b = { ...rulesOf(slug, a.id), ...((await request.json()) as Partial<ResRules>) };
-    const f: Record<string, string> = {};
-    if (!TIME_RE.test(b.open_from) || !TIME_RE.test(b.open_to) || b.open_to <= b.open_from) f.open_to = "Kapanış açılıştan sonra olmalı.";
-    else if (![30, 60, 90, 120, 180, 240].includes(Number(b.slot_minutes)) || hm2m(b.open_to) - hm2m(b.open_from) < Number(b.slot_minutes)) f.slot_minutes = "Süre açık saatlere sığmalı.";
-    if (!(Number(b.capacity) >= 1 && Number(b.capacity) <= 200)) f.capacity = "1–200.";
-    if (!(Number(b.max_people) >= 1)) f.max_people = "En az 1.";
-    if (!(Number(b.max_guests) >= 0)) f.max_guests = "0 ya da üstü.";
-    if (!(Number(b.weekly_limit) >= 0)) f.weekly_limit = "0 (sınırsız) ya da üstü.";
-    if (!(Number(b.cancel_hours) >= 0)) f.cancel_hours = "0 ya da üstü.";
-    if (b.fee_type !== "free" && !(cents(b.fee_amount) > 0)) f.fee_amount = "Ücreti girin.";
-    if (b.waitlist && !(Number(b.waitlist_minutes) >= 5)) f.waitlist_minutes = "En az 5 dakika.";
-    if (b.noshow.enabled && b.verify === "none") f.noshow = "No-show kuralı için kullanım doğrulaması gerekir.";
-    if (b.noshow.enabled && !(b.noshow.count >= 1 && b.noshow.months >= 1 && b.noshow.block_days >= 1)) f.noshow = "No-show sayıları en az 1.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const r: ResRules = { ...b, slot_minutes: Number(b.slot_minutes), capacity: Number(b.capacity), max_people: Number(b.max_people), max_guests: Number(b.max_guests), weekly_limit: Number(b.weekly_limit), cancel_hours: Number(b.cancel_hours), waitlist_minutes: Number(b.waitlist_minutes), fee_amount: b.fee_type === "free" ? "0.00" : tl(cents(b.fee_amount)) };
-    resRules.get(slug)![a.id] = r;
-    return HttpResponse.json({ data: resOut(slug, a), message: `${a.name} kuralları kaydedildi.${r.enabled ? "" : " Alan rezervasyona kapalı."}` });
-  }),
-  http.get(`${API}/reservable-areas/:id/availability`, ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const date = new URL(request.url).searchParams.get("date") ?? today();
-    if (!resAreas(slug).some((a) => a.id === params.id)) return err(404, "not_found", "Alan bulunamadı.");
-    return HttpResponse.json(availability(slug, String(params.id), date));
-  }),
-  // 60 — Rezervasyon (yönetim, sakin adına)
-  http.get(`${API}/reservations`, ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const u = new URL(request.url).searchParams;
-    const date = u.get("date"), area = u.get("area_id"), status = u.get("status");
-    const rows = listOf(reservations, slug).filter((r) => (!date || r.date === date) && (!area || r.area_id === area) && (!status || r.status === status)).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
-    return HttpResponse.json(rows.map(({ account: _a, ...r }) => r));
-  }),
-  http.post(`${API}/reservations`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as ResInput & { unit_id?: string; person_name?: string };
-    if (!b.unit_id) return err(422, "validation", VALIDATION, { unit_id: "Bölüm seçin." });
-    const u = await real<{ display_name: string }>(request, `/api/v1/sites/${slug}/units/${b.unit_id}`);
-    if (u.status !== 200 || !u.body) return err(422, "validation", VALIDATION, { unit_id: "Bölüm bulunamadı." });
-    const accs = await real<Paged<{ id: string; kind: string; reference_code: string; person_name: string | null; is_closed: boolean }>>(request, `/api/v1/sites/${slug}/accounts?unit_id=${b.unit_id}&page_size=50`);
-    const open = (accs.body?.items ?? []).filter((a) => !a.is_closed);
-    const acc = open.find((a) => a.kind === "tenant") ?? open.find((a) => a.kind === "owner") ?? open[0] ?? null;
-    const by = (await me(request)).name;
-    const person = (b.person_name ?? "").trim() || acc?.person_name || u.body.display_name;
-    return createReservation(slug, b, { unit_id: b.unit_id, unit_name: u.body.display_name, person_name: person, account: acc ? { id: acc.id, kind: acc.kind, reference_code: acc.reference_code, person_name: acc.person_name } : null, channel: "staff", by });
-  }),
-  ...(["approve", "reject", "cancel", "check-in"] as const).map((action) => http.post(`${API}/reservations/:id/${action}`, async ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const r = listOf(reservations, slug).find((x) => x.id === params.id);
-    if (!r) return err(404, "not_found", "Rezervasyon bulunamadı.");
-    const b = ((await request.json().catch(() => ({}))) ?? {}) as { reason?: string };
-    const who = (await me(request)).name;
-    if (action === "cancel") return cancelReservation(slug, r, b.reason?.trim() || `Yönetim (${who})`);
-    if (action === "check-in") {
-      if (r.status !== "approved") return err(409, "invalid_status", r.status === "checked_in" ? "Giriş zaten kaydedildi." : "Yalnız onaylı rezervasyona giriş yapılır.");
-      if (r.date !== today()) return err(409, "not_today", "Rezervasyon bugün için değil.");
-      Object.assign(r, { status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: who });
-      return HttpResponse.json({ data: r, message: `${r.unit_name} — ${r.area_name} ${r.start} girişi kaydedildi.` });
-    }
-    if (r.status !== "pending") return err(409, "invalid_status", "Yalnız onay bekleyen rezervasyon karara bağlanır.");
-    if (action === "reject") {
-      if ((b.reason ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { reason: "Ret gerekçesi yazın." });
-      Object.assign(r, { status: "rejected", reject_reason: b.reason!.trim(), decided_by: who });
-      const o = rulesOf(slug, r.area_id).waitlist ? offerNext(slug, r) : null;
-      return HttpResponse.json({ data: r, message: `Rezervasyon reddedildi; ücret oluşmadı.${o ? ` Bekleme listesindeki ${o.unit_name} bölümüne teklif gitti.` : ""}` });
-    }
-    Object.assign(r, { status: "approved", decided_by: who });
-    billReservation(slug, r);
-    return HttpResponse.json({ data: r, message: `Rezervasyon onaylandı.${r.charge_id ? " Ücret borca yansıdı." : ""}` });
-  })),
-  http.post(`${API}/reservations/check-in-code`, async ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const b = (await request.json()) as { code?: string };
-    const code = String(b.code ?? "").replace(/\D/g, "");
-    if (code.length !== 6) return err(422, "validation", VALIDATION, { code: "6 haneli kodu girin." });
-    const r = listOf(reservations, slug).find((x) => x.code === code && x.date === today() && ["approved", "checked_in"].includes(x.status));
-    if (!r) return err(404, "not_found", "Bugün için bu kodla rezervasyon yok.");
-    if (r.status === "checked_in") return err(409, "already", `Giriş zaten kaydedildi (${r.unit_name}, ${r.area_name} ${r.start}).`);
-    Object.assign(r, { status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: (await me(request)).name });
-    return HttpResponse.json({ data: r, message: `Doğrulandı: ${r.unit_name} · ${r.person_name} — ${r.area_name} ${r.start}–${r.end}, ${r.people} kişi${r.guests ? ` + ${r.guests} misafir` : ""}.` });
-  }),
-  http.get(`${API}/waitlist`, ({ params }) => { const slug = String(params.slug); resTick(slug); return HttpResponse.json(listOf(waitlist, slug).filter((w) => ["waiting", "offered"].includes(w.status)).map(({ account: _a, ...w }) => w)); }),
-  // 61 — Kullanım raporu
-  http.get(`${API}/reservations/report`, ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const u = new URL(request.url).searchParams;
-    const to = u.get("to") ?? today(), from = u.get("from") ?? addDays(to, -29);
-    const rows = resAreas(slug).map((a) => {
-      const r = rulesOf(slug, a.id);
-      const days = Math.max(1, Math.round((new Date(to + "T00:00:00").getTime() - new Date(from + "T00:00:00").getTime()) / 864e5) + 1);
-      const list = listOf(reservations, slug).filter((x) => x.area_id === a.id && x.date >= from && x.date <= to);
-      const used = list.filter((x) => ["approved", "checked_in", "completed", "no_show"].includes(x.status));
-      const ended = list.filter((x) => ["checked_in", "completed", "no_show"].includes(x.status));
-      const ns = list.filter((x) => x.status === "no_show").length;
-      return { area_id: a.id, area_name: a.name, total: list.length, cancelled: list.filter((x) => x.status === "cancelled").length, checked_in: list.filter((x) => x.status === "checked_in").length, no_show: ns, no_show_rate: r.verify === "none" || ended.length === 0 ? null : Math.round((ns / ended.length) * 100), occupancy: Math.round((used.length / (slotsOf(r).length * r.capacity * days)) * 1000) / 10, revenue: tl(list.filter((x) => x.charge_id && listOf(adHocCharges, slug).some((c) => c.id === x.charge_id && c.status !== "cancelled")).reduce((s, x) => s + cents(x.fee), 0)) };
-    });
-    return HttpResponse.json({ from, to, rows });
-  }),
-  // Sakin
-  http.get(`${API}/resident/reservable-areas`, ({ params }) => { const slug = String(params.slug); return HttpResponse.json(resAreas(slug).map((a) => resOut(slug, a)).filter((a) => a.rules.enabled && a.rules.channel !== "staff")); }),
-  http.get(`${API}/resident/reservable-areas/:id/availability`, async ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const who = await residentWho(request, slug);
-    if (!who) return err(403, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    const date = new URL(request.url).searchParams.get("date") ?? today();
-    return HttpResponse.json({ slots: availability(slug, String(params.id), date, who.unit_id), blocked_until: blockedUntil(slug, who.unit_id, String(params.id)) });
-  }),
-  http.get(`${API}/resident/reservations`, async ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const who = await residentWho(request, slug);
-    if (!who) return err(403, "forbidden", "Bu ekran sakin hesabıyla görülür.");
-    return HttpResponse.json({
-      reservations: listOf(reservations, slug).filter((r) => r.unit_id === who.unit_id).sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start)).slice(0, 30).map((r) => ({ ...r, account: undefined, verify: rulesOf(slug, r.area_id).verify, cancel_hours: rulesOf(slug, r.area_id).cancel_hours })),
-      waitlist: listOf(waitlist, slug).filter((w) => w.unit_id === who.unit_id && ["waiting", "offered"].includes(w.status)).map(({ account: _a, ...w }) => w),
-    });
-  }),
-  http.post(`${API}/resident/reservations`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as ResInput & { unit_id?: string };
-    const who = await residentWho(request, slug, b.unit_id);
-    if (!who) return err(403, "forbidden", "Bu işlem için yetkiniz yok.");
-    return createReservation(slug, b, who);
-  }),
-  http.post(`${API}/resident/reservations/:id/cancel`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const who = await residentWho(request, slug);
-    const r = listOf(reservations, slug).find((x) => x.id === params.id && x.unit_id === who?.unit_id);
-    if (!r) return err(404, "not_found", "Rezervasyon bulunamadı.");
-    return cancelReservation(slug, r, "Sakin iptal etti");
-  }),
-  http.post(`${API}/resident/waitlist/:id/:action`, async ({ request, params }) => {
-    const slug = String(params.slug); resTick(slug);
-    const action = String(params.action); if (!["accept", "leave"].includes(action)) return;
-    const who = await residentWho(request, slug);
-    const w = listOf(waitlist, slug).find((x) => x.id === params.id && x.unit_id === who?.unit_id);
-    if (!w) return err(404, "not_found", "Bekleme kaydı bulunamadı.");
-    if (action === "leave") { if (!["waiting", "offered"].includes(w.status)) return err(409, "invalid_status", "Kayıt kapanmış."); const wasOffered = w.status === "offered"; w.status = "left"; if (wasOffered) offerNext(slug, w); return HttpResponse.json({ data: w, message: "Bekleme listesinden çıktınız." }); }
-    if (w.status !== "offered") return err(409, w.status === "expired" ? "expired" : "invalid_status", w.status === "expired" ? "Teklifin süresi doldu; sıradaki kişiye geçti." : "Henüz teklif yok.");
-    w.status = "accepted";
-    const res = createReservation(slug, { area_id: w.area_id, date: w.date, start: w.start, people: w.people, guests: w.guests }, { unit_id: w.unit_id, unit_name: w.unit_name, person_name: w.person_name, account: w.account, channel: "resident", by: w.person_name });
-    if (res.status >= 400) w.status = "offered";
-    return res;
-  }),
-];
 
 // Satın alma paketi (servis istekleri 62–67) backend'de; sahte uçları silindi. Sözleşme
 // performansı (68–70) tedarikçi kartını gerçek `/vendors` ucundan okur.
@@ -1052,4 +736,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...rezervasyon, ...sozlesme, ...genelKurul, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...sozlesme, ...genelKurul, ...platformDestek];

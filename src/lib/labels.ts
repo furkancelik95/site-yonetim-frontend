@@ -64,6 +64,7 @@ export const ledgerSource = label({
   payment_plan: "Ödeme planı",
   service: "Ücretli hizmet",
   deposit: "Tadilat depozitosu",
+  reservation: "Rezervasyon",
 });
 
 export const paymentMethod = label({ cash: "Nakit", bank_transfer: "Havale / EFT", credit_card: "Kredi kartı", other: "Diğer" });
