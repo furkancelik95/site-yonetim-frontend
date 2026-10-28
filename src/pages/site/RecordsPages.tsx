@@ -8,6 +8,7 @@ import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, Pager, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
+import { ScheduledReports } from "./MessagingPages";
 import { P, useSite } from "../../site/SiteContext";
 
 /** Belge (backend `DocumentOut`, servis isteği 78). */
@@ -169,7 +170,7 @@ function DocForm({ onDone }: { onDone: () => void }) {
 /** Rapor kataloğu (RAP-01): yalnız yetkili olunan ve modülü açık raporlar; her metriğin tek tanımı
  * (metrik sözlüğü backend'de). Üreticisi olan rapor Excel'e aktarılır (dışa aktarma kayda geçer). */
 export function ReportCatalogPage() {
-  const { site } = useSite();
+  const { site, can } = useSite();
   const [s, set] = useUrlState({ rapor: "", q: "" });
   const q = useSiteGet<CatalogItem[]>("/reports/catalog");
   const list = (q.data ?? []).filter((r) => !s.q || `${r.name} ${r.group}`.toLocaleLowerCase("tr-TR").includes(s.q.toLocaleLowerCase("tr-TR")));
@@ -208,6 +209,7 @@ export function ReportCatalogPage() {
           ))}</div>
         </div>
       ))}
+      {can(P.reportsSchedule) && <ScheduledReports />}
       <p className="xs muted">Excel dışa aktarma son 30 günü kapsar ve kayda geçer. Planlı rapor gönderimi aynı rapor içeriğini kullanır.</p>
     </div>
   );

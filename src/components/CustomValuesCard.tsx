@@ -13,7 +13,7 @@ type Values = Record<string, unknown>;
  * değişikliği denetim kaydına yazılır (backend). Tanım yoksa yöneticiye kısa bir bağlantı gösterir.
  */
 export function CustomValuesCard({ entity, id }: { entity: "unit" | "person"; id: string }) {
-  const { site, can } = useSite();
+  const { site, can, roles } = useSite();
   const fields = useSiteGet<CustomField[]>("/custom-fields", { entity });
   const path = `/${entity === "unit" ? "units" : "people"}/${id}/custom-values`;
   const values = useSiteGet<{ values: Values }>(path);
@@ -22,7 +22,7 @@ export function CustomValuesCard({ entity, id }: { entity: "unit" | "person"; id
   const [dirty, setDirty] = useState(false);
   useEffect(() => { if (values.data) { setDraft(values.data.values); setDirty(false); } }, [values.data]);
 
-  const visible = (fields.data ?? []).filter((f) => f.view_roles.includes(site.role));
+  const visible = (fields.data ?? []).filter((f) => f.view_roles.some((r) => roles.includes(r)));
   if (fields.isPending || values.isPending) return null;
   if (visible.length === 0) {
     return can(P.modulesManage) && (fields.data ?? []).length === 0 ? (
@@ -36,7 +36,7 @@ export function CustomValuesCard({ entity, id }: { entity: "unit" | "person"; id
       <FormError error={save.error} />
       <div className="grid grid--kpi">
         {visible.map((f) => {
-          const editable = f.edit_roles.includes(site.role);
+          const editable = f.edit_roles.some((r) => roles.includes(r));
           const v = draft[f.key];
           return (
             <Field key={f.id} label={f.label} required={f.required} error={fieldError(save.error, f.key)}>
@@ -51,7 +51,7 @@ export function CustomValuesCard({ entity, id }: { entity: "unit" | "person"; id
           );
         })}
       </div>
-      {dirty && visible.some((f) => f.edit_roles.includes(site.role)) && (
+      {dirty && visible.some((f) => f.edit_roles.some((r) => roles.includes(r))) && (
         <div className="row" style={{ gap: "var(--s-2)" }}>
           <SubmitButton busy={save.isPending} className="btn btn--sm btn--primary">Özel alanları kaydet</SubmitButton>
           <button className="btn btn--ghost btn--sm" type="button" onClick={() => { setDraft(values.data?.values ?? {}); setDirty(false); }}>Vazgeç</button>

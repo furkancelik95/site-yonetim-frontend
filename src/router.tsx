@@ -8,6 +8,7 @@ import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { InviteAcceptPage } from "./pages/auth/InviteAcceptPage";
+import { AccountInvitePage, MfaRequiredPage, PasswordResetPage } from "./pages/auth/AccountPages";
 import { VendorQuotePage } from "./pages/auth/VendorQuotePage";
 import { ConsentPage } from "./pages/auth/ConsentPage";
 import { PrivacyNoticePage, PublicRegistrationPage } from "./pages/auth/PublicRegistrationPage";
@@ -63,6 +64,7 @@ const siteScreens: [string, string][] = [
   ["moduller", "ModulesPage"],
   ["denetim", "AuditPage"],
   ["kullanicilar", "MembersPage"],
+  ["roller", "RolesPage"],
   ["kayit-basvurulari", "RegistrationsPage"],
   ["toplantilar", "MeetingsPage"],
   ["toplantilar/:meetingId", "MeetingDetailPage"],
@@ -105,6 +107,9 @@ const siteScreens: [string, string][] = [
   ["sigorta", "InsurancePage"],
   ["sayaclar", "MetersPage"],
   ["gorevler", "TasksPage"],
+  // Teknik varlık, yasal muayene ve periyodik bakım (HIZ-06/07, K28)
+  ["teknik-varliklar", "TechnicalAssetsPage"],
+  ["teknik-varliklar/:assetId", "TechnicalAssetDetailPage"],
   // Rezervasyon paketi (servis istekleri 59-61)
   ["rezervasyon", "ReservationsPage"],
   ["rezervasyon/alanlar", "ReservationAreasPage"],
@@ -125,6 +130,7 @@ const siteScreens: [string, string][] = [
   // Raporlar, belgeler ve KVKK (servis istekleri 78-81)
   ["dokumanlar", "DocumentsPage"],
   ["rapor-katalogu", "ReportCatalogPage"],
+  ["sms-hesabi", "SmsAccountPage"],
   ["kvkk", "PrivacyPage"],
   ["denetim-paketi", "AuditPackagesPage"],
   // Platform destek (servis istekleri 82-84)
@@ -148,6 +154,8 @@ export const router = createBrowserRouter([
       // Oturumsuz: sakinin kendini kaydetmesi (servis isteği 13) ve aydınlatma metni.
       { path: "/kayit/:code", element: <PublicRegistrationPage /> },
       { path: "/davet/:token", element: <InviteAcceptPage /> },
+      { path: "/hesap-davet/:token", element: <AccountInvitePage /> },
+      { path: "/parola-sifirla", element: <PasswordResetPage /> },
       { path: "/teklif/:token", element: <VendorQuotePage /> },
       { path: "/aydinlatma", element: <PrivacyNoticePage /> },
       {
@@ -156,6 +164,7 @@ export const router = createBrowserRouter([
           { path: "/", element: <RootIndex portfolio={<L c={Portfolio} />} /> },
           { path: "/parola-degistir", element: <ChangePasswordPage /> },
           { path: "/aydinlatma-onayi", element: <ConsentPage /> },
+          { path: "/iki-adimli-dogrulama", element: <MfaRequiredPage /> },
           { path: "/profil", element: <AppShell title="Profil"><L c={Profile} /></AppShell> },
           { path: "/yetkisiz", element: <NoAccessPage /> },
           {
@@ -175,6 +184,7 @@ export const router = createBrowserRouter([
               { path: "musteri-ekle", element: <L c={page(platform, "NewCustomerPage")} /> },
               { path: "site-ac", element: <L c={page(platform, "NewSitePage")} /> },
               { path: "endeksler", element: <L c={page(platform, "IndexValuesPage")} /> },
+              { path: "test-gelen-kutusu", element: <L c={page(platform, "TestInboxPage")} /> },
               { path: "destek", element: <L c={page(platformSupport, "PlatformSupportPage")} /> },
               { path: "bilgi-bankasi", element: <L c={page(platformSupport, "KnowledgeAdminPage")} /> },
             ],

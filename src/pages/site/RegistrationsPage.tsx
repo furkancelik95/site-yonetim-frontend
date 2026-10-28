@@ -4,7 +4,6 @@ import { ApiError } from "../../api/client";
 import { Copy, Inbox, Link2, Mail, QrCode, RefreshCw, UserCheck, UserX } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { OneTimePassword } from "../../components/OneTimePassword";
 import { useToast } from "../../components/toast";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
@@ -73,15 +72,16 @@ function Applications({ durum, page, set }: { durum: string; page: string; set: 
   const toggle = useSiteMutation<{ is_enabled: boolean }, RegLink>("PATCH", "/registration-link");
   const q = useSiteGet<Page<Registration>>("/registrations", { status: durum, page, page_size: 30 });
   const url = link.data ? `${window.location.origin}/kayit/${link.data.code}` : "";
-  // Onaylanan başvuru listeden çıkar; yeni hesabın geçici parolası burada bir kez gösterilir
+  // Onaylanan başvuru listeden çıkar; giriş bilgisi (telefon + SMS kodu, P5) burada gösterilir
   const [issued, setIssued] = useState<Approved | null>(null);
   return (
     <>
-      {issued?.temporary_password && (
+      {issued && (
         <div className="card">
           <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
-            <Alert tone="ok" title={`${issued.first_name} ${issued.last_name} için giriş hesabı açıldı`}>{issued.unit_name} · {partyRole(issued.relation)}</Alert>
-            <OneTimePassword email={issued.email} password={issued.temporary_password} />
+            <Alert tone="ok" title={`${issued.first_name} ${issued.last_name} ${issued.login === "created" ? "için giriş hesabı açıldı" : "mevcut hesabına bağlandı"}`}>{issued.unit_name} · {partyRole(issued.relation)}</Alert>
+            <div className="kv"><span className="kv__k">Giriş telefonu</span><span className="kv__v mono">{issued.login_phone}</span></div>
+            <p className="small mb-0">Kişi giriş ekranında telefon numarasını girer, SMS koduyla girer; parola gerekmez. Onay SMS'i gönderildi (sağlayıcı seçilene dek test sağlayıcısı — K5: kayda geçer, dışarı gitmez).</p>
           </div>
           <div className="card__foot"><button className="btn" type="button" onClick={() => setIssued(null)}>Tamam</button></div>
         </div>
@@ -120,7 +120,7 @@ function Applications({ durum, page, set }: { durum: string; page: string; set: 
             <Empty title={durum === "pending" ? "Bekleyen başvuru yok" : "Kayıt yok"} icon={<Inbox aria-hidden="true" />}>Kayıt bağlantısını ya da QR afişi sakinlerle paylaştığınızda başvurular burada görünür.</Empty>
           ) : durum === "pending" ? (
             // Bekleyenler kart olarak: bölüm seçici ve onay düğmeleri telefonda da sığar (tablo taşıyordu)
-            <div className="stack" style={{ gap: "var(--s-3)", padding: "var(--s-3)" }}>{q.data.items.map((r) => <PendingCard key={r.id} r={r} onApproved={(d) => d.temporary_password && setIssued(d)} />)}</div>
+            <div className="stack" style={{ gap: "var(--s-3)", padding: "var(--s-3)" }}>{q.data.items.map((r) => <PendingCard key={r.id} r={r} onApproved={(d) => setIssued(d)} />)}</div>
           ) : (
             <div className="table-wrap">
               <table className="data">
@@ -150,7 +150,7 @@ function PendingCard({ r, onApproved }: { r: Registration; onApproved: (d: Appro
   const [reason, setReason] = useState("");
   // Malik başvurusunda hisse (boş = %100); bölümde başka malik varsa toplam %100'ü aşamaz (409)
   const [share, setShare] = useState("");
-  // Geçici parola yalnız sayfa üstündeki kartta tutulur; satırın mutasyon önbelleğinde kalmaz
+  // Onay sonucu (giriş telefonu) yalnız sayfa üstündeki kartta tutulur
   const approve = useSiteMutation<{ unit_id: string; start_date: string; share_percent?: string }, Approved>("POST", `/registrations/${r.id}/approve`, { onSuccess: (d) => { if (d) onApproved(d); approve.reset(); } });
   const reject = useSiteMutation<{ reason: string }, Registration>("POST", `/registrations/${r.id}/reject`);
   // Hisse dolu (409) gelince hisse alanı açılır; daha düşük oranla yeniden denenebilir

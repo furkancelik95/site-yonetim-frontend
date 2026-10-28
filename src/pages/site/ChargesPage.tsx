@@ -195,11 +195,9 @@ function PreviewView({ p, canPost, s, set, side }: { p: Preview; canPost: boolea
   );
 }
 
-/** Servis isteği 34'teki şekil. */
-interface Diff {
-  period: string; base_period: string | null; threshold: number; compared: number; counts: Record<"increase" | "decrease" | "new" | "missing", number>;
-  rows: { account_id: string; unit_name: string; person_name: string | null; account_kind: string; previous: string | null; current: string | null; change_percent: number | null; flag: "increase" | "decrease" | "new" | "missing" }[];
-}
+type Diff = Schemas["ChargeDiffOut"];
+/** Değişim yüzdesi metin gelir ("12.4"); işaretli ve tr-TR biçimli gösterilir. */
+const pct = (v: string | null) => (v == null ? "—" : `${Number(v) > 0 ? "+" : ""}%${Number(v).toLocaleString("tr-TR")}`);
 
 /** Fark raporu (FIN-05): önceki kesinleşmiş döneme göre eşik üstü değişen, yeni ve bu dönem olmayan hesaplar. */
 function DiffCard({ chargeDate, dueDate }: { chargeDate: string; dueDate: string }) {
@@ -228,7 +226,7 @@ function DiffCard({ chargeDate, dueDate }: { chargeDate: string; dueDate: string
                 <td><Link className="cell-main" to={`/s/${site.slug}/cari/${r.account_id}`}>{r.unit_name}</Link><div className="cell-sub">{accountKind(r.account_kind)} · {r.person_name ?? "—"}</div></td>
                 <td className="right">{r.previous ? <Money value={r.previous} /> : <span className="subtle">—</span>}</td>
                 <td className="right">{r.current ? <Money value={r.current} /> : <span className="subtle">—</span>}</td>
-                <td className="right num">{r.change_percent != null ? `${r.change_percent > 0 ? "+" : ""}%${r.change_percent.toLocaleString("tr-TR")}` : "—"}</td>
+                <td className="right num">{pct(r.change_percent)}</td>
                 <td><Badge tone={diffFlagTone(r.flag)}>{diffFlag(r.flag)}</Badge></td>
               </tr>
             ))}</tbody>

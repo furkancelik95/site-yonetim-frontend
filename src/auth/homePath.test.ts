@@ -10,7 +10,10 @@ const base: Me = {
   can_see_portfolio: false,
   must_change_password: false,
   consent_required: false,
-  sites: [{ site_id: "s1", name: "Aksu", slug: "aksu", role: "Yönetici", permissions: [], person_id: null, is_derived: false, organization_id: null, organization_role: null }],
+  mfa_enabled: false,
+  mfa_required: false,
+  mfa_setup_required: false,
+  sites: [{ site_id: "s1", name: "Aksu", slug: "aksu", role: "Yönetici", roles: [], permissions: [], scoped_permissions: [], person_id: null, is_derived: false, organization_id: null, organization_role: null, access_mode: "member", read_only: false, access_ends_at: null }],
 };
 
 describe("homePath — aydınlatma onayı (P6)", () => {

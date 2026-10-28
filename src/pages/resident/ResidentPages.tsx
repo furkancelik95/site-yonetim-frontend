@@ -22,7 +22,8 @@ type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
 type Req = Schemas["RequestOut"];
 type MyPackage = Schemas["MyPackage"];
-type SiteExpenses = Schemas["SiteExpensesOut"];
+// Geçici: /resident/expenses backend'den kalktı (K32, şeffaflık raporu geldi); ekran P12/P03 dalıyla yönlenecek.
+type SiteExpenses = { total: number; total_amount: string; page: number; page_size: number; items: { id: string; date: string; description: string; amount: string; category?: string | null; document_id?: string | null; vendor?: string | null }[] };
 
 /** Personel sakin ekranını açarsa servis 403/404 döner; ne olduğunu açıkça söyle. */
 function StaffNotice({ error }: { error: unknown }) {
@@ -305,7 +306,7 @@ export function ResidentStatementPage() {
 
 /** Ödeme planım (FIN-15): sakin yalnız kendi hesabının planını ve taksitlerini görür (servis isteği 30). */
 function ResidentPlans() {
-  const q = useSiteGet<{ id: string; unit_name: string; total: string; installment_count: number; status: string; installments: { no: number; due_date: string; amount: string; paid: string; status: string }[] }[]>("/resident/payment-plans");
+  const q = useSiteGet<Schemas["ResidentPaymentPlanOut"][]>("/resident/payment-plans");
   if (!q.data || q.data.length === 0) return null;
   return (
     <div>
