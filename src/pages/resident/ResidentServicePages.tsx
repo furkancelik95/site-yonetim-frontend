@@ -1,28 +1,42 @@
 import { useState, type FormEvent } from "react";
 import { Hammer, Star } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { AuthImage } from "../../components/AuthImage";
+import { useSite } from "../../site/SiteContext";
 import type { Schemas } from "../../api/types";
-import { Badge, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
-import { formatDate, formatMoney, todayIso } from "../../lib/format";
-import { meterKind, permitStatus, permitTone, permitType, quoteStatus } from "../../lib/labels";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { formatDate, formatDateTime, formatMoney, todayIso } from "../../lib/format";
+import { meterKind, permitStatus, permitTone, permitType } from "../../lib/labels";
 
-/** Servis isteği 49, 50, 51'deki şekiller (sakin tarafı). */
-interface Quote { id: string; lines: { description: string; qty: number; unit_price: string; total: string }[]; total: string; status: string; actual_total: string | null; billed_total: string | null }
-export interface ReqExtras { outage: { title: string; public_description: string; status: string } | null; rating: { solved: boolean; score: number | null; comment: string | null } | null; quote: Quote | null; auto_close_on: string | null }
-interface Permit { id: string; unit_name: string; type: string; date_from: string; date_to: string; contractor: string | null; description: string; status: string; reject_reason: string | null; deposit: string | null }
-interface Rules { weekday_hours: string; saturday_hours: string; sunday_allowed: boolean; deposit_amount: string }
+type Req = Schemas["RequestOut"];
+type Quote = Schemas["ServiceQuoteOut"];
+type Permit = Schemas["PermitOut"];
 
-/** Sakinin talep kartı ekleri: ana olay açıklaması, teklif onayı, kapanış onayı ve puan. */
-export function RequestExtrasBlock({ id, status, ex }: { id: string; status: string; ex: ReqExtras | undefined }) {
-  if (!ex) return null;
+/** Sakinin talep kartı ekleri (istek 49–51): ana olay açıklaması, teklif onayı, kapanış onayı ve puan, iptal. */
+export function RequestExtrasBlock({ r }: { r: Req }) {
+  const { outage, quote, feedback } = r;
+  // "Devam ediyor" denip yeniden açılan talepte son değerlendirme yalnız bilgi; yeni çözümde yeniden onay istenir.
+  const confirmed = feedback?.solved && r.status === "closed";
   return (
     <div className="stack" style={{ gap: "var(--s-2)", marginTop: "var(--s-2)" }}>
-      {ex.outage && <div className="small" style={{ background: "var(--bg-sunken)", borderRadius: 8, padding: "var(--s-2)" }}><strong>{ex.outage.title}</strong> {ex.outage.status === "resolved" ? <Badge tone="ok">Giderildi</Badge> : <Badge tone="warn">Üzerinde çalışılıyor</Badge>}<div>{ex.outage.public_description}</div></div>}
-      {ex.quote && (ex.quote.status === "pending" || ex.quote.status === "extra_pending") && <QuoteDecision q={ex.quote} />}
-      {ex.quote && !["pending", "extra_pending"].includes(ex.quote.status) && <div className="small">Ücretli hizmet: {quoteStatus(ex.quote.status)}{ex.quote.billed_total && <> · <Money value={ex.quote.billed_total} /></>}</div>}
-      {status === "resolved" && !ex.rating && <ConfirmForm id={id} autoClose={ex.auto_close_on} />}
-      {ex.rating && <div className="small"><Star aria-hidden="true" style={{ width: 14, height: 14, verticalAlign: "-2px" }} /> {ex.rating.solved ? `Değerlendirmeniz: ${ex.rating.score}/5` : "Sorunun devam ettiğini bildirdiniz"}</div>}
+      {outage && <div className="small" style={{ background: "var(--bg-sunken)", borderRadius: 8, padding: "var(--s-2)" }}><strong>{outage.title}</strong> {outage.status === "resolved" ? <Badge tone="ok">Giderildi</Badge> : <Badge tone="warn">Üzerinde çalışılıyor</Badge>}<div>{outage.public_description}</div></div>}
+      {quote && (quote.status === "pending" || quote.status === "extra_pending") && <QuoteDecision q={quote} />}
+      {quote && !["pending", "extra_pending"].includes(quote.status) && <div className="small">Ücretli hizmet: {quote.status_label}{quote.billed_total && <> · <Money value={quote.billed_total} /></>}</div>}
+      {r.status === "resolved" && <ConfirmForm id={r.id} autoClose={r.auto_close_at} />}
+      {confirmed && <div className="small"><Star aria-hidden="true" style={{ width: 14, height: 14, verticalAlign: "-2px" }} /> Değerlendirmeniz: {feedback.score}/5</div>}
+      {feedback && !feedback.solved && r.status !== "resolved" && <div className="small muted">Sorunun devam ettiğini bildirdiniz; talep yeniden ele alınıyor.</div>}
+      {r.can_cancel && <CancelRequest r={r} />}
     </div>
+  );
+}
+
+function CancelRequest({ r }: { r: Req }) {
+  const [reason, setReason] = useState("");
+  const m = useSiteMutation<{ reason: string | null }, unknown>("POST", `/resident/requests/${r.id}/cancel`);
+  return (
+    <div><ConfirmButton className="btn btn--ghost btn--sm" danger title={`#${r.number} talebini iptal et`} confirmLabel="İptal et"
+      body={<div className="field"><label className="field__label" htmlFor={`rc-${r.id}`}>Neden vazgeçtiniz? (isteğe bağlı)</label><input id={`rc-${r.id}`} className="field__input" maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} /><span className="field__hint">Üzerinde çalışılmaya başlanan talep iptal edilemez.</span></div>}
+      onConfirm={() => m.mutateAsync({ reason: reason.trim() || null })}>Talebi iptal et</ConfirmButton></div>
   );
 }
 
@@ -32,9 +46,9 @@ function QuoteDecision({ q }: { q: Quote }) {
   return (
     <div className="card" style={{ borderColor: "var(--warn-solid, #d97706)" }}><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
       <div className="strong small">{extra ? "Ek tutar onayı" : "Ücretli hizmet teklifi"}</div>
-      {q.lines.map((l, i) => <div key={i} className="kv"><span className="kv__k">{l.description} · {l.qty} × {formatMoney(l.unit_price)}</span><span className="kv__v"><Money value={l.total} /></span></div>)}
+      {q.lines.map((l, i) => <div key={i} className="kv"><span className="kv__k">{l.description} · {Number(l.qty).toLocaleString("tr-TR")} × {formatMoney(l.unit_price)}</span><span className="kv__v"><Money value={l.total} /></span></div>)}
       <div className="kv"><span className="kv__k strong">{extra ? "Teklif" : "Toplam"}</span><span className="kv__v strong"><Money value={q.total} /></span></div>
-      {extra && <div className="kv"><span className="kv__k strong">Gerçekleşen</span><span className="kv__v strong"><Money value={q.actual_total} /></span></div>}
+      {extra && q.actual_total && <div className="kv"><span className="kv__k strong">Gerçekleşen</span><span className="kv__v strong"><Money value={q.actual_total} /></span></div>}
       <p className="xs muted mb-0">{extra ? "Reddederseniz teklif tutarı geçerli olur." : "Onaylarsanız tutar iş bitince borcunuza eklenir. Onay vermeden ücretli iş yapılmaz."}</p>
       <div className="row" style={{ gap: "var(--s-2)" }}><button className="btn btn--primary btn--sm" type="button" disabled={m.isPending} onClick={() => m.mutate({ decision: "accept" })}>Onaylıyorum</button><button className="btn btn--sm" type="button" disabled={m.isPending} onClick={() => m.mutate({ decision: "reject" })}>Reddediyorum</button></div>
     </div></div>
@@ -60,7 +74,7 @@ function ConfirmForm({ id, autoClose }: { id: string; autoClose: string | null }
         </fieldset>
       )}
       <Field label={solved ? "Yorum (isteğe bağlı)" : "Ne devam ediyor?"} error={fieldError(m.error, "comment")}>{(p) => <input {...p} className="field__input" maxLength={300} value={comment} onChange={(e) => setComment(e.target.value)} />}</Field>
-      <div className="row" style={{ gap: "var(--s-2)", alignItems: "center" }}><SubmitButton busy={m.isPending} className="btn btn--sm btn--primary" disabled={solved && score === 0}>Gönder</SubmitButton>{autoClose && <span className="xs muted">Yanıt vermezseniz talep {formatDate(autoClose)} tarihinde kapanır.</span>}</div>
+      <div className="row" style={{ gap: "var(--s-2)", alignItems: "center" }}><SubmitButton busy={m.isPending} className="btn btn--sm btn--primary" disabled={solved && score === 0}>Gönder</SubmitButton>{autoClose && <span className="xs muted">Yanıt vermezseniz talep {formatDateTime(autoClose)} itibarıyla kapanır.</span>}</div>
     </form>
   );
 }
@@ -68,7 +82,7 @@ function ConfirmForm({ id, autoClose }: { id: string; autoClose: string | null }
 /** Tadilat ve taşınma (HIZ-05, sakin): başvuru ve durum; çalışma saatleri kuralları görünür. */
 export function ResidentPermitsPage() {
   useDocumentTitle("Tadilat ve taşınma");
-  const q = useSiteGet<{ rules: Rules; items: Permit[] }>("/resident/permits");
+  const q = useSiteGet<Schemas["MyPermitsOut"]>("/resident/permits");
   const [adding, setAdding] = useState(false);
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
@@ -83,7 +97,7 @@ export function ResidentPermitsPage() {
           <div key={p.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
             <div className="r-item__title">{permitType(p.type)} <Badge tone={permitTone(p.status)}>{permitStatus(p.status)}</Badge></div>
             <div className="r-item__meta">{p.unit_name} · {formatDate(p.date_from)}{p.date_to !== p.date_from && ` – ${formatDate(p.date_to)}`}{p.contractor && ` · ${p.contractor}`}</div>
-            <div className="r-item__body">{p.description}{p.reject_reason && <div>Ret gerekçesi: {p.reject_reason}</div>}{p.deposit && <div>Depozito: <Money value={p.deposit} /></div>}</div>
+            <div className="r-item__body">{p.description}{p.reject_reason && <div>Ret gerekçesi: {p.reject_reason}</div>}{p.deposit && <div>Depozito: <Money value={p.deposit} />{p.deposit_refunded && " (iade edildi)"}</div>}</div>
           </div></div>
         ))}
       </div>
@@ -97,7 +111,7 @@ function PermitForm({ onDone }: { onDone: () => void }) {
   const m = useSiteMutation<Record<string, unknown>, Permit>("POST", "/resident/permits", { onSuccess: onDone });
   const units = home.data?.units ?? [];
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
-  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ ...f, unit_id: f.unit_id || units[0]?.unit_id, contractor: f.contractor.trim() || null }); }
+  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ ...f, unit_id: f.unit_id || units[0]?.unit_id || null, date_to: f.type === "renovation" ? f.date_to : null, contractor: f.contractor.trim() || null }); }
   return (
     <form className="card" noValidate onSubmit={submit}>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
@@ -116,13 +130,14 @@ function PermitForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-interface ResDepKey { id: string; authorized: { name: string }[]; valid_until: string; status: string; handed_to: string | null; handed_at: string | null }
-interface ResMeter { meter: { id: string; kind: string; serial: string; unit_label: string }; readings: { id: string; period: string; value: string | null; consumption: string | null; status: string; photo: string | null; reason: string | null }[] }
+type ResDepKey = Schemas["DepositedKeyOut"];
+type ResMeter = Schemas["ResidentMeterOut"];
 const DEP_TEXT: Record<string, string> = { requested: "teslim bekleniyor", held: "emanette", returned: "size iade edildi", expired: "süresi doldu" };
 
 /** Emanet ve sayaçlar (OPS-01/05, sakin): anahtar bırakma + yetkili kişiler; sayaç okumaları ve tüketim. */
 export function ResidentKeysMetersPage() {
   useDocumentTitle("Emanet ve sayaçlar");
+  const { site } = useSite();
   const keys = useSiteGet<ResDepKey[]>("/resident/deposited-keys");
   const mtr = useSiteGet<ResMeter[]>("/resident/meter-readings");
   const [names, setNames] = useState("");
@@ -142,7 +157,7 @@ export function ResidentKeysMetersPage() {
       </form>
       {(keys.data ?? []).map((k) => (
         <div key={k.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
-          <div className="r-item__title">Emanet anahtar · {k.status === "handed" ? `${k.handed_to} kişisine verildi` : DEP_TEXT[k.status] ?? k.status}</div>
+          <div className="r-item__title">Emanet anahtar · {k.unit_name} · {k.status === "handed" ? `${k.handed_to} kişisine verildi` : DEP_TEXT[k.status] ?? k.status}</div>
           <div className="r-item__meta">Yetkili: {k.authorized.map((a) => a.name).join(", ")} · {formatDate(k.valid_until)} tarihine kadar</div>
         </div></div>
       ))}
@@ -151,8 +166,8 @@ export function ResidentKeysMetersPage() {
         <div key={m.meter.id} className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
           <div className="strong">{meterKind(m.meter.kind)} <span className="small muted mono">{m.meter.serial}</span></div>
           {m.readings.length === 0 ? <p className="small muted mb-0">Henüz okuma yok.</p> : m.readings.map((r) => (
-            <div key={r.id} className="kv"><span className="kv__k">{r.period}{r.status === "unreadable" && ` · okunamadı${r.reason ? ` (${r.reason})` : ""}`}</span>
-              <span className="kv__v">{r.value ? `${Number(r.value).toLocaleString("tr-TR")} ${m.meter.unit_label}` : "—"}{r.consumption && <span className="xs muted"> · tüketim {Number(r.consumption).toLocaleString("tr-TR")}</span>}{r.photo && <img src={r.photo} alt={`${r.period} sayaç fotoğrafı`} style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle" }} />}</span></div>
+            <div key={r.id} className="kv"><span className="kv__k">{r.period}{r.status === "anomaly" && " · onay bekliyor"}{r.status === "unreadable" && ` · okunamadı${r.reason ? ` (${r.reason})` : ""}`}</span>
+              <span className="kv__v">{r.value ? `${Number(r.value).toLocaleString("tr-TR")} ${m.meter.unit_label}` : "—"}{r.consumption && <span className="xs muted"> · tüketim {Number(r.consumption).toLocaleString("tr-TR")}</span>}{r.photo_id && <span style={{ marginLeft: 6 }}><AuthImage path={`/sites/${site.slug}/resident/meter-readings/${r.id}/photo`} alt={`${r.period} sayaç fotoğrafı`} size={32} /></span>}</span></div>
           ))}
           <p className="xs muted mb-0">Okumaya itirazınız varsa Taleplerim ekranından talep açın.</p>
         </div></div>

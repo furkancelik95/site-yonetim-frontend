@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router";
+import { BellRing, CalendarRange, Hourglass, History, Landmark } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Alert, Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, parseMoneyInput } from "../../lib/format";
 import { P, useSite } from "../../site/SiteContext";
 
@@ -43,6 +44,12 @@ export function FinanceSettingsPage() {
   return (
     <div className="stack">
       <PageHead title="Finans ayarları" subtitle="Vade, kıst, gecikme, mahsup, hatırlatma kademeleri, eşikler. Her değişiklik yürürlük dönemiyle kaydedilir; geçmiş dönemler değişmez." />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Hatırlatma kademeleri" icon={<BellRing aria-hidden="true" />} value={q.data.current.reminder_days.join(" · ")} note="vadeden sonraki gün" />
+        <Kpi label="Kıst yöntemi" icon={<CalendarRange aria-hidden="true" />} value={q.data.current.proration === "day" ? "Gün bazlı" : "Ay bazlı"} small note={`yürürlükte: ${plabel(q.data.current_period)}`} />
+        <Kpi label="Planlı değişiklik" tone={q.data.scheduled.length ? "accent" : undefined} icon={<History aria-hidden="true" />} value={q.data.scheduled.length} note={`${q.data.versions.length} sürüm kayıtlı`} />
+        <Kpi label="Karar bekleyen" tone="warn" icon={<Hourglass aria-hidden="true" />} value={PENDING.filter((x) => x[3] === "warn").length} note="ortak kararıyla açılacak" />
+      </div>
       {q.data.scheduled.length > 0 && <Alert tone="info" title="Planlı değişiklik">{q.data.scheduled.map((v) => `${plabel(v.effective_period)}: ${v.changed.map(label).join(", ")}`).join(" · ")}</Alert>}
       {pending.length > 0 && <Alert tone="warn" title="Onay bekleyen değişiklik">{pending.map((v) => `${plabel(v.effective_period)}: ${v.changed.map(label).join(", ")}`).join(" · ")} — Onaylar ekranından izleyin.</Alert>}
       <Alert tone="info" title="Tahakkuk motoru bu ayarları kullanır">
@@ -52,7 +59,7 @@ export function FinanceSettingsPage() {
       </Alert>
       {can(P.chargePost) ? <ParamsForm d={q.data} /> : <Alert tone="info">Parametreleri yalnız site yöneticisi ve muhasebe değiştirir.</Alert>}
       <div className="card">
-        <div className="card__head"><span className="card__title">Bu ekranda olmayan ayarlar</span><span className="card__meta ml-auto">dış karar bekleyen ya da başka ekranda</span></div>
+        <div className="card__head"><span className="card__icon card__icon--warn"><Hourglass aria-hidden="true" /></span><span className="card__title">Bu ekranda olmayan ayarlar</span><span className="card__meta ml-auto">dış karar bekleyen ya da başka ekranda</span></div>
         <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
           <caption className="visually-hidden">Karar bekleyen finans ayarları</caption>
           <thead><tr><th scope="col">Ayar</th><th scope="col">Şu an</th><th scope="col">Bekleyen</th></tr></thead>
@@ -61,7 +68,7 @@ export function FinanceSettingsPage() {
       </div>
       {q.data.versions.length > 0 && (
         <div className="card">
-          <div className="card__head"><span className="card__title">Değişiklik geçmişi</span></div>
+          <div className="card__head"><span className="card__icon"><History aria-hidden="true" /></span><span className="card__title">Değişiklik geçmişi</span></div>
           <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Parametre sürümleri</caption>
             <thead><tr><th scope="col">Yürürlük</th><th scope="col">Değişen</th><th scope="col">Durum</th><th scope="col">Yapan</th></tr></thead>
@@ -97,7 +104,7 @@ function ParamsForm({ d }: { d: Resp }) {
     <form className="stack" onSubmit={submit} noValidate>
       <FormError error={m.error} />
       <div className="card">
-        <div className="card__head"><span className="card__title">Tahakkuk ve vade</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Landmark aria-hidden="true" /></span><span className="card__title">Tahakkuk ve vade</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field__label">Tahakkuk kaynağı {fin}</legend>
@@ -116,7 +123,7 @@ function ParamsForm({ d }: { d: Resp }) {
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Gecikme tazminatı ve mahsup</span></div>
+        <div className="card__head"><span className="card__icon card__icon--warn"><Hourglass aria-hidden="true" /></span><span className="card__title">Gecikme tazminatı ve mahsup</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <label className="check"><input type="checkbox" checked={v.late_fee_enabled} onChange={(e) => set("late_fee_enabled", e.target.checked)} /><span>Gecikme tazminatı uygulanır {fin} <span className="muted">— site yönetimi kararı; varsayılan kapalı</span></span></label>
           {v.late_fee_enabled && (
@@ -137,7 +144,7 @@ function ParamsForm({ d }: { d: Resp }) {
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Borç takibi</span></div>
+        <div className="card__head"><span className="card__icon card__icon--danger"><BellRing aria-hidden="true" /></span><span className="card__title">Borç takibi</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field__label">Hatırlatma kademeleri (vadeden sonraki gün)</legend>
@@ -164,7 +171,7 @@ function ParamsForm({ d }: { d: Resp }) {
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Diğer</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><CalendarRange aria-hidden="true" /></span><span className="card__title">Diğer</span></div>
         <div className="card__body grid grid--kpi">
           <Field label="Banka otomatik eşleşme">{(p) => <select {...p} className="field__input" value={v.bank_auto_match} onChange={(e) => set("bank_auto_match", e.target.value as Params["bank_auto_match"])}><option value="high">Yalnız yüksek güven (referans kodu, IBAN geçmişi)</option><option value="high_medium">Yüksek + orta (ad ve bölüm no)</option></select>}</Field>
           <Field label="Bütçe uyarı eşiği (%)" hint="Kategori bu orana ulaşınca uyarı" error={fieldError(m.error, "budget_warn_percent")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={v.budget_warn_percent} onChange={num("budget_warn_percent")} />}</Field>

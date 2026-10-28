@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { FileSignature, Plus } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, Clock, FileSignature, Plus, ShieldCheck, Sparkles, Trees, Umbrella, Wallet, Waves, Wrench } from "lucide-react";
 import { Link } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { contractCategory, contractPeriod } from "../../lib/labels";
@@ -12,6 +12,12 @@ import { P, useSite } from "../../site/SiteContext";
 type Contract = Schemas["ContractOut"];
 
 const CATEGORIES = ["elevator", "cleaning", "security", "garden", "maintenance", "insurance", "pool", "other"];
+
+/** Sözleşme türü → ikon (dekoratif; tür adı yanında yazılır) */
+function CategoryIcon({ category }: { category: string }) {
+  const I = category === "elevator" ? ArrowUpDown : category === "cleaning" ? Sparkles : category === "security" ? ShieldCheck : category === "garden" ? Trees : category === "maintenance" ? Wrench : category === "insurance" ? Umbrella : category === "pool" ? Waves : FileSignature;
+  return <I />;
+}
 
 function StateBadge({ c }: { c: Contract }) {
   if (c.state === "expired") return <Badge tone="danger">Süresi doldu · {-c.days_left} gün önce</Badge>;
@@ -28,6 +34,10 @@ export function ContractsPage() {
   const [editing, setEditing] = useState<Contract | "new" | null>(null);
   const manage = can(P.contractsManage);
   const warn = (q.data ?? []).filter((c) => c.state === "expiring" || c.state === "expired");
+  const all = q.data ?? [];
+  const n = (st: string) => (q.data ? all.filter((c) => c.state === st).length : "—");
+  // Aylık dönemli sözleşmelerin bedel toplamı (gösterim; para metni toplanıp iki ondalıkla yazılır)
+  const monthly = all.filter((c) => c.period === "monthly" && c.amount).reduce((sum, c) => sum + Number(c.amount), 0);
   return (
     <div className="stack">
       <PageHead
@@ -35,17 +45,21 @@ export function ContractsPage() {
         subtitle="Asansör, temizlik, güvenlik, sigorta gibi hizmet sözleşmeleri ve bitiş tarihleri."
         actions={manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Sözleşme ekle</button>}
       />
+      {!s.arsiv && (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Yürürlükte" tone="ok" icon={<FileSignature aria-hidden="true" />} value={n("active")} note="sözleşme" />
+          <Kpi label="Bitmek üzere" tone={warn.some((c) => c.state === "expiring") ? "warn" : undefined} icon={<Clock aria-hidden="true" />} value={n("expiring")} note="uyarı süresine girdi" />
+          <Kpi label="Süresi dolmuş" tone={warn.some((c) => c.state === "expired") ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={n("expired")} note="yenileme bekliyor" />
+          <Kpi label="Aylık bedel toplamı" icon={<Wallet aria-hidden="true" />} value={q.data ? formatMoney(monthly.toFixed(2)) : "—"} note="aylık dönemli sözleşmeler" />
+        </div>
+      )}
       {editing && <ContractForm c={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
       {!s.arsiv && warn.length > 0 && (
         <Alert tone="warn" title={`${warn.length} sözleşme için işlem gerekiyor`}>
           {warn.map((c) => `${c.vendor} (${c.state === "expired" ? "süresi doldu" : `${c.days_left} gün`})`).join(", ")}. Yenileme ya da yeni teklif için firmayla görüşün.
         </Alert>
       )}
-      <div className="row" role="tablist" aria-label="Sözleşme listesi" style={{ gap: "var(--s-2)" }}>
-        {[["", "Geçerli"], ["1", "Arşiv"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.arsiv === k} className={`btn btn--sm${s.arsiv === k ? " btn--primary" : ""}`} onClick={() => set({ arsiv: k! })}>{l}</button>
-        ))}
-      </div>
+      <Segmented label="Sözleşme listesi" value={s.arsiv} onChange={(k) => set({ arsiv: k })} options={[{ value: "", label: "Geçerli" }, { value: "1", label: "Arşiv" }]} />
       <div className="card">
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? (
@@ -58,7 +72,12 @@ export function ContractsPage() {
                 <tbody>
                   {q.data.map((c) => (
                     <tr key={c.id}>
-                      <td><Link className="cell-main" to={`/s/${site.slug}/sozlesmeler/${c.id}`}>{c.vendor}</Link><div className="cell-sub">{contractCategory(c.category)} · {c.subject}</div></td>
+                      <td>
+                        <div className="cell-person">
+                          <IconChip tone={c.state === "expired" ? "danger" : c.state === "expiring" ? "warn" : undefined}><CategoryIcon category={c.category} /></IconChip>
+                          <div><Link className="cell-main" to={`/s/${site.slug}/sozlesmeler/${c.id}`}>{c.vendor}</Link><div className="cell-sub">{contractCategory(c.category)} · {c.subject}</div></div>
+                        </div>
+                      </td>
                       <td className="small nowrap">{formatDate(c.start_date)} – {formatDate(c.end_date)}{c.auto_renew && <div className="cell-sub">Kendiliğinden yenilenir</div>}</td>
                       <td className="right nowrap">{c.amount ? <>{formatMoney(c.amount)}<div className="cell-sub">{contractPeriod(c.period)}</div></> : "—"}</td>
                       <td><StateBadge c={c} /></td>

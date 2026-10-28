@@ -16,9 +16,11 @@ export const P = {
   unitsManage: "units.manage",
   peopleRead: "people.read",
   peopleManage: "people.manage",
+  peopleContact: "people.contact",
   requestsRead: "requests.read",
   requestsCreate: "requests.create",
   requestsAssign: "requests.assign",
+  requestsSettings: "requests.settings",
   announcementsRead: "announcements.read",
   announcementsPublish: "announcements.publish",
   packages: "security.packages",
@@ -39,6 +41,9 @@ export const P = {
   documentsRead: "documents.read",
   documentsManage: "documents.manage",
   documentsConfidential: "documents.confidential",
+  privacyManage: "privacy.manage",
+  notificationsManage: "notifications.manage",
+  reportsSchedule: "reports.schedule",
 } as const;
 
 export const M = {
@@ -59,6 +64,12 @@ export type SiteDetail = Schemas["SiteResponse"];
 
 export interface SiteCtx {
   site: SiteDetail;
+  /**
+   * Bu sitedeki etkin rol adları, ana rol (en üst düzey) önce. Bir kişinin birden çok rolü olabilir
+   * (P18); yetki için rol adına değil `can` ile izne bakılır — roller yalnız gösterim ve rol listesi
+   * içeren ayarlar (ör. özel alan görünürlüğü) içindir.
+   */
+  roles: string[];
   /** İzin var mı (gizlemek güvenlik değildir; asıl kontrol backend'de). */
   can: (permission: string) => boolean;
   /** Modül açık mı ve izin var mı — kapalı modülün menüsü görünmez, tıklayan 404 alır. */
@@ -78,6 +89,7 @@ export function makeSiteCtx(site: SiteDetail): SiteCtx {
   const mods = new Set(site.modules);
   return {
     site,
+    roles: site.roles.map((r) => r.name),
     can: (p) => perms.has(p),
     shows: (m, p) => mods.has(m) && (p === undefined || perms.has(p)),
   };

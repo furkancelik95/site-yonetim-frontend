@@ -23,10 +23,14 @@ Kaynak: Yazılım Dokümanı **RAP-04** ve **18.2** (KVKK).
 - **Silme**: finansal kayıtlar yasal saklama süresince silinmez; sonuç "yerine getirildi" değilse **saklanan kayıtlar ve
   dayanağı zorunlu**; diğerleri silinir ya da anonimleşir.
 - Yanıt kişiye gider (K5); hepsi denetim kaydına yazılır.
-- **Aydınlatma metni**: Türkçe bağlayıcı metin sürümlenir (≥ 200 karakter), eski sürümler saklanır; çeviriler sonra. Belgedeki
-  "metin değişince yeniden onay" ve girişi onaya bağlama kurgusu hukuki teyide bağlı (ortaklara soru 2.1: aydınlatma
-  bilgilendirmedir, onay kutusu gerekmez) — uygulanmadı. Herkese açık `/aydinlatma` sayfası son sürümü göstermeli.
-- **Saklama politikası** (kategori × süre) ve VERBİS veri envanteri dökümü K8 kararına bağlı.
+- **Aydınlatma metni**: Türkçe bağlayıcı metin sürümlenir (≥ 200 karakter), eski sürümler saklanır; çeviriler sonra.
+  **PM kararı P6 (25.10.2026): ilk girişte ve metin değişince onay** — uygulandı: `/me` → `consent_required`;
+  onaysız oturumda yalnız `/me`, `/auth/*`, `/me/consents` ve herkese açık metin çalışır (diğerleri 403
+  `consent_required`); girişten sonra `/aydinlatma-onayi` ekranı. Herkese açık `/aydinlatma?site=<slug>` son
+  sürümü gösterir (`/public/privacy-notice/{slug}`). Kayıt başvurusu ve davet kabulündeki onay aynı kayda bağlanır;
+  açık rıza ayrı ve isteğe bağlı (`…/my-privacy/explicit-consents/{purpose}`).
+- **Saklama politikası** (kategori × süre, K8: dokümandaki varsayılanlar; hukuki teyit bekleyenlerde otomatik kapalı) `…/settings/retention`, silme raporu `…/settings/retention/runs`; VERBİS envanteri `…/data-inventory` (Excel/CSV); "verilerimi indir" `…/my-privacy/data-export`.
+- **Backend biçimi:** listeler sayfalı (`Page`); yönetim yetkisi `privacy.manage`.
 
 ## Hata durumları
 | Durum | Kod | Mesaj |

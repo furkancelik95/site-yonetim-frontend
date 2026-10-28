@@ -39,8 +39,8 @@ export function ChangePasswordPage() {
   }
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 560 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 560px)" }}>
         <h1>Parolanızı değiştirin</h1>
         {forced && (
           <Alert tone="info" title="Yeni parola gerekli">

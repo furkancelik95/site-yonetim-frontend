@@ -1,15 +1,16 @@
-import { Fragment, useState, type FormEvent } from "react";
+import { Fragment, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { ClipboardList } from "lucide-react";
+import { Building2, CalendarDays, ClipboardList, ReceiptText } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, formatMoneyShort, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, adjustmentStatus, adjustmentTone, chargeSource, diffFlag, diffFlagTone, runStatus, runTone, warningKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { ChargeSchedule } from "./ChargeSchedule";
+import { CollectionChart, type Collections } from "./CollectionStats";
 
 type Preview = Schemas["site_yonetim__api__v1__charges__PreviewOut"];
 type Run = Schemas["ChargeRunOut"];
@@ -28,17 +29,22 @@ export function ChargesPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ charge_date: "", due_date: "", page: "1" });
   const preview = useSiteGet<Preview>("/charge-runs/preview", { charge_date: s.charge_date, due_date: s.due_date, page: s.page, page_size: 25 });
+  const coll = useSiteGet<Collections>("/reports/collections", {}, { enabled: can(P.financeRead) });
+  const chart = coll.data && coll.data.periods.length > 0 ? <CollectionChart data={coll.data} series="charged" title="Aylık tahakkuk" /> : null;
 
   return (
     <div className="stack">
-      <PageHead title="Tahakkuk" subtitle="Sıradaki dönemin önizlemesi. Önizlemede hiçbir şey kaydedilmez; kontrol ettikten sonra kaydedin ya da taslak hazırlayıp onaya gönderin." />
+      <PageHead title="Tahakkuk" subtitle="Sıradaki dönemin önizlemesi. Önizlemede hiçbir şey kaydedilmez; kontrol ettikten sonra kaydedin ya da taslak hazırlayıp onaya gönderin." band />
 
       {preview.isPending ? (
-        <Loading label="Önizleme hazırlanıyor…" />
+        <>
+          <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+          <Loading label="Önizleme hazırlanıyor…" />
+        </>
       ) : preview.isError ? (
         <ErrorState error={preview.error} onRetry={() => preview.refetch()} />
       ) : (
-        <PreviewView p={preview.data} canPost={can(P.chargePost)} s={s} set={set} />
+        <PreviewView p={preview.data} canPost={can(P.chargePost)} s={s} set={set} side={chart} />
       )}
 
       {can(P.chargePost) && <ChargeSchedule />}
@@ -67,7 +73,7 @@ function WarningsAlert({ warnings }: { warnings: Warning[] }) {
   );
 }
 
-function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: Record<"charge_date" | "due_date" | "page", string>; set: (x: Partial<Record<"charge_date" | "due_date" | "page", string>>) => void }) {
+function PreviewView({ p, canPost, s, set, side }: { p: Preview; canPost: boolean; s: Record<"charge_date" | "due_date" | "page", string>; set: (x: Partial<Record<"charge_date" | "due_date" | "page", string>>) => void; side?: ReactNode }) {
   const { site } = useSite();
   const [open, setOpen] = useState<string | null>(null);
   const post = useSiteMutation<DateBody, Run>("POST", "/charge-runs", { money: true });
@@ -76,8 +82,7 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
   const dates: DateBody = { charge_date: s.charge_date || p.charge_date, due_date: s.due_date || p.due_date };
   const fromRules = p.source === "billing_rule";
 
-  return (
-    <>
+  const previewCard = (
       <div className="card">
         <div className="card__head">
           <span className="card__icon card__icon--accent"><ClipboardList aria-hidden="true" /></span>
@@ -97,13 +102,6 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
               <input id="c-due" className="field__input" type="date" value={dates.due_date ?? ""} onChange={(e) => set({ due_date: e.target.value })} />
               <span className="field__hint">Varsayılan: Finans ayarlarındaki vade günü.</span>
             </div>
-          </div>
-
-          <div className="grid grid--kpi">
-            <Kpi label="Toplam tutar" tone="accent" value={formatMoneyShort(p.total_amount)} note={formatMoney(p.total_amount)} />
-            <Kpi label="Bağımsız bölüm" value={p.unit_count} />
-            <Kpi label="Borç kaydı" value={p.charge_count} note="oturan + malik hesapları" />
-            <Kpi label="Son ödeme" value={formatDate(p.due_date)} small />
           </div>
 
           {p.already_charged && <Alert tone="info" title="Bu dönem zaten tahakkuk edildi">Aynı döneme ikinci kez tahakkuk kesilemez. Tek satırı aşağıdaki koşu ayrıntısından düzeltin; tümü hatalıysa koşuyu ters kaydedin.</Alert>}
@@ -153,6 +151,18 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
           <FormError error={draft.error} />
         </div>
       </div>
+  );
+
+  return (
+    <>
+      <div className="grid grid--kpi rise">
+        <Kpi label="Toplam tutar" tone="accent" icon={<ReceiptText aria-hidden="true" />} value={formatMoneyShort(p.total_amount)} note={formatMoney(p.total_amount)} />
+        <Kpi label="Bağımsız bölüm" icon={<Building2 aria-hidden="true" />} value={p.unit_count} note={`${p.period} dönemi`} />
+        <Kpi label="Borç kaydı" icon={<ClipboardList aria-hidden="true" />} value={p.charge_count} note="oturan + malik hesapları" />
+        <Kpi label="Son ödeme" icon={<CalendarDays aria-hidden="true" />} value={formatDate(p.due_date)} small note={`tahakkuk ${formatDate(p.charge_date)}`} />
+      </div>
+
+      {side ? <div className="grid grid--main">{previewCard}{side}</div> : previewCard}
 
       {!p.already_charged && p.charge_count > 0 && <DiffCard path="/charge-runs/preview/diff" query={dates} />}
 
@@ -179,7 +189,7 @@ function PreviewView({ p, canPost, s, set }: { p: Preview; canPost: boolean; s: 
                             </button>
                             <Proration days={c.days} periodDays={c.period_days} />
                           </td>
-                          <td>{c.person_name ?? <span className="subtle">—</span>}</td>
+                          <td><div className="cell-person"><Avatar name={c.person_name} size="sm" soft /><span>{c.person_name ?? <span className="subtle">—</span>}</span></div></td>
                           <td className="small">{accountKind(c.account_kind)} · <span className="mono">{c.reference_code}</span></td>
                           <td className="right"><Money value={c.amount} /></td>
                         </tr>

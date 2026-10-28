@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, get } from "../../api/client";
-import type { Written } from "../../api/types";
+import type { Schemas, Written } from "../../api/types";
 import { Alert, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { trUpper } from "../../lib/format";
 
@@ -22,8 +22,8 @@ const digits = (v: string) => v.replace(/\D/g, "").replace(/^90/, "").replace(/^
 const maskPhone = (d: string) => [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean).join(" ");
 const capitalize = (s: string) => s.trim().split(/\s+/).map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1).toLocaleLowerCase("tr-TR")).join(" ");
 
-/** Gerçek yanıt + servis isteği 23 ekleri: blok/bölüm listesi (yalnız ad, kişi yok) ve belge zorunluluğu. */
-interface PublicSite { site_name: string; site_slug: string; blocks?: { id: string; name: string; units: { id: string; name: string }[] }[]; document_required?: boolean }
+/** Site adı + blok/bölüm listesi (yalnız ad, kişi yok — KVKK) ve belge zorunluluğu (istek 23). */
+type PublicSite = Schemas["PublicSiteOut"];
 
 /** Herkese açık sakin kayıt formu (/kayit/:code). Oturum gerekmez; başvuru yönetim onayına düşer. Servis isteği 13 + 23. */
 export function PublicRegistrationPage() {
@@ -73,6 +73,7 @@ export function PublicRegistrationPage() {
       phone: `+90${digits(f.phone)}`,
       email: f.email.trim().toLocaleLowerCase("tr-TR") || null,
       unit_text: selectedUnit?.name ?? f.unit_text.trim(),
+      unit_id: selectedUnit?.id ?? undefined,
       relation: f.relation,
       explicit_consent: f.explicit_consent,
       kvkk_ack: f.kvkk_ack,
@@ -82,8 +83,8 @@ export function PublicRegistrationPage() {
   const err = (k: string) => errs[k] ?? fieldError(m.error, k);
 
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 620 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 620px)" }}>
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">SY</span>
           <span><span className="sidebar__name">{site.data?.site_name ?? "SiteYönetimi"}</span><br /><span className="sidebar__sub">Sakin kaydı</span></span>
@@ -127,7 +128,7 @@ export function PublicRegistrationPage() {
               {site.data?.document_required && f.relation === "owner" && <p className="small muted mb-0">Malik başvurusunda site yönetimi onay sırasında tapu ya da yetki belgesi isteyecektir.</p>}
 
               <p className="small mb-0">
-                Kişisel verilerinizin işlenmesine ilişkin <Link to="/aydinlatma" target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.
+                Kişisel verilerinizin işlenmesine ilişkin <Link to={site.data?.site_slug ? `/aydinlatma?site=${encodeURIComponent(site.data.site_slug)}` : "/aydinlatma"} target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.
               </p>
               <label className="check check--rich">
                 <input type="checkbox" checked={f.explicit_consent} onChange={(e) => setF((x) => ({ ...x, explicit_consent: e.target.checked }))} />
@@ -149,20 +150,35 @@ export function PublicRegistrationPage() {
   );
 }
 
-/** Aydınlatma metni — TASLAK. Saklama süreleri ve metin hukuk onayı bekliyor (açık karar K8). */
+/** Aydınlatma metni (RAP-04): `?site=<slug>` ile sitenin yayınlanmış son sürümü (oturumsuz);
+ * site yoksa ya da henüz yayın yoksa taslak metin gösterilir. */
 export function PrivacyNoticePage() {
   useDocumentTitle("Aydınlatma metni");
+  const [params] = useSearchParams();
+  const slug = params.get("site") ?? "";
+  const q = useQuery({ queryKey: ["public-privacy-notice", slug], queryFn: () => get<Schemas["PublicNoticeOut"]>(`/public/privacy-notice/${encodeURIComponent(slug)}`), enabled: !!slug, retry: false });
+  const published = q.data?.version != null && q.data.text;
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 720 }}>
-      <div className="auth__panel stack" style={{ gap: "var(--s-3)", lineHeight: 1.7 }}>
-        <Alert tone="warn" title="Taslak">Bu metin hukuk onayı bekliyor (açık karar K8). Yayına almadan önce site yönetimi ve hukukçu tarafından tamamlanmalı.</Alert>
-        <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
-        <p className="mb-0"><strong>Veri sorumlusu:</strong> Kaydolduğunuz sitenin yönetimi.</p>
-        <p className="mb-0"><strong>İşlenen veriler:</strong> ad, soyad, cep telefonu, e-posta, bağımsız bölüm ve malik/kiracı bilgisi.</p>
-        <p className="mb-0"><strong>Amaç:</strong> aidat ve ortak gider takibi, duyuru ve talep hizmetleri, site güvenliği (634 sayılı Kat Mülkiyeti Kanunu kapsamındaki yükümlülükler).</p>
-        <p className="mb-0"><strong>Hukuki sebep:</strong> sözleşmenin ifası ve kanuni yükümlülük (KVKK m.5/2). Ticari ileti için ayrıca açık rıza istenir.</p>
-        <p className="mb-0"><strong>Aktarım:</strong> [barındırma kararı verilince doldurulacak — sunucu yeri, yurt dışına aktarım olup olmadığı]</p>
-        <p className="mb-0"><strong>Haklarınız:</strong> KVKK m.11 kapsamındaki başvurularınızı site yönetimine iletebilirsiniz.</p>
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel stack" style={{ gap: "var(--s-3)", lineHeight: 1.7, width: "min(100%, 720px)" }}>
+        {slug && q.isPending ? <Loading /> : published ? (
+          <>
+            <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
+            <p className="small muted mb-0">{q.data!.site_name} · sürüm {q.data!.version}{q.data!.published_at ? ` · ${new Date(q.data!.published_at).toLocaleDateString("tr-TR")}` : ""}</p>
+            <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{q.data!.text}</p>
+          </>
+        ) : (
+          <>
+            <Alert tone="warn" title="Taslak">{q.data ? `${q.data.site_name} henüz aydınlatma metni yayınlamadı. ` : ""}Bu genel taslak hukuk onayı bekliyor; site yönetimi yayınladığında burada onun metni görünür.</Alert>
+            <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
+            <p className="mb-0"><strong>Veri sorumlusu:</strong> Kaydolduğunuz sitenin yönetimi.</p>
+            <p className="mb-0"><strong>İşlenen veriler:</strong> ad, soyad, cep telefonu, e-posta, bağımsız bölüm ve malik/kiracı bilgisi.</p>
+            <p className="mb-0"><strong>Amaç:</strong> aidat ve ortak gider takibi, duyuru ve talep hizmetleri, site güvenliği (634 sayılı Kat Mülkiyeti Kanunu kapsamındaki yükümlülükler).</p>
+            <p className="mb-0"><strong>Hukuki sebep:</strong> sözleşmenin ifası ve kanuni yükümlülük (KVKK m.5/2). Ticari ileti için ayrıca açık rıza istenir.</p>
+            <p className="mb-0"><strong>Saklama:</strong> finansal kayıtlar kanuni süre boyunca (10 yıl); ziyaretçi kayıtları site ayarına göre (varsayılan 6 ay).</p>
+            <p className="mb-0"><strong>Haklarınız:</strong> KVKK m.11 kapsamındaki başvurularınızı uygulamadaki "Kişisel verilerim" ekranından site yönetimine iletebilirsiniz.</p>
+          </>
+        )}
       </div>
     </main>
   );

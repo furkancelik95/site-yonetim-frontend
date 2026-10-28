@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { Plus, Receipt } from "lucide-react";
+import { CheckCircle2, Clock, PieChart, Plus, Receipt, Wallet, XCircle } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { Donut } from "../../components/charts";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatDateTime, parseMoneyInput, todayIso } from "../../lib/format";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatDateTime, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, adHocMode, adHocSource, adHocStatus } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
@@ -14,6 +15,7 @@ type Source = AdHoc["source"];
 /** Backend her kaynağı döner (`AdHocSettingsOut`); burada kaynak anahtarıyla sıkı tiplenir. */
 type Settings = { sources: Record<Source, Schemas["AdHocSourceSettingOut"]> };
 const SOURCES: Source[] = ["reservation", "service", "renovation", "penalty", "other"];
+const short = (v: number) => formatMoneyShort(v.toFixed(2));
 
 /**
  * Dönem dışı ücretler (FIN-06): rezervasyon, ücretli hizmet, tadilat, ceza gibi aidat dışı ücretler. Kaynak bazında
@@ -24,21 +26,51 @@ export function AdHocChargesPage() {
   const manage = can(P.chargePost);
   const [s, set] = useUrlState({ durum: "", page: "1" });
   const q = useSiteGet<Schemas["Page_AdHocChargeOut_"]>("/ad-hoc-charges", { status: s.durum || undefined, page: s.page, page_size: 50 });
+  const all = useSiteGet<Schemas["Page_AdHocChargeOut_"]>("/ad-hoc-charges", { page_size: 200 });
   const [adding, setAdding] = useState(false);
+  const rows = all.data?.items ?? [];
+  const live = rows.filter((c) => c.status !== "cancelled" && c.status !== "rejected");
+  const sum = (xs: AdHoc[]) => xs.reduce((t, c) => t + Number(c.amount), 0);
+  const posted = rows.filter((c) => c.status === "posted");
+  const waiting = rows.filter((c) => c.status === "waiting_next_run");
+  const bySource = SOURCES.map((k) => ({ label: adHocSource(k), value: sum(live.filter((c) => c.source === k)) })).filter((x) => x.value > 0);
   return (
     <div className="stack">
       <PageHead title="Dönem dışı ücretler" subtitle="Aidat dışındaki tek seferlik ücretler: rezervasyon, ücretli hizmet, tadilat, ceza. Kaynak bazında hemen ya da sonraki aidatla yansır." actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Ücret ekle</button>} />
+      {!all.isError && (
+        all.data ? (
+          <div className="grid grid--kpi rise">
+            <Kpi label="Toplam ücret" tone="accent" icon={<Wallet aria-hidden="true" />} value={short(sum(live))} note={`${live.length} ücret · iptaller hariç`} />
+            <Kpi label="Cariye yazıldı" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={posted.length} note={short(sum(posted))} />
+            <Kpi label="Sonraki aidatı bekliyor" icon={<Clock aria-hidden="true" />} value={waiting.length} note={short(sum(waiting))} />
+            <Kpi label="İptal" icon={<XCircle aria-hidden="true" />} value={rows.length - live.length} note="ters kayıtla kapanan" />
+          </div>
+        ) : (
+          <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+        )
+      )}
       {adding && <AdHocForm onDone={() => setAdding(false)} />}
       {manage && <SettingsCard />}
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="ah-st">Durum</label><select id="ah-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["approval_pending", "posted", "waiting_next_run", "cancelled", "rejected"].map((k) => <option key={k} value={k}>{adHocStatus(k)}</option>)}</select></div></div>
-      <div className="card"><div className="card__body card__body--flush">
+      <div className={bySource.length > 0 ? "grid grid--main" : "stack"}>
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Ücretler</div>
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="ah-st">Durum</label><select id="ah-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["approval_pending", "posted", "waiting_next_run", "cancelled", "rejected"].map((k) => <option key={k} value={k}>{adHocStatus(k)}</option>)}</select></div>
+          </div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Dönem dışı ücret yok" icon={<Receipt aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Dönem dışı ücretler</caption>
             <thead><tr><th scope="col">Bölüm / hesap</th><th scope="col">Ücret</th><th scope="col" className="right">Tutar</th><th scope="col">Vade</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
             <tbody>{q.data.items.map((c) => (
               <tr key={c.id} style={c.status === "cancelled" || c.status === "rejected" ? { opacity: 0.6 } : undefined}>
-                <td><div className="cell-main">{c.unit_name}</div><div className="cell-sub">{accountKind(c.account_kind)} · {c.person_name ?? "—"}</div></td>
+                <td><div className="cell-person"><IconChip tone={c.status === "posted" ? "ok" : c.status === "waiting_next_run" ? undefined : "muted"}><Receipt aria-hidden="true" /></IconChip><div><div className="cell-main">{c.unit_name}</div><div className="cell-sub">{accountKind(c.account_kind)} · {c.person_name ?? "—"}</div></div></div></td>
                 <td><div>{c.description}</div><div className="cell-sub">{adHocSource(c.source)} · {c.created_by}, {formatDateTime(c.created_at)}</div>{c.cancel_reason && <div className="cell-sub">İptal: {c.cancel_reason}</div>}</td>
                 <td className="right"><Money value={c.amount} /></td>
                 <td className="small nowrap">{c.due_date ? formatDate(c.due_date) : <span className="muted">tahakkuk vadesi</span>}</td>
@@ -48,7 +80,22 @@ export function AdHocChargesPage() {
             ))}</tbody>
           </table></div>
         )}
-      </div>{q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}</div>
+        </div>
+        {q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
+      </div>
+      {bySource.length > 0 && (
+        <div className="card">
+          <div className="card__head">
+            <span className="card__icon"><PieChart aria-hidden="true" /></span>
+            <span className="card__title">Kaynağa göre</span>
+            <span className="card__meta ml-auto">iptaller hariç</span>
+          </div>
+          <div className="card__body fin-pie">
+            <Donut segments={bySource} label="Dönem dışı ücretlerin kaynağa göre tutarı" center={short(sum(live))} centerSub="toplam" format={short} />
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
-import { Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { CalendarDays, Flag, ListChecks, Pencil, PieChart, Plus, Receipt, ReceiptText, Trash2 } from "lucide-react";
+import { Donut } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
@@ -24,15 +25,16 @@ export function BudgetPage() {
   const [creating, setCreating] = useState(false);
   const tabs: [string, string][] = [["proje", "İşletme projesi"], ["butce", "Bütçe ve gerçekleşme"]];
   const tabBar = (
-    <div className="row" role="tablist" aria-label="İşletme projesi ve bütçe" style={{ gap: "var(--s-2)" }}>
-      {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k })}>{l}</button>)}
+    <div className="tabs" role="tablist" aria-label="İşletme projesi ve bütçe">
+      {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className="tabs__tab" onClick={() => set({ sekme: k })}>{l}</button>)}
     </div>
   );
   if (s.sekme === "butce") {
     return (
       <div className="stack">
-        <PageHead title="Bütçe ve gerçekleşme" subtitle="Gider kategorisi × ay yıllık bütçe ve gerçekleşen gider. Eşiğe yaklaşan kategori sarı, aşan kırmızı görünür (FIN-17)." />
-        {tabBar}
+        <PageHead title="Bütçe ve gerçekleşme" subtitle="Gider kategorisi × ay yıllık bütçe ve gerçekleşen gider. Eşiğe yaklaşan kategori sarı, aşan kırmızı görünür (FIN-17).">
+          {tabBar}
+        </PageHead>
         <AnnualBudget s={s} set={set} canManage={can(P.budgetManage)} />
       </div>
     );
@@ -46,33 +48,40 @@ export function BudgetPage() {
       <PageHead
         title="İşletme projesi"
         subtitle="Yıllık gider tahmini ve dağıtım kuralları. Aylık tahakkuk buradaki kalemlerden hesaplanır (KMK m.37)."
-        actions={can(P.budgetManage) && <button className="btn" type="button" onClick={() => setCreating((v) => !v)} aria-expanded={creating}><Plus aria-hidden="true" /> Yeni proje</button>}
-      />
-
-      {tabBar}
-
-      {creating && <NewPlanForm onDone={(id) => { setCreating(false); if (id) set({ plan: id }); }} />}
+        actions={
+          <>
+            {list.length > 1 && (
+              <select className="field__input fin-plan-sel" aria-label="İşletme projesi" value={selectedId} onChange={(e) => set({ plan: e.target.value })}>
+                {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {budgetStatus(p.status)}</option>)}
+              </select>
+            )}
+            {can(P.budgetManage) && <button className="btn" type="button" onClick={() => setCreating((v) => !v)} aria-expanded={creating}><Plus aria-hidden="true" /> Yeni proje</button>}
+          </>
+        }
+      >
+        {tabBar}
+      </PageHead>
 
       {plans.isPending ? (
-        <Loading />
+        <>
+          <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+          <Loading />
+        </>
       ) : plans.isError ? (
         <ErrorState error={plans.error} onRetry={() => plans.refetch()} />
       ) : list.length === 0 ? (
-        <div className="card"><Empty title="Henüz işletme projesi yok" icon={<Receipt aria-hidden="true" />}>Yeni proje oluşturup kalemlerini ekleyin.</Empty></div>
-      ) : (
         <>
-          {list.length > 1 && (
-            <div className="filters">
-              <div className="field">
-                <label className="field__label" htmlFor="plan-sel">Proje</label>
-                <select id="plan-sel" className="field__input" value={selectedId} onChange={(e) => set({ plan: e.target.value })}>
-                  {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {budgetStatus(p.status)}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
-          {selectedId && <PlanView id={selectedId} canManage={can(P.budgetManage)} />}
+          {creating && <NewPlanForm onDone={(id) => { setCreating(false); if (id) set({ plan: id }); }} />}
+          <div className="card"><Empty title="Henüz işletme projesi yok" icon={<Receipt aria-hidden="true" />}>Yeni proje oluşturup kalemlerini ekleyin.</Empty></div>
         </>
+      ) : (
+        selectedId && (
+          <PlanView
+            id={selectedId}
+            canManage={can(P.budgetManage)}
+            newPlan={creating && <NewPlanForm onDone={(id) => { setCreating(false); if (id) set({ plan: id }); }} />}
+          />
+        )
       )}
     </div>
   );
@@ -104,7 +113,7 @@ function NewPlanForm({ onDone }: { onDone: (id?: string) => void }) {
   );
 }
 
-function PlanView({ id, canManage }: { id: string; canManage: boolean }) {
+function PlanView({ id, canManage, newPlan }: { id: string; canManage: boolean; newPlan?: ReactNode }) {
   const { site } = useSite();
   const q = useSiteGet<PlanDetail>(`/budget-plans/${id}`);
   const cats = useSiteGet<Category[]>("/expense-categories");
@@ -116,19 +125,19 @@ function PlanView({ id, canManage }: { id: string; canManage: boolean }) {
   const finalize = useSiteMutation<Record<string, never>, PlanDetail>("POST", `/budget-plans/${id}/finalize`);
   const del = useSiteMutation<string, PlanDetail>("DELETE", (itemId) => `/budget-plans/${id}/items/${itemId}`);
 
-  if (q.isPending) return <Loading />;
-  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
+  if (q.isPending) return <><div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>{newPlan}<Loading /></>;
+  if (q.isError) return <>{newPlan}<ErrorState error={q.error} onRetry={() => q.refetch()} /></>;
   const p = q.data;
   const editable = canManage && p.status === "draft";
   const name = <T extends { id: string; name: string }>(list: T[] | undefined, x: string) => list?.find((i) => i.id === x)?.name ?? "—";
 
   return (
     <>
-      <div className="grid grid--kpi">
-        <Kpi label="Durum" value={<Badge tone={budgetTone(p.status)}>{budgetStatus(p.status)}</Badge>} small />
-        <Kpi label="Yıllık toplam" tone="accent" value={formatMoneyShort(p.total_annual_amount)} note={formatMoney(p.total_annual_amount)} />
-        <Kpi label="Kalem" value={p.item_count} />
-        <Kpi label="Tebliğ / itiraz süresi" small value={formatDate(p.notified_on)} note={p.objection_deadline ? `itiraz son günü ${formatDate(p.objection_deadline)}` : "henüz tebliğ edilmedi"} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Durum" icon={<Flag aria-hidden="true" />} value={<Badge tone={budgetTone(p.status)}>{budgetStatus(p.status)}</Badge>} small />
+        <Kpi label="Yıllık toplam" tone="accent" icon={<ReceiptText aria-hidden="true" />} value={formatMoneyShort(p.total_annual_amount)} note={formatMoney(p.total_annual_amount)} />
+        <Kpi label="Kalem" icon={<ListChecks aria-hidden="true" />} value={p.item_count} />
+        <Kpi label="Tebliğ / itiraz süresi" icon={<CalendarDays aria-hidden="true" />} small value={formatDate(p.notified_on)} note={p.objection_deadline ? `itiraz son günü ${formatDate(p.objection_deadline)}` : "henüz tebliğ edilmedi"} />
       </div>
 
       {canManage && p.status === "draft" && (
@@ -137,8 +146,11 @@ function PlanView({ id, canManage }: { id: string; canManage: boolean }) {
         </Alert>
       )}
 
+      {newPlan}
+
       <div className="card">
         <div className="card__head">
+          <span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span>
           <span className="card__title">{p.name}</span>
           {editable && (
             <button className="btn btn--sm ml-auto" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Kalem ekle</button>
@@ -254,7 +266,29 @@ function PlanView({ id, canManage }: { id: string; canManage: boolean }) {
           </div>
         )}
       </div>
+      {p.items.length > 0 && <ItemShare items={p.items} total={p.total_annual_amount} />}
     </>
+  );
+}
+
+/** Kalemlerin yıllık tutar payı: en büyük 5 kalem + kalanı "Diğer" (halkada 6 dilimden fazlası okunmaz) */
+function ItemShare({ items, total }: { items: Item[]; total: string }) {
+  const sorted = [...items].sort((a, b) => Number(b.annual_amount) - Number(a.annual_amount));
+  const top = sorted.slice(0, 5).map((i) => ({ label: i.name, value: Number(i.annual_amount) }));
+  const rest = sorted.slice(5).reduce((s, i) => s + Number(i.annual_amount), 0);
+  const segments = rest > 0 ? [...top, { label: `Diğer (${sorted.length - 5} kalem)`, value: rest }] : top;
+  const short = (v: number) => formatMoneyShort(v.toFixed(2));
+  return (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--warn"><PieChart aria-hidden="true" /></span>
+        <span className="card__title">Kalem payları</span>
+        <span className="card__meta ml-auto">yıllık</span>
+      </div>
+      <div className="card__body fin-share">
+        <Donut label={`Kalemlere göre yıllık tutar, toplam ${formatMoneyShort(total)}`} centerSub="kalem" center={String(items.length)} format={short} segments={segments} />
+      </div>
+    </div>
   );
 }
 
