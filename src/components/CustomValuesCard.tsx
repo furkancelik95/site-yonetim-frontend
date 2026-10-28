@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useSiteGet, useSiteMutation } from "../api/hooks";
+import type { Schemas } from "../api/types";
 import { Field, FormError, SubmitButton, fieldError } from "./ui";
 import { P, useSite } from "../site/SiteContext";
 
-/** Servis isteği 24'teki şekil. */
-export interface CustomField {
-  id: string; entity: "unit" | "person"; label: string; key: string; type: "text" | "number" | "date" | "bool" | "select"; options: string[];
-  required: boolean; kvkk_category: string; view_roles: string[]; edit_roles: string[]; resident_can_view: boolean; resident_can_edit: boolean; sort_order: number; is_archived: boolean;
-}
+export type CustomField = Schemas["CustomFieldOut"];
 type Values = Record<string, unknown>;
 
 /**

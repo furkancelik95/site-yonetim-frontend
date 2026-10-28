@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
-import { Plus } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, CalendarDays, Plus, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashStatement, Schemas } from "../../api/types";
 import { CashDayCard } from "../../components/CashDayCard";
 import { ExcelButton } from "../../components/ExcelButton";
-import { Badge, ConfirmButton, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, ConfirmButton, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { cashAccountKind, cashSource } from "../../lib/labels";
@@ -40,22 +40,28 @@ export function CashStatementPage() {
         }
       />
 
+      <div className="grid grid--kpi rise">
+        <Kpi label="Dönem başı" icon={<CalendarDays aria-hidden="true" />} small value={formatMoney(d.opening)} />
+        <Kpi label="Giriş" tone="ok" icon={<ArrowDownToLine aria-hidden="true" />} small value={formatMoney(d.total_in)} />
+        <Kpi label="Çıkış" tone="danger" icon={<ArrowUpFromLine aria-hidden="true" />} small value={formatMoney(d.total_out)} />
+        <Kpi label="Dönem sonu" tone="accent" icon={<Wallet aria-hidden="true" />} small value={formatMoney(d.closing)} />
+      </div>
+
       {adding && <MovementForm accountId={a.id} onDone={() => setAdding(false)} />}
       {a.kind === "cash" && <CashDayCard accountId={a.id} canManage={can(P.cashManage)} />}
 
-      <div className="filters">
-        <div className="field"><label className="field__label" htmlFor="cs-from">Başlangıç</label><input id="cs-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} /></div>
-        <div className="field"><label className="field__label" htmlFor="cs-to">Bitiş</label><input id="cs-to" className="field__input" type="date" value={s.to} onChange={(e) => set({ to: e.target.value })} /></div>
-      </div>
-
-      <div className="grid grid--kpi">
-        <Kpi label="Dönem başı" small value={formatMoney(d.opening)} />
-        <Kpi label="Giriş" tone="ok" small value={formatMoney(d.total_in)} />
-        <Kpi label="Çıkış" tone="danger" small value={formatMoney(d.total_out)} />
-        <Kpi label="Dönem sonu" tone="accent" small value={formatMoney(d.closing)} />
-      </div>
-
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Wallet aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Hareketler</div>
+            <div className="card__meta">{d.movements.total} kayıt</div>
+          </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="cs-from">Başlangıç</label><input id="cs-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} /></div>
+            <div className="field"><label className="field__label" htmlFor="cs-to">Bitiş</label><input id="cs-to" className="field__input" type="date" value={s.to} onChange={(e) => set({ to: e.target.value })} /></div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           <div className="table-wrap">
             <table className="data">
@@ -78,13 +84,18 @@ export function CashStatementPage() {
                   <tr key={m.id} style={m.is_reversed || m.reversal_of_id ? { opacity: 0.7 } : undefined}>
                     <td className="small nowrap">{formatDate(m.date)}</td>
                     <td>
-                      <div className="cell-main">{m.description}</div>
-                      <div className="cell-sub">
-                        {cashSource(m.source)}
-                        {m.reference ? ` · ${m.reference}` : ""}
-                        {m.created_by_name ? ` · ${m.created_by_name}` : ""}
-                        {m.is_reversed && <> · <Badge tone="danger">Geri alındı</Badge></>}
-                        {m.reversal_of_id && <> · <Badge>Ters hareket</Badge></>}
+                      <div className="cell-person">
+                        <IconChip tone={Number(m.inflow) !== 0 ? "ok" : "danger"}>{Number(m.inflow) !== 0 ? <ArrowDownToLine aria-hidden="true" /> : <ArrowUpFromLine aria-hidden="true" />}</IconChip>
+                        <div>
+                          <div className="cell-main">{m.description}</div>
+                          <div className="cell-sub">
+                            {cashSource(m.source)}
+                            {m.reference ? ` · ${m.reference}` : ""}
+                            {m.created_by_name ? ` · ${m.created_by_name}` : ""}
+                            {m.is_reversed && <> · <Badge tone="danger">Geri alındı</Badge></>}
+                            {m.reversal_of_id && <> · <Badge>Ters hareket</Badge></>}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="right">{Number(m.inflow) !== 0 ? <Money value={m.inflow} /> : <span className="subtle">—</span>}</td>
@@ -122,7 +133,7 @@ function MovementForm({ accountId, onDone }: { accountId: string; onDone: () => 
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Elle hareket</span><span className="card__meta ml-auto">banka masrafı, faiz geliri gibi</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Plus aria-hidden="true" /></span><span className="card__title">Elle hareket</span><span className="card__meta ml-auto">banka masrafı, faiz geliri gibi</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">

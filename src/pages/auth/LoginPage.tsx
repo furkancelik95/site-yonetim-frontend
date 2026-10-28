@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Smartphone, Wallet, Wrench } from "lucide-react";
 import { homePath, useAuth } from "../../auth/AuthContext";
 import { FormError, SubmitButton, useDocumentTitle } from "../../components/ui";
 
@@ -51,7 +51,9 @@ export function LoginPage() {
 
   return (
     <main id="main" className="auth">
-      <div className="auth__panel">
+      {/* Marka paneli: ürünün ne yaptığı yazar; sahte istatistik ya da müşteri sözü yok */}
+      <section className="auth__side" aria-label="SiteYönetimi hakkında">
+        <div className="hero__grid" aria-hidden="true" />
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">
             SY
@@ -62,93 +64,126 @@ export function LoginPage() {
             <span className="sidebar__sub">Site ve apartman yönetim platformu</span>
           </span>
         </div>
-
-        <h1 className="mt-4">Giriş yapın</h1>
-        <p className="muted small">Hesabınızla giriş yaparak sitenizin yönetim ekranına ulaşın.</p>
-
-        <form className="stack" style={{ gap: "var(--s-4)", marginTop: "var(--s-5)" }} onSubmit={submit} noValidate>
-          <FormError error={error} />
-
-          <div className="field">
-            <label className="field__label" htmlFor="email">
-              E-posta
-            </label>
-            <input
-              className="field__input"
-              id="email"
-              type="email"
-              inputMode="email"
-              autoComplete="username"
-              required
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label" htmlFor="password">
-              Parola
-            </label>
-            <div className="field__wrap">
-              <input
-                ref={passwordRef}
-                className="field__input"
-                id="password"
-                type={show ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="field__toggle"
-                aria-label={show ? "Parolayı gizle" : "Parolayı göster"}
-                aria-pressed={show}
-                onClick={() => setShow((v) => !v)}
-              >
-                {show ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <SubmitButton busy={busy} className="btn btn--primary" disabled={!email || !password}>
-            Giriş yap
-          </SubmitButton>
-        </form>
-      </div>
-
-      {SHOW_DEMO && (
-        <aside className="auth__demo" aria-label="Gösterim hesapları">
-          <div className="section-title">Gösterim hesapları</div>
-          <p className="small muted">
-            Her rolün ne gördüğünü denemek için aşağıdaki hesaplarla giriş yapabilirsiniz. Hepsinin parolası aynı:{" "}
-            <span className="mono strong">{DEMO_PASSWORD}</span>
+        <div>
+          <p className="auth__headline display strong">Sitenizi tek ekrandan yönetin.</p>
+          <p className="auth__lead">
+            Aidat, tahsilat, talep, duyuru ve güvenlik — yönetim şirketi, site yöneticisi ve sakinler için tek platform.
           </p>
-          <div className="stack" style={{ gap: "var(--s-2)", marginTop: "var(--s-4)" }}>
-            {DEMO_ACCOUNTS.map((a) => (
-              <button
-                key={a.email}
-                type="button"
-                className="demo-account"
-                onClick={() => {
-                  setEmail(a.email);
-                  setPassword(DEMO_PASSWORD);
-                  passwordRef.current?.focus();
-                }}
-              >
-                <span className="demo-account__row">
-                  <span className="demo-account__role">{a.role}</span>
-                  <span className="demo-account__name">{a.name}</span>
-                </span>
-                <span className="demo-account__mail mono xs">{a.email}</span>
-                <span className="demo-account__desc">{a.desc}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
-      )}
+          <ul className="auth__features">
+            <li>
+              <span className="auth__feature-icon" aria-hidden="true">
+                <Wallet />
+              </span>
+              Aidat ve tahsilat takibi, banka aktarımı
+            </li>
+            <li>
+              <span className="auth__feature-icon" aria-hidden="true">
+                <Wrench />
+              </span>
+              Talep, duyuru, rezervasyon ve güvenlik
+            </li>
+            <li>
+              <span className="auth__feature-icon" aria-hidden="true">
+                <Smartphone />
+              </span>
+              Sakinler için telefondan erişim
+            </li>
+          </ul>
+        </div>
+        <div className="auth__foot">© {new Date().getFullYear()} SiteYönetimi</div>
+      </section>
+
+      <div className="auth__main">
+        <div className="auth__panel">
+          <h1>Giriş yapın</h1>
+          <p className="muted small">Hesabınızla giriş yaparak sitenizin yönetim ekranına ulaşın.</p>
+
+          <form className="stack" style={{ gap: "var(--s-4)", marginTop: "var(--s-5)" }} onSubmit={submit} noValidate>
+            <FormError error={error} />
+
+            <div className="field">
+              <label className="field__label" htmlFor="email">
+                E-posta
+              </label>
+              <input
+                className="field__input"
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="username"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label" htmlFor="password">
+                Parola
+              </label>
+              <div className="field__wrap">
+                <input
+                  ref={passwordRef}
+                  className="field__input"
+                  id="password"
+                  type={show ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="field__toggle"
+                  aria-label={show ? "Parolayı gizle" : "Parolayı göster"}
+                  aria-pressed={show}
+                  onClick={() => setShow((v) => !v)}
+                >
+                  {show ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <SubmitButton busy={busy} className="btn btn--primary" disabled={!email || !password}>
+              Giriş yap
+            </SubmitButton>
+          </form>
+        </div>
+
+        {SHOW_DEMO && (
+          <details className="auth__demo" open>
+            <summary>
+              <span>Gösterim hesapları</span>
+              <ChevronDown aria-hidden="true" />
+            </summary>
+            <p className="small muted" style={{ margin: "var(--s-3) 0 0" }}>
+              Her rolün ne gördüğünü denemek için bir hesaba tıklayın. Hepsinin parolası aynı: <span className="mono strong">{DEMO_PASSWORD}</span>
+            </p>
+            <div className="auth__demo-grid">
+              {DEMO_ACCOUNTS.map((a) => (
+                <button
+                  key={a.email}
+                  type="button"
+                  className="demo-account"
+                  title={a.desc}
+                  onClick={() => {
+                    setEmail(a.email);
+                    setPassword(DEMO_PASSWORD);
+                    passwordRef.current?.focus();
+                  }}
+                >
+                  <span className="demo-account__row">
+                    <span className="demo-account__role">{a.role}</span>
+                    <span className="demo-account__name">{a.name}</span>
+                  </span>
+                  <span className="demo-account__mail mono xs">{a.email}</span>
+                </button>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
     </main>
   );
 }

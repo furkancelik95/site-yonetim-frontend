@@ -1,37 +1,65 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Search, Wallet } from "lucide-react";
+import { Banknote, CreditCard, Landmark, Search, Wallet } from "lucide-react";
 import { useSiteGet } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Empty, ErrorState, Loading, Money, PageHead, Pager } from "../../components/ui";
+import { Avatar, Empty, ErrorState, IconChip, Loading, Money, PageHead, Pager } from "../../components/ui";
 import { formatDate } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { accountKind, paymentMethod } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { CollectionChart, CollectionKpis, type Collections } from "./CollectionStats";
 
 type Account = Schemas["site_yonetim__api__v1__payments__AccountOut"];
 type Payment = Schemas["PaymentListItem"];
+
+/** Ödeme yöntemi ikonu (dekoratif; yöntem adı yanında yazılı) */
+function MethodIcon({ method }: { method: string }) {
+  const Icon = method === "cash" ? Banknote : method === "credit_card" ? CreditCard : method === "bank_transfer" ? Landmark : Wallet;
+  return <Icon aria-hidden="true" />;
+}
 
 export function PaymentsPage() {
   const { site, can } = useSite();
   const [s, set] = useUrlState({ from: "", to: "", page: "1" });
   const payments = useSiteGet<Page<Payment>>("/payments", { from: s.from, to: s.to, page: s.page, page_size: 50 });
+  const showStats = can(P.financeRead);
+  const coll = useSiteGet<Collections>("/reports/collections", {}, { enabled: showStats });
+  const canFind = can(P.paymentRecord);
 
   return (
     <div className="stack">
-      <PageHead title="Tahsilat" subtitle="Tahsilat girmek için hesabı bulun; tutar en eski borçtan başlayarak kapatılır." actions={can(P.paymentRecord) && <>{can(P.cashManage) && <Link className="btn" to={`/s/${site.slug}/banka-aktarim`}>Banka ekstresinden aktar</Link>}<Link className="btn" to={`/s/${site.slug}/tahsilat/toplu`}>Toplu tahsilat</Link></>} />
+      <PageHead
+        title="Tahsilat"
+        subtitle="Tahsilat girmek için hesabı bulun; tutar en eski borçtan başlayarak kapatılır."
+        band
+        actions={canFind && <>{can(P.cashManage) && <Link className="btn" to={`/s/${site.slug}/banka-aktarim`}>Banka ekstresinden aktar</Link>}<Link className="btn btn--primary" to={`/s/${site.slug}/tahsilat/toplu`}>Toplu tahsilat</Link></>}
+      />
 
-      {can(P.paymentRecord) && <AccountFinder slug={site.slug} />}
+      {showStats && !coll.isError && <CollectionKpis data={coll.data} />}
+
+      {showStats && coll.data && coll.data.periods.length > 0 ? (
+        <div className="grid grid--main">
+          <CollectionChart data={coll.data} />
+          {canFind && <AccountFinder slug={site.slug} />}
+        </div>
+      ) : (
+        canFind && <AccountFinder slug={site.slug} />
+      )}
 
       <div className="card">
         <div className="card__head">
-          <span className="card__title">Son tahsilatlar</span>
-          <div className="filters ml-auto" style={{ gap: "var(--s-2)" }}>
-            <div className="field" style={{ minWidth: "9rem" }}>
+          <span className="card__icon card__icon--ok"><Wallet aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Son tahsilatlar</div>
+            {payments.data && <div className="card__meta">{payments.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field">
               <label className="field__label" htmlFor="p-from">Başlangıç</label>
               <input id="p-from" className="field__input" type="date" value={s.from} onChange={(e) => set({ from: e.target.value })} />
             </div>
-            <div className="field" style={{ minWidth: "9rem" }}>
+            <div className="field">
               <label className="field__label" htmlFor="p-to">Bitiş</label>
               <input id="p-to" className="field__input" type="date" value={s.to} onChange={(e) => set({ to: e.target.value })} />
             </div>
@@ -54,7 +82,7 @@ export function PaymentsPage() {
                     <th scope="col">Bölüm</th>
                     <th scope="col">Kişi</th>
                     <th scope="col">Yöntem</th>
-                    <th scope="col">Kaydeden</th>
+                    <th scope="col" className="hide-sm">Kaydeden</th>
                     <th scope="col" className="right">Tutar</th>
                     <th scope="col"><span className="visually-hidden">Makbuz</span></th>
                   </tr>
@@ -67,12 +95,17 @@ export function PaymentsPage() {
                         <Link className="cell-main" to={`/s/${site.slug}/cari/${p.ledger_account_id}`}>{p.unit_name}</Link>
                         <div className="cell-sub mono">{p.reference_code}</div>
                       </td>
-                      <td>{p.person_name ?? "—"}</td>
+                      <td><div className="cell-person"><Avatar name={p.person_name} size="sm" soft /><span>{p.person_name ?? "—"}</span></div></td>
                       <td className="small">
-                        {paymentMethod(p.method)}
-                        {p.reference && <div className="cell-sub">{p.reference}</div>}
+                        <div className="cell-person">
+                          <IconChip tone="ok"><MethodIcon method={p.method} /></IconChip>
+                          <div>
+                            {paymentMethod(p.method)}
+                            {p.reference && <div className="cell-sub">{p.reference}</div>}
+                          </div>
+                        </div>
                       </td>
-                      <td className="small">{p.created_by_name ?? "—"}</td>
+                      <td className="small hide-sm">{p.created_by_name ?? "—"}</td>
                       <td className="right"><Money value={p.amount} /></td>
                       <td className="right"><Link className="btn btn--ghost btn--sm" to={`/s/${site.slug}/makbuz/${p.id}`}>Makbuz</Link></td>
                     </tr>
@@ -99,7 +132,10 @@ function AccountFinder({ slug }: { slug: string }) {
 
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Hesap bul</span></div>
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><Search aria-hidden="true" /></span>
+        <span className="card__title">Hesap bul ve tahsilat gir</span>
+      </div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <div className="field">
           <label className="field__label" htmlFor="acc-q">Bölüm, kişi ya da referans kodu</label>

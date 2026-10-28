@@ -1,18 +1,20 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
+import { CircleDot, Flag, History, ListChecks, MessageSquare, Timer, UserCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Badge, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Avatar, Badge, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { categoryIcon } from "../../lib/icons";
+import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone, slaState, slaTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentAssign } from "./Departments";
 import { ExtrasCard, InternalNotes, MergeCard, SlaCard } from "./RequestExtras";
 import { fillTemplate } from "../../lib/labels";
 
 type Detail = Schemas["RequestDetail"];
-const STATUSES = ["open", "in_progress", "waiting", "resolved", "closed", "cancelled"];
-const NEEDS_RESOLUTION = new Set(["resolved", "closed"]);
+/** Çözüm notu (çözüldü) ya da gerekçe (iptal) zorunlu — backend kuralı (K18). */
+const NEEDS_RESOLUTION = new Set(["resolved", "cancelled"]);
 
 export function RequestDetailPage() {
   const { requestId = "" } = useParams();
@@ -22,34 +24,38 @@ export function RequestDetailPage() {
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const r = q.data;
+  const CatIcon = categoryIcon(r.category);
+  const catName = r.category_name || requestCategory(r.category);
 
   return (
     <div className="stack">
       <PageHead
-        title={`#${r.number} ${r.title}`}
-        subtitle={<>{requestCategory(r.category)} · {r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
-        actions={<Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link>}
+        eyebrow={`Talep #${r.number} · ${catName}`}
+        title={r.title}
+        subtitle={<>{r.unit_name ?? r.location ?? "Ortak alan"} · {formatDateTime(r.created_at)}</>}
+        actions={<><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge><Link className="btn" to={`/s/${site.slug}/talepler`}>Taleplere dön</Link></>}
       />
+      <DetailKpis r={r} />
 
       <div className="grid grid--2">
         <div className="card">
-          <div className="card__head"><span className="card__title">Talep</span></div>
+          <div className="card__head"><IconChip><CatIcon /></IconChip><span className="card__title">Talep</span><span className="card__meta ml-auto">{catName}</span></div>
           <div className="card__body">
             <div className="kv"><span className="kv__k">Durum</span><span className="kv__v"><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Öncelik</span><span className="kv__v"><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge></span></div>
-            <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ?? "—"}</span></div>
+            <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.reporter_name ?? r.created_by_name} size="sm" soft /><span>{r.reporter_name ?? r.created_by_name}</span></span> : "—"}</span></div>
             <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
-            <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ?? "—"}</span></div>
+            <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.assigned_to} size="sm" soft /><span>{r.assigned_to}</span></span> : "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
-            <SlaCard id={r.id} />
+            <SlaCard s={r.sla} />
             {r.resolution && <div className="kv"><span className="kv__k">Çözüm</span><span className="kv__v">{r.resolution}</span></div>}
             {r.description && <p className="mt-4 mb-0" style={{ whiteSpace: "pre-wrap" }}>{r.description}</p>}
           </div>
         </div>
 
         <div className="stack">
-          {can(P.requestsAssign) && <StatusForm r={r} />}
-          {can(P.requestsAssign) && <AssignForm r={r} />}
+          {can(P.requestsAssign) && r.allowed_transitions.length > 0 && <StatusForm key={`${r.status}-${r.allowed_transitions.join()}`} r={r} />}
+          {can(P.requestsAssign) && !["closed", "cancelled"].includes(r.status) && <AssignForm r={r} />}
         </div>
       </div>
 
@@ -58,7 +64,7 @@ export function RequestDetailPage() {
       {can(P.requestsAssign) && <InternalNotes id={r.id} />}
 
       <div className="card">
-        <div className="card__head"><span className="card__title">Geçmiş</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><MessageSquare aria-hidden="true" /></span><span className="card__title">Geçmiş ve yanıtlar</span><span className="card__meta ml-auto">{r.events.length} hareket</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-4)" }}>
           <ul className="timeline">
             {r.events.map((e) => (
@@ -79,26 +85,44 @@ export function RequestDetailPage() {
   );
 }
 
+/** Talebin durumu, önceliği, SLA'sı ve hareket sayısı. Kaynak: talep ayrıntısı (SLA içinde gelir). */
+function DetailKpis({ r }: { r: Detail }) {
+  const s = r.sla;
+  const ageH = Math.max(0, Math.round((Date.now() - new Date(r.created_at).getTime()) / 3_600_000));
+  const age = ageH >= 48 ? `${Math.floor(ageH / 24)} gün` : `${ageH} saat`;
+  const statusTone = requestStatusTone(r.status);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Durum" tone={statusTone === "danger" ? "danger" : statusTone === "warn" ? "warn" : statusTone === "ok" ? "ok" : "accent"} icon={<CircleDot aria-hidden="true" />} value={r.status_label || requestStatus(r.status)} small note={r.assigned_to ? `atanan: ${r.assigned_to}` : "henüz atanmadı"} />
+      <Kpi label="Öncelik" tone={r.priority === "urgent" ? "danger" : r.priority === "high" ? "warn" : undefined} icon={<Flag aria-hidden="true" />} value={requestPriority(r.priority)} small note={r.category_name || requestCategory(r.category)} />
+      <Kpi label="SLA" tone={s ? (slaTone(s.state) === "ok" ? "ok" : slaTone(s.state) === "warn" ? "warn" : "danger") : undefined} icon={<Timer aria-hidden="true" />} value={s ? slaState(s.state) : "—"} small note={s ? `hedef ${s.target_hours} sa · ${formatDateTime(s.due_at)}` : "bu talep için SLA yok"} />
+      <Kpi label="Açık kalma" icon={<History aria-hidden="true" />} value={age} small note={`${r.events.length} hareket`} />
+    </div>
+  );
+}
+
+/** Yalnız dokümandaki akışta izin verilen geçişler (backend `allowed_transitions`, K18). */
 function StatusForm({ r }: { r: Detail }) {
-  const [status, setStatus] = useState(r.status);
+  const [status, setStatus] = useState<Detail["status"]>(r.allowed_transitions[0] ?? r.status);
   const [resolution, setResolution] = useState("");
   const [err, setErr] = useState<string>();
   const m = useSiteMutation<{ status: string; resolution: string | null }, Detail>("POST", `/requests/${r.id}/status`, { onSuccess: () => setResolution("") });
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (NEEDS_RESOLUTION.has(status) && !resolution.trim()) return setErr("Çözüldü ya da kapandı için çözüm notu zorunlu.");
+    if (NEEDS_RESOLUTION.has(status) && !resolution.trim()) return setErr(status === "cancelled" ? "İptal için gerekçe yazın." : "Çözüldü için çözüm notu zorunlu.");
     setErr(undefined);
     m.mutate({ status, resolution: resolution.trim() || null });
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Durumu değiştir</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><ListChecks aria-hidden="true" /></span><span className="card__title">Durumu değiştir</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Yeni durum">
-          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{STATUSES.map((x) => <option key={x} value={x} disabled={x === r.status}>{requestStatus(x)}</option>)}</select>}
+          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{r.allowed_transitions.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}</select>}
         </Field>
-        <Field label="Çözüm notu" required={NEEDS_RESOLUTION.has(status)} error={err ?? fieldError(m.error, "resolution")}>
+        {r.status === "resolved" && r.reported_by_person_id && <p className="small muted mb-0">Sakin onayı bekleniyor; talep sakin onaylayınca ya da yanıt gelmezse kendiliğinden kapanır.</p>}
+        <Field label={status === "cancelled" ? "İptal gerekçesi" : "Çözüm notu"} required={NEEDS_RESOLUTION.has(status)} error={err ?? fieldError(m.error, "resolution")}>
           {(p) => <textarea {...p} className="field__input" rows={2} value={resolution} onChange={(e) => setResolution(e.target.value)} />}
         </Field>
       </div>
@@ -112,7 +136,7 @@ function AssignForm({ r }: { r: Detail }) {
   const m = useSiteMutation<{ assignee: string }, Detail>("POST", `/requests/${r.id}/assign`);
   return (
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ assignee: who.trim() }); }}>
-      <div className="card__head"><span className="card__title">Ata</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><UserCheck aria-hidden="true" /></span><span className="card__title">Ata</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Personel ya da firma" error={fieldError(m.error, "assignee")}>

@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
+import { CalendarClock, FileText, ReceiptText, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, CashAccounts, Schemas } from "../../api/types";
-import { Badge, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, allocationKind, ledgerSource, paymentMethod } from "../../lib/labels";
@@ -23,6 +24,7 @@ export function LedgerPage() {
   return (
     <div className="stack">
       <PageHead
+        eyebrow="Cari hesap"
         title={`${a.unit_name} · ${accountKind(a.kind)} hesabı`}
         subtitle={
           <>
@@ -33,10 +35,11 @@ export function LedgerPage() {
         actions={<Link className="btn" to={`/s/${site.slug}/daireler/${a.unit_id}`}>Bölüme git</Link>}
       />
 
-      <div className="grid grid--kpi">
-        <Kpi label="Bakiye" tone={Number(a.balance) > 0 ? "danger" : "ok"} value={formatMoney(a.balance)} note={Number(a.balance) < 0 ? "avans (alacak)" : Number(a.balance) > 0 ? "borç" : "kapalı"} small />
-        <Kpi label="En eski açık vade" value={formatDate(a.oldest_open_due_date)} small />
-        {last_charge && <Kpi label={`Son tahakkuk (${last_charge.period})`} value={formatMoney(last_charge.amount)} small />}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Bakiye" tone={Number(a.balance) > 0 ? "danger" : "ok"} icon={<Wallet aria-hidden="true" />} value={formatMoney(a.balance)} note={Number(a.balance) < 0 ? "avans (alacak)" : Number(a.balance) > 0 ? "borç" : "kapalı"} small />
+        <Kpi label="En eski açık vade" icon={<CalendarClock aria-hidden="true" />} value={formatDate(a.oldest_open_due_date)} small />
+        {last_charge && <Kpi label={`Son tahakkuk (${last_charge.period})`} icon={<ReceiptText aria-hidden="true" />} value={formatMoney(last_charge.amount)} small />}
+        <Kpi label="Hareket" icon={<FileText aria-hidden="true" />} value={entries.total} note="borç, tahsilat ve düzeltme kaydı" />
       </div>
 
       {can(P.paymentRecord) && !a.is_closed && <PaymentForm accountId={a.id} balance={a.balance} />}
@@ -73,7 +76,7 @@ export function LedgerPage() {
       )}
 
       <div className="card">
-        <div className="card__head"><span className="card__title">Hesap hareketleri</span><span className="card__meta ml-auto">{entries.total} kayıt · yeni üstte</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><FileText aria-hidden="true" /></span><span className="card__title">Hesap hareketleri</span><span className="card__meta ml-auto">{entries.total} kayıt · yeni üstte</span></div>
         <div className="card__body card__body--flush">
           <div className="table-wrap">
             <table className="data">
@@ -93,8 +96,15 @@ export function LedgerPage() {
                   <tr key={e.id}>
                     <td className="small nowrap">{formatDate(e.date)}</td>
                     <td>
-                      <div className="cell-main">{e.description}</div>
-                      <div className="cell-sub">{ledgerSource(e.source)}</div>
+                      <div className="cell-person">
+                        <IconChip tone={Number(e.credit) !== 0 ? "ok" : "muted"}>
+                          {e.source === "payment" ? <Wallet aria-hidden="true" /> : e.source === "charge" ? <ReceiptText aria-hidden="true" /> : <FileText aria-hidden="true" />}
+                        </IconChip>
+                        <div>
+                          <div className="cell-main">{e.description}</div>
+                          <div className="cell-sub">{ledgerSource(e.source)}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="small nowrap hide-sm">{formatDate(e.due_date)}</td>
                     <td className="right">{Number(e.debit) !== 0 ? <Money value={e.debit} /> : <span className="subtle">—</span>}</td>
@@ -149,7 +159,7 @@ function PaymentForm({ accountId, balance }: { accountId: string; balance: strin
 
   return (
     <form className="card" onSubmit={submit} noValidate>
-      <div className="card__head"><span className="card__title">Tahsilat gir</span><span className="card__meta ml-auto">En eski borçtan başlayarak kapatılır</span></div>
+      <div className="card__head"><span className="card__icon card__icon--ok"><Wallet aria-hidden="true" /></span><span className="card__title">Tahsilat gir</span><span className="card__meta ml-auto">En eski borçtan başlayarak kapatılır</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="pay-form">

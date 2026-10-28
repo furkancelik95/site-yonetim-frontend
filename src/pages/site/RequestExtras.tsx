@@ -5,37 +5,32 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Alert, Badge, ConfirmButton, Field, FormError, Money, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, formatMoney, parseMoneyInput } from "../../lib/format";
-import { hourType, quoteStatus, quoteTone, slaState, slaTone } from "../../lib/labels";
+import { hourType, quoteTone, slaState, slaTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
 type Detail = Schemas["RequestDetail"];
-/** Servis isteği 47–51'deki şekiller. */
-export interface Sla { due_at: string; hour_type: string; target_hours: number; used_minutes: number; remaining_minutes: number; state: string; paused: boolean }
-interface Note { id: string; body: string; by: string; at: string }
-interface Suggest { linked_outage: { id: string; title: string; status: string; public_description: string } | null; similar: { id: string; number: number; title: string; unit_name: string | null; location: string | null; created_at: string }[]; open_outages: { id: string; title: string; request_count: number }[]; window_hours: number }
-interface Rating { solved: boolean; score: number | null; comment: string | null; by: string; at: string }
-export interface Quote { id: string; lines: { description: string; qty: number; unit_price: string; total: string }[]; total: string; note: string | null; status: string; actual_total: string | null; billed_total: string | null; created_by: string; created_at: string }
-interface Extras { outage: { title: string; public_description: string; status: string } | null; rating: Rating | null; quote: Quote | null }
-interface Tariff { id: string; name: string; unit: string; price: string; is_active: boolean }
+export type Sla = Schemas["RequestSlaOut"];
+type Note = Schemas["InternalNoteOut"];
+type Suggest = Schemas["MergeSuggestionsOut"];
+export type Quote = Schemas["ServiceQuoteOut"];
+type Tariff = Schemas["ServiceTariffOut"];
 
 const hm = (m: number) => (m >= 1440 ? `${Math.floor(m / 1440)} g ${Math.floor((m % 1440) / 60)} sa` : `${Math.floor(m / 60)} sa ${m % 60} dk`);
 
-export function SlaBadge({ s }: { s: Sla | undefined }) {
+export function SlaBadge({ s }: { s: Sla | null | undefined }) {
   if (!s) return null;
   return <Badge tone={slaTone(s.state)}>{slaState(s.state)}{(s.state === "ok" || s.state === "warning") && ` · ${hm(s.remaining_minutes)}`}{s.paused && " · durdu"}</Badge>;
 }
 
 /** SLA kartı (istek 47): hedef, saat tipi, kalan süre; çalışma saati dışında sayaç durur. */
-export function SlaCard({ id }: { id: string }) {
-  const q = useSiteGet<Record<string, Sla>>("/requests/sla");
-  const s = q.data?.[id];
+export function SlaCard({ s }: { s: Sla | null | undefined }) {
   if (!s) return null;
   return (
     <div className="kv"><span className="kv__k">SLA</span><span className="kv__v"><SlaBadge s={s} /><div className="xs muted">Hedef {s.target_hours} sa ({hourType(s.hour_type)}) · {formatDateTime(s.due_at)}</div></span></div>
   );
 }
 
-/** İç notlar (istek 48): yalnız personel; sakin hiçbir kanalda görmez. */
+/** İç notlar (istek 48, K26): yalnız personel; sakin hiçbir kanalda görmez, silinmez. */
 export function InternalNotes({ id }: { id: string }) {
   const q = useSiteGet<Note[]>(`/requests/${id}/internal-notes`);
   const [body, setBody] = useState("");
@@ -44,10 +39,10 @@ export function InternalNotes({ id }: { id: string }) {
     <div className="card">
       <div className="card__head"><span className="card__icon card__icon--warn"><Lock aria-hidden="true" /></span><span className="card__title">İç notlar</span><span className="card__meta ml-auto">sakin görmez</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
-        {(q.data ?? []).map((n) => <div key={n.id} className="small" style={{ borderLeft: "3px solid var(--warn-solid, #d97706)", paddingLeft: "var(--s-2)" }}><Badge tone="warn">İç not</Badge> {n.body}<div className="xs muted">{n.by} · {formatDateTime(n.at)}</div></div>)}
+        {(q.data ?? []).map((n) => <div key={n.id} className="small" style={{ borderLeft: "3px solid var(--warn-solid, #d97706)", paddingLeft: "var(--s-2)" }}><Badge tone="warn">İç not</Badge> {n.body}<div className="xs muted">{n.author_name} · {formatDateTime(n.created_at)}</div></div>)}
         <form className="stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ body: body.trim() }); }}>
           <FormError error={m.error} />
-          <Field label="İç not ekle" error={fieldError(m.error, "body")}>{(p) => <textarea {...p} className="field__input" rows={2} maxLength={1000} value={body} onChange={(e) => setBody(e.target.value)} />}</Field>
+          <Field label="İç not ekle" error={fieldError(m.error, "body")}>{(p) => <textarea {...p} className="field__input" rows={2} maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} />}</Field>
           <div><SubmitButton busy={m.isPending} className="btn" disabled={body.trim().length < 2}>Notu ekle</SubmitButton></div>
         </form>
       </div>
@@ -58,16 +53,15 @@ export function InternalNotes({ id }: { id: string }) {
 /** Birleştirme önerisi ve ana olay (istek 49). Kural tabanlı: aynı kategori + konum/blok + zaman penceresi. */
 export function MergeCard({ r }: { r: Detail }) {
   const { site, can } = useSite();
-  const q = useSiteGet<Suggest>(`/requests/${r.id}/merge-suggestions`);
+  const manage = can(P.requestsAssign);
+  const q = useSiteGet<Suggest>(`/requests/${r.id}/merge-suggestions`, undefined, { enabled: manage });
   const create = useSiteMutation<Record<string, unknown>, unknown>("POST", "/outages");
   const [f, setF] = useState({ title: r.title, public_description: "" });
   const [open, setOpen] = useState(false);
-  if (q.isPending) return null;
-  if (!q.data) return null;
+  if (r.outage) return <Alert tone="info" title={`Ana olaya bağlı: ${r.outage.title}`}>{r.outage.status === "resolved" ? "Ana olay çözüldü." : "Ana olay çözülünce bu talep de çözülür."} <Link to={`/s/${site.slug}/talepler/ana-olaylar`}>Ana olaylar</Link></Alert>;
+  if (!manage || !q.data) return null;
   const d = q.data;
-  const manage = can(P.requestsAssign);
-  if (d.linked_outage) return <Alert tone="info" title={`Ana olaya bağlı: ${d.linked_outage.title}`}>Ana olay çözülünce bu talep de kapanır. <Link to={`/s/${site.slug}/talepler/ana-olaylar`}>Ana olaylar</Link></Alert>;
-  if (!manage || (d.similar.length === 0 && d.open_outages.length === 0)) return null;
+  if (d.similar.length === 0 && d.open_outages.length === 0) return null;
   return (
     <div className="card">
       <div className="card__head"><span className="card__icon card__icon--info"><GitMerge aria-hidden="true" /></span><span className="card__title">Bu talepler aynı arıza olabilir</span><span className="card__meta ml-auto">son {d.window_hours} saat, aynı kategori ve konum</span></div>
@@ -95,23 +89,23 @@ function OutageLink({ outageId, title, count, requestId }: { outageId: string; t
 /** Sakin kapanış onayı ve puan (istek 50) ile ücretli hizmet teklifi (istek 51). */
 export function ExtrasCard({ r }: { r: Detail }) {
   const { can } = useSite();
-  const q = useSiteGet<Extras>(`/requests/${r.id}/extras`);
   const [quoting, setQuoting] = useState(false);
-  if (!q.data) return null;
-  const { rating, quote } = q.data;
-  const canQuote = can(P.requestsAssign) && !!r.unit_id && (!quote || ["rejected", "billed"].includes(quote.status));
+  const { feedback, quote } = r;
+  const active = !["closed", "cancelled"].includes(r.status);
+  const canQuote = can(P.requestsAssign) && !!r.unit_id && active && (!quote || ["rejected", "billed"].includes(quote.status));
   return (
     <>
-      {rating && (
+      {feedback && (
         <div className="card"><div className="card__body">
-          <div className="row" style={{ gap: "var(--s-2)" }}><Star aria-hidden="true" /> <strong>Sakin değerlendirmesi</strong> {rating.solved ? <Badge tone={rating.score! <= 2 ? "danger" : "ok"}>{rating.score}/5</Badge> : <Badge tone="danger">Sorun devam ediyor</Badge>}</div>
-          {rating.comment && <p className="small mb-0 mt-2">"{rating.comment}"</p>}
-          <div className="xs muted">{rating.by} · {formatDateTime(rating.at)}</div>
+          <div className="row" style={{ gap: "var(--s-2)" }}><Star aria-hidden="true" /> <strong>Sakin değerlendirmesi</strong> {feedback.solved ? <Badge tone={(feedback.score ?? 0) <= 2 ? "danger" : "ok"}>{feedback.score}/5</Badge> : <Badge tone="danger">Sorun devam ediyor</Badge>}</div>
+          {feedback.comment && <p className="small mb-0 mt-2">"{feedback.comment}"</p>}
+          <div className="xs muted">{feedback.by_name} · {formatDateTime(feedback.created_at)}</div>
         </div></div>
       )}
+      {r.status === "resolved" && r.auto_close_at && !feedback?.solved && <p className="small muted mb-0">Sakin onayı bekleniyor; yanıt gelmezse {formatDateTime(r.auto_close_at)} itibarıyla kendiliğinden kapanır.</p>}
       {(quote || canQuote) && (
         <div className="card">
-          <div className="card__head"><span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span><span className="card__title">Ücretli hizmet</span>{quote && <span className="ml-auto"><Badge tone={quoteTone(quote.status)}>{quoteStatus(quote.status)}</Badge></span>}</div>
+          <div className="card__head"><span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span><span className="card__title">Ücretli hizmet</span>{quote && <span className="ml-auto"><Badge tone={quoteTone(quote.status)}>{quote.status_label}</Badge></span>}</div>
           <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
             {quote && <QuoteView q={quote} />}
             {quote?.status === "accepted" && can(P.requestsAssign) && <CompleteQuote q={quote} />}
@@ -126,7 +120,7 @@ export function ExtrasCard({ r }: { r: Detail }) {
 export function QuoteView({ q }: { q: Quote }) {
   return (
     <div className="stack" style={{ gap: "var(--s-1)" }}>
-      {q.lines.map((l, i) => <div key={i} className="kv"><span className="kv__k">{l.description} · {l.qty} × {formatMoney(l.unit_price)}</span><span className="kv__v"><Money value={l.total} /></span></div>)}
+      {q.lines.map((l, i) => <div key={i} className="kv"><span className="kv__k">{l.description} · {Number(l.qty).toLocaleString("tr-TR")} × {formatMoney(l.unit_price)}</span><span className="kv__v"><Money value={l.total} /></span></div>)}
       <div className="kv"><span className="kv__k strong">Teklif</span><span className="kv__v strong"><Money value={q.total} /></span></div>
       {q.actual_total && <div className="kv"><span className="kv__k">Gerçekleşen</span><span className="kv__v"><Money value={q.actual_total} /></span></div>}
       {q.billed_total && <div className="kv"><span className="kv__k">Cariye yansıyan</span><span className="kv__v"><Money value={q.billed_total} /></span></div>}
@@ -142,15 +136,16 @@ function QuoteForm({ requestId, onDone }: { requestId: string; onDone: () => voi
   const m = useSiteMutation<Record<string, unknown>, Quote>("POST", `/requests/${requestId}/quotes`, { onSuccess: onDone });
   const upd = (i: number, k: "description" | "qty" | "unit_price", v: string) => setLines((l) => l.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
   const total = lines.reduce((s, l) => s + Number(l.qty || 0) * Number(parseMoneyInput(l.unit_price) ?? 0), 0);
-  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ lines: lines.map((l) => ({ description: l.description, qty: Number(l.qty), unit_price: parseMoneyInput(l.unit_price) })), note: note.trim() || null }); }
+  const active = (tariffs.data ?? []).filter((t) => t.is_active);
+  function submit(e: FormEvent) { e.preventDefault(); m.mutate({ lines: lines.map((l) => ({ description: l.description, qty: l.qty || "0", unit_price: parseMoneyInput(l.unit_price) ?? "0" })), note: note.trim() || null }); }
   return (
     <form className="stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={submit}>
       <FormError error={m.error} />
-      {(tariffs.data ?? []).filter((t) => t.is_active).length > 0 && <div className="row" style={{ gap: "var(--s-1)" }}>{tariffs.data!.filter((t) => t.is_active).map((t) => <button key={t.id} type="button" className="btn btn--sm" onClick={() => setLines((l) => [...l.filter((x) => x.description || x.unit_price), { description: t.name, qty: "1", unit_price: Number(t.price).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }])}><Plus aria-hidden="true" /> {t.name} ({formatMoney(t.price)}/{t.unit})</button>)}</div>}
+      {active.length > 0 && <div className="row" style={{ gap: "var(--s-1)" }}>{active.map((t) => <button key={t.id} type="button" className="btn btn--sm" onClick={() => setLines((l) => [...l.filter((x) => x.description || x.unit_price), { description: t.name, qty: "1", unit_price: Number(t.price).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }])}><Plus aria-hidden="true" /> {t.name} ({formatMoney(t.price)}/{t.unit})</button>)}</div>}
       {lines.map((l, i) => (
         <div key={i} className="row" style={{ gap: "var(--s-2)", alignItems: "flex-end", flexWrap: "wrap" }}>
           <div className="field" style={{ flex: "2 1 12rem" }}><label className="field__label" htmlFor={`ql-d-${i}`}>Kalem</label><input id={`ql-d-${i}`} className="field__input" value={l.description} onChange={(e) => upd(i, "description", e.target.value)} placeholder="ör. Batarya değişimi (malzeme)" /></div>
-          <div className="field" style={{ flex: "0 1 5rem" }}><label className="field__label" htmlFor={`ql-q-${i}`}>Miktar</label><input id={`ql-q-${i}`} className="field__input" inputMode="decimal" value={l.qty} onChange={(e) => upd(i, "qty", e.target.value.replace(/[^\d.]/g, ""))} /></div>
+          <div className="field" style={{ flex: "0 1 5rem" }}><label className="field__label" htmlFor={`ql-q-${i}`}>Miktar</label><input id={`ql-q-${i}`} className="field__input" inputMode="decimal" value={l.qty} onChange={(e) => upd(i, "qty", e.target.value.replace(",", ".").replace(/[^\d.]/g, ""))} /></div>
           <div className="field" style={{ flex: "1 1 7rem" }}><label className="field__label" htmlFor={`ql-p-${i}`}>Birim fiyat (₺)</label><input id={`ql-p-${i}`} className="field__input" inputMode="decimal" value={l.unit_price} onChange={(e) => upd(i, "unit_price", e.target.value)} /></div>
           {lines.length > 1 && <button type="button" className="btn btn--ghost btn--sm btn--icon" aria-label={`${i + 1}. kalemi kaldır`} onClick={() => setLines((x) => x.filter((_, j) => j !== i))}><Trash2 aria-hidden="true" /></button>}
         </div>

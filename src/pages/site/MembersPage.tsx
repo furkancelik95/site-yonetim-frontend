@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { History, Plus, UserPlus, Users, X } from "lucide-react";
+import { Building2, Clock, History, PieChart, Plus, ShieldCheck, UserCheck, UserPlus, Users, X } from "lucide-react";
+import { Donut } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { OneTimePassword } from "../../components/OneTimePassword";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, todayIso } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
 
 type Role = Schemas["RoleOut"];
 type Member = Schemas["MemberOut"];
 type MemberRole = Schemas["MemberRoleOut"];
-type Added = Schemas["AddedOut"];
+// Geçici: backend artık davet (SMS) gönderiyor; temporary_password kalktı (P16c ekranları #39 ile gelir).
+type Added = Schemas["AddedOut"] & { temporary_password?: string | null };
 type Block = Schemas["BlockOut"];
 type History = Schemas["RoleAssignmentHistoryOut"];
 
@@ -65,9 +67,23 @@ export function MembersPage() {
           <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><UserPlus aria-hidden="true" /> Kullanıcı ekle</button>
         </>}
       />
+      {q.isPending && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)}</div>}
+      {q.data && (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Kullanıcı" icon={<Users aria-hidden="true" />} value={q.data.length} note="bu siteye erişen" />
+          <Kpi label="Erişimi açık" icon={<UserCheck aria-hidden="true" />} tone="ok" value={q.data.filter((m) => m.is_active).length} note={`${q.data.filter((m) => !m.is_active).length} kapalı`} />
+          <Kpi label="Yönetim şirketinden" icon={<Building2 aria-hidden="true" />} tone="accent" value={q.data.filter((m) => m.source === "organization").length} note="burada değiştirilemez" />
+          <Kpi label="Hiç girmemiş" icon={<Clock aria-hidden="true" />} tone={q.data.some((m) => m.is_active && !m.last_login_at) ? "warn" : undefined} value={q.data.filter((m) => m.is_active && !m.last_login_at).length} note="erişimi açık, ilk giriş yok" />
+        </div>
+      )}
       {adding && <AddMember roles={roleList} blocks={blockList} onDone={() => setAdding(false)} />}
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Users aria-hidden="true" /></span>
+          <span className="card__title">Kullanıcı listesi</span>
+          {q.data && <span className="card__meta ml-auto">{q.data.length} kayıt</span>}
+        </div>
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.length === 0 ? (
             <Empty title="Henüz kullanıcı yok" icon={<Users aria-hidden="true" />} />
@@ -87,8 +103,36 @@ export function MembersPage() {
       </div>
 
       {history && <AssignmentHistory />}
+
+      {(roles.data || (q.data && q.data.length > 0)) && (
+        <div className="grid grid--main">
+          {roles.data && (
+            <div className="card">
+              <div className="card__head"><span className="card__icon card__icon--accent"><ShieldCheck aria-hidden="true" /></span><span className="card__title">Roller</span></div>
+              <div className="card__body">
+                {roles.data.map((r) => <div key={r.key} className="kv"><span className="kv__k strong">{r.name}</span><span className="kv__v small">{r.description}</span></div>)}
+              </div>
+            </div>
+          )}
+          {q.data && q.data.length > 0 && (
+            <div className="card">
+              <div className="card__head"><span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span><span className="card__title">Rollere göre dağılım</span><span className="card__meta ml-auto">erişimi açık</span></div>
+              <div className="card__body yapi-pie">
+                <Donut label="Rollere göre kullanıcı sayısı" centerSub="kullanıcı" segments={roleSegments(q.data)} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
+}
+
+/** Erişimi açık kullanıcıları rollerine göre sayar (çoktan aza); çok rollü kişi her rolde sayılır. */
+function roleSegments(list: Member[]) {
+  const m = new Map<string, number>();
+  for (const x of list) if (x.is_active) for (const r of x.roles) m.set(r.role_name, (m.get(r.role_name) ?? 0) + 1);
+  return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
 }
 
 function MemberRow({ m, roles, blocks }: { m: Member; roles: Role[]; blocks: Block[] }) {
@@ -98,7 +142,7 @@ function MemberRow({ m, roles, blocks }: { m: Member; roles: Role[]; blocks: Blo
   return (
     <>
       <tr style={!m.is_active ? { opacity: 0.6 } : undefined}>
-        <td><div className="cell-main">{m.full_name}</div><div className="cell-sub mono">{m.email}</div></td>
+        <td><div className="cell-person"><Avatar name={m.full_name} size="sm" soft={!m.is_active} /><div><div className="cell-main">{m.full_name}</div><div className="cell-sub mono">{m.email}</div></div></div></td>
         <td>
           <div className="row" style={{ gap: "var(--s-1)", flexWrap: "wrap" }}>
             {m.roles.length === 0 && <span className="small muted">Etkin rol yok</span>}

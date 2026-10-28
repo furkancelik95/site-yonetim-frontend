@@ -1,0 +1,90 @@
+/* Sayfa grubu stilleri: operasyon (talep, güvenlik, duyuru, rezervasyon, toplantı, anket, acil durum).
+   Yalnız belirteç (CSS değişkeni) kullanılır, ham renk yok. Ortak bileşenler app.css'te. */
+
+/* --- Sekme grubu: hap kabı, seçili parça beyaz (app.css .seg ile aynı dil; tablist semantiği) --- */
+.tabs {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; max-width: 100%;
+  background: rgb(15 23 42 / .06); border-radius: var(--r-md);
+}
+.tabs__tab {
+  min-height: 36px; padding: 0 var(--s-4); border: 0; border-radius: 8px;
+  background: transparent; color: var(--fg-muted); font: inherit; font-size: 0.8125rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s-2);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.tabs__tab:hover { color: var(--fg); }
+.tabs__tab[aria-selected="true"], .tabs__tab[aria-pressed="true"] { background: var(--bg-raised); color: var(--fg); box-shadow: var(--shadow-sm); }
+.tabs__tab:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.tabs__count { font-size: 0.6875rem; font-weight: 700; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-full); background: var(--bg-sunken); color: var(--fg-muted); display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; }
+.tabs__tab[aria-selected="true"] .tabs__count { background: var(--accent-soft); color: var(--accent); }
+/* Hero içinde (PageHead children) sekmeler banda oturur */
+.hero .tabs { background: rgb(15 23 42 / .07); margin-top: var(--s-4); }
+
+/* --- Küçük ikon çipi (tablo satırı, pano kartı) --- */
+.chip--sm { width: 28px; height: 28px; }
+.chip--sm svg { width: 14px; height: 14px; }
+
+/* --- Talep tablosu: kategori çipi + ad; durum ve öncelik yan yana; SLA kum saati --- */
+/* Talep başlığı kelime kelime bölünmesin: tablo gerekirse kendi kabında yatay kayar */
+table.data td.req-title { min-width: 15rem; }
+.req-cat { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.req-cat__name { font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.req-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.req-sla { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--fg-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.req-sla svg { width: 14px; height: 14px; }
+
+/* --- Talep panosu kartı --- */
+.board__card { border-left-width: 1px; border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); box-shadow: var(--shadow-xs); transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.board__card:hover { box-shadow: var(--shadow-md); }
+.board__card--urgent { box-shadow: inset 3px 0 0 var(--danger-solid), var(--shadow-xs); }
+.board__card--urgent:hover { box-shadow: inset 3px 0 0 var(--danger-solid), var(--shadow-md); }
+.board__top { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); }
+.board__no { margin-left: auto; font-size: 0.6875rem; color: var(--fg-subtle); font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.board__col { background: rgb(15 23 42 / .04); border-color: transparent; }
+.board__head { font-family: var(--font-display); }
+.board__count { background: var(--bg-raised); border-radius: var(--r-full); padding: 0 8px; font-size: 0.75rem; font-weight: 700; min-width: 22px; text-align: center; box-shadow: var(--shadow-xs); }
+
+/* --- Güvenlik: kargo / ziyaretçi satırları (.txn) sağda işlem düğmesi --- */
+.txn__action { flex: none; display: flex; gap: var(--s-2); align-items: center; }
+.txn__badge { flex: none; }
+.txn--compact li { padding: var(--s-2) var(--s-5); }
+
+/* --- Anket sonuç çubukları: önde olan vurgulu, diğerleri pastel --- */
+.poll__row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-2); font-size: 0.875rem; margin-bottom: 4px; }
+.poll__pct { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.poll .meter { height: 8px; }
+.meter__fill--soft { background: var(--chart-3); }
+.meter__fill--accent { background: var(--accent); }
+
+/* --- Duyuru kartı --- */
+.ann__title { margin: 0; font-size: 0.9375rem; }
+.ann__foot { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-3); align-items: center; }
+
+/* --- Toplantı satırı: tarih kutusu --- */
+.datebox { width: 44px; flex: none; text-align: center; border-radius: 10px; background: var(--accent-soft); color: var(--accent); padding: 4px 0; line-height: 1.1; }
+.datebox__d { font-family: var(--font-display); font-weight: 800; font-size: 1.0625rem; }
+.datebox__m { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.datebox--muted { background: var(--bg-sunken); color: var(--fg-muted); }
+
+/* --- Grafik satırı: iki kart yan yana, dar ekranda alt alta (grid--2'nin 400px tabanı 390'da taşar) --- */
+.ops-charts { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .ops-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ops-chart { overflow: clip; }
+.ops-pie .legend__count { white-space: nowrap; }
+/* Rutin görev satırı: tek kart içinde satır satır (iç içe kart yerine) */
+.task-list > .task-row { padding: var(--s-4) var(--s-5); border-top: 1px solid var(--line); }
+.task-list > .task-row:first-child { border-top: 0; }
+/* Bant içindeki tek süzgeç (pano: departman) */
+.hero__filter { margin-top: var(--s-4); max-width: 16rem; }
+.hero__filter .field__label { font-size: 0.75rem; color: var(--hero-fg-muted); }
+.hero__filter .field__input { min-height: 38px; background: rgb(255 255 255 / .85); }
+/* Kart başlığı süzgeci: arama kutusu biraz geniş */
+.card__tools .field--wide { min-width: 14rem; }
+
+@media (max-width: 640px) {
+  .ops-chart .barchart__col--hi:not(:hover):not(:focus-within) .barchart__tip { opacity: 0; }
+  .card__tools .field--wide { min-width: 0; flex-basis: 100%; }
+  .tabs { width: 100%; }
+  .tabs__tab { flex: 1 1 auto; justify-content: center; padding: 0 var(--s-3); }
+  .req-cat__name { white-space: normal; }
+}

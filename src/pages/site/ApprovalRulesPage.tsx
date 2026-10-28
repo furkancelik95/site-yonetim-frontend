@@ -2,11 +2,11 @@ import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../../api/client";
 import { Link } from "react-router";
-import { ListChecks, Plus, Trash2 } from "lucide-react";
+import { Link2, ListChecks, Plus, ShieldCheck, Trash2, UserX } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { dayBasis, quorumKind, rejectBehavior, stepMode } from "../../lib/labels";
@@ -47,6 +47,8 @@ export function ApprovalRulesPage() {
   const [s, set] = useUrlState({ arsiv: "" });
   const types = useSiteGet<ActionTypeOut[]>("/approval-action-types");
   const q = useSiteGet<Rule[]>("/approval-rules", { archived: s.arsiv ? "true" : undefined });
+  // Göstergeler her zaman yürürlükteki listeden (Arşiv sekmesinde de); varsayılan sekmede q ile aynı sorgu
+  const active = useSiteGet<Rule[]>("/approval-rules", { archived: undefined });
   const [editing, setEditing] = useState<Rule | "new" | null>(null);
   const restore = useSiteMutation<Record<string, never>, Schemas["RestoreOut"]>("POST", "/approval-rules/restore-defaults", {
     onSuccess: (d) => d?.skipped.length && toast(`Kurulamayanlar: ${d.skipped.join(", ")}`),
@@ -65,15 +67,21 @@ export function ApprovalRulesPage() {
           {manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Kural ekle</button>}
         </>}
       />
+      {active.isError || types.isError ? null : !active.data || !types.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Yürürlükteki kural" tone="accent" icon={<ListChecks aria-hidden="true" />} value={active.data.length} note={`${types.data.length} işlem tipinden`} />
+          <Kpi label="Uygulanan" tone="ok" icon={<ShieldCheck aria-hidden="true" />} value={active.data.filter((r) => connected.has(r.action_type)).length} note="onaya bağlı işlemde çalışıyor" />
+          <Kpi label="Onaya bağlı işlem" icon={<Link2 aria-hidden="true" />} value={connected.size} note={`${types.data.length - connected.size} işlem bağlanmayı bekliyor`} />
+          <Kpi label="Onaycısı yok" tone={active.data.some((r) => !r.applicable) ? "danger" : undefined} icon={<UserX aria-hidden="true" />} value={active.data.filter((r) => !r.applicable).length} note="adımdaki rolde etkin kullanıcı yok" />
+        </div>
+      )}
       <Alert tone="info">Şu an onaydan gerçekten geçen işlem: {(types.data ?? []).filter((t) => t.connected).map((t) => t.label).join(", ") || "—"}. Diğer işlemler için kural şimdiden tanımlanabilir; o işlemler onaya bağlanınca kural uygulanır.</Alert>
       {editing && <RuleForm rule={editing === "new" ? null : editing} types={types.data ?? []} onDone={() => setEditing(null)} />}
       <Simulator types={types.data ?? []} />
 
-      <div className="row" role="tablist" aria-label="Kural listesi" style={{ gap: "var(--s-2)" }}>
-        {[["", "Yürürlükte"], ["1", "Arşiv"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.arsiv === k} className={`btn btn--sm${s.arsiv === k ? " btn--primary" : ""}`} onClick={() => set({ arsiv: k! })}>{l}</button>
-        ))}
-      </div>
+      <Segmented label="Kural listesi" value={s.arsiv} onChange={(k) => set({ arsiv: k })} options={[{ value: "", label: "Yürürlükte" }, { value: "1", label: "Arşiv" }]} />
 
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data.length === 0 ? (
         <div className="card"><div className="card__body"><Empty title={s.arsiv ? "Arşivde kural yok" : "Henüz kural yok"} icon={<ListChecks aria-hidden="true" />}>{!s.arsiv && manage && "\"Önerilen kuralları kur\" ile başlayabilirsiniz."}</Empty></div></div>
