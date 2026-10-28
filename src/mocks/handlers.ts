@@ -7,7 +7,9 @@
 // Güvenlik ve devriye (40–46: kapılar, ön davet, sakin onayı, plaka/ihlal, kargo yetkilisi, nöbet defteri,
 // devriye) ve park yerleri (K30) backend'de — sahte uçları silindi (25.10.2026).
 //
-// Backend'e geçti, handler'ı kaldırıldı: İletişim ve acil durum 71–74 (okuma onayı ve raporu, zamanlanmış
+// Backend'e geçti, handler'ı kaldırıldı: Satın alma 62–67 (tedarikçi kartı, ayar ve bütçe, talep/
+// teklif/tedarikçi linki/onay, sipariş ve kabul, tedarikçi faturası ve üçlü eşleşme, ödenecekler).
+// İletişim ve acil durum 71–74 (okuma onayı ve raporu, zamanlanmış
 // duyuru, bildirim/duyuru şablonları, acil durum modu ve pano, toplanma yoklaması, acil bilgi kartı) — P12;
 // 71'in sessiz saat ayarı (`communication-settings`; P16c kimlik ve bildirim gönderimi ile — SMS hesabı,
 // teslim kayıtları, planlı raporlar). Raporlar ve KVKK 79–81 (rapor kataloğu, talep/SLA raporu, KVKK başvurusu, aydınlatma
@@ -57,7 +59,6 @@ const today = () => iso(new Date());
 /** ISO zaman damgasının YEREL günü (UTC'de .slice(0, 10) gece yarısından sonra bir önceki günü verir). */
 const dayOf = (ts: string) => iso(new Date(ts));
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const normPhone = (v: string) => { const d = v.replace(/\D/g, "").replace(/^90/, "").replace(/^0/, ""); return d ? `+90${d}` : ""; };
 
 async function me(request: Request) {
   const r = await real<{ full_name: string; user_id: string }>(request, "/api/v1/me");
@@ -432,392 +433,13 @@ const rezervasyon: RequestHandler[] = [
   }),
 ];
 
-// ============================================================================================
-// SATIN ALMA PAKETİ (Yazılım Dokümanı SAT-01..05 + tedarikçi kartı) — servis istekleri 62–67
-// ============================================================================================
-interface Vendor { id: string; name: string; tax_no: string; phone: string | null; email: string | null; iban: string | null; category: string | null; status: "active" | "passive" | "blacklist"; note: string | null; created_at: string }
-interface VendorRating { vendor_id: string; score: number; source: string; at: string }
-interface PurchaseSettings { thresholds: { max: string; quotes: number }[]; above_quotes: number; tolerance_percent: number; link_days: number }
-interface PrItem { description: string; qty: number; unit: string; est_unit_price: string; stock_item_id: string | null }
-interface PrDecision { stage: "exception" | "purchase"; decision: "approve" | "reject"; by: string; at: string; note: string | null }
-interface PurchaseRequest {
-  id: string; number: string; title: string; reason: string; category_id: string; category_name: string; items: PrItem[]; estimated_total: string;
-  budget: { annual: string; spent: string; committed: string; remaining: string } | null; over_budget: boolean; required_quotes: number; request_number: number | null;
-  status: "quoting" | "exception_pending" | "approval_pending" | "approved" | "rejected" | "ordered" | "cancelled";
-  selected_quote_id: string | null; exception_reason: string | null; decisions: PrDecision[]; reject_reason: string | null;
-  created_by: string; created_by_id: string; created_at: string;
+// Satın alma paketi (servis istekleri 62–67) backend'de; sahte uçları silindi. Sözleşme
+// performansı (68–70) tedarikçi kartını gerçek `/vendors` ucundan okur.
+type RealVendor = { id: string; name: string; rating_avg: string | null; rating_count: number };
+async function realVendor(request: Request, slug: string, id: string) {
+  const r = await real<Paged<RealVendor>>(request, `/api/v1/sites/${slug}/vendors?page_size=200`);
+  return (r.body?.items ?? []).find((v) => v.id === id) ?? null;
 }
-interface PrQuote { id: string; pr_id: string; vendor_id: string; vendor_name: string; lines: { unit_price: string }[]; total: string; delivery_days: number; payment_terms: string; valid_until: string; note: string | null; file_name: string | null; source: "staff" | "vendor_link"; created_by: string; created_at: string }
-interface QuoteLink { token: string; pr_id: string; vendor_id: string; vendor_name: string; site_name: string; expires_at: string; used_at: string | null; created_at: string }
-interface PoLine { description: string; qty: number; unit: string; unit_price: string; total: string; stock_item_id: string | null; received: number }
-interface PurchaseOrder { id: string; number: string; pr_id: string; pr_number: string; vendor_id: string; vendor_name: string; category_id: string; lines: PoLine[]; total: string; status: "sent" | "partial" | "received" | "closed"; created_by: string; created_at: string }
-interface Receipt { id: string; order_id: string; lines: { qty: number }[]; note: string | null; photo: string | null; rating: number | null; by: string; at: string }
-interface VendorInvoice {
-  id: string; order_id: string; order_number: string; vendor_id: string; vendor_name: string; number: string; date: string; due_date: string; lines: { qty: number; unit_price: string }[];
-  total: string; expected_total: string; diffs: string[]; status: "matched" | "diff_pending" | "disputed" | "paid"; decision: { by: string; at: string; note: string } | null;
-  file_name: string | null; paid_on: string | null; cash_account_id: string | null; created_by: string; created_by_id: string; created_at: string;
-}
-const vendors = loadMap<string, Vendor[]>("vendors");
-const vendorRatings = loadMap<string, VendorRating[]>("vendorRatings");
-const purchaseSettings = loadMap<string, PurchaseSettings>("purchaseSettings");
-const purchaseRequests = loadMap<string, PurchaseRequest[]>("purchaseRequests");
-const prQuotes = loadMap<string, PrQuote[]>("prQuotes");
-const quoteLinks = loadMap<string, QuoteLink[]>("quoteLinks"); // slug → linkler
-const purchaseOrders = loadMap<string, PurchaseOrder[]>("purchaseOrders");
-const receipts = loadMap<string, Receipt[]>("receipts");
-const vendorInvoices = loadMap<string, VendorInvoice[]>("vendorInvoices");
-const PS_DEFAULT: PurchaseSettings = { thresholds: [{ max: "10000.00", quotes: 1 }, { max: "100000.00", quotes: 2 }], above_quotes: 3, tolerance_percent: 1, link_days: 7 };
-const psOf = (slug: string) => { if (!purchaseSettings.has(slug)) purchaseSettings.set(slug, structuredClone(PS_DEFAULT)); return purchaseSettings.get(slug)!; };
-const requiredQuotes = (slug: string, totalCents: number) => { const s = psOf(slug); for (const t of [...s.thresholds].sort((a, b) => cents(a.max) - cents(b.max))) if (totalCents < cents(t.max)) return t.quotes; return s.above_quotes; };
-const ratingOf = (slug: string, vendorId: string) => { const r = listOf(vendorRatings, slug).filter((x) => x.vendor_id === vendorId); return { rating_avg: r.length ? Math.round((r.reduce((s, x) => s + x.score, 0) / r.length) * 10) / 10 : null, rating_count: r.length }; };
-const maskIban = (i: string | null) => (i ? `${i.slice(0, 4)} •••• •••• ${i.slice(-4)}` : null);
-const vendorOut = (slug: string, v: Vendor) => ({ ...v, iban: undefined, iban_masked: maskIban(v.iban), ...ratingOf(slug, v.id), order_count: listOf(purchaseOrders, slug).filter((o) => o.vendor_id === v.id).length });
-const seqNo = (prefix: string, n: number) => `${prefix}-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`;
-const lineTotal = (qty: number, price: string) => Math.round(qty * cents(price));
-const TAX_RE = /^\d{10,11}$/;
-const IBAN_RE = /^TR\d{24}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Kategorinin yıllık bütçesi, bu yıl gerçekleşen gider ve açık taahhüt (onaylı talep + faturası kesilmemiş sipariş). */
-async function budgetOf(request: Request, slug: string, categoryId: string, excludePr?: string) {
-  const plan = await real<{ items?: { expense_category_id: string | null; annual_amount: string }[] }>(request, `/api/v1/sites/${slug}/budget-plans/current`);
-  const annual = (plan.body?.items ?? []).filter((i) => i.expense_category_id === categoryId).reduce((s, i) => s + cents(i.annual_amount), 0);
-  const ex = await real<Paged<{ amount: string; is_reversed: boolean; is_reversal: boolean }>>(request, `/api/v1/sites/${slug}/expenses?year=${new Date().getFullYear()}&category_id=${categoryId}&paid=all&page_size=200`);
-  const spent = (ex.body?.items ?? []).filter((e) => !e.is_reversed && !e.is_reversal).reduce((s, e) => s + cents(e.amount), 0);
-  const prs = listOf(purchaseRequests, slug).filter((p) => p.category_id === categoryId && p.id !== excludePr && ["approval_pending", "approved", "exception_pending"].includes(p.status));
-  const ords = listOf(purchaseOrders, slug).filter((o) => o.category_id === categoryId && o.status !== "closed");
-  const committed = prs.reduce((s, p) => s + cents(p.estimated_total), 0) + ords.reduce((s, o) => s + cents(o.total), 0);
-  return { has_budget: plan.status === 200 && annual > 0, annual: tl(annual), spent: tl(spent), committed: tl(committed), remaining: tl(annual - spent - committed) };
-}
-const prOut = (slug: string, p: PurchaseRequest) => {
-  const quotes = listOf(prQuotes, slug).filter((q) => q.pr_id === p.id).map((q) => ({ ...q, ...ratingOf(slug, q.vendor_id) }));
-  const links = listOf(quoteLinks, slug).filter((l) => l.pr_id === p.id).map((l) => ({ token: l.token, vendor_name: l.vendor_name, expires_at: l.expires_at, used_at: l.used_at, state: l.used_at ? "used" : l.expires_at < new Date().toISOString() ? "expired" : "open" }));
-  const order = listOf(purchaseOrders, slug).find((o) => o.pr_id === p.id) ?? null;
-  return { ...p, quotes, links, order_id: order?.id ?? null, order_number: order?.number ?? null };
-};
-function decideOk(p: PurchaseRequest, meId: string) { return p.created_by_id !== meId; }
-
-const satinalma: RequestHandler[] = [
-  // 62 — Tedarikçi kartı
-  http.get(`${API}/vendors`, ({ request, params }) => {
-    const slug = String(params.slug); const u = new URL(request.url).searchParams;
-    const q = (u.get("q") ?? "").toLocaleLowerCase("tr-TR"), st = u.get("status");
-    return HttpResponse.json(listOf(vendors, slug).filter((v) => (!q || v.name.toLocaleLowerCase("tr-TR").includes(q) || v.tax_no.includes(q)) && (!st || v.status === st)).sort((a, b) => a.name.localeCompare(b.name, "tr")).map((v) => vendorOut(slug, v)));
-  }),
-  ...(["post", "patch"] as const).map((verb) => http[verb](verb === "post" ? `${API}/vendors` : `${API}/vendors/:id`, async ({ request, params }) => {
-    const slug = String(params.slug); const list = listOf(vendors, slug);
-    const cur = verb === "patch" ? list.find((v) => v.id === params.id) : undefined;
-    if (verb === "patch" && !cur) return err(404, "not_found", "Tedarikçi bulunamadı.");
-    const raw = (await request.json()) as Partial<Vendor>;
-    const b = { ...(cur ?? {}), ...raw, iban: raw.iban === undefined ? cur?.iban ?? null : raw.iban };
-    const f: Record<string, string> = {};
-    const name = (b.name ?? "").trim().replace(/\s+/g, " ");
-    if (name.length < 2 || name.length > 120) f.name = "Unvan yazın (2–120 karakter).";
-    const tax = (b.tax_no ?? "").replace(/\D/g, "");
-    if (!TAX_RE.test(tax)) f.tax_no = "Vergi no 10, T.C. kimlik no 11 hane olmalı.";
-    else if (list.some((v) => v.id !== cur?.id && v.tax_no === tax)) f.tax_no = "Bu vergi numarasıyla tedarikçi var.";
-    const iban = (b.iban ?? "").replace(/\s/g, "").toUpperCase();
-    if (iban && !IBAN_RE.test(iban)) f.iban = "IBAN TR ile başlayan 26 karakter olmalı.";
-    const email = (b.email ?? "").trim().toLowerCase();
-    if (email && (!EMAIL_RE.test(email) || email.length > 254)) f.email = "Geçerli bir e-posta yazın.";
-    const phone = b.phone ? normPhone(b.phone) : "";
-    if (phone && !/^\d{10}$/.test(phone)) f.phone = "Telefon 10 hane olmalı.";
-    if (b.status && !["active", "passive", "blacklist"].includes(b.status)) f.status = "Durum seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const v: Vendor = { id: cur?.id ?? crypto.randomUUID(), name, tax_no: tax, phone: phone || null, email: email || null, iban: iban || null, category: b.category?.trim() || null, status: b.status ?? "active", note: b.note?.trim() || null, created_at: cur?.created_at ?? new Date().toISOString() };
-    if (cur) Object.assign(cur, v); else list.push(v);
-    return HttpResponse.json({ data: vendorOut(slug, v), message: verb === "post" ? `${v.name} eklendi.` : `${v.name} güncellendi.` }, { status: verb === "post" ? 201 : 200 });
-  })),
-
-  // 63 — Ayarlar ve bütçe
-  http.get(`${API}/purchase-settings`, ({ params }) => HttpResponse.json(psOf(String(params.slug)))),
-  http.put(`${API}/purchase-settings`, async ({ request, params }) => {
-    const slug = String(params.slug); const b = (await request.json()) as Partial<PurchaseSettings>;
-    const f: Record<string, string> = {};
-    const th = (b.thresholds ?? []).map((t) => ({ max: tl(cents(t.max)), quotes: Number(t.quotes) }));
-    if (th.length === 0 || th.some((t) => !(cents(t.max) > 0) || !(t.quotes >= 1 && t.quotes <= 10))) f.thresholds = "Her eşik için tutar > 0 ve teklif sayısı 1–10.";
-    else if (th.some((t, i) => i > 0 && cents(t.max) <= cents(th[i - 1]!.max))) f.thresholds = "Eşikler küçükten büyüğe sıralanmalı.";
-    if (!(Number(b.above_quotes) >= 1 && Number(b.above_quotes) <= 10)) f.above_quotes = "1–10.";
-    if (!(Number(b.tolerance_percent) >= 0 && Number(b.tolerance_percent) <= 10)) f.tolerance_percent = "%0–10.";
-    if (!(Number(b.link_days) >= 1 && Number(b.link_days) <= 30)) f.link_days = "1–30 gün.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const s: PurchaseSettings = { thresholds: th, above_quotes: Number(b.above_quotes), tolerance_percent: Number(b.tolerance_percent), link_days: Number(b.link_days) };
-    purchaseSettings.set(slug, s);
-    return HttpResponse.json({ data: s, message: "Satın alma ayarları kaydedildi." });
-  }),
-  http.get(`${API}/purchase-budget`, async ({ request, params }) => {
-    const c = new URL(request.url).searchParams.get("category_id");
-    if (!c) return err(422, "validation", VALIDATION, { category_id: "Kategori seçin." });
-    return HttpResponse.json(await budgetOf(request, String(params.slug), c));
-  }),
-
-  // 64 — Satın alma talebi, teklif, onay
-  http.get(`${API}/purchase-requests`, ({ request, params }) => {
-    const slug = String(params.slug); const st = new URL(request.url).searchParams.get("status");
-    return HttpResponse.json([...listOf(purchaseRequests, slug)].filter((p) => !st || p.status === st).reverse().map((p) => ({ ...prOut(slug, p), quote_count: listOf(prQuotes, slug).filter((q) => q.pr_id === p.id).length })));
-  }),
-  http.get(`${API}/purchase-requests/:id`, ({ params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    return p ? HttpResponse.json(prOut(slug, p)) : err(404, "not_found", "Satın alma talebi bulunamadı.");
-  }),
-  http.post(`${API}/purchase-requests`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { title?: string; reason?: string; category_id?: string; items?: Partial<PrItem>[]; request_number?: number | null };
-    const f: Record<string, string> = {};
-    if ((b.title ?? "").trim().length < 3) f.title = "Konu yazın.";
-    if ((b.reason ?? "").trim().length < 5) f.reason = "Gerekçe yazın.";
-    const cats = (await real<{ id: string; name: string }[]>(request, `/api/v1/sites/${slug}/expense-categories`)).body ?? [];
-    const cat = cats.find((c) => c.id === b.category_id);
-    if (!cat) f.category_id = "Gider kategorisi seçin.";
-    const items = (b.items ?? []).filter((i) => (i.description ?? "").trim());
-    if (items.length === 0) f.items = "En az bir kalem ekleyin.";
-    items.forEach((i, k) => { if (!(Number(i.qty) > 0)) f[`items.${k}.qty`] = "Miktar > 0."; if (!(cents(i.est_unit_price) > 0)) f[`items.${k}.est_unit_price`] = "Tahmini birim fiyat > 0."; });
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const its: PrItem[] = items.map((i) => ({ description: i.description!.trim(), qty: Number(i.qty), unit: (i.unit ?? "adet").trim() || "adet", est_unit_price: tl(cents(i.est_unit_price)), stock_item_id: i.stock_item_id || null }));
-    const total = its.reduce((s, i) => s + lineTotal(i.qty, i.est_unit_price), 0);
-    const bud = await budgetOf(request, slug, cat!.id);
-    const who = await me(request);
-    const list = listOf(purchaseRequests, slug);
-    const p: PurchaseRequest = { id: crypto.randomUUID(), number: seqNo("ST", list.length + 1), title: b.title!.trim(), reason: b.reason!.trim(), category_id: cat!.id, category_name: cat!.name, items: its, estimated_total: tl(total), budget: bud.has_budget ? { annual: bud.annual, spent: bud.spent, committed: bud.committed, remaining: bud.remaining } : null, over_budget: bud.has_budget && total > cents(bud.remaining), required_quotes: requiredQuotes(slug, total), request_number: b.request_number ?? null, status: "quoting", selected_quote_id: null, exception_reason: null, decisions: [], reject_reason: null, created_by: who.name, created_by_id: who.id, created_at: new Date().toISOString() };
-    list.push(p);
-    return HttpResponse.json({ data: prOut(slug, p), message: `${p.number} açıldı; ${p.required_quotes} teklif gerekiyor.${p.over_budget ? " Bütçe aşımı işaretlendi." : ""}` }, { status: 201 });
-  }),
-  http.post(`${API}/purchase-requests/:id/quotes`, async ({ request, params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (p.status !== "quoting") return err(409, "invalid_status", "Teklif yalnız teklif aşamasında eklenir.");
-    const b = (await request.json()) as { vendor_id?: string; lines?: { unit_price: string }[]; delivery_days?: number; payment_terms?: string; valid_until?: string; note?: string; file_name?: string };
-    const v = listOf(vendors, slug).find((x) => x.id === b.vendor_id);
-    const f = quoteFields(p, b);
-    if (!v) f.vendor_id = "Tedarikçi seçin."; else if (v.status !== "active") f.vendor_id = "Tedarikçi aktif değil.";
-    else if (listOf(prQuotes, slug).some((q) => q.pr_id === p.id && q.vendor_id === v.id)) f.vendor_id = "Bu tedarikçinin teklifi var.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const q = makeQuote(p, v!, b, "staff", (await me(request)).name);
-    listOf(prQuotes, slug).push(q);
-    return HttpResponse.json({ data: q, message: `${v!.name} teklifi eklendi (${quoteCount(slug, p)}/${p.required_quotes}).` }, { status: 201 });
-  }),
-  http.post(`${API}/purchase-requests/:id/quote-links`, async ({ request, params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (p.status !== "quoting") return err(409, "invalid_status", "Link yalnız teklif aşamasında gönderilir.");
-    const b = (await request.json()) as { vendor_id?: string };
-    const v = listOf(vendors, slug).find((x) => x.id === b.vendor_id);
-    if (!v) return err(422, "validation", VALIDATION, { vendor_id: "Tedarikçi seçin." });
-    if (v.status !== "active") return err(422, "validation", VALIDATION, { vendor_id: "Tedarikçi aktif değil." });
-    const now = new Date().toISOString();
-    if (listOf(quoteLinks, slug).some((l) => l.pr_id === p.id && l.vendor_id === v.id && !l.used_at && l.expires_at > now)) return err(409, "link_open", "Bu tedarikçiye gönderilmiş açık link var.");
-    if (listOf(prQuotes, slug).some((q) => q.pr_id === p.id && q.vendor_id === v.id)) return err(409, "quoted", "Bu tedarikçinin teklifi zaten var.");
-    const site = await real<{ name: string }>(request, `/api/v1/sites/${slug}`);
-    const l: QuoteLink = { token: crypto.randomUUID().replace(/-/g, ""), pr_id: p.id, vendor_id: v.id, vendor_name: v.name, site_name: site.body?.name ?? slug, expires_at: new Date(Date.now() + psOf(slug).link_days * 864e5).toISOString(), used_at: null, created_at: now };
-    listOf(quoteLinks, slug).push(l);
-    return HttpResponse.json({ data: { token: l.token, expires_at: l.expires_at, vendor_name: v.name }, message: `${v.name} için teklif linki hazır; ${psOf(slug).link_days} gün geçerli, tek kullanımlık.${v.email ? ` ${v.email} adresine e-posta (K5).` : ""}` }, { status: 201 });
-  }),
-  http.post(`${API}/purchase-requests/:id/select-quote`, async ({ request, params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (p.status !== "quoting") return err(409, "invalid_status", "Teklif yalnız teklif aşamasında seçilir.");
-    const b = (await request.json()) as { quote_id?: string; exception_reason?: string };
-    const q = listOf(prQuotes, slug).find((x) => x.id === b.quote_id && x.pr_id === p.id);
-    if (!q) return err(422, "validation", VALIDATION, { quote_id: "Teklif seçin." });
-    const n = quoteCount(slug, p);
-    if (n < p.required_quotes) {
-      if ((b.exception_reason ?? "").trim().length < 10) return err(422, "quote_exception", `${p.required_quotes} teklif gerekiyor, ${n} var. Eksik teklif için gerekçe yazın (teklif istisnası onaya düşer).`, { exception_reason: "Eksik teklif gerekçesi (en az 10 karakter)." });
-      Object.assign(p, { selected_quote_id: q.id, exception_reason: b.exception_reason!.trim(), status: "exception_pending" });
-      return HttpResponse.json({ data: prOut(slug, p), message: "Teklif istisnası onaya gönderildi." });
-    }
-    Object.assign(p, { selected_quote_id: q.id, status: "approval_pending" });
-    return HttpResponse.json({ data: prOut(slug, p), message: `${q.vendor_name} teklifi seçildi; satın alma onayı bekleniyor.` });
-  }),
-  http.post(`${API}/purchase-requests/:id/decide`, async ({ request, params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (!["exception_pending", "approval_pending"].includes(p.status)) return err(409, "invalid_status", "Onay bekleyen bir adım yok.");
-    const who = await me(request);
-    if (!decideOk(p, who.id)) return err(403, "self_approval", "Kendi talebinizi onaylayamazsınız.");
-    const b = (await request.json()) as { decision?: "approve" | "reject"; note?: string };
-    if (b.decision !== "approve" && b.decision !== "reject") return err(422, "validation", VALIDATION, { decision: "Karar seçin." });
-    if (b.decision === "reject" && (b.note ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { note: "Ret gerekçesi yazın." });
-    const stage = p.status === "exception_pending" ? "exception" : "purchase";
-    p.decisions.push({ stage, decision: b.decision, by: who.name, at: new Date().toISOString(), note: b.note?.trim() || null });
-    if (stage === "exception") {
-      if (b.decision === "approve") { p.status = "approval_pending"; return HttpResponse.json({ data: prOut(slug, p), message: "Teklif istisnası onaylandı; satın alma onayına geçti." }); }
-      Object.assign(p, { status: "quoting", selected_quote_id: null }); return HttpResponse.json({ data: prOut(slug, p), message: "Teklif istisnası reddedildi; teklif toplamaya devam." });
-    }
-    if (b.decision === "approve") { p.status = "approved"; return HttpResponse.json({ data: prOut(slug, p), message: "Satın alma onaylandı; sipariş oluşturulabilir." }); }
-    Object.assign(p, { status: "rejected", reject_reason: b.note!.trim() });
-    return HttpResponse.json({ data: prOut(slug, p), message: "Talep reddedildi; talep edene gerekçe gider." });
-  }),
-  http.post(`${API}/purchase-requests/:id/cancel`, async ({ params }) => {
-    const slug = String(params.slug); const p = listOf(purchaseRequests, slug).find((x) => x.id === params.id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (["ordered", "rejected", "cancelled"].includes(p.status)) return err(409, "invalid_status", "Bu talep iptal edilemez.");
-    p.status = "cancelled";
-    for (const l of listOf(quoteLinks, slug)) if (l.pr_id === p.id && !l.used_at) l.expires_at = new Date().toISOString();
-    return HttpResponse.json({ data: prOut(slug, p), message: "Talep iptal edildi; açık teklif linkleri kapatıldı." });
-  }),
-  // Tedarikçi linki (oturumsuz)
-  http.get("/api/v1/public/quote-links/:token", ({ params }) => {
-    const found = findLink(String(params.token));
-    if (!found) return err(404, "not_found", "Bağlantı bulunamadı.");
-    const { slug, l } = found;
-    if (l.used_at || l.expires_at < new Date().toISOString()) return err(410, "link_closed", "Bu bağlantının süresi doldu veya kullanıldı.");
-    const p = listOf(purchaseRequests, slug).find((x) => x.id === l.pr_id)!;
-    if (p.status !== "quoting") return err(410, "link_closed", "Bu bağlantının süresi doldu veya kullanıldı.");
-    return HttpResponse.json({ site_name: l.site_name, vendor_name: l.vendor_name, number: p.number, title: p.title, items: p.items.map((i) => ({ description: i.description, qty: i.qty, unit: i.unit })), expires_at: l.expires_at });
-  }),
-  http.post("/api/v1/public/quote-links/:token", async ({ request, params }) => {
-    const found = findLink(String(params.token));
-    if (!found) return err(404, "not_found", "Bağlantı bulunamadı.");
-    const { slug, l } = found;
-    const p = listOf(purchaseRequests, slug).find((x) => x.id === l.pr_id)!;
-    if (l.used_at || l.expires_at < new Date().toISOString() || p.status !== "quoting") return err(410, "link_closed", "Bu bağlantının süresi doldu veya kullanıldı.");
-    const b = (await request.json()) as { lines?: { unit_price: string }[]; delivery_days?: number; payment_terms?: string; valid_until?: string; note?: string; file_name?: string; terms_ack?: boolean };
-    const f = quoteFields(p, b);
-    if (!b.terms_ack) f.terms_ack = "Kullanım koşullarını onaylayın.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const v = listOf(vendors, slug).find((x) => x.id === l.vendor_id)!;
-    const q = makeQuote(p, v, b, "vendor_link", v.name);
-    listOf(prQuotes, slug).push(q);
-    l.used_at = new Date().toISOString();
-    return HttpResponse.json({ data: { total: q.total }, message: "Teklifiniz iletildi. Teşekkür ederiz; bu bağlantı artık kapandı." }, { status: 201 });
-  }),
-
-  // 65 — Sipariş ve mal/hizmet kabul
-  http.get(`${API}/purchase-orders`, ({ params }) => { const slug = String(params.slug); return HttpResponse.json([...listOf(purchaseOrders, slug)].reverse().map((o) => orderOut(slug, o))); }),
-  http.get(`${API}/purchase-orders/:id`, ({ params }) => { const slug = String(params.slug); const o = listOf(purchaseOrders, slug).find((x) => x.id === params.id); return o ? HttpResponse.json(orderOut(slug, o)) : err(404, "not_found", "Sipariş bulunamadı."); }),
-  http.post(`${API}/purchase-orders`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { pr_id?: string };
-    const p = listOf(purchaseRequests, slug).find((x) => x.id === b.pr_id);
-    if (!p) return err(404, "not_found", "Satın alma talebi bulunamadı.");
-    if (p.status !== "approved") return err(409, "not_approved", "Onaysız sipariş verilemez.");
-    const q = listOf(prQuotes, slug).find((x) => x.id === p.selected_quote_id)!;
-    const v = listOf(vendors, slug).find((x) => x.id === q.vendor_id);
-    if (!v || v.status !== "active") return err(409, "vendor_inactive", "Tedarikçi aktif değil; sipariş verilemez.");
-    const lines: PoLine[] = p.items.map((i, k) => ({ description: i.description, qty: i.qty, unit: i.unit, unit_price: q.lines[k]!.unit_price, total: tl(lineTotal(i.qty, q.lines[k]!.unit_price)), stock_item_id: i.stock_item_id, received: 0 }));
-    const list = listOf(purchaseOrders, slug);
-    const o: PurchaseOrder = { id: crypto.randomUUID(), number: seqNo("SIP", list.length + 1), pr_id: p.id, pr_number: p.number, vendor_id: v.id, vendor_name: v.name, category_id: p.category_id, lines, total: q.total, status: "sent", created_by: (await me(request)).name, created_at: new Date().toISOString() };
-    list.push(o); p.status = "ordered";
-    return HttpResponse.json({ data: orderOut(slug, o), message: `${o.number} oluşturuldu ve ${v.name} tedarikçisine iletildi${v.email ? ` (${v.email}, K5)` : ""}.` }, { status: 201 });
-  }),
-  http.post(`${API}/purchase-orders/:id/receipts`, async ({ request, params }) => {
-    const slug = String(params.slug); const o = listOf(purchaseOrders, slug).find((x) => x.id === params.id);
-    if (!o) return err(404, "not_found", "Sipariş bulunamadı.");
-    if (o.status === "received" || o.status === "closed") return err(409, "invalid_status", "Siparişin tamamı teslim alınmış.");
-    const b = (await request.json()) as { lines?: { qty: number }[]; note?: string; photo?: string | null; rating?: number | null };
-    const f: Record<string, string> = {};
-    const ls = o.lines.map((_, k) => Number(b.lines?.[k]?.qty ?? 0));
-    if (ls.every((q) => q === 0)) f.lines = "Teslim alınan miktarı girin.";
-    ls.forEach((q, k) => { if (!(q >= 0)) f[`lines.${k}`] = "Geçersiz miktar."; else if (q > o.lines[k]!.qty - o.lines[k]!.received) f[`lines.${k}`] = `Kalan ${o.lines[k]!.qty - o.lines[k]!.received}; fazla teslim not olarak yazılır.`; });
-    if (b.rating != null && !(Number.isInteger(b.rating) && b.rating >= 1 && b.rating <= 5)) f.rating = "1–5 puan.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    const who = (await me(request)).name;
-    let stockNote = 0;
-    for (const [k, q] of ls.entries()) {
-      if (q <= 0) continue;
-      const line = o.lines[k]!; line.received += q;
-      if (line.stock_item_id) { const r = await real(request, `/api/v1/sites/${slug}/stock-items/${line.stock_item_id}/moves`, { method: "POST", body: { direction: "in", quantity: String(q), note: `${o.number} kabulü` } }); if (r.status < 300) stockNote++; }
-    }
-    o.status = o.lines.every((l) => l.received >= l.qty) ? "received" : "partial";
-    const r: Receipt = { id: crypto.randomUUID(), order_id: o.id, lines: ls.map((qty) => ({ qty })), note: b.note?.trim() || null, photo: b.photo ?? null, rating: b.rating ?? null, by: who, at: new Date().toISOString() };
-    listOf(receipts, slug).push(r);
-    if (b.rating) listOf(vendorRatings, slug).push({ vendor_id: o.vendor_id, score: b.rating, source: o.number, at: r.at });
-    return HttpResponse.json({ data: orderOut(slug, o), message: `${o.status === "received" ? "Tamamı" : "Kısmi"} kabul kaydedildi.${stockNote ? ` ${stockNote} kalem stoğa girdi.` : ""}` }, { status: 201 });
-  }),
-
-  // 66 — Tedarikçi faturası ve üçlü eşleşme
-  http.get(`${API}/vendor-invoices`, ({ request, params }) => { const slug = String(params.slug); const st = new URL(request.url).searchParams.get("status"); return HttpResponse.json([...listOf(vendorInvoices, slug)].filter((i) => !st || i.status === st).reverse()); }),
-  http.post(`${API}/vendor-invoices`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const b = (await request.json()) as { order_id?: string; number?: string; date?: string; due_date?: string; lines?: { qty: number; unit_price: string }[]; file_name?: string };
-    const o = listOf(purchaseOrders, slug).find((x) => x.id === b.order_id);
-    if (!o) return err(422, "validation", VALIDATION, { order_id: "Sipariş seçin." });
-    const f: Record<string, string> = {};
-    const number = (b.number ?? "").trim().toUpperCase();
-    if (number.length < 3) f.number = "Fatura no yazın.";
-    else if (listOf(vendorInvoices, slug).some((i) => i.vendor_id === o.vendor_id && i.number === number)) f.number = "Bu tedarikçinin bu numaralı faturası kayıtlı.";
-    if (!b.date || !DATE_RE.test(b.date) || b.date > today()) f.date = "Fatura tarihi bugünden ileri olamaz.";
-    if (!b.due_date || !DATE_RE.test(b.due_date) || (b.date && b.due_date < b.date)) f.due_date = "Vade fatura tarihinden önce olamaz.";
-    const lines = o.lines.map((_, k) => ({ qty: Number(b.lines?.[k]?.qty ?? 0), unit_price: tl(cents(b.lines?.[k]?.unit_price ?? 0)) }));
-    if (lines.every((l) => l.qty === 0)) f.lines = "Fatura kalemlerini girin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    if (o.lines.every((l) => l.received === 0)) return err(409, "no_receipt", "Teslim alınmamış sipariş için fatura eşleştirilemez; önce mal/hizmet kabulünü girin.");
-    const tol = psOf(slug).tolerance_percent;
-    const diffs: string[] = [];
-    o.lines.forEach((l, k) => {
-      const inv = lines[k]!;
-      if (inv.qty !== l.received) diffs.push(`${l.description}: faturada ${inv.qty}, teslim alınan ${l.received} ${l.unit}`);
-      if (cents(inv.unit_price) !== cents(l.unit_price)) diffs.push(`${l.description}: birim fiyat ${Number(inv.unit_price).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺, siparişte ${Number(l.unit_price).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺`);
-    });
-    const total = lines.reduce((s, l) => s + lineTotal(l.qty, l.unit_price), 0);
-    const expected = o.lines.reduce((s, l) => s + lineTotal(l.received, l.unit_price), 0);
-    const tolOk = Math.abs(total - expected) <= Math.round(expected * tol / 100);
-    if (!tolOk) diffs.push(`Toplam ${(total / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺, beklenen ${(expected / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ (tolerans %${tol})`);
-    const qtyDiff = diffs.some((d) => d.includes("teslim alınan"));
-    const ok = !qtyDiff && tolOk;
-    const who = await me(request);
-    const inv: VendorInvoice = { id: crypto.randomUUID(), order_id: o.id, order_number: o.number, vendor_id: o.vendor_id, vendor_name: o.vendor_name, number, date: b.date!, due_date: b.due_date!, lines, total: tl(total), expected_total: tl(expected), diffs: ok ? diffs.filter((d) => !d.includes("birim fiyat")) : diffs, status: ok ? "matched" : "diff_pending", decision: null, file_name: b.file_name || null, paid_on: null, cash_account_id: null, created_by: who.name, created_by_id: who.id, created_at: new Date().toISOString() };
-    listOf(vendorInvoices, slug).push(inv);
-    if (ok && o.status === "received") o.status = "closed";
-    return HttpResponse.json({ data: inv, message: ok ? `Fatura eşleşti; ödenecekler listesine ${inv.due_date.split("-").reverse().join(".")} vadesiyle girdi.` : "Fatura sipariş/kabulle eşleşmedi; fark onaya düştü, ödenecekler listesine giremez." }, { status: 201 });
-  }),
-  http.post(`${API}/vendor-invoices/:id/decide`, async ({ request, params }) => {
-    const slug = String(params.slug); const inv = listOf(vendorInvoices, slug).find((x) => x.id === params.id);
-    if (!inv) return err(404, "not_found", "Fatura bulunamadı.");
-    if (inv.status !== "diff_pending") return err(409, "invalid_status", "Onay bekleyen fark yok.");
-    const who = await me(request);
-    if (inv.created_by_id === who.id) return err(403, "self_approval", "Faturayı giren kişi farkı onaylayamaz.");
-    const b = (await request.json()) as { decision?: string; note?: string };
-    if ((b.note ?? "").trim().length < 5) return err(422, "validation", VALIDATION, { note: "Gerekçe zorunlu." });
-    inv.decision = { by: who.name, at: new Date().toISOString(), note: b.note!.trim() };
-    if (b.decision === "approve") {
-      inv.status = "matched";
-      const o = listOf(purchaseOrders, slug).find((x) => x.id === inv.order_id);
-      if (o && o.status === "received") o.status = "closed";
-      return HttpResponse.json({ data: inv, message: "Fark onaylandı; fatura ödenecekler listesine girdi." });
-    }
-    inv.status = "disputed";
-    return HttpResponse.json({ data: inv, message: "Faturaya itiraz edildi; tedarikçiye bildirim taslağı hazırlanır (K5)." });
-  }),
-
-  // 67 — Ödenecekler
-  http.get(`${API}/payables`, async ({ request, params }) => {
-    const slug = String(params.slug);
-    const inv = listOf(vendorInvoices, slug).filter((i) => i.status === "matched").sort((a, b) => a.due_date.localeCompare(b.due_date));
-    const ex = await real<Paged<{ id: string; description: string; amount: string; date: string; vendor: string | null; is_paid: boolean; is_reversed: boolean; is_reversal: boolean }>>(request, `/api/v1/sites/${slug}/expenses?paid=unpaid&page_size=200`);
-    const direct = (ex.body?.items ?? []).filter((e) => !e.is_paid && !e.is_reversed && !e.is_reversal);
-    return HttpResponse.json({ invoices: inv.map((i) => ({ ...i, overdue: i.due_date < today() })), direct_expenses: { count: direct.length, total: tl(direct.reduce((s, e) => s + cents(e.amount), 0)) }, total: tl(inv.reduce((s, i) => s + cents(i.total), 0)) });
-  }),
-  http.post(`${API}/vendor-invoices/:id/mark-paid`, async ({ request, params }) => {
-    const slug = String(params.slug); const inv = listOf(vendorInvoices, slug).find((x) => x.id === params.id);
-    if (!inv) return err(404, "not_found", "Fatura bulunamadı.");
-    if (inv.status !== "matched") return err(409, "not_matched", inv.status === "paid" ? "Fatura zaten ödendi." : "Eşleşmeyen fatura ödenemez.");
-    const b = (await request.json()) as { paid_on?: string; cash_account_id?: string };
-    const f: Record<string, string> = {};
-    if (!b.paid_on || !DATE_RE.test(b.paid_on) || b.paid_on > today()) f.paid_on = "Ödeme tarihi bugünden ileri olamaz.";
-    if (!b.cash_account_id) f.cash_account_id = "Ödemenin yapıldığı hesabı seçin.";
-    if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
-    Object.assign(inv, { status: "paid", paid_on: b.paid_on, cash_account_id: b.cash_account_id });
-    return HttpResponse.json({ data: inv, message: `${inv.vendor_name} ${inv.number} ödendi olarak işaretlendi; gider ve muhasebe fişi aktarım kuyruğuna girer.` });
-  }),
-];
-function quoteFields(p: PurchaseRequest, b: { lines?: { unit_price: string }[]; delivery_days?: number; payment_terms?: string; valid_until?: string }) {
-  const f: Record<string, string> = {};
-  if (!b.lines || b.lines.length !== p.items.length) f.lines = "Her kalem için birim fiyat girin.";
-  else b.lines.forEach((l, k) => { if (!(cents(l.unit_price) > 0)) f[`lines.${k}`] = "Birim fiyat > 0."; });
-  if (!(Number.isInteger(Number(b.delivery_days)) && Number(b.delivery_days) >= 0 && Number(b.delivery_days) <= 365)) f.delivery_days = "Teslim süresi 0–365 gün.";
-  if ((b.payment_terms ?? "").trim().length < 2) f.payment_terms = "Ödeme koşulunu yazın (ör. 30 gün vadeli).";
-  if (!b.valid_until || !DATE_RE.test(b.valid_until) || b.valid_until < today()) f.valid_until = "Geçerlilik bugünden önce olamaz.";
-  return f;
-}
-function makeQuote(p: PurchaseRequest, v: Vendor, b: { lines?: { unit_price: string }[]; delivery_days?: number; payment_terms?: string; valid_until?: string; note?: string; file_name?: string }, source: PrQuote["source"], by: string): PrQuote {
-  const lines = b.lines!.map((l) => ({ unit_price: tl(cents(l.unit_price)) }));
-  const total = p.items.reduce((s, it, k) => s + lineTotal(it.qty, lines[k]!.unit_price), 0);
-  return { id: crypto.randomUUID(), pr_id: p.id, vendor_id: v.id, vendor_name: v.name, lines, total: tl(total), delivery_days: Number(b.delivery_days), payment_terms: b.payment_terms!.trim(), valid_until: b.valid_until!, note: b.note?.trim() || null, file_name: b.file_name || null, source, created_by: by, created_at: new Date().toISOString() };
-}
-const quoteCount = (slug: string, p: PurchaseRequest) => listOf(prQuotes, slug).filter((q) => q.pr_id === p.id).length;
-function findLink(token: string) { for (const [slug, list] of quoteLinks) { const l = list.find((x) => x.token === token); if (l) return { slug, l }; } return null; }
-const orderOut = (slug: string, o: PurchaseOrder) => ({ ...o, receipts: listOf(receipts, slug).filter((r) => r.order_id === o.id), invoices: listOf(vendorInvoices, slug).filter((i) => i.order_id === o.id) });
 
 // ============================================================================================
 // SÖZLEŞME PERFORMANSI (Yazılım Dokümanı SAT-06, 15.3) — servis istekleri 68–70
@@ -936,9 +558,9 @@ const sozlesme: RequestHandler[] = [
     const slug = String(params.slug); const c = await contractOf(request, slug, String(params.id));
     if (!c) return err(404, "not_found", "Sözleşme bulunamadı.");
     const ext = extOf(slug, c.id);
-    const v = ext.vendor_id ? listOf(vendors, slug).find((x) => x.id === ext.vendor_id) : null;
+    const v = ext.vendor_id ? await realVendor(request, slug, ext.vendor_id) : null;
     const cards = listOf(scorecards, slug).filter((s) => s.contract_id === c.id).sort((a, b) => b.period.localeCompare(a.period)).slice(0, 12);
-    return HttpResponse.json({ ...ext, vendor: v ? { id: v.id, name: v.name, ...ratingOf(slug, v.id) } : null, monthly_amount: monthlyOf(c) != null ? tl(monthlyOf(c)!) : null, escalation_preview: escalationPreview(c, ext), last_scorecards: cards.map((s) => ({ period: s.period, total: s.total, status: s.status, penalty: s.penalty?.status === "approved" ? s.penalty.amount : null })) });
+    return HttpResponse.json({ ...ext, vendor: v ? { id: v.id, name: v.name, rating_avg: v.rating_avg, rating_count: v.rating_count } : null, monthly_amount: monthlyOf(c) != null ? tl(monthlyOf(c)!) : null, escalation_preview: escalationPreview(c, ext), last_scorecards: cards.map((s) => ({ period: s.period, total: s.total, status: s.status, penalty: s.penalty?.status === "approved" ? s.penalty.amount : null })) });
   }),
   http.put(`${API}/contracts/:id/performance`, async ({ request, params }) => {
     const slug = String(params.slug); const c = await contractOf(request, slug, String(params.id));
@@ -968,7 +590,7 @@ const sozlesme: RequestHandler[] = [
     if (e.cap != null && !(Number(e.cap) > 0)) f["escalation.cap"] = "Tavan > 0 ya da boş.";
     if (e.kind !== "none" && !c.amount) f["escalation.kind"] = "Artış için sözleşmede bedel olmalı.";
     let vendorId = b.vendor_id === undefined ? extOf(slug, c.id).vendor_id : b.vendor_id;
-    if (vendorId && !listOf(vendors, slug).some((v) => v.id === vendorId)) f.vendor_id = "Tedarikçi bulunamadı."; if (!vendorId) vendorId = null;
+    if (vendorId && !(await realVendor(request, slug, vendorId))) f.vendor_id = "Tedarikçi bulunamadı."; if (!vendorId) vendorId = null;
     if (Object.keys(f).length) return err(422, "validation", VALIDATION, f);
     const ext = extOf(slug, c.id);
     Object.assign(ext, { vendor_id: vendorId, kpis, penalties: pens, escalation: { kind: e.kind, fixed_rate: e.kind === "fixed" ? Number(e.fixed_rate) : null, period: e.period === "semiannual" ? "semiannual" : "yearly", cap: e.cap == null || (e.cap as unknown) === "" ? null : Number(e.cap) } });
@@ -1430,4 +1052,4 @@ const platformDestek: RequestHandler[] = [
   }),
 ];
 
-export const handlers: RequestHandler[] = [...ortakOnbellek, ...rezervasyon, ...satinalma, ...sozlesme, ...genelKurul, ...platformDestek];
+export const handlers: RequestHandler[] = [...ortakOnbellek, ...rezervasyon, ...sozlesme, ...genelKurul, ...platformDestek];
