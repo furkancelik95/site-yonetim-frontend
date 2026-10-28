@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { CheckCircle2, LifeBuoy, MapPin, Phone, Siren } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Schemas } from "../../api/types";
 import { Alert, Field, FormError, Loading, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useSite } from "../../site/SiteContext";
 import { EM_KIND, INSTR, type InfoCard } from "../site/CommPages";
 
-/** Servis isteği 71 ve 73'teki şekiller (sakin). */
-interface ResEmergency { id: string; kind: string; message: string; started_at: string; units: { unit_id: string; unit_name: string; status: { status: string; note: string | null; muster_point: string | null; at: string } | null }[]; muster_points: string[] }
-interface PendingAck { announcement_id: string; title: string; deadline: string }
+/** Servis isteği 71 ve 73 (sakin). */
+type ResEmergency = Schemas["ResidentEmergencyOut"];
+type PendingAck = Schemas["PendingAckOut"];
 
 /** "Okudum, anladım" (ILT-01): zorunlu okuma onayı. */
 export function AckButton({ id, ackedAt }: { id: string; ackedAt: string | null | undefined }) {

@@ -6,17 +6,11 @@ import { Badge, ConfirmButton, Field, FormError, Loading, Money, SubmitButton, f
 import { formatDate, formatDateTime, formatMoney, parseMoneyInput, todayIso } from "../lib/format";
 import { collectionKind, installmentStatus, installmentTone, letterMethod, letterStatus, planStatus, planStatusTone, reminderChannel } from "../lib/labels";
 import { P, useSite } from "../site/SiteContext";
+import type { Schemas } from "../api/types";
 
-/** Servis isteği 29 ve 30'daki şekiller. */
-export interface Installment { no: number; due_date: string; amount: string; paid: string; status: "paid" | "partial" | "open" | "overdue" }
-export interface PaymentPlan {
-  id: string; account_id: string; unit_id: string; unit_name: string; person_name: string | null; reference_code: string; total: string; installment_count: number; tolerance_days: number;
-  note: string | null; created_by: string; created_at: string; cancelled_at: string | null; cancel_reason: string | null; installments: Installment[]; status: "active" | "broken" | "completed" | "cancelled"; paid_total: string;
-}
-interface TimelineItem {
-  id: string; kind: "reminder" | "call" | "note" | "demand_letter" | "payment_plan"; channel: string | null; note: string | null; by: string; at: string;
-  letter?: { id: string; method: string; sent_on: string; tracking_no: string | null; served_on: string | null; status: "sent" | "served" }; plan?: { id: string; status: string } | null;
-}
+export type PaymentPlan = Schemas["PaymentPlanOut"];
+export type Installment = Schemas["PlanInstallmentOut"];
+type Timeline = Schemas["Page_CollectionTimelineItemOut_"];
 
 /** Toplamı koruyan eşit bölme (servisle aynı kural): kuruş artığı ilk taksitlere. */
 export function splitEven(totalCents: number, n: number) {
@@ -36,10 +30,10 @@ export function addMonths(d: string, n: number) {
 export function CollectionPanel({ accountId, balance }: { accountId: string; balance: string }) {
   const { site, can } = useSite();
   const manage = can(P.paymentRecord);
-  const tl = useSiteGet<TimelineItem[]>(`/accounts/${accountId}/collection-timeline`);
+  const tl = useSiteGet<Timeline>(`/accounts/${accountId}/collection-timeline`, { page_size: 100 });
   const plans = useSiteGet<PaymentPlan[]>(`/accounts/${accountId}/payment-plans`);
   const [panel, setPanel] = useState<"action" | "letter" | "plan" | null>(null);
-  const active = plans.data?.find((p) => p.status === "active" || p.status === "broken");
+  const active = plans.data?.find((p) => p.status === "active" || p.status === "broken" || p.status === "approval_pending");
   const toggle = (p: typeof panel) => setPanel((x) => (x === p ? null : p));
   return (
     <div className="card">
@@ -61,14 +55,14 @@ export function CollectionPanel({ accountId, balance }: { accountId: string; bal
       {panel === "plan" && <PlanForm accountId={accountId} balance={balance} onDone={() => setPanel(null)} />}
       {active && <div className="card__body" style={{ borderBottom: "1px solid var(--line)" }}><PlanView p={active} manage={manage} /></div>}
       <div className="card__body">
-        {tl.isPending ? <Loading /> : !tl.data || tl.data.length === 0 ? <p className="small muted mb-0">Henüz takip kaydı yok.</p> : (
+        {tl.isPending ? <Loading /> : !tl.data || tl.data.items.length === 0 ? <p className="small muted mb-0">Henüz takip kaydı yok.</p> : (
           <ol className="timeline">
-            {tl.data.map((e) => (
+            {tl.data.items.map((e) => (
               <li key={e.id}>
                 <div className="timeline__title">
                   {collectionKind(e.kind)}
                   {e.kind === "reminder" && e.channel && <span className="muted"> · {reminderChannel(e.channel)}</span>}
-                  {e.letter && <> · {letterMethod(e.letter.method)} <Badge tone={e.letter.status === "served" ? "ok" : "info"}>{letterStatus(e.letter.status)}</Badge></>}
+                  {e.letter && <> · {letterMethod(e.letter.method)} <Badge tone={e.letter.status === "served" ? "ok" : e.letter.status === "approval_pending" ? "warn" : e.letter.status === "rejected" ? "muted" : "info"}>{letterStatus(e.letter.status)}</Badge></>}
                   {e.plan && <> <Badge tone={planStatusTone(e.plan.status)}>{planStatus(e.plan.status)}</Badge></>}
                 </div>
                 <div className="timeline__meta">{formatDateTime(e.at)} · {e.by}</div>
@@ -76,7 +70,7 @@ export function CollectionPanel({ accountId, balance }: { accountId: string; bal
                 {e.letter && (
                   <div className="small">
                     Gönderim {formatDate(e.letter.sent_on)}{e.letter.tracking_no && <> · takip no <span className="mono">{e.letter.tracking_no}</span></>}
-                    {e.letter.served_on ? <> · tebliğ {formatDate(e.letter.served_on)}</> : manage && <ServeButton letterId={e.letter.id} sentOn={e.letter.sent_on} />}
+                    {e.letter.served_on ? <> · tebliğ {formatDate(e.letter.served_on)}</> : manage && e.letter.status === "sent" && <ServeButton letterId={e.letter.id} sentOn={e.letter.sent_on} />}
                   </div>
                 )}
               </li>
@@ -116,7 +110,7 @@ function LetterForm({ accountId, onDone }: { accountId: string; onDone: () => vo
   return (
     <form className="card__body stack" style={{ gap: "var(--s-3)", borderBottom: "1px solid var(--line)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ ...f, tracking_no: f.tracking_no.trim() || null, note: f.note.trim() || null }); }}>
       <FormError error={m.error} />
-      <p className="small muted mb-0">İhtarname yazısını "İhtarname yazısı" düğmesinden yazdırın; burada gönderimi kaydedersiniz. Metin avukat onayı bekliyor (A-04); KEP gönderimi sonraki fazda.</p>
+      <p className="small muted mb-0">İhtarname yazısını "İhtarname yazısı" düğmesinden yazdırın; burada gönderimi kaydedersiniz. "İhtarname" onay kuralı varsa kayıt onaya gider. Metin avukat onayı bekliyor (A-04); KEP gönderimi sonraki fazda.</p>
       <div className="grid grid--kpi">
         <Field label="Gönderim yöntemi" required error={fieldError(m.error, "method")}>{(p) => <select {...p} className="field__input" value={f.method} onChange={(e) => setF((x) => ({ ...x, method: e.target.value }))}>{["hand", "registered_mail", "notary"].map((k) => <option key={k} value={k}>{letterMethod(k)}</option>)}</select>}</Field>
         <Field label="Gönderim tarihi" required error={fieldError(m.error, "sent_on")}>{(p) => <input {...p} className="field__input" type="date" max={todayIso()} value={f.sent_on} onChange={(e) => setF((x) => ({ ...x, sent_on: e.target.value }))} />}</Field>
@@ -172,7 +166,7 @@ function PlanForm({ accountId, balance, onDone }: { accountId: string; balance: 
           </table></div>
         </details>
       )}
-      <p className="small muted mb-0">Taksitler vadesinde ödendikçe plan ilerler; tolerans gününü (Finans ayarları) aşan taksit planı bozar ve yöneticiye uyarı düşer. Plan onay mekanizmasına bağlanması ortak kararı bekliyor (K21).</p>
+      <p className="small muted mb-0">Plan yürürlüğe girince yapılandırılan kalemler kapanır, taksitler cari hesapta ayrı vadeli borç olarak açılır (bakiye değişmez). Tahsilatlar taksitlere sırayla mahsup edilir; tolerans gününü (Finans ayarları) aşan taksit planı bozar ve yöneticiye bildirim düşer. "Ödeme planı" onay kuralı varsa plan onaya gider.</p>
       <div className="row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!preview.length}>Planı oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
   );
@@ -189,10 +183,11 @@ export function PlanView({ p, manage }: { p: PaymentPlan | (Pick<PaymentPlan, "i
         <div>
           <span className="strong">Ödeme planı</span> <Badge tone={planStatusTone(p.status)}>{planStatus(p.status)}</Badge>
           <div className="small muted">{p.installment_count} taksit · toplam {formatMoney(p.total)} · {paid}/{p.installment_count} ödendi{p.created_by && <> · {p.created_by}, {formatDate(p.created_at)}</>}</div>
+          {p.status === "approval_pending" && <div className="small">Onay bekliyor — onaylanınca taksitler deftere yazılır (aşağıdaki takvim önizlemedir).</div>}
         </div>
         {manage && (p.status === "active" || p.status === "broken") && (
           <ConfirmButton className="btn btn--ghost btn--sm" danger title="Ödeme planını iptal et" confirmLabel="İptal et"
-            body={<div className="field"><label className="field__label" htmlFor={`pc-${p.id}`}>Gerekçe *</label><input id={`pc-${p.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} /><span className="field__hint">Kalan borç normal hatırlatma kurallarına döner.</span></div>}
+            body={<div className="field"><label className="field__label" htmlFor={`pc-${p.id}`}>Gerekçe *</label><input id={`pc-${p.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} /><span className="field__hint">Ödenmemiş tutar ilk vadesiyle yeniden borç olarak açılır ve normal hatırlatma kurallarına döner.</span></div>}
             onConfirm={() => cancel.mutateAsync({ reason })}>
             Planı iptal et
           </ConfirmButton>

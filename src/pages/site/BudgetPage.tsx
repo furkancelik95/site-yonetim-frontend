@@ -8,6 +8,8 @@ import { formatDate, formatMoney, formatMoneyShort, parseMoneyInput, todayIso } 
 import { useUrlState } from "../../lib/hooks";
 import { allocationKind, budgetStatus, budgetTone, frequency, payerRule } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { Link } from "react-router";
+import { AnnualBudget } from "./AnnualBudget";
 
 type Plan = Schemas["BudgetPlanOut"];
 type PlanDetail = Schemas["BudgetPlanDetail"];
@@ -18,12 +20,28 @@ type Rule = Schemas["AllocationRuleOut"];
 
 export function BudgetPage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ plan: "" });
+  const [s, set] = useUrlState({ plan: "", sekme: "proje", yil: "", butce: "", ay: "" });
   const plans = useSiteGet<Page<Plan>>("/budget-plans", { page_size: 50 });
+  const [creating, setCreating] = useState(false);
+  const tabs: [string, string][] = [["proje", "İşletme projesi"], ["butce", "Bütçe ve gerçekleşme"]];
+  const tabBar = (
+    <div className="tabs" role="tablist" aria-label="İşletme projesi ve bütçe">
+      {tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className="tabs__tab" onClick={() => set({ sekme: k })}>{l}</button>)}
+    </div>
+  );
+  if (s.sekme === "butce") {
+    return (
+      <div className="stack">
+        <PageHead title="Bütçe ve gerçekleşme" subtitle="Gider kategorisi × ay yıllık bütçe ve gerçekleşen gider. Eşiğe yaklaşan kategori sarı, aşan kırmızı görünür (FIN-17).">
+          {tabBar}
+        </PageHead>
+        <AnnualBudget s={s} set={set} canManage={can(P.budgetManage)} />
+      </div>
+    );
+  }
   const list = plans.data?.items ?? [];
   // Varsayılan: kesinleşmiş (geçerli) proje, yoksa en yeni taslak
   const selectedId = s.plan || list.find((p) => p.status === "finalized")?.id || list[0]?.id || "";
-  const [creating, setCreating] = useState(false);
 
   return (
     <div className="stack">
@@ -40,7 +58,9 @@ export function BudgetPage() {
             {can(P.budgetManage) && <button className="btn" type="button" onClick={() => setCreating((v) => !v)} aria-expanded={creating}><Plus aria-hidden="true" /> Yeni proje</button>}
           </>
         }
-      />
+      >
+        {tabBar}
+      </PageHead>
 
       {plans.isPending ? (
         <>
@@ -94,6 +114,7 @@ function NewPlanForm({ onDone }: { onDone: (id?: string) => void }) {
 }
 
 function PlanView({ id, canManage, newPlan }: { id: string; canManage: boolean; newPlan?: ReactNode }) {
+  const { site } = useSite();
   const q = useSiteGet<PlanDetail>(`/budget-plans/${id}`);
   const cats = useSiteGet<Category[]>("/expense-categories");
   const types = useSiteGet<ChargeType[]>("/charge-types");
@@ -227,11 +248,16 @@ function PlanView({ id, canManage, newPlan }: { id: string; canManage: boolean; 
                 </ConfirmButton>
               </>
             )}
-            {p.status === "notified" && (
+            {p.status === "notified" && p.finalize_request_id && (
+              <Alert tone="warn" title="Kesinleştirme onay bekliyor">
+                "Bütçe" onay kuralına gönderildi; onaylanınca proje kesinleşir. <Link to={`/s/${site.slug}/onaylar/${p.finalize_request_id}`}>Onay talebini aç</Link>
+              </Alert>
+            )}
+            {p.status === "notified" && !p.finalize_request_id && (
               <ConfirmButton
                 className="btn btn--primary"
                 title="Projeyi kesinleştir"
-                body="Kesinleşen proje geçerli proje olur; sonraki tahakkuklar bu kalemlerden hesaplanır. Önceki kesinleşmiş projenin yerini alır."
+                body={'Kesinleşen proje geçerli proje olur; sonraki tahakkuklar bu kalemlerden hesaplanır. Önceki kesinleşmiş projenin yerini alır. "Bütçe" onay kuralı varsa önce onaya gider.'}
                 onConfirm={() => finalize.mutateAsync({})}
               >
                 Kesinleştir

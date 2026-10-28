@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Hammer, Star } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { AuthImage } from "../../components/AuthImage";
+import { useSite } from "../../site/SiteContext";
 import type { Schemas } from "../../api/types";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, todayIso } from "../../lib/format";
@@ -128,13 +130,14 @@ function PermitForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-interface ResDepKey { id: string; authorized: { name: string }[]; valid_until: string; status: string; handed_to: string | null; handed_at: string | null }
-interface ResMeter { meter: { id: string; kind: string; serial: string; unit_label: string }; readings: { id: string; period: string; value: string | null; consumption: string | null; status: string; photo: string | null; reason: string | null }[] }
+type ResDepKey = Schemas["DepositedKeyOut"];
+type ResMeter = Schemas["ResidentMeterOut"];
 const DEP_TEXT: Record<string, string> = { requested: "teslim bekleniyor", held: "emanette", returned: "size iade edildi", expired: "süresi doldu" };
 
 /** Emanet ve sayaçlar (OPS-01/05, sakin): anahtar bırakma + yetkili kişiler; sayaç okumaları ve tüketim. */
 export function ResidentKeysMetersPage() {
   useDocumentTitle("Emanet ve sayaçlar");
+  const { site } = useSite();
   const keys = useSiteGet<ResDepKey[]>("/resident/deposited-keys");
   const mtr = useSiteGet<ResMeter[]>("/resident/meter-readings");
   const [names, setNames] = useState("");
@@ -154,7 +157,7 @@ export function ResidentKeysMetersPage() {
       </form>
       {(keys.data ?? []).map((k) => (
         <div key={k.id} className="r-item"><div style={{ flex: 1, minWidth: 0 }}>
-          <div className="r-item__title">Emanet anahtar · {k.status === "handed" ? `${k.handed_to} kişisine verildi` : DEP_TEXT[k.status] ?? k.status}</div>
+          <div className="r-item__title">Emanet anahtar · {k.unit_name} · {k.status === "handed" ? `${k.handed_to} kişisine verildi` : DEP_TEXT[k.status] ?? k.status}</div>
           <div className="r-item__meta">Yetkili: {k.authorized.map((a) => a.name).join(", ")} · {formatDate(k.valid_until)} tarihine kadar</div>
         </div></div>
       ))}
@@ -163,8 +166,8 @@ export function ResidentKeysMetersPage() {
         <div key={m.meter.id} className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
           <div className="strong">{meterKind(m.meter.kind)} <span className="small muted mono">{m.meter.serial}</span></div>
           {m.readings.length === 0 ? <p className="small muted mb-0">Henüz okuma yok.</p> : m.readings.map((r) => (
-            <div key={r.id} className="kv"><span className="kv__k">{r.period}{r.status === "unreadable" && ` · okunamadı${r.reason ? ` (${r.reason})` : ""}`}</span>
-              <span className="kv__v">{r.value ? `${Number(r.value).toLocaleString("tr-TR")} ${m.meter.unit_label}` : "—"}{r.consumption && <span className="xs muted"> · tüketim {Number(r.consumption).toLocaleString("tr-TR")}</span>}{r.photo && <img src={r.photo} alt={`${r.period} sayaç fotoğrafı`} style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle" }} />}</span></div>
+            <div key={r.id} className="kv"><span className="kv__k">{r.period}{r.status === "anomaly" && " · onay bekliyor"}{r.status === "unreadable" && ` · okunamadı${r.reason ? ` (${r.reason})` : ""}`}</span>
+              <span className="kv__v">{r.value ? `${Number(r.value).toLocaleString("tr-TR")} ${m.meter.unit_label}` : "—"}{r.consumption && <span className="xs muted"> · tüketim {Number(r.consumption).toLocaleString("tr-TR")}</span>}{r.photo_id && <span style={{ marginLeft: 6 }}><AuthImage path={`/sites/${site.slug}/resident/meter-readings/${r.id}/photo`} alt={`${r.period} sayaç fotoğrafı`} size={32} /></span>}</span></div>
           ))}
           <p className="xs muted mb-0">Okumaya itirazınız varsa Taleplerim ekranından talep açın.</p>
         </div></div>
