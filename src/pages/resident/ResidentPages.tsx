@@ -279,7 +279,8 @@ export function ResidentStatementPage() {
                           </span>
                           <div className="txn__main">
                             <div className="txn__title">{e.description}</div>
-                            <div className="txn__sub">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                            <div className="txn__sub">{formatDate(e.date)} · {e.source === "late_fee" ? <Badge tone="warn">Gecikme tazminatı</Badge> : ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                            {Number(e.advance_applied) > 0 && <div className="xs muted">Avanstan mahsup: {formatMoney(e.advance_applied)} (önceki fazla ödemenizden düşüldü)</div>}
                           </div>
                           <div className="txn__right">
                             <span className="txn__amount">{debit ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}</span>

@@ -31,8 +31,25 @@ export const allocationKind = label({
 export const budgetStatus = label({ draft: "Taslak", notified: "Tebliğ edildi", finalized: "Kesinleşti", superseded: "Yerine yenisi geldi" });
 export const budgetTone = (s: string): Tone => ({ draft: "muted", notified: "info", finalized: "ok", superseded: "muted" })[s] as Tone ?? "muted";
 
-export const runStatus = label({ draft: "Taslak", posted: "Kaydedildi", reversed: "Ters kaydedildi" });
-export const runTone = (s: string): Tone => ({ draft: "muted", posted: "ok", reversed: "danger" })[s] as Tone ?? "muted";
+/** Tahakkuk koşusu (FIN-05): Taslak → Onay bekliyor → Onaylandı → Kesinleşti; düzeltme yalnız ters kayıtla. */
+export const runStatus = label({
+  draft: "Taslak", approval_pending: "Onay bekliyor", approved: "Onaylandı", rejected: "Reddedildi",
+  cancelled: "Vazgeçildi", posted: "Kesinleşti", reversed: "Ters kaydedildi",
+});
+export const runTone = (s: string): Tone =>
+  ({ draft: "muted", approval_pending: "warn", approved: "info", rejected: "danger", cancelled: "muted", posted: "ok", reversed: "danger" })[s] as Tone ?? "muted";
+export const chargeSource = label({ budget_plan: "İşletme projesi", billing_rule: "Aidat kuralları" });
+export const scheduleRunStatus = label({ posted: "Kesildi", drafted: "Taslak onaya gönderildi", skipped: "Atlandı", failed: "Başarısız" });
+export const scheduleRunTone = (s: string): Exclude<Tone, "muted"> => (s === "failed" ? "danger" : s === "skipped" ? "warn" : s === "drafted" ? "info" : "ok");
+export const adjustmentStatus = label({ approval_pending: "Onay bekliyor", applied: "Uygulandı", rejected: "Reddedildi" });
+export const adjustmentTone = (s: string): Tone => (s === "applied" ? "ok" : s === "approval_pending" ? "warn" : "danger");
+/** Aidat kuralı sürümü ve yıllık bütçe (FIN-17) durumları */
+export const versionStatus = label({ draft: "Taslak", approval_pending: "Onay bekliyor", active: "Yürürlükte", rejected: "Reddedildi", superseded: "Yerine yenisi geldi" });
+export const versionTone = (s: string): Tone => (s === "active" ? "ok" : s === "approval_pending" ? "warn" : s === "rejected" ? "danger" : "muted");
+export const scopeKind = label({ whole_site: "Tüm site", blocks: "Seçili bloklar", unit_types: "Seçili bölüm tipleri", usage: "Kullanım türü" });
+export const areaBasis = label({ gross: "Brüt m²", net: "Net m²" });
+export const budgetLevelTone = (s: string): Tone => (s === "over" ? "danger" : s === "warn" ? "warn" : "ok");
+export const budgetLevel = label({ ok: "Bütçe içinde", warn: "Eşiğe yaklaştı", over: "Bütçe aşıldı" });
 
 export const ledgerSource = label({
   charge: "Tahakkuk",
@@ -43,6 +60,8 @@ export const ledgerSource = label({
   advance: "Avans mahsubu",
   opening: "Devir bakiye",
   refund: "İade",
+  ad_hoc_charge: "Dönem dışı ücret",
+  payment_plan: "Ödeme planı",
   service: "Ücretli hizmet",
   deposit: "Tadilat depozitosu",
 });

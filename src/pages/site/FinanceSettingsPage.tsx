@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import { BellRing, CalendarRange, Hourglass, History, Landmark } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
@@ -14,9 +15,8 @@ const LABELS: Record<keyof Params, string> = {
   reminder_days: "Hatırlatma kademeleri", demand_letter_day: "İhtarname hazırlığı", proration: "Kıst (ay ortası giriş/çıkış)", diff_threshold_percent: "Tahakkuk fark raporu eşiği",
   bank_auto_match: "Banka otomatik eşleşme", plan_tolerance_days: "Ödeme planı tolerans günü", plan_suspends_late_fee: "Plan süresince gecikme işlemez", budget_warn_percent: "Bütçe uyarı eşiği",
   due_day: "Vade günü", charge_source: "Tahakkuk kaynağı", late_fee_enabled: "Gecikme tazminatı", late_fee_monthly_rate_percent: "Gecikme oranı (aylık %)", late_fee_method: "Gecikme hesap yöntemi",
-  late_fee_grace_days: "Gecikme tolerans günü", allocation_order: "Mahsup sırası", debtor_restriction_enabled: "Borçlu hizmet kısıtı", debtor_restriction_min_amount: "Kısıt eşiği (tutar)",
+  late_fee_grace_days: "Gecikme tolerans günü", late_fee_cap_percent: "Gecikme tavanı (%)", late_fee_minimum_amount: "Asgari gecikme tutarı", allocation_order: "Mahsup sırası", debtor_restriction_enabled: "Borçlu hizmet kısıtı", debtor_restriction_min_amount: "Kısıt eşiği (tutar)",
   debtor_restriction_min_days: "Kısıt eşiği (gün)",
-  late_fee_cap_percent: "Gecikme tavanı (ana borcun %)", late_fee_minimum_amount: "Gecikme asgari tutarı",
 };
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const plabel = (p: string) => `${MONTHS[Number(p.slice(5, 7)) - 1]} ${p.slice(0, 4)}`;
@@ -24,10 +24,10 @@ const label = (k: string) => LABELS[k as keyof Params] ?? k;
 const versionTone = (s: Version["status"]) => (s === "active" ? "ok" : s === "approval_pending" ? "warn" : "muted");
 const versionStatus = (s: Version["status"]) => (s === "active" ? "Geçerli" : s === "approval_pending" ? "Onay bekliyor" : "Reddedildi");
 
-/** Henüz ayara dönmemiş, dış karar bekleyen konular: ekranda yalnız bilgi. */
+/** Henüz ayara dönmemiş ya da başka ekranda yönetilen konular: burada yalnız bilgi. */
 const PENDING = [
-  ["Kart ile tahsilat, komisyon, taksit", "Kapalı — tahsilat havale/EFT ve elle giriş", "K1 — sitenin kendi sanal POS'u (ayrı paket)"],
-  ["Ek toplama (taksitli)", "İşletme projesine ek kalem olarak", "Aidat kuralları ile birlikte (K23)"],
+  ["Kart ile tahsilat, komisyon, taksit", "Kapalı — tahsilat havale/EFT ve elle giriş", "K1 — sitenin kendi sanal POS'u (ayrı paket)", "warn"],
+  ["Ek toplama (taksitli)", "Ayrı bir kalem tipi olarak tanımlanır; işletme projesi kalemi ya da aidat kuralıyla kesilir", "Aidat kuralları ekranında (K23)", "info"],
 ] as const;
 
 /**
@@ -36,7 +36,7 @@ const PENDING = [
  * değişmez. PM kararlarının ayar noktaları: K9 kıst, K25 vade günü, K23 tahakkuk kaynağı, K2 gecikme, K24 mahsup, K11 kısıt.
  */
 export function FinanceSettingsPage() {
-  const { can } = useSite();
+  const { can, site } = useSite();
   const q = useSiteGet<Resp>("/finance-parameters");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
@@ -48,19 +48,22 @@ export function FinanceSettingsPage() {
         <Kpi label="Hatırlatma kademeleri" icon={<BellRing aria-hidden="true" />} value={q.data.current.reminder_days.join(" · ")} note="vadeden sonraki gün" />
         <Kpi label="Kıst yöntemi" icon={<CalendarRange aria-hidden="true" />} value={q.data.current.proration === "day" ? "Gün bazlı" : "Ay bazlı"} small note={`yürürlükte: ${plabel(q.data.current_period)}`} />
         <Kpi label="Planlı değişiklik" tone={q.data.scheduled.length ? "accent" : undefined} icon={<History aria-hidden="true" />} value={q.data.scheduled.length} note={`${q.data.versions.length} sürüm kayıtlı`} />
-        <Kpi label="Karar bekleyen" tone="warn" icon={<Hourglass aria-hidden="true" />} value={PENDING.length} note="ortak kararıyla açılacak" />
+        <Kpi label="Karar bekleyen" tone="warn" icon={<Hourglass aria-hidden="true" />} value={PENDING.filter((x) => x[3] === "warn").length} note="ortak kararıyla açılacak" />
       </div>
-      {q.data.scheduled.length > 0 && <Alert tone="info" title="Planlı değişiklik">{q.data.scheduled.map((v) => `${plabel(v.effective_period)}: ${v.changed.map((k) => LABELS[k as keyof Params] ?? k).join(", ")}`).join(" · ")}</Alert>}
       {q.data.scheduled.length > 0 && <Alert tone="info" title="Planlı değişiklik">{q.data.scheduled.map((v) => `${plabel(v.effective_period)}: ${v.changed.map(label).join(", ")}`).join(" · ")}</Alert>}
       {pending.length > 0 && <Alert tone="warn" title="Onay bekleyen değişiklik">{pending.map((v) => `${plabel(v.effective_period)}: ${v.changed.map(label).join(", ")}`).join(" · ")} — Onaylar ekranından izleyin.</Alert>}
-      <Alert tone="info">Tahakkuk motorunun kıst, vade günü, tahakkuk kaynağı ve gecikme ayarlarını kullanması sonraki sürümde; ayarlar şimdiden kaydedilir ve yürürlük dönemiyle saklanır.</Alert>
+      <Alert tone="info" title="Tahakkuk motoru bu ayarları kullanır">
+        Kıst (gün/ay bazlı), vade günü ve tahakkuk kaynağı (işletme projesi ya da <Link to={`/s/${site.slug}/aidat-kurallari`}>aidat kuralları</Link>) her tahakkukta uygulanır.
+        Gecikme tazminatı açıksa ay sonu işiyle ve tahsilat anında işlenir; ödeme planı süresince işlemez, oran en fazla aylık %5'tir.
+        Mahsup sırası tahsilatta ve avans mahsubunda uygulanır.
+      </Alert>
       {can(P.chargePost) ? <ParamsForm d={q.data} /> : <Alert tone="info">Parametreleri yalnız site yöneticisi ve muhasebe değiştirir.</Alert>}
       <div className="card">
-        <div className="card__head"><span className="card__icon card__icon--warn"><Hourglass aria-hidden="true" /></span><span className="card__title">Dış karar bekleyen ayarlar</span><span className="card__meta ml-auto">şimdilik değiştirilemez</span></div>
+        <div className="card__head"><span className="card__icon card__icon--warn"><Hourglass aria-hidden="true" /></span><span className="card__title">Bu ekranda olmayan ayarlar</span><span className="card__meta ml-auto">dış karar bekleyen ya da başka ekranda</span></div>
         <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
           <caption className="visually-hidden">Karar bekleyen finans ayarları</caption>
           <thead><tr><th scope="col">Ayar</th><th scope="col">Şu an</th><th scope="col">Bekleyen</th></tr></thead>
-          <tbody>{PENDING.map(([a, b, c]) => <tr key={a}><td className="cell-main">{a}</td><td className="small">{b}</td><td className="small"><Badge tone="warn">{c}</Badge></td></tr>)}</tbody>
+          <tbody>{PENDING.map(([a, b, c, tone]) => <tr key={a}><td className="cell-main">{a}</td><td className="small">{b}</td><td className="small"><Badge tone={tone}>{c}</Badge></td></tr>)}</tbody>
         </table></div></div>
       </div>
       {q.data.versions.length > 0 && (
@@ -77,8 +80,8 @@ export function FinanceSettingsPage() {
   );
 }
 
-type Form = Omit<Params, "reminder_days" | "late_fee_monthly_rate_percent" | "debtor_restriction_min_amount"> & { rate: string; minAmount: string };
-const toForm = (p: Params): Form => ({ ...p, rate: p.late_fee_monthly_rate_percent.replace(".", ","), minAmount: p.debtor_restriction_min_amount.replace(".", ",") });
+type Form = Omit<Params, "reminder_days" | "late_fee_monthly_rate_percent" | "debtor_restriction_min_amount" | "late_fee_minimum_amount"> & { rate: string; minAmount: string; lateMin: string };
+const toForm = (p: Params): Form => ({ ...p, rate: p.late_fee_monthly_rate_percent.replace(".", ","), minAmount: p.debtor_restriction_min_amount.replace(".", ","), lateMin: p.late_fee_minimum_amount.replace(".", ",") });
 const digits = (v: string, n = 3) => v.replace(/\D/g, "").slice(0, n);
 
 function ParamsForm({ d }: { d: Resp }) {
@@ -87,8 +90,8 @@ function ParamsForm({ d }: { d: Resp }) {
   const [period, setPeriod] = useState(d.current_period);
   useEffect(() => { setV(toForm(d.current)); setDays(d.current.reminder_days.map(String)); }, [d.current]);
   const m = useSiteMutation<{ effective_period: string; values: Partial<Params> }, Version>("POST", "/finance-parameters/versions");
-  const { rate, minAmount, ...rest } = v;
-  const next: Params = { ...rest, reminder_days: days.map(Number), late_fee_monthly_rate_percent: parseMoneyInput(rate) ?? rate, debtor_restriction_min_amount: parseMoneyInput(minAmount) ?? minAmount };
+  const { rate, minAmount, lateMin, ...rest } = v;
+  const next: Params = { ...rest, reminder_days: days.map(Number), late_fee_monthly_rate_percent: parseMoneyInput(rate) ?? rate, debtor_restriction_min_amount: parseMoneyInput(minAmount) ?? minAmount, late_fee_minimum_amount: parseMoneyInput(lateMin) ?? lateMin };
   const changed = (Object.keys(next) as (keyof Params)[]).filter((k) => JSON.stringify(next[k]) !== JSON.stringify(d.current[k]));
   const financial = changed.some((k) => d.financial_keys.includes(k));
   useEffect(() => { if (financial && period < d.earliest_financial_period) setPeriod(d.earliest_financial_period); }, [financial]);
@@ -106,7 +109,7 @@ function ParamsForm({ d }: { d: Resp }) {
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field__label">Tahakkuk kaynağı {fin}</legend>
             <label className="check"><input type="radio" name="charge_source" checked={v.charge_source === "budget_plan"} onChange={() => set("charge_source", "budget_plan")} /><span>İşletme projesi — aidat bütçe kalemlerinden dağıtılır</span></label>
-            <label className="check"><input type="radio" name="charge_source" checked={v.charge_source === "billing_rule"} onChange={() => set("charge_source", "billing_rule")} /><span>Aidat kuralı — işletme projesi olmayan site (kural ekranı sonraki sürümde)</span></label>
+            <label className="check"><input type="radio" name="charge_source" checked={v.charge_source === "billing_rule"} onChange={() => set("charge_source", "billing_rule")} /><span>Aidat kuralları — sabit, m², arsa payı ya da bölüm tipi katsayısıyla (Aidat kuralları ekranı)</span></label>
           </fieldset>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field__label">Kıst — ay ortası giriş/çıkışta aidat {fin}</legend>
@@ -128,9 +131,11 @@ function ParamsForm({ d }: { d: Resp }) {
               <Field label="Aylık oran (%)" hint="KMK m.20 üst sınırı %5" error={fieldError(m.error, "late_fee_monthly_rate_percent")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={rate} onChange={(e) => set("rate", e.target.value)} />}</Field>
               <Field label="Hesap yöntemi">{(p) => <select {...p} className="field__input" value={v.late_fee_method} onChange={(e) => set("late_fee_method", e.target.value as Params["late_fee_method"])}><option value="daily">Gün bazlı oransal (oran × gün / 30)</option><option value="full_month">Başlamış ay tam ay</option></select>}</Field>
               <Field label="Tolerans (gün)" hint="0–30; vade + tolerans dolmadan işlemez" error={fieldError(m.error, "late_fee_grace_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={v.late_fee_grace_days} onChange={num("late_fee_grace_days")} />}</Field>
+              <Field label="Tavan (ana borcun %'si)" hint="0–100; 0 = tavan yok" error={fieldError(m.error, "late_fee_cap_percent")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={v.late_fee_cap_percent} onChange={num("late_fee_cap_percent")} />}</Field>
+              <Field label="Asgari tutar (₺)" hint="Bu tutarın altındaki gecikme yazılmaz" error={fieldError(m.error, "late_fee_minimum_amount")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={lateMin} onChange={(e) => set("lateMin", e.target.value)} />}</Field>
             </div>
           )}
-          <span className="field__hint">Oran ve yöntem avukat görüşüne kadar parametredir (K2). Tazminatın deftere işlenmesi sonraki sürümde.</span>
+          <span className="field__hint">Oran ve yöntem avukat görüşüne kadar parametredir (K2). Tazminat ay sonu işiyle ve tahsilat anında cariye "Gecikme tazminatı" satırı olarak işlenir; ödeme planı süresince işlemez.</span>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field__label">Mahsup sırası {fin}</legend>
             <label className="check"><input type="radio" name="allocation_order" checked={v.allocation_order === "late_fee_first"} onChange={() => set("allocation_order", "late_fee_first")} /><span>Aynı vadede önce gecikme tazminatı, sonra ana borç (TBK m.100 — varsayılan)</span></label>

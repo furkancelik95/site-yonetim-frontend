@@ -16,7 +16,9 @@
 // metni sürümleri, saklama politikası, denetim paketi). İnsan kaynakları 35–39 (sicil no ve açık işler, vardiya planı,
 // izinler, puantaj, puantaj aktarımı; K29 personel hesabı ve giriş-çıkış dahil); Finans Mod P 27–34
 // (dönem kapanışı ve kilit, kasa gün sonu, borç takibi, ödeme planı, dönem dışı ücretler, muhasebe
-// aktarımı, finans parametreleri, tahakkuk fark raporu).
+// aktarımı, finans parametreleri, tahakkuk fark raporu). Finans motoru P03b (otomatik tahakkuk 04, finans
+// parametreleri 33, fark raporu 34; aidat kuralları, tahakkuk taslak/onay ve satır düzeltme, yıllık bütçe)
+// baştan gerçek uçlarla bağlandı — burada sahte karşılığı yok.
 import { bypass, http, HttpResponse, type RequestHandler } from "msw";
 
 const API = "/api/v1/sites/:slug";
