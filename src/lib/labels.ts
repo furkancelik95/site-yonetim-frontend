@@ -226,19 +226,19 @@ export const unitAttr = label({ gross_area: "Brüt m²", net_area: "Net m²", la
 // Finans paketi (servis istekleri 27–34)
 export const fiscalStatus = label({ open: "Açık", closing: "Kapanışta", locked: "Kilitli", temp_open: "Süreli açık" });
 export const fiscalStatusTone = (v: string): Tone => (v === "locked" ? "ok" : v === "closing" ? "warn" : v === "temp_open" ? "danger" : "muted");
-export const fiscalAction = label({ start_close: "Kapanış başlatıldı", lock: "Kilitlendi", reopen: "Açığa alındı", unlock: "Süreli açıldı", relocked: "Yeniden kilitlendi" });
+export const fiscalAction = label({ start_close: "Kapanış başlatıldı", lock: "Kilitlendi", reopen: "Açığa alındı", unlock_requested: "Süreli açma onaya gönderildi", unlock: "Süreli açıldı", unlock_rejected: "Süreli açma reddedildi", relocked: "Süre doldu, yeniden kilitlendi" });
 export const collectionKind = label({ reminder: "Hatırlatma", call: "Arama", note: "Not", demand_letter: "İhtarname", payment_plan: "Ödeme planı" });
 export const reminderChannel = label({ app: "Uygulama bildirimi", sms: "SMS", phone: "Telefon" });
 export const letterMethod = label({ hand: "Elden, imzalı", registered_mail: "İadeli taahhütlü", notary: "Noter" });
-export const letterStatus = label({ sent: "Gönderildi", served: "Tebliğ edildi" });
-export const planStatus = label({ active: "Yürürlükte", broken: "Bozuldu", completed: "Tamamlandı", cancelled: "İptal" });
-export const planStatusTone = (v: string): Tone => (v === "completed" ? "ok" : v === "active" ? "info" : v === "broken" ? "danger" : "muted");
+export const letterStatus = label({ approval_pending: "Onay bekliyor", sent: "Gönderildi", served: "Tebliğ edildi", rejected: "Reddedildi" });
+export const planStatus = label({ approval_pending: "Onay bekliyor", active: "Yürürlükte", broken: "Bozuldu", completed: "Tamamlandı", cancelled: "İptal", rejected: "Reddedildi" });
+export const planStatusTone = (v: string): Tone => (v === "completed" ? "ok" : v === "active" ? "info" : v === "broken" ? "danger" : v === "approval_pending" ? "warn" : "muted");
 export const installmentStatus = label({ paid: "Ödendi", partial: "Kısmi", open: "Bekliyor", overdue: "Gecikti" });
 export const installmentTone = (v: string): Tone => (v === "paid" ? "ok" : v === "overdue" ? "danger" : v === "partial" ? "warn" : "muted");
 export const adHocSource = label({ reservation: "Rezervasyon", service: "Ücretli hizmet", renovation: "Tadilat / taşınma", penalty: "Ceza", other: "Diğer" });
 export const adHocMode = label({ immediate: "Anında tahakkuk", next_period: "Sonraki aidat dönemine ekle" });
-export const adHocStatus = label({ posted: "Cariye yazıldı", waiting_next_run: "Sonraki tahakkukta", cancelled: "İptal" });
-export const voucherSource = label({ charge: "Tahakkuk", ad_hoc_charge: "Dönem dışı ücret", payment_cash: "Tahsilat — nakit", payment_bank_transfer: "Tahsilat — havale", payment_credit_card: "Tahsilat — kart", payment_other: "Tahsilat — diğer", expense: "Gider ödemesi" });
+export const adHocStatus = label({ approval_pending: "Onay bekliyor", posted: "Cariye yazıldı", waiting_next_run: "Sonraki tahakkukta", cancelled: "İptal", rejected: "Reddedildi" });
+export const voucherSource = label({ charge: "Tahakkuk", ad_hoc_charge: "Dönem dışı ücret", payment_cash: "Tahsilat — nakit", payment_bank_transfer: "Tahsilat — havale", payment_credit_card: "Tahsilat — kart", payment_other: "Tahsilat — diğer", expense: "Gider ödemesi", refund: "İade" });
 export const diffFlag = label({ increase: "Arttı", decrease: "Azaldı", new: "Yeni hesap", missing: "Bu dönem yok" });
 export const diffFlagTone = (v: string): Tone => (v === "increase" ? "warn" : v === "decrease" ? "info" : v === "new" ? "info" : "danger");
 
