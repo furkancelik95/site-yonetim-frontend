@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { FileText, Inbox, Plus, Repeat } from "lucide-react";
+import { BarChart3, Clock, FileText, Inbox, PieChart, Plus, Repeat, Tag } from "lucide-react";
+import { BarChart, Donut } from "../../components/charts";
 import { openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
 import { ExcelButton } from "../../components/ExcelButton";
 import { useToast } from "../../components/toast";
-import { Badge, ConfirmButton, Empty, ErrorState, Kpi, Loading, Money, PageHead, Pager } from "../../components/ui";
+import { Badge, ConfirmButton, Empty, ErrorState, IconChip, Kpi, Loading, Money, PageHead, Pager } from "../../components/ui";
 import { formatDate, formatMoney, formatMoneyShort, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
@@ -40,41 +41,52 @@ export function ExpensesPage() {
         }
       />
 
-      {sum && (
-        <div className="grid grid--kpi">
-          <Kpi label={`${s.year} toplam gider`} tone="accent" value={formatMoneyShort(sum.total)} note={formatMoney(sum.total)} />
-          <Kpi label="Ödenmemiş" tone={sum.unpaid_count > 0 ? "warn" : "ok"} value={formatMoneyShort(sum.unpaid_total)} note={`${sum.unpaid_count} gider`} />
+      {sum ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label={`${s.year} toplam gider`} tone="accent" icon={<Inbox aria-hidden="true" />} value={formatMoneyShort(sum.total)} note={formatMoney(sum.total)} />
+          <Kpi label="Ödenmemiş" tone={sum.unpaid_count > 0 ? "warn" : "ok"} icon={<Clock aria-hidden="true" />} value={formatMoneyShort(sum.unpaid_total)} note={`${sum.unpaid_count} gider`} />
           {sum.by_category.slice(0, 2).map((c) => (
-            <Kpi key={c.category_id} label={c.name} value={formatMoneyShort(c.total)} note={`${c.count} kayıt`} />
+            <Kpi key={c.category_id} label={c.name} icon={<Tag aria-hidden="true" />} value={formatMoneyShort(c.total)} note={`${c.count} kayıt`} />
           ))}
         </div>
-      )}
+      ) : r.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : null}
 
-      <div className="filters">
-        <div className="field">
-          <label className="field__label" htmlFor="e-year">Yıl</label>
-          <select id="e-year" className="field__input" value={s.year} onChange={(e) => set({ year: e.target.value })}>
-            {years.map((y) => <option key={y}>{y}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="e-cat">Kategori</label>
-          <select id="e-cat" className="field__input" value={s.category} onChange={(e) => set({ category: e.target.value })}>
-            <option value="">Tümü</option>
-            {cats.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="e-paid">Durum</label>
-          <select id="e-paid" className="field__input" value={s.paid} onChange={(e) => set({ paid: e.target.value })}>
-            <option value="">Tümü</option>
-            <option value="true">Ödendi</option>
-            <option value="false">Ödenmedi</option>
-          </select>
-        </div>
-      </div>
+      {/* Grafikler süzgeçten bağımsız: yılın tamamını gösterir (kategori/durum süzgeci yalnız tabloyu daraltır) */}
+      <ExpenseCharts year={s.year} byCategory={!s.category && !s.paid ? sum?.by_category : undefined} />
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Inbox aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Giderler</div>
+            {r.data && <div className="card__meta">{r.data.total} kayıt</div>}
+          </div>
+          <div className="card__tools">
+            <div className="field">
+              <label className="field__label" htmlFor="e-year">Yıl</label>
+              <select id="e-year" className="field__input" value={s.year} onChange={(e) => set({ year: e.target.value })}>
+                {years.map((y) => <option key={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="e-cat">Kategori</label>
+              <select id="e-cat" className="field__input" value={s.category} onChange={(e) => set({ category: e.target.value })}>
+                <option value="">Tümü</option>
+                {cats.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="e-paid">Durum</label>
+              <select id="e-paid" className="field__input" value={s.paid} onChange={(e) => set({ paid: e.target.value })}>
+                <option value="">Tümü</option>
+                <option value="true">Ödendi</option>
+                <option value="false">Ödenmedi</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div className="card__body card__body--flush">
           {r.isPending ? (
             <Loading />
@@ -115,6 +127,53 @@ export function ExpensesPage() {
   );
 }
 
+const short = (v: number) => formatMoneyShort(v.toFixed(2));
+const monthShort = (m: number) => new Date(2000, m - 1, 1).toLocaleDateString("tr-TR", { month: "short" });
+
+/**
+ * Aylık gider çubukları (gelir-gider raporundan, rapor izni varsa) ve kategori halkası
+ * (gider listesinin özetinden). Rapor yoksa yalnız halka; ikisi de yoksa hiçbir şey.
+ */
+function ExpenseCharts({ year, byCategory }: { year: string; byCategory?: Schemas["ExpensePage"]["summary"]["by_category"] }) {
+  const { can } = useSite();
+  const rep = useSiteGet<Schemas["IncomeExpenseOut"]>("/reports/income-expense", { year }, { enabled: can(P.reportsRead) });
+  const months = rep.data?.months.filter((m) => Number(m.expense) !== 0 || Number(m.income) !== 0) ?? [];
+  const nowMonth = new Date().getFullYear() === Number(year) ? new Date().getMonth() + 1 : -1;
+  const hi = months.findIndex((m) => m.month === nowMonth);
+  const bar = months.length > 0 && (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span>
+        <span className="card__title">Aylık gider</span>
+        <span className="card__meta ml-auto">{year} · gelir-gider raporundan</span>
+      </div>
+      <div className="card__body fin-chart">
+        <BarChart label={`${year} aylık gider`} data={months.map((m) => ({ label: monthShort(m.month), value: Number(m.expense) }))} format={short} highlight={hi >= 0 ? hi : undefined} />
+      </div>
+    </div>
+  );
+  const pie = byCategory && byCategory.length > 0 && (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--warn"><PieChart aria-hidden="true" /></span>
+        <span className="card__title">Kategoriye göre</span>
+      </div>
+      <div className="card__body fin-pie">
+        <Donut
+          label="Kategoriye göre gider"
+          centerSub="kategori"
+          center={String(byCategory.length)}
+          format={short}
+          segments={byCategory.map((c) => ({ label: c.name, value: Number(c.total) }))}
+        />
+      </div>
+    </div>
+  );
+  if (!bar && !pie) return null;
+  if (bar && pie) return <div className="grid grid--main">{bar}{pie}</div>;
+  return <>{bar || pie}</>;
+}
+
 function ExpenseRow({ e, cat, canManage }: { e: Expense; cat: string; canManage: boolean }) {
   const { site } = useSite();
   const toast = useToast();
@@ -123,10 +182,15 @@ function ExpenseRow({ e, cat, canManage }: { e: Expense; cat: string; canManage:
     <tr style={muted ? { opacity: 0.7 } : undefined}>
       <td className="small nowrap">{formatDate(e.date)}</td>
       <td>
-        <div className="cell-main">{e.description}</div>
-        <div className="cell-sub">{[e.vendor, e.document_number].filter(Boolean).join(" · ") || "—"}</div>
+        <div className="cell-person">
+          <IconChip tone={e.is_reversal || e.is_reversed ? "muted" : e.is_paid ? "ok" : "warn"}><Inbox aria-hidden="true" /></IconChip>
+          <div>
+            <div className="cell-main">{e.description}</div>
+            <div className="cell-sub">{[e.vendor, e.document_number].filter(Boolean).join(" · ") || "—"}</div>
+          </div>
+        </div>
       </td>
-      <td className="small">{cat}</td>
+      <td className="small"><span className="badge badge--muted"><Tag aria-hidden="true" /> {cat}</span></td>
       <td>
         {e.is_reversal ? <Badge tone="muted">Düzeltme kaydı</Badge> : e.is_reversed ? <Badge tone="danger">Geri alındı</Badge> : e.is_paid ? <Badge tone="ok">Ödendi {formatDate(e.paid_on)}</Badge> : <Badge tone="warn">Ödenmedi</Badge>}
       </td>

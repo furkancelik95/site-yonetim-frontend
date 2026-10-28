@@ -1,23 +1,22 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Layers, Pencil, Plus } from "lucide-react";
+import { Baby, Building2, Car, DoorOpen, Dumbbell, Home, Layers, MapPin, Pencil, Percent, PieChart, Plus, Trees, UserX, Waves, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Donut } from "../../components/charts";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { useUrlState } from "../../lib/hooks";
 import { commonAreaKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
 type Block = Schemas["BlockOut"];
 type UnitType = Schemas["UnitTypeOut"];
-/** Servis isteği 19'daki şekiller. */
-interface CommonArea { id: string; name: string; kind: string; block_id: string | null; block_name: string | null; is_reservable: boolean; is_active: boolean; note: string | null }
-export interface StructureSummary {
-  unit_count: number; active_unit_count: number; block_count: number; land_share_sum: number; land_share_denominator: number | null; land_share_mismatch: boolean;
-  units_without_land_share: number; units_without_owner: { id: string; display_name: string }[]; units_shares_incomplete: { id: string; display_name: string; total: string }[]; common_area_count: number;
-}
+type CommonArea = Schemas["CommonAreaOut"];
+export type StructureSummary = Schemas["StructureSummaryOut"];
 
 const AREA_KINDS = ["pool", "hall", "gym", "garden", "playground", "parking", "technical", "roof", "other"];
+/** Ortak alan türü → ikon (dekoratif; tür metni yanında yazılı) */
+const AREA_ICON: Record<string, typeof Home> = { pool: Waves, hall: DoorOpen, gym: Dumbbell, garden: Trees, playground: Baby, parking: Car, technical: Wrench, roof: Home, other: MapPin };
 const TABS = [["bloklar", "Bloklar"], ["tipler", "Bölüm tipleri"], ["ortak", "Ortak alanlar"]] as const;
 
 /** Yapı tanımları (YAP-02): bloklar, bölüm tipleri, ortak alanlar; yapının sağlık özeti. */
@@ -29,18 +28,19 @@ export function YapiPage() {
   return (
     <div className="stack">
       <PageHead title="Yapı tanımları" subtitle="Bloklar, bölüm tipleri ve ortak alanlar: fiziksel yapının tek doğru kaynağı." actions={<Link className="btn" to={`/s/${site.slug}/daireler`}>Daireler</Link>} />
+      {sum.isPending && <div className="grid grid--kpi">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)}</div>}
       {sum.data && (
-        <div className="grid grid--kpi">
-          <Kpi label="Blok" value={sum.data.block_count} />
-          <Kpi label="Bölüm" value={sum.data.active_unit_count} note={sum.data.unit_count !== sum.data.active_unit_count ? `${sum.data.unit_count - sum.data.active_unit_count} pasif` : undefined} />
-          <Kpi label="Arsa payı" value={sum.data.land_share_denominator ? `${sum.data.land_share_sum} / ${sum.data.land_share_denominator}` : "—"} tone={sum.data.land_share_mismatch ? "warn" : undefined} note={sum.data.land_share_mismatch ? "Toplam paydaya eşit değil" : sum.data.units_without_land_share ? `${sum.data.units_without_land_share} bölümde yok` : "Tamam"} />
-          <Kpi label="Maliksiz bölüm" value={sum.data.units_without_owner.length} tone={sum.data.units_without_owner.length ? "danger" : "ok"} />
-          <Kpi label="Hissesi eksik bölüm" value={sum.data.units_shares_incomplete.length} tone={sum.data.units_shares_incomplete.length ? "warn" : "ok"} />
+        <div className="grid grid--kpi rise">
+          <Kpi label="Blok" icon={<Layers aria-hidden="true" />} value={sum.data.block_count} note={`${sum.data.common_area_count} ortak alan`} />
+          <Kpi label="Bölüm" icon={<Building2 aria-hidden="true" />} value={sum.data.active_unit_count} note={sum.data.unit_count !== sum.data.active_unit_count ? `${sum.data.unit_count - sum.data.active_unit_count} pasif` : "tümü etkin"} />
+          <Kpi label="Arsa payı" icon={<Percent aria-hidden="true" />} value={sum.data.land_share_denominator ? `${sum.data.land_share_sum} / ${sum.data.land_share_denominator}` : "—"} tone={sum.data.land_share_mismatch ? "warn" : undefined} note={sum.data.land_share_mismatch ? "Toplam paydaya eşit değil" : sum.data.units_without_land_share ? `${sum.data.units_without_land_share} bölümde yok` : "Tamam"} />
+          <Kpi label="Maliksiz bölüm" icon={<UserX aria-hidden="true" />} value={sum.data.units_without_owner.length} tone={sum.data.units_without_owner.length ? "danger" : "ok"} note={sum.data.units_without_owner.length ? "gider yazılamaz" : "tamam"} />
+          <Kpi label="Hissesi eksik bölüm" icon={<PieChart aria-hidden="true" />} value={sum.data.units_shares_incomplete.length} tone={sum.data.units_shares_incomplete.length ? "warn" : "ok"} note={sum.data.units_shares_incomplete.length ? "toplam %100 değil" : "tamam"} />
         </div>
       )}
       {sum.data?.land_share_mismatch && <Alert tone="warn" title="Arsa payları toplamı paydaya eşit değil">Toplam {sum.data.land_share_sum}, payda {sum.data.land_share_denominator}. Kayıt engellenmez; arsa payına göre dağıtılan giderler yanlış paylaşılır, bölümleri kontrol edin.</Alert>}
-      <div className="row" role="tablist" aria-label="Yapı tanımları" style={{ gap: "var(--s-2)" }}>
-        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k })}>{l}</button>)}
+      <div className="tabs" role="tablist" aria-label="Yapı tanımları">
+        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} onClick={() => set({ sekme: k })}>{l}</button>)}
       </div>
       {s.sekme === "tipler" ? <UnitTypes manage={manage} /> : s.sekme === "ortak" ? <CommonAreas manage={manage} /> : <Blocks manage={manage} />}
     </div>
@@ -54,24 +54,34 @@ function Blocks({ manage }: { manage: boolean }) {
     <>
       {manage && <div className="row"><button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Blok ekle</button></div>}
       {editing && <BlockForm b={editing === "new" ? null : editing} onDone={() => setEditing(null)} />}
-      <div className="card"><div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Blok yok" icon={<Layers aria-hidden="true" />}>Tek binalı sitede bile bir blok tanımlanır (ör. "A").</Empty> : (
-          <div className="table-wrap"><table className="data">
-            <caption className="visually-hidden">Bloklar</caption>
-            <thead><tr><th scope="col">Blok</th><th scope="col" className="right">Kat</th><th scope="col">Asansör</th><th scope="col" className="right">Bölüm</th><th scope="col" className="right">Sıra</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{q.data.items.map((b) => (
-              <tr key={b.id}>
-                <td className="cell-main">{b.name}</td>
-                <td className="right num">{b.floor_count ?? "—"}</td>
-                <td className="small">{b.has_elevator ? "Var" : "Yok"}</td>
-                <td className="right num">{b.unit_count}</td>
-                <td className="right num small">{b.sort_order}</td>
-                {manage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${b.name} bloğunu düzenle`} onClick={() => setEditing(b)}><Pencil aria-hidden="true" /></button></td>}
-              </tr>
-            ))}</tbody>
-          </table></div>
+      <div className="grid grid--main">
+        <div className="card"><div className="card__body card__body--flush">
+          {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Blok yok" icon={<Layers aria-hidden="true" />}>Tek binalı sitede bile bir blok tanımlanır (ör. "A").</Empty> : (
+            <div className="table-wrap"><table className="data">
+              <caption className="visually-hidden">Bloklar</caption>
+              <thead><tr><th scope="col">Blok</th><th scope="col" className="right">Kat</th><th scope="col">Asansör</th><th scope="col" className="right">Bölüm</th><th scope="col" className="right">Sıra</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
+              <tbody>{q.data.items.map((b) => (
+                <tr key={b.id}>
+                  <td><div className="cell-chip"><IconChip><Layers /></IconChip><span className="cell-main">{b.name}</span></div></td>
+                  <td className="right num">{b.floor_count ?? "—"}</td>
+                  <td className="small">{b.has_elevator ? <Badge tone="ok">Var</Badge> : <span className="muted">Yok</span>}</td>
+                  <td className="right num">{b.unit_count}</td>
+                  <td className="right num small">{b.sort_order}</td>
+                  {manage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${b.name} bloğunu düzenle`} onClick={() => setEditing(b)}><Pencil aria-hidden="true" /></button></td>}
+                </tr>
+              ))}</tbody>
+            </table></div>
+          )}
+        </div></div>
+        {q.data && q.data.items.length > 0 && (
+          <div className="card">
+            <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Bölüm dağılımı</span><span className="card__meta ml-auto">bloklara göre</span></div>
+            <div className="card__body">
+              <Donut label="Bloklara göre bölüm sayısı" centerSub="bölüm" segments={q.data.items.map((b) => ({ label: b.name, value: b.unit_count }))} />
+            </div>
+          </div>
         )}
-      </div></div>
+      </div>
     </>
   );
 }
@@ -160,15 +170,18 @@ function CommonAreas({ manage }: { manage: boolean }) {
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Ortak alanlar</caption>
             <thead><tr><th scope="col">Alan</th><th scope="col">Tür</th><th scope="col">Blok</th><th scope="col">Rezervasyon</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{q.data.map((a) => (
+            <tbody>{q.data.map((a) => {
+              const AreaIcon = AREA_ICON[a.kind] ?? MapPin;
+              return (
               <tr key={a.id} style={!a.is_active ? { opacity: 0.6 } : undefined}>
-                <td><div className="cell-main">{a.name}</div>{a.note && <div className="cell-sub">{a.note}</div>}</td>
+                <td><div className="cell-chip"><IconChip tone={a.is_active ? undefined : "muted"}><AreaIcon /></IconChip><div><div className="cell-main">{a.name}</div>{a.note && <div className="cell-sub">{a.note}</div>}</div></div></td>
                 <td className="small">{commonAreaKind(a.kind)}</td><td className="small">{a.block_name ?? "Tüm site"}</td>
                 <td className="small">{a.is_reservable ? <Badge tone="info">Rezerve edilebilir</Badge> : "—"}</td>
                 <td>{a.is_active ? <Badge tone="ok">Etkin</Badge> : <Badge>Kapalı</Badge>}</td>
                 {manage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${a.name} alanını düzenle`} onClick={() => setEditing(a)}><Pencil aria-hidden="true" /></button></td>}
               </tr>
-            ))}</tbody>
+              );
+            })}</tbody>
           </table></div>
         )}
       </div></div>
@@ -178,7 +191,7 @@ function CommonAreas({ manage }: { manage: boolean }) {
 
 function CommonAreaForm({ a, onDone }: { a: CommonArea | null; onDone: () => void }) {
   const blocks = useSiteGet<Page<Block>>("/blocks", { page_size: 200 });
-  const [f, setF] = useState({ name: a?.name ?? "", kind: a?.kind ?? "hall", block_id: a?.block_id ?? "", is_reservable: a?.is_reservable ?? false, is_active: a?.is_active ?? true, note: a?.note ?? "" });
+  const [f, setF] = useState<{ name: string; kind: string; block_id: string; is_reservable: boolean; is_active: boolean; note: string }>({ name: a?.name ?? "", kind: a?.kind ?? "hall", block_id: a?.block_id ?? "", is_reservable: a?.is_reservable ?? false, is_active: a?.is_active ?? true, note: a?.note ?? "" });
   const m = useSiteMutation<Record<string, unknown>, CommonArea>(a ? "PATCH" : "POST", a ? `/common-areas/${a.id}` : "/common-areas", { onSuccess: onDone });
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   return (

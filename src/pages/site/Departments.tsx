@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Pencil } from "lucide-react";
+import { Network, Pencil } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Badge, FormError, SubmitButton, fieldError } from "../../components/ui";
@@ -49,7 +49,7 @@ export function DepartmentManager({ onClose }: { onClose: () => void }) {
   }
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">Departmanlar</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><button className="btn btn--ghost btn--sm" type="button" onClick={onClose}>Kapat</button></span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><Network aria-hidden="true" /></span><span className="card__title">Departmanlar</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><button className="btn btn--ghost btn--sm" type="button" onClick={onClose}>Kapat</button></span></div>
       <div className="card__body card__body--flush">
         <div className="table-wrap">
           <table className="data">

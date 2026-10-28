@@ -16,13 +16,13 @@ export function ChargeSchedule() {
   const q = useSiteGet<Schedule>("/charge-schedule");
   const [f, setF] = useState({ enabled: false, charge_day: "1", due_days: "14", notify_on_run: true });
   useEffect(() => {
-    if (q.data) setF({ enabled: q.data.enabled, charge_day: String(q.data.charge_day), due_days: String(q.data.due_days), notify_on_run: q.data.notify_on_run });
+    if (q.data) setF({ enabled: q.data.enabled, charge_day: String(q.data.charge_day), due_days: String(q.data.due_day), notify_on_run: q.data.notify_on_run });
   }, [q.data]);
   const m = useSiteMutation<Record<string, unknown>, Schedule>("PUT", "/charge-schedule");
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ enabled: f.enabled, charge_day: Number(f.charge_day), due_days: Number(f.due_days), notify_on_run: f.notify_on_run });
+    m.mutate({ enabled: f.enabled, charge_day: Number(f.charge_day), due_day: Number(f.due_days), notify_on_run: f.notify_on_run });
   }
 
   const last = q.data?.last_run;
@@ -50,7 +50,7 @@ export function ChargeSchedule() {
             <Field label="Ayın kaçında" hint="1–28 (her ayda olsun diye)." error={fieldError(m.error, "charge_day")}>
               {(p) => <input {...p} className="field__input" inputMode="numeric" value={f.charge_day} onChange={(e) => setF((x) => ({ ...x, charge_day: e.target.value.replace(/\D/g, "") }))} />}
             </Field>
-            <Field label="Vade (gün)" hint="Tahakkuktan kaç gün sonra son ödeme." error={fieldError(m.error, "due_days")}>
+            <Field label="Vade (gün)" hint="Tahakkuktan kaç gün sonra son ödeme." error={fieldError(m.error, "due_day")}>
               {(p) => <input {...p} className="field__input" inputMode="numeric" value={f.due_days} onChange={(e) => setF((x) => ({ ...x, due_days: e.target.value.replace(/\D/g, "") }))} />}
             </Field>
             <label className="check" style={{ alignSelf: "end", minHeight: 44 }}>

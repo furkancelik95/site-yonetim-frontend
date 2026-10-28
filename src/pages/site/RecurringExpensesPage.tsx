@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Pause, Pencil, Play, Plus, Repeat, Trash2 } from "lucide-react";
+import { CalendarClock, Pause, Pencil, Play, Plus, Repeat, Trash2, Wallet } from "lucide-react";
+import Decimal from "decimal.js";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
-import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatMoney, parseMoneyInput } from "../../lib/format";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatMoney, formatMoneyShort, parseMoneyInput } from "../../lib/format";
 import { P, useSite } from "../../site/SiteContext";
 
 type Category = Schemas["ExpenseCategoryOut"];
@@ -36,9 +37,20 @@ export function RecurringExpensesPage() {
         }
       />
 
+      {q.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : q.data && q.data.length > 0 ? (
+        <RecurringKpis items={q.data} />
+      ) : null}
+
       {editing && <RecurringForm item={editing === "new" ? null : editing} cats={cats.data ?? []} onDone={() => setEditing(null)} />}
 
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Repeat aria-hidden="true" /></span>
+          <span className="card__title">Tanımlar</span>
+          {q.data && <span className="card__meta ml-auto">{q.data.length} tanım</span>}
+        </div>
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.length === 0 ? (
             <Empty title="Henüz tekrarlanan gider yok" icon={<Repeat aria-hidden="true" />}>
@@ -66,13 +78,34 @@ export function RecurringExpensesPage() {
   );
 }
 
+/** Tanım listesinden türetilen özet: etkin sayısı, aylık yük, sıradaki oluşum, durdurulan */
+function RecurringKpis({ items }: { items: Recurring[] }) {
+  const active = items.filter((r) => r.is_active);
+  const monthly = active.reduce((s, r) => s.plus(r.amount), new Decimal(0)).toFixed(2);
+  const next = active.map((r) => r.next_run_on).filter((d): d is string => !!d).sort()[0];
+  const nextItems = next ? active.filter((r) => r.next_run_on === next) : [];
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Etkin tanım" tone="accent" icon={<Repeat aria-hidden="true" />} value={active.length} note={`${items.length} tanımdan`} />
+      <Kpi label="Aylık tutar" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(monthly)} note={`${formatMoney(monthly)} · her ay`} />
+      <Kpi label="Sıradaki oluşum" icon={<CalendarClock aria-hidden="true" />} small value={formatDate(next)} note={nextItems.length > 0 ? nextItems.map((r) => r.description).join(", ") : "etkin tanım yok"} />
+      <Kpi label="Durdurulan" tone={items.length - active.length > 0 ? "warn" : undefined} icon={<Pause aria-hidden="true" />} value={items.length - active.length} note="gider oluşturmuyor" />
+    </div>
+  );
+}
+
 function RecurringRow({ r, cat, manage, onEdit }: { r: Recurring; cat: string; manage: boolean; onEdit: () => void }) {
   const toggle = useSiteMutation<{ is_active: boolean }, Recurring>("PATCH", `/recurring-expenses/${r.id}`);
   const del = useSiteMutation<string, Recurring>("DELETE", `/recurring-expenses/${r.id}`);
   return (
     <tr style={!r.is_active ? { opacity: 0.65 } : undefined}>
-      <td><div className="cell-main">{r.description}</div><div className="cell-sub">{r.vendor ?? "—"}{r.auto_pay ? " · ödendi olarak işaretlenir" : ""}</div></td>
-      <td className="small">{cat}</td>
+      <td>
+        <div className="cell-person">
+          <IconChip tone={r.is_active ? undefined : "muted"}><Repeat aria-hidden="true" /></IconChip>
+          <div><div className="cell-main">{r.description}</div><div className="cell-sub">{r.vendor ?? "—"}{r.auto_pay ? " · ödendi olarak işaretlenir" : ""}</div></div>
+        </div>
+      </td>
+      <td className="small"><span className="badge badge--muted">{cat}</span></td>
       <td className="small">{r.day_of_month}. günü</td>
       <td className="small nowrap">{r.is_active ? formatDate(r.next_run_on) : "—"}{r.last_created_on && <div className="cell-sub">son: {formatDate(r.last_created_on)}</div>}</td>
       <td>{r.is_active ? <Badge tone="ok">Etkin</Badge> : <Badge>Durduruldu</Badge>}</td>

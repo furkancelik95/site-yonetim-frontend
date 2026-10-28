@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Boxes, Plus } from "lucide-react";
+import { AlertTriangle, Archive, Boxes, CheckCircle2, Package, Plus } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
-import { Badge, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { StockCount } from "./OpsPages";
@@ -27,11 +27,7 @@ export function InventoryPage() {
   return (
     <div className="stack">
       <PageHead title="Demirbaş ve stok" subtitle="Sitenin malları ve sarf malzemesi: nerede, kimde, ne kadar kaldı." />
-      <div className="row" role="tablist" aria-label="Demirbaş ve stok" style={{ gap: "var(--s-2)" }}>
-        {[["demirbas", "Demirbaş"], ["stok", "Stok"], ["sayim", "Sayım"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>
-        ))}
-      </div>
+      <Segmented label="Demirbaş ve stok" value={s.sekme} onChange={(k) => set({ sekme: k })} options={[{ value: "demirbas", label: "Demirbaş" }, { value: "stok", label: "Stok" }, { value: "sayim", label: "Sayım" }]} />
       {s.sekme === "stok" ? <Stock /> : s.sekme === "sayim" ? <StockCount /> : <Assets />}
     </div>
   );
@@ -41,10 +37,19 @@ function Assets() {
   const { can } = useSite();
   const [status, setStatus] = useState("");
   const q = useSiteGet<Asset[]>("/assets", { status: status || undefined });
+  // Üst sayılar süzgeçten bağımsız: tüm demirbaş listesi ayrıca okunur
+  const all = useSiteGet<Asset[]>("/assets");
   const [editing, setEditing] = useState<Asset | "new" | null>(null);
   const manage = can(P.inventoryManage);
+  const n = (st: string) => (all.data ? all.data.filter((a) => a.status === st).length : "—");
   return (
     <>
+      <div className="grid grid--kpi rise">
+        <Kpi label="Demirbaş" icon={<Boxes aria-hidden="true" />} value={all.data ? all.data.length : "—"} note="kayıtlı mal" />
+        <Kpi label="Kullanımda" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={n("in_use")} note={assetStatus("in_use")} />
+        <Kpi label="Arızalı" tone={all.data && n("broken") !== 0 ? "warn" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={n("broken")} note="bakım ya da onarım bekliyor" />
+        <Kpi label="Kullanım dışı" icon={<Archive aria-hidden="true" />} value={n("retired")} note={assetStatus("retired")} />
+      </div>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <div className="field" style={{ minWidth: "12rem" }}>
           <label className="field__label" htmlFor="as-status">Durum</label>
@@ -67,7 +72,7 @@ function Assets() {
                 <tbody>
                   {q.data.map((a) => (
                     <tr key={a.id}>
-                      <td><div className="cell-main">{a.name}</div><div className="cell-sub"><span className="mono">{a.code}</span> · {a.category}</div></td>
+                      <td><div className="cell-person"><IconChip tone={a.status === "broken" ? "warn" : a.status === "retired" ? "muted" : undefined}><Boxes /></IconChip><div><div className="cell-main">{a.name}</div><div className="cell-sub"><span className="mono">{a.code}</span> · {a.category}</div></div></div></td>
                       <td className="small">{a.location}{a.assignee && <div className="cell-sub">Zimmet: {a.assignee}</div>}</td>
                       <td className="small nowrap">{a.acquired_on ? formatDate(a.acquired_on) : "—"}{a.value && <div className="cell-sub">{formatMoney(a.value)}</div>}</td>
                       <td><Badge tone={assetStatusTone(a.status)}>{assetStatus(a.status)}</Badge></td>
@@ -133,6 +138,10 @@ function Stock() {
   const low = (q.data ?? []).filter((s) => s.is_low);
   return (
     <>
+      <div className="grid grid--kpi rise">
+        <Kpi label="Stok kalemi" icon={<Package aria-hidden="true" />} value={q.data ? q.data.length : "—"} note="sarf malzemesi" />
+        <Kpi label="Azalan" tone={low.length > 0 ? "warn" : "ok"} icon={<AlertTriangle aria-hidden="true" />} value={q.data ? low.length : "—"} note="asgari miktarın altında ya da eşiğinde" />
+      </div>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <span className="small muted">{low.length > 0 ? `${low.length} malzeme asgari miktarın altında ya da eşiğinde.` : "Asgari miktarın altına inen malzeme yok."}</span>
         {manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Malzeme ekle</button>}
@@ -152,7 +161,7 @@ function Stock() {
                     const isLow = s.is_low;
                     return [
                       <tr key={s.id}>
-                        <td><div className="cell-main">{s.name}</div>{s.location && <div className="cell-sub">{s.location}</div>}</td>
+                        <td><div className="cell-person"><IconChip tone={isLow ? "warn" : undefined}><Package /></IconChip><div><div className="cell-main">{s.name}</div>{s.location && <div className="cell-sub">{s.location}</div>}</div></div></td>
                         <td className="right nowrap strong" style={{ fontVariantNumeric: "tabular-nums" }}>{qty(s.quantity)} {s.unit_label}</td>
                         <td className="right nowrap small" style={{ fontVariantNumeric: "tabular-nums" }}>{qty(s.min_quantity)} {s.unit_label}</td>
                         <td>{isLow ? <Badge tone="warn">Azaldı</Badge> : <Badge tone="ok">Yeterli</Badge>}</td>

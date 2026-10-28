@@ -2,11 +2,11 @@ import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "../../api/client";
 import { Link } from "react-router";
-import { ListChecks, Plus, Trash2 } from "lucide-react";
+import { Link2, ListChecks, Plus, ShieldCheck, Trash2, UserX } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatMoney, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { dayBasis, quorumKind, rejectBehavior, stepMode } from "../../lib/labels";
@@ -16,12 +16,18 @@ type Rule = Schemas["RuleOut"];
 type ActionTypeOut = Schemas["ActionTypeOut"];
 type RuleIn = Schemas["RuleIn"];
 type RuleWrite = Schemas["RuleWriteOut"];
-type SiteRole = Schemas["SiteRole"];
+type SiteRoleOut = Schemas["RoleOut"];
 type Quorum = Schemas["QuorumKind"];
 type Simulated = Schemas["SimulateOut"];
 
-/** Onaycı olabilecek roller (sakin onaycı olamaz). */
-const ROLES: SiteRole[] = ["Yönetici", "Yönetim Kurulu Üyesi", "Denetçi", "Muhasebe", "Güvenlik", "Teknik Personel"];
+/**
+ * Onaycı olabilecek roller: sitenin etkin personel rolleri (hazır + siteye özel, P18), düzey
+ * sırasıyla. Sakin onaycı olamaz; backend `/roles` sakini zaten döndürmez.
+ */
+function useApproverRoles(): string[] {
+  const q = useSiteGet<SiteRoleOut[]>("/roles");
+  return (q.data ?? []).filter((r) => r.is_active).map((r) => r.name);
+}
 const QUORUMS: Quorum[] = ["any", "all", "majority", "count"];
 
 const range = (r: Rule["current"]) =>
@@ -41,6 +47,8 @@ export function ApprovalRulesPage() {
   const [s, set] = useUrlState({ arsiv: "" });
   const types = useSiteGet<ActionTypeOut[]>("/approval-action-types");
   const q = useSiteGet<Rule[]>("/approval-rules", { archived: s.arsiv ? "true" : undefined });
+  // Göstergeler her zaman yürürlükteki listeden (Arşiv sekmesinde de); varsayılan sekmede q ile aynı sorgu
+  const active = useSiteGet<Rule[]>("/approval-rules", { archived: undefined });
   const [editing, setEditing] = useState<Rule | "new" | null>(null);
   const restore = useSiteMutation<Record<string, never>, Schemas["RestoreOut"]>("POST", "/approval-rules/restore-defaults", {
     onSuccess: (d) => d?.skipped.length && toast(`Kurulamayanlar: ${d.skipped.join(", ")}`),
@@ -59,15 +67,21 @@ export function ApprovalRulesPage() {
           {manage && <button className="btn btn--primary" type="button" onClick={() => setEditing("new")}><Plus aria-hidden="true" /> Kural ekle</button>}
         </>}
       />
+      {active.isError || types.isError ? null : !active.data || !types.data ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Yürürlükteki kural" tone="accent" icon={<ListChecks aria-hidden="true" />} value={active.data.length} note={`${types.data.length} işlem tipinden`} />
+          <Kpi label="Uygulanan" tone="ok" icon={<ShieldCheck aria-hidden="true" />} value={active.data.filter((r) => connected.has(r.action_type)).length} note="onaya bağlı işlemde çalışıyor" />
+          <Kpi label="Onaya bağlı işlem" icon={<Link2 aria-hidden="true" />} value={connected.size} note={`${types.data.length - connected.size} işlem bağlanmayı bekliyor`} />
+          <Kpi label="Onaycısı yok" tone={active.data.some((r) => !r.applicable) ? "danger" : undefined} icon={<UserX aria-hidden="true" />} value={active.data.filter((r) => !r.applicable).length} note="adımdaki rolde etkin kullanıcı yok" />
+        </div>
+      )}
       <Alert tone="info">Şu an onaydan gerçekten geçen işlem: {(types.data ?? []).filter((t) => t.connected).map((t) => t.label).join(", ") || "—"}. Diğer işlemler için kural şimdiden tanımlanabilir; o işlemler onaya bağlanınca kural uygulanır.</Alert>
       {editing && <RuleForm rule={editing === "new" ? null : editing} types={types.data ?? []} onDone={() => setEditing(null)} />}
       <Simulator types={types.data ?? []} />
 
-      <div className="row" role="tablist" aria-label="Kural listesi" style={{ gap: "var(--s-2)" }}>
-        {[["", "Yürürlükte"], ["1", "Arşiv"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.arsiv === k} className={`btn btn--sm${s.arsiv === k ? " btn--primary" : ""}`} onClick={() => set({ arsiv: k! })}>{l}</button>
-        ))}
-      </div>
+      <Segmented label="Kural listesi" value={s.arsiv} onChange={(k) => set({ arsiv: k })} options={[{ value: "", label: "Yürürlükte" }, { value: "1", label: "Arşiv" }]} />
 
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data.length === 0 ? (
         <div className="card"><div className="card__body"><Empty title={s.arsiv ? "Arşivde kural yok" : "Henüz kural yok"} icon={<ListChecks aria-hidden="true" />}>{!s.arsiv && manage && "\"Önerilen kuralları kur\" ile başlayabilirsiniz."}</Empty></div></div>
@@ -118,7 +132,7 @@ function RuleCard({ r, manage, connected, onEdit }: { r: Rule; manage: boolean; 
   );
 }
 
-type StepDraft = { roles: SiteRole[]; quorum: Quorum; count: string };
+type StepDraft = { roles: string[]; quorum: Quorum; count: string };
 
 /**
  * Kural formu. `resubmitId` verilirse kural değişikliği talebi düzeltilip yeniden gönderilir
@@ -143,6 +157,11 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
   });
   const [steps, setSteps] = useState<StepDraft[]>(v?.steps.map((s) => ({ roles: s.roles, quorum: s.quorum, count: s.count ? String(s.count) : "" })) ?? [{ roles: ["Yönetici"], quorum: "any", count: "" }]);
   const [moneyErr, setMoneyErr] = useState<string>();
+  const ROLES = useApproverRoles();
+  // Rol sırasından eskalasyon önerisi (K20): adımlardaki en üst rolün bir üst düzeyi
+  const stepRoles = [...new Set(steps.flatMap((s) => s.roles))].sort();
+  const suggestion = useSiteGet<Schemas["EscalationSuggestionOut"]>("/approval-rules/escalation-suggestion", { roles: stepRoles }, { enabled: stepRoles.length > 0 });
+  const suggested = suggestion.data?.role ?? null;
   const [warnings, setWarnings] = useState<string[]>([]);
   const m = useSiteMutation<RuleIn, RuleWrite>(rule ? "PUT" : "POST", rule ? `/approval-rules/${rule.id}` : "/approval-rules", {
     onSuccess: (d) => {
@@ -173,7 +192,7 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
       remind_after_days: Number(f.remind_after_days || 0),
       escalate_after_days: Number(f.escalate_after_days || 0),
       day_basis: f.day_basis as RuleIn["day_basis"],
-      escalation_role: (f.escalation_role || null) as RuleIn["escalation_role"],
+      escalation_role: f.escalation_role || null,
       effective_from: f.effective_from,
       basis_note: f.basis_note.trim() || null,
     };
@@ -237,7 +256,8 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
           <Field label="Hatırlatma (gün)" hint="1–30" error={fieldError(act.error, "remind_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.remind_after_days} onChange={(e) => setF((x) => ({ ...x, remind_after_days: digits(e.target.value) }))} />}</Field>
           <Field label="Üst role iletme (gün)" hint="Hatırlatmadan sonra" error={fieldError(act.error, "escalate_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.escalate_after_days} onChange={(e) => setF((x) => ({ ...x, escalate_after_days: digits(e.target.value) }))} />}</Field>
           <Field label="Gün hesabı">{(p) => <select {...p} className="field__input" value={f.day_basis} onChange={set("day_basis")}>{["business", "calendar"].map((k) => <option key={k} value={k}>{dayBasis(k)}</option>)}</select>}</Field>
-          <Field label="İletilecek rol" hint="Boş: yalnız hatırlatma gider">{(p) => <select {...p} className="field__input" value={f.escalation_role} onChange={set("escalation_role")}><option value="">Yok</option>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>}</Field>
+          <Field label="İletilecek rol" hint={suggested ? `Rol sırasına göre öneri: ${suggested}` : "Boş: yalnız hatırlatma gider"} error={fieldError(act.error, "escalation_role")}>{(p) => <select {...p} className="field__input" value={f.escalation_role} onChange={set("escalation_role")}><option value="">Yok</option>{ROLES.map((r) => <option key={r} value={r}>{r}{r === suggested ? " (önerilen)" : ""}</option>)}</select>}</Field>
+          {suggested && f.escalation_role !== suggested && <div className="field" style={{ justifyContent: "flex-end" }}><button className="btn btn--sm" type="button" onClick={() => setF((x) => ({ ...x, escalation_role: suggested }))}>Öneriyi uygula: {suggested}</button></div>}
         </div>
         <Field label="Dayanak" hint="ör. 12.03.2026 tarihli yönetim kurulu kararı">{(p) => <input {...p} className="field__input" maxLength={300} value={f.basis_note} onChange={set("basis_note")} />}</Field>
         <p className="small muted mb-0">Otomatik onay ya da ret yoktur: süresi geçen talep hatırlatılır, seçildiyse üst role iletilir. Talep eden, onaycı listesinden kendiliğinden çıkar.</p>

@@ -75,6 +75,8 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/vardiya` | **Vardiya planı** — şablonlar; personel × gün ızgarası, çakışma (çakışan vardiya, izin, 11 saat dinlenme), kopyala, yayınla (IK-02) | `people.read` (yazma `staff.manage`) | istek 36 | R |
 | `/s/{slug}/izinler` | **İzinler** — kaydet, onayla/reddet/iptal (onay kuralı varsa onay mekanizmasıyla), yıllık kullanım (IK-03) | `staff.manage` | istek 37 | R |
 | `/s/{slug}/vardiyam` | **Vardiyam** — yayınlanmış vardiyalarım, vardiyaya başla/bitir (QR kodu ya da o anki konum), izin talebi (K29; IK-02/03/04) | kartı bağlı personel | `staff` | R |
+| `/s/{slug}/kullanicilar` | **Kullanıcılar** — bir kişiye birden çok rol (izinler birleşir), tesis ya da blok kapsamı, başlangıç–bitiş; rol kaldırma; atama geçmişi (PLT-09, P18) | `members.manage` | istek 12 + P16a | R |
+| `/s/{slug}/roller` | **Roller ve yetkiler** — hazır şablonlar salt okunur; kopyala ve özelleştir (gruplu izin ağacı, hassasiyet); rol düzeyi = rol sırası (K20); arşiv | `members.manage` | P16a | R |
 | `/s/{slug}/puantaj` | **Puantaj** — günlük (plandan; istisna düzelt; kesinleştir) ve aylık aktarım (sicil no ile dosya, kilit) (IK-04/05) | `staff.manage` (aktarımı `finance.read` okur) | istek 38, 39 | R |
 | `/s/{slug}/guvenlik?sekme=masa` | **Kapı ekranı** — davet koduyla giriş, habersiz ziyaretçi (bilgi / sakin onayı, zaman aşımında gerekçeli karar), plaka sorgu + giriş/çıkış + ihlal, uzun bekleyen kargolar (GUV-01/03/04/05) | `security.visitors` | istek 41–44 | R (sahte servis) |
 | `/s/{slug}/guvenlik?sekme=nobet` | **Nöbet defteri** — not/olay/devir, ek not, devralma onayı (GUV-06) | `security.incidents` | istek 45 | R (sahte servis) |

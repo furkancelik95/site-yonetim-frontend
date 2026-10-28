@@ -3,7 +3,7 @@ import { LogIn, LogOut, Package, SearchCheck, Siren, UserRound } from "lucide-re
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso, trUpper } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { incidentKind, packageStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
@@ -34,14 +34,16 @@ export function SecurityPage() {
   const tab = tabs.find((t) => t.key === s.sekme)?.key ?? tabs[0]?.key;
   return (
     <div className="stack">
-      <PageHead title="Güvenlik" subtitle="Kapı, kargo, ziyaretçi, olay, nöbet defteri ve devriye" />
-      <div className="row" role="tablist" aria-label="Güvenlik bölümleri" style={{ gap: "var(--s-2)" }}>
-        {tabs.map((t) => (
-          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={`btn btn--sm${tab === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key })}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <PageHead title="Güvenlik" eyebrow="Operasyon" subtitle="Kapı, kargo, ziyaretçi, olay, nöbet defteri ve devriye">
+        <div className="tabs" role="tablist" aria-label="Güvenlik bölümleri">
+          {tabs.map((t) => (
+            <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className="tabs__tab" onClick={() => set({ sekme: t.key })}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </PageHead>
+      <SecurityKpis pk={pk} vs={vs} inc={inc} />
       {tab === "masa" ? (
         <GateDesk />
       ) : tab === "nobet" ? (
@@ -63,6 +65,29 @@ export function SecurityPage() {
 }
 
 const INCIDENT_KINDS = ["theft", "damage", "noise", "fire", "water_leak", "suspicious", "accident", "other"];
+
+/**
+ * Bandın altındaki göstergeler: kullanıcının yetkisi olan bölümlerin sayıları (gerçek uçlardan,
+ * kartlarla aynı sorgular — önbellekten gelir). Yetkisi olmayan gösterge hiç çağrılmaz.
+ */
+function SecurityKpis({ pk, vs, inc }: { pk: boolean; vs: boolean; inc: boolean }) {
+  const pkg = useSiteGet<Page<Pkg>>("/packages", { status: "waiting", page_size: 50 }, { enabled: pk });
+  const vis = useSiteGet<Page<Visitor>>("/visitors", { date: todayIso(), page_size: 100 }, { enabled: vs });
+  const ince = useSiteGet<Page<Incident>>("/incidents", { status: "open", page_size: 50 }, { enabled: inc });
+  const lost = useSiteGet<Page<LostItem>>("/lost-items", { status: "waiting", page_size: 50 }, { enabled: inc });
+  const waiting = [pk && pkg, vs && vis, inc && ince, inc && lost].filter(Boolean) as { data?: unknown; isError: boolean }[];
+  if (waiting.length === 0) return null;
+  if (waiting.some((q) => !q.data && !q.isError)) return <div className="grid grid--kpi">{waiting.map((_, i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const inside = (vis.data?.items ?? []).filter((v) => v.status === "entered").length;
+  return (
+    <div className="grid grid--kpi rise">
+      {pk && pkg.data && <Kpi label="Bekleyen kargo" tone={pkg.data.total ? "warn" : undefined} icon={<Package aria-hidden="true" />} value={pkg.data.total} note="teslim kodu bekleniyor" />}
+      {vs && vis.data && <Kpi label="Bugünkü ziyaretçi" icon={<UserRound aria-hidden="true" />} value={vis.data.total} note={`${inside} kişi şu an içeride`} />}
+      {inc && ince.data && <Kpi label="Açık olay" tone={ince.data.total ? "danger" : "ok"} icon={<Siren aria-hidden="true" />} value={ince.data.total} note="kapanış notu bekliyor" />}
+      {inc && lost.data && <Kpi label="Kayıp eşya" icon={<SearchCheck aria-hidden="true" />} value={lost.data.total} note="sahibini bekliyor" />}
+    </div>
+  );
+}
 
 
 function IncidentsCard() {
@@ -88,9 +113,10 @@ function IncidentsCard() {
       </form>
       <div className="card">
         <div className="card__head">
+          <span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span>
           <span className="card__title">Olaylar</span>
-          <div className="row ml-auto" role="group" aria-label="Olay durumu" style={{ gap: "var(--s-2)" }}>
-            {[["open", "Açık"], ["closed", "Kapanan"]].map(([k, l]) => <button key={k} type="button" className={`btn btn--sm${status === k ? " btn--primary" : ""}`} aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
+          <div className="tabs ml-auto" role="group" aria-label="Olay durumu">
+            {[["open", "Açık"], ["closed", "Kapanan"]].map(([k, l]) => <button key={k} type="button" className="tabs__tab" aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
           </div>
         </div>
         <div className="card__body card__body--flush">
@@ -153,9 +179,10 @@ function LostItemsCard() {
       </form>
       <div className="card">
         <div className="card__head">
+          <span className="card__icon card__icon--info"><SearchCheck aria-hidden="true" /></span>
           <span className="card__title">Kayıp eşya</span>
-          <div className="row ml-auto" role="group" aria-label="Eşya durumu" style={{ gap: "var(--s-2)" }}>
-            {[["waiting", "Bekleyen"], ["returned", "Teslim edilen"]].map(([k, l]) => <button key={k} type="button" className={`btn btn--sm${status === k ? " btn--primary" : ""}`} aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
+          <div className="tabs ml-auto" role="group" aria-label="Eşya durumu">
+            {[["waiting", "Bekleyen"], ["returned", "Teslim edilen"]].map(([k, l]) => <button key={k} type="button" className="tabs__tab" aria-pressed={status === k} onClick={() => setStatus(k!)}>{l}</button>)}
           </div>
         </div>
         <div className="card__body card__body--flush">
@@ -221,32 +248,29 @@ function PackagesCard() {
         <div><SubmitButton busy={add.isPending} className="btn btn--primary">Kargo geldi</SubmitButton></div>
         <p className="small muted mb-0">Sakine 4 haneli teslim kodu gösterilir; teslimde bu kod sorulur.</p>
       </form>
-      <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
-        <div className="row" style={{ gap: "var(--s-2)" }} role="group" aria-label="Kargo durumu">
+      <div className="card__body" style={{ paddingBottom: 0 }}>
+        <div className="tabs" role="group" aria-label="Kargo durumu">
           {["waiting", "delivered"].map((x) => (
-            <button key={x} type="button" className={`btn btn--sm${status === x ? " btn--primary" : ""}`} aria-pressed={status === x} onClick={() => setStatus(x)}>{packageStatus(x)}</button>
+            <button key={x} type="button" className="tabs__tab" aria-pressed={status === x} onClick={() => setStatus(x)}>{packageStatus(x)}</button>
           ))}
         </div>
-        {r.isPending ? <Loading /> : r.isError ? <ErrorState error={r.error} /> : r.data.items.length === 0 ? (
+      </div>
+      <div className="card__body card__body--flush" style={{ paddingTop: "var(--s-3)" }}>
+        {r.isPending ? <Loading /> : r.isError ? <div className="card__body"><ErrorState error={r.error} /></div> : r.data.items.length === 0 ? (
           <Empty title={status === "waiting" ? "Bekleyen kargo yok" : "Teslim edilen kargo yok"} />
         ) : (
-          <div className="table-wrap">
-            <table className="data">
-              <caption className="visually-hidden">Kargolar</caption>
-              <tbody>
-                {r.data.items.map((p) => (
-                  <tr key={p.id}>
-                    <td>
-                      <div className="cell-main">{p.unit_name}</div>
-                      <div className="cell-sub">{p.carrier ?? "—"} · {formatDateTime(p.received_at)}</div>
-                      {p.delivered_to && <div className="cell-sub">Teslim alan: {p.delivered_to}</div>}
-                    </td>
-                    <td className="right">{p.status === "waiting" ? <DeliverButton p={p} /> : <Badge tone="ok">{packageStatus(p.status)}</Badge>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="txn" aria-label="Kargolar">
+            {r.data.items.map((p) => (
+              <li key={p.id}>
+                <span className={`txn__icon ${p.status === "waiting" ? "txn__icon--warn" : "txn__icon--ok"}`} aria-hidden="true"><Package /></span>
+                <div className="txn__main">
+                  <div className="txn__title">{p.unit_name}</div>
+                  <div className="txn__sub">{p.carrier ?? "—"} · {formatDateTime(p.received_at)}{p.delivered_to && ` · teslim alan: ${p.delivered_to}`}</div>
+                </div>
+                <span className="txn__action">{p.status === "waiting" ? <DeliverButton p={p} /> : <Badge tone="ok">{packageStatus(p.status)}</Badge>}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
@@ -257,7 +281,7 @@ function DeliverButton({ p }: { p: Pkg }) {
   const [code, setCode] = useState("");
   const [to, setTo] = useState("");
   const m = useSiteMutation<{ pickup_code: string; delivered_to: string }, Pkg>("POST", `/packages/${p.id}/deliver`);
-  const dg = useSiteGet<{ id: string; name: string }[]>(`/units/${p.unit_id}/parcel-delegates`);
+  const dg = useSiteGet<Schemas["DelegateNameOut"][]>(`/units/${p.unit_id}/parcel-delegates`);
   return (
     <ConfirmButton
       className="btn btn--sm"
@@ -325,14 +349,9 @@ function VisitorsCard() {
         {r.isPending ? <Loading /> : r.isError ? <div className="card__body"><ErrorState error={r.error} /></div> : r.data.items.length === 0 ? (
           <Empty title="Bugün ziyaretçi yok" />
         ) : (
-          <div className="table-wrap">
-            <table className="data">
-              <caption className="visually-hidden">Bugünkü ziyaretçiler</caption>
-              <tbody>
-                {r.data.items.map((v) => <VisitorRow key={v.id} v={v} />)}
-              </tbody>
-            </table>
-          </div>
+          <ul className="txn" aria-label="Bugünkü ziyaretçiler">
+            {r.data.items.map((v) => <VisitorRow key={v.id} v={v} />)}
+          </ul>
         )}
       </div>
     </div>
@@ -342,17 +361,19 @@ function VisitorsCard() {
 function VisitorRow({ v }: { v: Visitor }) {
   const enter = useSiteMutation<Record<string, never>, Visitor>("POST", `/visitors/${v.id}/enter`);
   const exit = useSiteMutation<Record<string, never>, Visitor>("POST", `/visitors/${v.id}/exit`);
+  const tone = v.status === "entered" ? "txn__icon--ok" : v.status === "expected" ? "" : "txn__icon--muted";
   return (
-    <tr>
-      <td>
-        <div className="cell-main">{v.full_name}</div>
-        <div className="cell-sub">{v.unit_name} · {visitorKind(v.kind)}{v.plate_number ? ` · ${v.plate_number}` : ""}</div>
-      </td>
-      <td><Badge tone={visitorTone(v.status)}>{visitorStatus(v.status)}</Badge></td>
-      <td className="right">
+    <li>
+      <span className={`txn__icon ${tone}`} aria-hidden="true">{v.kind === "cargo" ? <Package /> : <UserRound />}</span>
+      <div className="txn__main">
+        <div className="txn__title">{v.full_name}</div>
+        <div className="txn__sub">{v.unit_name} · {visitorKind(v.kind)}{v.plate_number ? ` · ${v.plate_number}` : ""}</div>
+      </div>
+      <span className="txn__badge"><Badge tone={visitorTone(v.status)}>{visitorStatus(v.status)}</Badge></span>
+      <span className="txn__action">
         {v.status === "expected" && <button className="btn btn--sm" type="button" disabled={enter.isPending} onClick={() => enter.mutate({})}><LogIn aria-hidden="true" /> Giriş</button>}
         {v.status === "entered" && <button className="btn btn--sm" type="button" disabled={exit.isPending} onClick={() => exit.mutate({})}><LogOut aria-hidden="true" /> Çıkış</button>}
-      </td>
-    </tr>
+      </span>
+    </li>
   );
 }

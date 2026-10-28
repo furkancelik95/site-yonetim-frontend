@@ -18,6 +18,7 @@ export { RequestDetailPage } from "./RequestDetailPage";
 export { RequestsPage } from "./RequestsPage";
 export { SecurityPage } from "./SecurityPage";
 export { MembersPage } from "./MembersPage";
+export { RolesPage } from "./RolesPage";
 export { RegistrationsPage } from "./RegistrationsPage";
 export { MeetingDetailPage, MeetingsPage } from "./MeetingsPage";
 export { PollsPage } from "./PollsPage";

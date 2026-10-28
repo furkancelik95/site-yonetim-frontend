@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
-import { CheckCircle2, Inbox, UserCheck } from "lucide-react";
+import { CheckCircle2, History as HistoryIcon, Inbox, Send, UserCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Donut } from "../../components/charts";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, formatMoney, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { RuleForm } from "./ApprovalRulesPage";
@@ -13,7 +14,7 @@ import { P, useSite } from "../../site/SiteContext";
 type ListItem = Schemas["RequestListItem"];
 type Request = Schemas["ApprovalRequestOut"];
 type Delegation = Schemas["DelegationOut"];
-type Candidate = Schemas["CandidateOut"];
+type Candidates = Schemas["DelegationCandidatesOut"];
 
 const TABS = [
   { key: "bekleyen", api: "pending", label: "Kararımı bekleyen" },
@@ -31,27 +32,42 @@ export function ApprovalsPage() {
   const { can, site } = useSite();
   const [s, set] = useUrlState({ sekme: "bekleyen", page: "1" });
   const tab = TABS.find((t) => t.key === s.sekme) ?? TABS[0];
+  // Üst sayılar: her kutunun toplamı (sayfa boyutu 1 — yalnız `total` okunur, liste indirilmez)
+  const pending = useSiteGet<Page<ListItem>>("/approvals", { tab: "pending", page_size: 1 });
+  const mine = useSiteGet<Page<ListItem>>("/approvals", { tab: "mine", page_size: 1 });
+  const past = useSiteGet<Page<ListItem>>("/approvals", { tab: "history", page_size: 1 });
+  const total = (q: typeof pending) => (q.data ? q.data.total : "—");
   return (
     <div className="stack">
       <PageHead
+        band
         title="Onaylar"
         subtitle="Onayınıza gelen işlemler ve sizin onaya gönderdikleriniz. Karar için ayrı izin gerekmez; onaycı listesinde olmanız yeter."
         actions={can(P.approvalRulesRead) && <Link className="btn" to={`/s/${site.slug}/onay-kurallari`}>Onay kuralları</Link>}
       />
-      <div className="row" role="tablist" aria-label="Onay bölümleri" style={{ gap: "var(--s-2)" }}>
-        {TABS.map((t) => (
-          <button key={t.key} type="button" role="tab" aria-selected={tab.key === t.key} className={`btn btn--sm${tab.key === t.key ? " btn--primary" : ""}`} onClick={() => set({ sekme: t.key, page: "1" })}>{t.label}</button>
-        ))}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Kararımı bekleyen" tone={pending.data && pending.data.total > 0 ? "warn" : undefined} icon={<Inbox aria-hidden="true" />} value={total(pending)} note="sizden karar bekleyen talep" />
+        <Kpi label="Benim taleplerim" icon={<Send aria-hidden="true" />} value={total(mine)} note="onaya gönderdikleriniz" />
+        <Kpi label="Sonuçlanan" icon={<HistoryIcon aria-hidden="true" />} value={total(past)} note="geçmiş kararlar" />
       </div>
+      <Segmented label="Onay bölümleri" value={tab.key} onChange={(k) => set({ sekme: k, page: "1" })} options={TABS.map((t) => ({ value: t.key, label: t.label }))} />
       {tab.key === "devir" ? <Delegations /> : <RequestList tab={tab.api} page={s.page} onPage={(p) => set({ page: String(p) })} empty={tab.key === "bekleyen" ? "Kararınızı bekleyen talep yok" : "Kayıt yok"} />}
     </div>
   );
 }
 
+const DONUT_TONES = ["ok", "warn", "danger", "info", "muted"] as const;
+type DonutTone = (typeof DONUT_TONES)[number];
+const donutTone = (t: string): DonutTone => (DONUT_TONES as readonly string[]).includes(t) ? (t as DonutTone) : "muted";
+
 function RequestList({ tab, page, onPage, empty }: { tab: string; page: string; onPage: (p: number) => void; empty: string }) {
   const { site } = useSite();
   const q = useSiteGet<Page<ListItem>>("/approvals", { tab, page, page_size: 30 });
-  return (
+  // Listelenen taleplerin durum dağılımı (bu sayfadaki kayıtlar) — gerçek sayılar
+  const dist = q.data
+    ? Object.entries(q.data.items.reduce<Record<string, number>>((acc, r) => { acc[r.status] = (acc[r.status] ?? 0) + 1; return acc; }, {}))
+    : [];
+  const list = (
     <div className="card">
       <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.items.length === 0 ? (
@@ -65,8 +81,13 @@ function RequestList({ tab, page, onPage, empty }: { tab: string; page: string; 
                 {q.data.items.map((r) => (
                   <tr key={r.id}>
                     <td>
-                      <Link className="cell-main" to={`/s/${site.slug}/onaylar/${r.id}`}>#{r.number} {r.title}</Link>
-                      <div className="cell-sub">{r.requested_by} · {formatDateTime(r.created_at)}</div>
+                      <div className="cell-person">
+                        <Avatar name={r.requested_by} size="sm" soft />
+                        <div>
+                          <Link className="cell-main" to={`/s/${site.slug}/onaylar/${r.id}`}>#{r.number} {r.title}</Link>
+                          <div className="cell-sub">{r.requested_by} · {formatDateTime(r.created_at)}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="small">{r.action_label}{r.post_approval && <div className="cell-sub">Sonradan onay</div>}</td>
                     <td className="right nowrap">{r.amount ? formatMoney(r.amount) : "—"}</td>
@@ -80,6 +101,18 @@ function RequestList({ tab, page, onPage, empty }: { tab: string; page: string; 
         )}
       </div>
       {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={onPage} /></div>}
+    </div>
+  );
+  if (dist.length === 0) return list;
+  return (
+    <div className="grid grid--main">
+      {list}
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><CheckCircle2 aria-hidden="true" /></span><span className="card__title">Durum dağılımı</span><span className="card__meta ml-auto">bu sayfadaki {q.data?.items.length ?? 0} talep</span></div>
+        <div className="card__body">
+          <Donut label="Onay talebi durumları" centerSub="talep" segments={dist.map(([k, v]) => ({ label: approvalStatus(k), value: v, tone: donutTone(approvalStatusTone(k)) }))} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -134,36 +167,59 @@ function EndDelegation({ d }: { d: Delegation }) {
 
 const toIso = (local: string) => (local && !Number.isNaN(Date.parse(local)) ? new Date(local).toISOString() : "");
 
+/**
+ * Yetki devri (ONY-03): kendi onaycı rollerinizden birini ya da birkaçını, aynı ya da daha üst
+ * düzeyde role sahip birine devredersiniz (K20 rol sırası). Aday listesi seçtiğiniz rollere göre
+ * süzülür.
+ */
 function NewDelegation({ onDone }: { onDone: () => void }) {
-  const { site } = useSite();
-  const cands = useSiteGet<Candidate[]>("/delegations/candidates");
+  const cands = useSiteGet<Candidates>("/delegations/candidates");
+  const mine = cands.data?.my_roles ?? [];
+  const [roles, setRoles] = useState<string[] | null>(null);
+  const chosen = roles ?? mine.slice(0, 1);
   const [f, setF] = useState({ to_user_id: "", starts_at: "", ends_at: "", note: "" });
   const m = useSiteMutation<Record<string, unknown>, Delegation>("POST", "/delegations", { onSuccess: onDone });
+  const eligible = (cands.data?.candidates ?? []).filter((c) => chosen.every((r) => c.can_take.includes(r)));
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ to_user_id: f.to_user_id, roles: [site.role], starts_at: toIso(f.starts_at), ends_at: toIso(f.ends_at), note: f.note.trim() || null });
+    m.mutate({ to_user_id: f.to_user_id, roles: chosen, starts_at: toIso(f.starts_at), ends_at: toIso(f.ends_at), note: f.note.trim() || null });
   }
-  const none = cands.data && cands.data.length === 0;
+  function toggle(role: string, on: boolean) {
+    setRoles(on ? [...chosen, role] : chosen.filter((r) => r !== role));
+    setF((x) => ({ ...x, to_user_id: "" }));
+  }
+  const none = cands.data && (mine.length === 0 || cands.data.candidates.length === 0);
   return (
     <form className="card" onSubmit={submit} noValidate>
       <div className="card__head"><span className="card__title">Yetki devret</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
-        {none ? (
-          <Alert tone="info">Sitede sizinle aynı rolde ({site.role}) başka etkin kullanıcı yok; yetki yalnız aynı role devredilebilir.</Alert>
+        {cands.isPending ? <Loading /> : none ? (
+          <Alert tone="info">Sitede yetkinizi devredebileceğiniz kimse yok: devralan, sizinle aynı ya da daha üst düzeyde bir role sahip olmalı (rol sırası Roller ve yetkiler ekranında).</Alert>
         ) : (
-          <div className="grid grid--kpi">
-            <Field label="Devralacak kişi" required error={fieldError(m.error, "to_user_id")}>
-              {(p) => <select {...p} className="field__input" value={f.to_user_id} onChange={(e) => setF((x) => ({ ...x, to_user_id: e.target.value }))}><option value="">Seçin</option>{cands.data?.map((c) => <option key={c.user_id} value={c.user_id}>{c.name} · {c.role}</option>)}</select>}
-            </Field>
-            <Field label="Başlangıç" required error={fieldError(m.error, "starts_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={`${todayIso()}T00:00`} value={f.starts_at} onChange={(e) => setF((x) => ({ ...x, starts_at: e.target.value }))} />}</Field>
-            <Field label="Bitiş" required error={fieldError(m.error, "ends_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={f.starts_at || undefined} value={f.ends_at} onChange={(e) => setF((x) => ({ ...x, ends_at: e.target.value }))} />}</Field>
-            <Field label="Not" hint="ör. Yıllık izin">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={(e) => setF((x) => ({ ...x, note: e.target.value }))} />}</Field>
-          </div>
+          <>
+            {mine.length > 1 && (
+              <fieldset className="row" style={{ gap: "var(--s-2) var(--s-4)", border: 0, padding: 0, margin: 0 }}>
+                <legend className="field__label">Devredilecek rollerim</legend>
+                {mine.map((r) => (
+                  <label key={r} className="check"><input type="checkbox" checked={chosen.includes(r)} onChange={(e) => toggle(r, e.target.checked)} /><span>{r}</span></label>
+                ))}
+              </fieldset>
+            )}
+            {fieldError(m.error, "roles") && <span className="field__error" role="alert">{fieldError(m.error, "roles")}</span>}
+            <div className="grid grid--kpi">
+              <Field label="Devralacak kişi" required hint={mine.length === 1 ? `Rolünüz: ${mine[0]} — aynı ya da üst düzeydeki kişiler` : "Aynı ya da üst düzeydeki kişiler"} error={fieldError(m.error, "to_user_id")}>
+                {(p) => <select {...p} className="field__input" value={f.to_user_id} onChange={(e) => setF((x) => ({ ...x, to_user_id: e.target.value }))}><option value="">Seçin</option>{eligible.map((c) => <option key={c.user_id} value={c.user_id}>{c.name} · {c.roles.join(", ")}</option>)}</select>}
+              </Field>
+              <Field label="Başlangıç" required error={fieldError(m.error, "starts_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={`${todayIso()}T00:00`} value={f.starts_at} onChange={(e) => setF((x) => ({ ...x, starts_at: e.target.value }))} />}</Field>
+              <Field label="Bitiş" required error={fieldError(m.error, "ends_at")}>{(p) => <input {...p} className="field__input" type="datetime-local" min={f.starts_at || undefined} value={f.ends_at} onChange={(e) => setF((x) => ({ ...x, ends_at: e.target.value }))} />}</Field>
+              <Field label="Not" hint="ör. Yıllık izin">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={(e) => setF((x) => ({ ...x, note: e.target.value }))} />}</Field>
+            </div>
+          </>
         )}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}>
-        {!none && <SubmitButton busy={m.isPending} disabled={!f.to_user_id || !f.starts_at || !f.ends_at}>Devret</SubmitButton>}
+        {!none && <SubmitButton busy={m.isPending} disabled={!f.to_user_id || !f.starts_at || !f.ends_at || chosen.length === 0}>Devret</SubmitButton>}
         <button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button>
       </div>
     </form>
@@ -212,7 +268,7 @@ export function ApprovalDetailPage() {
                   <ul className="steps__people">
                     {st.approvers.map((a) => (
                       <li key={a.user_id}>
-                        <span>{a.name} <span className="muted">({a.role}{a.source === "escalation" ? ", üst role iletildi" : ""})</span></span>
+                        <span className="cell-person"><Avatar name={a.name} size="sm" soft /><span>{a.name} <span className="muted">({a.role}{a.source === "escalation" ? ", üst role iletildi" : ""})</span></span></span>
                         {a.decision ? <Badge tone={decisionTone(a.decision)}>{decisionLabel(a.decision)}</Badge> : <span className="small muted">Bekleniyor</span>}
                         {a.comment && <div className="small">"{a.comment}"{a.decided_by && a.decided_by !== a.name ? ` — ${a.decided_by} vekâleten` : ""}</div>}
                       </li>

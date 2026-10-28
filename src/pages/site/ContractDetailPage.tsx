@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Copy, Plus, Trash2 } from "lucide-react";
+import { ClipboardCheck, Clock, Copy, Plus, Star, Trash2, Wallet } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { BarChart } from "../../components/charts";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { contractCategory, contractPeriod, escalationKind, kpiSource, requestCategory } from "../../lib/labels";
@@ -22,7 +23,7 @@ interface Row { kpi_id: string; name: string; source: string; target: number; we
 interface Card { period: string; rows: Row[]; total: number | null; comment: string | null; status: string; penalty: { amount: string; reasons: string[]; status: string; decided_by: string | null; note: string | null } | null; monthly_amount: string | null; expected_invoice: string | null; finalized_by: string | null; finalized_by_id: string | null; finalized_at: string | null }
 
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
 );
 const prevMonth = () => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
 const REQ_CATS = ["elevator", "cleaning", "security", "garden", "plumbing", "electrical", "heating", "common_area", "other"];
@@ -55,12 +56,20 @@ function General({ c, p }: { c: Contract; p: Perf }) {
   const ep = p.escalation_preview;
   return (
     <div className="stack">
-      <div className="grid grid--kpi">
-        <Kpi label="Bedel" value={c.amount ? <Money value={c.amount} /> : "—"} note={contractPeriod(c.period)} />
-        <Kpi label="Bitişe" value={c.days_left >= 0 ? `${c.days_left} gün` : "Doldu"} tone={c.days_left <= 30 ? "danger" : c.days_left <= 60 ? "warn" : undefined} />
-        <Kpi label="Tedarikçi puanı" value={p.vendor?.rating_avg ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : "tedarikçi kartı bağlı değil"} />
-        <Kpi label="Son karne" value={p.last_scorecards[0]?.total ?? "—"} note={p.last_scorecards[0]?.period} />
+      <div className="grid grid--kpi rise">
+        <Kpi label="Bedel" icon={<Wallet aria-hidden="true" />} value={c.amount ? <Money value={c.amount} /> : "—"} note={contractPeriod(c.period)} />
+        <Kpi label="Bitişe" icon={<Clock aria-hidden="true" />} value={c.days_left >= 0 ? `${c.days_left} gün` : "Doldu"} tone={c.days_left <= 30 ? "danger" : c.days_left <= 60 ? "warn" : undefined} note={formatDate(c.end_date)} />
+        <Kpi label="Tedarikçi puanı" icon={<Star aria-hidden="true" />} value={p.vendor?.rating_avg ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : "tedarikçi kartı bağlı değil"} />
+        <Kpi label="Son karne" icon={<ClipboardCheck aria-hidden="true" />} value={p.last_scorecards[0]?.total ?? "—"} note={p.last_scorecards[0]?.period ?? "henüz karne yok"} />
       </div>
+      {p.last_scorecards.filter((x) => x.total != null).length > 1 && (
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><ClipboardCheck aria-hidden="true" /></span><span className="card__title">Skor eğilimi</span><span className="card__meta ml-auto">toplam skor, 100 üzerinden</span></div>
+          <div className="card__body">
+            <BarChart label="Aylık karne skorları" format={(v) => String(v)} data={[...p.last_scorecards].reverse().map((x) => ({ label: x.period, value: x.total ?? 0, sub: x.status === "finalized" ? "kesin" : "taslak" }))} />
+          </div>
+        </div>
+      )}
       {c.days_left <= 60 && c.days_left >= 0 && <Alert tone="warn" title="Yenileme kararı">Sözleşme {c.days_left} gün sonra bitiyor. Son 12 ayın karnesine bakarak yenileyin, yeniden teklif alın ya da sonlandırın.</Alert>}
       {ep.status === "due" && <Alert tone="info" title="Fiyat artışı onay bekliyor">{formatDate(ep.date)} tarihli artış: {formatMoney(ep.old_amount)} → {formatMoney(ep.new_amount)}. "Fiyat artışı" sekmesinden karar verin.</Alert>}
       {ep.status === "missing_index" && <Alert tone="warn" title="Endeks değeri eksik">{ep.index_period} dönemi endeksi girilmemiş; platform yöneticisine bildirildi.</Alert>}

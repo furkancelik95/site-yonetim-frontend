@@ -1,10 +1,11 @@
 import { Fragment, useState, type FormEvent } from "react";
-import { ClipboardList, Gauge, KeyRound, ListTodo, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, BarChart3, CalendarClock, CheckCircle2, ClipboardList, FileWarning, Gauge, History, Hourglass, KeyRound, ListTodo, LogOut, Plus, ShieldCheck, Trash2, TriangleAlert, UserCheck, Wallet, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { BarChart } from "../../components/charts";
 import { PhotoInput } from "../../components/PhotoInput";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatDateTime, parseMoneyInput, todayIso } from "../../lib/format";
+import { formatDate, formatDateTime, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { WEEKDAYS, claimStatus, claimTone, depositStatus, depositTone, itemType, keyKind, meterKind, policyKind, readingStatus, readingTone, taskFrequency, taskStatus, taskTone } from "../../lib/labels";
 
@@ -25,7 +26,7 @@ interface TaskRow { template: TaskT; done: { status: string; reason: string | nu
 const plusHours = (h: number) => { const d = new Date(Date.now() + h * 3600e3); d.setMinutes(0, 0, 0); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:00`; };
 const ROLES = ["Yönetici", "Teknik Personel", "Güvenlik", "Görevli", "Sakin"];
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <div className="tabs" role="tablist" aria-label={label}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className="tabs__tab" onClick={() => set(k)}>{l}</button>)}</div>
 );
 
 // ===================================================================== 53 Anahtar ve emanet
@@ -34,8 +35,9 @@ export function KeysPage() {
   const [s, set] = useUrlState({ sekme: "anahtar" });
   return (
     <div className="stack">
-      <PageHead title="Anahtar ve emanet" subtitle="Ortak alan anahtarları kimde, ne zaman dönecek; sakinlerin bıraktığı emanet anahtarlar yalnız yetkili kişiye." />
-      {tabs([["anahtar", "Anahtarlar"], ["emanet", "Emanet anahtarlar"]], s.sekme, (k) => set({ sekme: k }), "Anahtar")}
+      <PageHead title="Anahtar ve emanet" eyebrow="Operasyon" subtitle="Ortak alan anahtarları kimde, ne zaman dönecek; sakinlerin bıraktığı emanet anahtarlar yalnız yetkili kişiye.">
+        {tabs([["anahtar", "Anahtarlar"], ["emanet", "Emanet anahtarlar"]], s.sekme, (k) => set({ sekme: k }), "Anahtar")}
+      </PageHead>
       {s.sekme === "emanet" ? <Deposits /> : <Keys />}
     </div>
   );
@@ -49,7 +51,7 @@ function Keys() {
   const out = (q.data ?? []).filter((k) => k.loan).length, late = (q.data ?? []).filter((k) => k.overdue).length;
   return (
     <>
-      <div className="grid grid--kpi"><Kpi label="Anahtar" value={q.data?.length ?? 0} /><Kpi label="Dışarıda" value={out} /><Kpi label="İadesi gecikmiş" value={late} tone={late ? "danger" : undefined} /></div>
+      <div className="grid grid--kpi rise"><Kpi label="Anahtar" icon={<KeyRound aria-hidden="true" />} value={q.data?.length ?? 0} note="kayıtlı anahtar, kart, kumanda" /><Kpi label="Dışarıda" icon={<LogOut aria-hidden="true" />} tone={out ? "accent" : undefined} value={out} note="teslim edilmiş, iade bekleniyor" /><Kpi label="İadesi gecikmiş" icon={<AlertTriangle aria-hidden="true" />} value={late} tone={late ? "danger" : undefined} note="iade zamanı geçti" /></div>
       <div className="row"><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Anahtar ekle</button></div>
       {adding && (
         <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ ...f, area: f.area.trim() || null }); }}>
@@ -66,7 +68,9 @@ function Keys() {
           <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={add.isPending}>Ekle</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => setAdding(false)}>Vazgeç</button></div>
         </form>
       )}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><KeyRound aria-hidden="true" /></span><span className="card__title">Anahtarlar</span>{q.data && <span className="card__meta ml-auto">{q.data.length} kayıt</span>}</div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Anahtar kaydı yok" icon={<KeyRound aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Anahtarlar</caption>
@@ -105,9 +109,20 @@ function ReturnKey({ id }: { id: string }) {
 
 function Deposits() {
   const q = useSiteGet<DepKey[]>("/deposited-keys");
+  const n = (st: string) => (q.data ?? []).filter((d) => d.status === st).length;
   return (
-    <div className="card"><div className="card__body card__body--flush">
-      {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Emanet anahtar yok">Sakin uygulamada "Emanet anahtar" bırakır; anahtarı getirdiğinde teslim alın.</Empty> : (
+    <>
+    {q.data ? (
+      <div className="grid grid--kpi rise">
+        <Kpi label="Teslim bekleniyor" tone={n("requested") ? "warn" : undefined} icon={<Hourglass aria-hidden="true" />} value={n("requested")} note="sakin bildirdi, anahtar gelmedi" />
+        <Kpi label="Emanette" tone="accent" icon={<KeyRound aria-hidden="true" />} value={n("held")} note="güvenlikte duran anahtar" />
+        <Kpi label="Yetkiliye verilen" icon={<UserCheck aria-hidden="true" />} value={n("handed")} note="kimlik kontrolüyle teslim" />
+      </div>
+    ) : <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
+    <div className="card">
+      <div className="card__head"><span className="card__icon card__icon--accent"><KeyRound aria-hidden="true" /></span><span className="card__title">Emanet anahtarlar</span>{q.data && <span className="card__meta ml-auto">{q.data.length} kayıt</span>}</div>
+      <div className="card__body card__body--flush">
+      {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Emanet anahtar yok" icon={<KeyRound aria-hidden="true" />}>Sakin uygulamada "Emanet anahtar" bırakır; anahtarı getirdiğinde teslim alın.</Empty> : (
         <div className="table-wrap"><table className="data">
           <caption className="visually-hidden">Emanet anahtarlar</caption>
           <thead><tr><th scope="col">Bölüm</th><th scope="col">Yetkili kişiler</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
@@ -122,6 +137,7 @@ function Deposits() {
         </table></div>
       )}
     </div></div>
+    </>
   );
 }
 function DepositActions({ d }: { d: DepKey }) {
@@ -149,10 +165,25 @@ function DepositActions({ d }: { d: DepKey }) {
 /** Denetim listeleri (OPS-03): şablondan saha denetimi; olumsuz madde talep açar; skor. */
 export function InspectionsPage() {
   const [s, set] = useUrlState({ sekme: "yeni" });
+  const iq = useSiteGet<Inspection[]>("/inspections");
+  const tq = useSiteGet<ChkTemplate[]>("/checklist-templates");
+  const list = iq.data ?? [];
+  const avg = list.length ? Math.round(list.reduce((a, x) => a + x.score, 0) / list.length) : null;
+  const failed = list.reduce((a, x) => a + x.failed, 0);
+  const opened = list.reduce((a, x) => a + x.opened_request_ids.length, 0);
   return (
     <div className="stack">
-      <PageHead title="Denetim listeleri" subtitle="Temizlik, havuz hijyeni, taşınma hasar kontrolü… Olumsuz madde otomatik talep açar." />
-      {tabs([["yeni", "Denetim yap"], ["gecmis", "Geçmiş"], ["sablon", "Şablonlar"]], s.sekme, (k) => set({ sekme: k }), "Denetim")}
+      <PageHead title="Denetim listeleri" eyebrow="Operasyon" subtitle="Temizlik, havuz hijyeni, taşınma hasar kontrolü… Olumsuz madde otomatik talep açar.">
+        {tabs([["yeni", "Denetim yap"], ["gecmis", "Geçmiş"], ["sablon", "Şablonlar"]], s.sekme, (k) => set({ sekme: k }), "Denetim")}
+      </PageHead>
+      {iq.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Yapılan denetim" icon={<ClipboardList aria-hidden="true" />} value={list.length} note={tq.data ? `${tq.data.filter((t) => t.is_active).length} etkin şablon` : undefined} />
+          <Kpi label="Ortalama skor" tone={avg == null ? undefined : avg >= 90 ? "ok" : avg >= 70 ? "warn" : "danger"} icon={<Gauge aria-hidden="true" />} value={avg == null ? "—" : `%${avg}`} note="tüm denetimlerin ortalaması" />
+          <Kpi label="Olumsuz madde" tone={failed ? "warn" : "ok"} icon={<TriangleAlert aria-hidden="true" />} value={failed} note="uygun bulunmayan madde" />
+          <Kpi label="Açılan talep" icon={<Wrench aria-hidden="true" />} value={opened} note="olumsuz maddeden otomatik" />
+        </div>
+      ) : !iq.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {s.sekme === "gecmis" ? <InspectionHistory /> : s.sekme === "sablon" ? <ChkTemplates /> : <NewInspection />}
     </div>
   );
@@ -200,9 +231,22 @@ function NewInspection() {
 function InspectionHistory() {
   const q = useSiteGet<Inspection[]>("/inspections");
   const [open, setOpen] = useState<string | null>(null);
+  // Son 8 denetimin skoru, eskiden yeniye (liste yeniden eskiye geliyor)
+  const recent = (q.data ?? []).slice(0, 8).reverse();
   return (
-    <div className="card"><div className="card__body card__body--flush">
-      {!q.data ? <Loading /> : q.data.length === 0 ? <Empty title="Denetim yok" /> : (
+    <>
+    {recent.length > 1 && (
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">Son denetimlerin skoru</span><span className="card__meta ml-auto">son {recent.length} denetim</span></div>
+        <div className="card__body ops-chart">
+          <BarChart label="Son denetim skorları" data={recent.map((x) => ({ label: formatDate(x.at).slice(0, 5), value: x.score, sub: x.template_name }))} format={(v) => `%${Math.round(v)}`} highlight={recent.length - 1} compact />
+        </div>
+      </div>
+    )}
+    <div className="card">
+      <div className="card__head"><span className="card__icon card__icon--accent"><ClipboardList aria-hidden="true" /></span><span className="card__title">Denetim geçmişi</span>{q.data && <span className="card__meta ml-auto">{q.data.length} denetim</span>}</div>
+      <div className="card__body card__body--flush">
+      {!q.data ? <Loading /> : q.data.length === 0 ? <Empty title="Denetim yok" icon={<ClipboardList aria-hidden="true" />} /> : (
         <div className="table-wrap"><table className="data">
           <caption className="visually-hidden">Denetim geçmişi</caption>
           <thead><tr><th scope="col">Denetim</th><th scope="col" className="right">Skor</th><th scope="col">Olumsuz</th><th scope="col"><span className="visually-hidden">Ayrıntı</span></th></tr></thead>
@@ -220,6 +264,7 @@ function InspectionHistory() {
         </table></div>
       )}
     </div></div>
+    </>
   );
 }
 
@@ -251,7 +296,9 @@ function ChkTemplates() {
           <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Kaydet</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => setOpen(false)}>Vazgeç</button></div>
         </form>
       )}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><ListTodo aria-hidden="true" /></span><span className="card__title">Denetim şablonları</span>{q.data && <span className="card__meta ml-auto">{q.data.length} şablon</span>}</div>
+        <div className="card__body card__body--flush">
         {!q.data ? <Loading /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Denetim şablonları</caption>
             <thead><tr><th scope="col">Şablon</th><th scope="col" className="right">Madde</th></tr></thead>
@@ -272,7 +319,15 @@ export function InsurancePage() {
   const warn = (pq.data ?? []).filter((p) => p.warning);
   return (
     <div className="stack">
-      <PageHead title="Sigorta ve hasar" subtitle="Poliçelerin bitişini kaçırmayın; hasar dosyalarını ve tazminatı izleyin." actions={<><button className="btn" type="button" onClick={() => setAdding("claim")} disabled={!pq.data?.length}>Hasar dosyası aç</button><button className="btn btn--primary" type="button" onClick={() => setAdding("policy")}><Plus aria-hidden="true" /> Poliçe ekle</button></>} />
+      <PageHead title="Sigorta ve hasar" eyebrow="Yönetim" subtitle="Poliçelerin bitişini kaçırmayın; hasar dosyalarını ve tazminatı izleyin." actions={<><button className="btn" type="button" onClick={() => setAdding("claim")} disabled={!pq.data?.length}>Hasar dosyası aç</button><button className="btn btn--primary" type="button" onClick={() => setAdding("policy")}><Plus aria-hidden="true" /> Poliçe ekle</button></>} />
+      {pq.data && cq.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Geçerli poliçe" tone="ok" icon={<ShieldCheck aria-hidden="true" />} value={pq.data.filter((p) => p.days_left >= 0).length} note={`${pq.data.length} kayıtlı poliçe`} />
+          <Kpi label="Bitişi yaklaşan" tone={warn.length ? "warn" : undefined} icon={<CalendarClock aria-hidden="true" />} value={warn.length} note="60 gün içinde ya da süresi doldu" />
+          <Kpi label="Toplam prim" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(pq.data.reduce((a, p) => a + Number(p.premium), 0).toFixed(2))} note="kayıtlı poliçelerin primi" />
+          <Kpi label="Açık hasar dosyası" tone={cq.data.some((c) => c.status === "open" || c.status === "submitted") ? "accent" : undefined} icon={<FileWarning aria-hidden="true" />} value={cq.data.filter((c) => c.status === "open" || c.status === "submitted").length} note={`${cq.data.length} dosyadan sonuçlanmamış`} />
+        </div>
+      ) : !pq.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {warn.length > 0 && <Alert tone="warn" title="Bitişi yaklaşan poliçe">{warn.map((p) => `${policyKind(p.kind)} (${p.insurer}) — ${p.days_left < 0 ? "süresi doldu" : `${p.days_left} gün kaldı`}`).join(" · ")}</Alert>}
       {adding === "policy" && <PolicyForm onDone={() => setAdding(null)} />}
       {adding === "claim" && <ClaimForm policies={pq.data ?? []} onDone={() => setAdding(null)} />}
@@ -288,7 +343,7 @@ export function InsurancePage() {
         </div>
       </div>
       <div className="card">
-        <div className="card__head"><span className="card__title">Hasar dosyaları</span></div>
+        <div className="card__head"><span className="card__icon card__icon--warn"><FileWarning aria-hidden="true" /></span><span className="card__title">Hasar dosyaları</span>{cq.data && <span className="card__meta ml-auto">{cq.data.length} dosya</span>}</div>
         <div className="card__body card__body--flush">
           {!cq.data || cq.data.length === 0 ? <Empty title="Hasar dosyası yok" /> : (
             <div className="table-wrap"><table className="data"><caption className="visually-hidden">Hasar dosyaları</caption>
@@ -365,11 +420,17 @@ export function MetersPage() {
   const anomalies = (q.data?.rows ?? []).filter((r) => r.reading?.status === "anomaly").length;
   return (
     <div className="stack">
-      <PageHead title="Sayaçlar ve okuma" subtitle="Okumalar fotoğraf kanıtıyla; önceki endeksten küçük değer reddedilir, %50'den fazla sapma onaya düşer." actions={<button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Sayaç ekle</button>} />
+      <PageHead title="Sayaçlar ve okuma" eyebrow="Operasyon" subtitle="Okumalar fotoğraf kanıtıyla; önceki endeksten küçük değer reddedilir, %50'den fazla sapma onaya düşer." actions={<button className="btn btn--primary" type="button" onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Sayaç ekle</button>} />
+      {q.data && <div className="grid grid--kpi rise"><Kpi label="Sayaç" icon={<Gauge aria-hidden="true" />} value={q.data.rows.length} note="kayıtlı sayaç" /><Kpi label="Okunmamış" icon={<ClipboardList aria-hidden="true" />} value={q.data.missing} tone={q.data.missing ? "warn" : "ok"} note="bu dönem okuması girilmedi" /><Kpi label="Anormal" icon={<TriangleAlert aria-hidden="true" />} value={anomalies} tone={anomalies ? "warn" : undefined} note="%50'den fazla sapma, onay bekliyor" /></div>}
+      {!q.data && !q.isError && <div className="grid grid--kpi">{[0, 1, 2].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {adding && <MeterForm onDone={() => setAdding(false)} />}
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="mt-p">Okuma dönemi</label><input id="mt-p" className="field__input" type="month" value={s.donem} onChange={(e) => set({ donem: e.target.value })} /></div></div>
-      {q.data && <div className="grid grid--kpi"><Kpi label="Sayaç" value={q.data.rows.length} /><Kpi label="Okunmamış" value={q.data.missing} tone={q.data.missing ? "warn" : "ok"} /><Kpi label="Anormal" value={anomalies} tone={anomalies ? "warn" : undefined} /></div>}
-      <div className="card"><div className="card__body card__body--flush">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Gauge aria-hidden="true" /></span>
+          <div><div className="card__title">Dönem okumaları</div>{q.data && <div className="card__meta">{q.data.rows.length - q.data.missing} / {q.data.rows.length} okundu</div>}</div>
+          <div className="card__tools"><div className="field"><label className="field__label" htmlFor="mt-p">Okuma dönemi</label><input id="mt-p" className="field__input" type="month" value={s.donem} onChange={(e) => set({ donem: e.target.value })} /></div></div>
+        </div>
+        <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.rows.length === 0 ? <Empty title="Sayaç yok" icon={<Gauge aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Sayaç okumaları</caption>
             <thead><tr><th scope="col">Sayaç</th><th scope="col" className="right">Önceki</th><th scope="col" className="right">Bu dönem</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
@@ -441,10 +502,24 @@ function AnomalyActions({ id }: { id: string }) {
 /** Görevli rutin görevleri (OPS-06): şablondan günlük görev; fotoğraf zorunluysa fotoğrafsız tamamlanmaz; haftalık oran. */
 export function TasksPage() {
   const [s, set] = useUrlState({ sekme: "bugun", tarih: todayIso() });
+  // Göstergeler her zaman bugünü anlatır (gün seçimi yalnız listeyi değiştirir)
+  const today = useSiteGet<TaskRow[]>("/tasks", { date: todayIso() }, { refetchInterval: 60000 });
+  const rep = useSiteGet<{ rate: number | null }>("/tasks/report");
+  const t = today.data ?? [];
+  const cnt = (st: string) => t.filter((x) => x.status === st).length;
   return (
     <div className="stack">
-      <PageHead title="Rutin görevler" subtitle="Çöp, temizlik, havuz kontrolü gibi işler şablondan her gün üretilir; saat aralığı geçince 'gecikti'." />
-      {tabs([["bugun", "Günün görevleri"], ["sablon", "Görev şablonları"], ["rapor", "Haftalık rapor"]], s.sekme, (k) => set({ sekme: k }), "Görevler")}
+      <PageHead title="Rutin görevler" eyebrow="Operasyon" subtitle="Çöp, temizlik, havuz kontrolü gibi işler şablondan her gün üretilir; saat aralığı geçince 'gecikti'.">
+        {tabs([["bugun", "Günün görevleri"], ["sablon", "Görev şablonları"], ["rapor", "Haftalık rapor"]], s.sekme, (k) => set({ sekme: k }), "Görevler")}
+      </PageHead>
+      {today.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Bugünkü görev" icon={<ListTodo aria-hidden="true" />} value={t.length} note={`${cnt("upcoming") + cnt("due")} tanesi sırada ya da şimdi`} />
+          <Kpi label="Tamamlanan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={cnt("done")} note={cnt("failed") ? `${cnt("failed")} tamamlanamadı` : "bugün kapatılan"} />
+          <Kpi label="Geciken" tone={cnt("late") ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={cnt("late")} note="saat aralığı geçti" />
+          <Kpi label="Haftalık oran" tone={rep.data?.rate == null ? undefined : rep.data.rate >= 90 ? "ok" : rep.data.rate >= 70 ? "warn" : "danger"} icon={<Gauge aria-hidden="true" />} value={rep.data ? (rep.data.rate == null ? "—" : `%${rep.data.rate}`) : "…"} note="son 7 günde tamamlanma" />
+        </div>
+      ) : !today.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {s.sekme === "sablon" ? <TaskTemplates /> : s.sekme === "rapor" ? <TaskReport /> : <DayTasks date={s.tarih} setDate={(tarih) => set({ tarih })} />}
     </div>
   );
@@ -453,12 +528,16 @@ export function TasksPage() {
 function DayTasks({ date, setDate }: { date: string; setDate: (d: string) => void }) {
   const q = useSiteGet<TaskRow[]>("/tasks", { date }, { refetchInterval: 60000 });
   return (
-    <>
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="tk-d">Gün</label><input id="tk-d" className="field__input" type="date" max={todayIso()} value={date} onChange={(e) => setDate(e.target.value)} /></div></div>
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><ListTodo aria-hidden="true" /></span>
+        <div><div className="card__title">Günün görevleri</div>{q.data && <div className="card__meta">{formatDate(date)} · {q.data.length} görev</div>}</div>
+        <div className="card__tools"><div className="field"><label className="field__label" htmlFor="tk-d">Gün</label><input id="tk-d" className="field__input" type="date" max={todayIso()} value={date} onChange={(e) => setDate(e.target.value)} /></div></div>
+      </div>
       {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Bu gün görev yok" icon={<ListTodo aria-hidden="true" />}>Görev şablonu ekleyin.</Empty> : (
-        <div className="stack" style={{ gap: "var(--s-2)" }}>{q.data.map((t) => <TaskCard key={t.template.id} t={t} date={date} />)}</div>
+        <div className="task-list">{q.data.map((t) => <TaskCard key={t.template.id} t={t} date={date} />)}</div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -469,7 +548,7 @@ function TaskCard({ t, date }: { t: TaskRow; date: string }) {
   const [reason, setReason] = useState("");
   const m = useSiteMutation<Record<string, unknown>, unknown>("POST", `/tasks/${t.template.id}/complete`, { onSuccess: () => setOpen(false) });
   return (
-    <div className="card"><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+    <div className="task-row"><div className="stack" style={{ gap: "var(--s-2)" }}>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <div><span className="strong">{t.template.name}</span> <span className="small muted">{t.template.time_from}–{t.template.time_to}{t.template.location && ` · ${t.template.location}`} · {t.template.assignee}</span>{t.template.description && <div className="small">{t.template.description}</div>}</div>
         <Badge tone={taskTone(t.status)}>{taskStatus(t.status)}</Badge>
@@ -520,8 +599,10 @@ function TaskTemplates() {
           <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Kaydet</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => setOpen(false)}>Vazgeç</button></div>
         </form>
       )}
-      <div className="card"><div className="card__body card__body--flush">
-        {!q.data || q.data.length === 0 ? <Empty title="Görev şablonu yok" /> : (
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><ListTodo aria-hidden="true" /></span><span className="card__title">Görev şablonları</span>{q.data && <span className="card__meta ml-auto">{q.data.length} şablon</span>}</div>
+        <div className="card__body card__body--flush">
+        {!q.data || q.data.length === 0 ? <Empty title="Görev şablonu yok" icon={<ListTodo aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Görev şablonları</caption>
             <thead><tr><th scope="col">Görev</th><th scope="col">Sıklık</th><th scope="col">Saat</th><th scope="col">Atanan</th></tr></thead>
             <tbody>{q.data.map((t) => <tr key={t.id}><td className="cell-main">{t.name}{t.photo_required && <div className="cell-sub">fotoğraf zorunlu</div>}</td><td className="small">{taskFrequency(t.frequency)}{t.frequency === "weekdays" && ` (${t.weekdays.map((d) => WEEKDAYS[d]).join(", ")})`}{t.frequency === "monthly" && ` (${t.month_day}.)`}</td><td className="small mono">{t.time_from}–{t.time_to}</td><td className="small">{t.assignee}</td></tr>)}</tbody>
@@ -535,9 +616,19 @@ function TaskTemplates() {
 function TaskReport() {
   const q = useSiteGet<{ from: string; to: string; rows: { template_id: string; name: string; assignee: string; expected: number; done: number; rate: number | null }[]; rate: number | null }>("/tasks/report");
   if (!q.data) return <Loading />;
+  const rated = q.data.rows.filter((r) => r.rate != null);
   return (
+    <>
+    {rated.length > 0 && (
+      <div className="card">
+        <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">Görev bazında tamamlanma</span><span className="card__meta ml-auto">son 7 gün</span></div>
+        <div className="card__body ops-chart">
+          <BarChart label="Görev bazında tamamlanma oranı" data={rated.map((r) => ({ label: r.name, value: r.rate ?? 0, sub: `${r.done}/${r.expected}` }))} format={(v) => `%${Math.round(v)}`} highlight={rated.reduce((bi, r, i, a) => ((r.rate ?? 0) < (a[bi]?.rate ?? 0) ? i : bi), 0)} compact />
+        </div>
+      </div>
+    )}
     <div className="card">
-      <div className="card__head"><span className="card__title">Son 7 gün</span><span className="card__meta ml-auto">{formatDate(q.data.from)} – {formatDate(q.data.to)} · genel %{q.data.rate ?? "—"}</span></div>
+      <div className="card__head"><span className="card__icon card__icon--accent"><ListTodo aria-hidden="true" /></span><span className="card__title">Son 7 gün</span><span className="card__meta ml-auto">{formatDate(q.data.from)} – {formatDate(q.data.to)} · genel %{q.data.rate ?? "—"}</span></div>
       <div className="card__body card__body--flush">
         {q.data.rows.length === 0 ? <Empty title="Görev yok" /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Görev tamamlanma oranı</caption>
@@ -548,6 +639,7 @@ function TaskReport() {
       </div>
       <div className="card__foot small muted">Dış firma personeline atanan görevlerin oranı sözleşme KPI'ı olarak kullanılabilir (satın alma ve sözleşme paketiyle).</div>
     </div>
+    </>
   );
 }
 
@@ -566,7 +658,7 @@ export function StockCount() {
     <div className="stack">
       {low.length > 0 && <Alert tone="warn" title="Asgari seviyenin altında">{low.map((i) => `${i.name} (${Number(i.quantity).toLocaleString("tr-TR")} ${i.unit_label})`).join(", ")} — satın alma talebi önerilir (satın alma paketiyle).</Alert>}
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ lines: Object.entries(counts).filter(([, v]) => v !== "").map(([item_id, counted]) => ({ item_id, counted: counted.replace(",", ".") })) }); }}>
-        <div className="card__head"><span className="card__title">Sayım</span><span className="card__meta ml-auto">yalnız saydığınız malzemeleri girin</span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><ClipboardList aria-hidden="true" /></span><span className="card__title">Sayım</span><span className="card__meta ml-auto">yalnız saydığınız malzemeleri girin</span></div>
         <div className="card__body card__body--flush">
           <FormError error={m.error} />
           {!items.data ? <Loading /> : items.data.length === 0 ? <Empty title="Malzeme yok" /> : (
@@ -583,7 +675,7 @@ export function StockCount() {
         <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!Object.values(counts).some((v) => v !== "")}>Sayımı kaydet</SubmitButton><span className="small muted">Farkın onaya bağlanması K21 kararına bağlı; şimdilik doğrudan düzeltme hareketi yazılır.</span></div>
       </form>
       {hist.data && hist.data.length > 0 && (
-        <div className="card"><div className="card__head"><span className="card__title">Sayım geçmişi</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+        <div className="card"><div className="card__head"><span className="card__icon card__icon--accent"><History aria-hidden="true" /></span><span className="card__title">Sayım geçmişi</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
           {hist.data.map((h) => { const diffs = h.lines.filter((l) => Number(l.diff) !== 0); return <div key={h.id} className="small"><strong>{formatDateTime(h.created_at)}</strong> · {h.created_by} · {h.lines.length} kalem{diffs.length > 0 && ` · fark: ${diffs.map((l) => `${l.name} ${Number(l.diff) > 0 ? "+" : ""}${Number(l.diff).toLocaleString("tr-TR")}`).join(", ")}`}</div>; })}
         </div></div>
       )}

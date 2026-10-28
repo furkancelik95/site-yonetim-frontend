@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { ApiError, api } from "../../api/client";
 import type { Me, Written } from "../../api/types";
 import { homePath, useAuth } from "../../auth/AuthContext";
@@ -49,25 +49,26 @@ export function LoginPage() {
     <AuthFrame
       aside={
         SHOW_DEMO && status !== "mfa" ? (
-          <aside className="auth__demo" aria-label="Gösterim hesapları">
-            <div className="section-title">Gösterim hesapları</div>
-            <p className="small muted">
-              Her rolün ne gördüğünü denemek için aşağıdaki hesaplarla giriş yapabilirsiniz. Hepsinin parolası aynı:{" "}
-              <span className="mono strong">{DEMO_PASSWORD}</span>. Sakin ve saha hesapları "Telefon ile" sekmesinden SMS koduyla da girer (kod demo ekranında görünür).
+          <details className="auth__demo" open>
+            <summary>
+              <span>Gösterim hesapları</span>
+              <ChevronDown aria-hidden="true" />
+            </summary>
+            <p className="small muted" style={{ margin: "var(--s-3) 0 0" }}>
+              Her rolün ne gördüğünü denemek için bir hesaba tıklayın. Hepsinin parolası aynı: <span className="mono strong">{DEMO_PASSWORD}</span>. Sakin ve saha hesapları "Telefon ile" sekmesinden SMS koduyla da girer (kod demo ekranında görünür).
             </p>
-            <div className="stack" style={{ gap: "var(--s-2)", marginTop: "var(--s-4)" }}>
+            <div className="auth__demo-grid">
               {DEMO_ACCOUNTS.map((a) => (
-                <button key={a.email} type="button" className="demo-account" onClick={() => { setMode("email"); setDemoEmail({ email: a.email, at: Date.now() }); }}>
+                <button key={a.email} type="button" className="demo-account" title={a.desc} onClick={() => { setMode("email"); setDemoEmail({ email: a.email, at: Date.now() }); }}>
                   <span className="demo-account__row">
                     <span className="demo-account__role">{a.role}</span>
                     <span className="demo-account__name">{a.name}</span>
                   </span>
                   <span className="demo-account__mail mono xs">{a.email}</span>
-                  <span className="demo-account__desc">{a.desc}</span>
                 </button>
               ))}
             </div>
-          </aside>
+          </details>
         ) : undefined
       }
     >

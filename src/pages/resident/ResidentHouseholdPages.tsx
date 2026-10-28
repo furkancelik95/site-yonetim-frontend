@@ -8,10 +8,9 @@ import { formatDate, todayIso } from "../../lib/format";
 import { formatPhone, isTrMobile, phoneDigits, phoneMask, plateInput, toE164 } from "../../lib/input";
 import { householdPermission, householdStatus, vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
 
-/** Servis isteği 20 ve 22'deki şekiller (sakin tarafı). */
 type Perm = "visitors" | "packages" | "reservations" | "requests";
-interface Household { id: string; unit_id: string; unit_name: string; full_name: string; phone: string; permissions: Record<Perm, boolean>; status: "invited" | "active" | "ended"; invite_link: string; created_at: string; ended_at: string | null }
-interface MyVehicle { id: string; plate_display: string; brand_model: string | null; color: string | null; unit_name: string; kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive" }
+type Household = Schemas["HouseholdOut"];
+type MyVehicle = Schemas["VehicleOut"];
 type MyUnit = Schemas["MyUnit"];
 const PERMS: Perm[] = ["visitors", "packages", "reservations", "requests"];
 const HOUSEHOLD_LIMIT = 6;
@@ -28,24 +27,27 @@ export function ResidentHouseholdPage() {
   const q = useSiteGet<Household[]>("/resident/household");
   const home = useSiteGet<Schemas["HomeOut"]>("/resident/home");
   const [adding, setAdding] = useState(false);
+  // Davet bağlantısı yalnız oluşturma yanıtında döner (belirtecin özeti saklanır): bu oturumda göster.
+  const [links, setLinks] = useState<Record<string, string>>({});
   const active = (q.data ?? []).filter((h) => h.status !== "ended");
+  const copy = (link: string) => navigator.clipboard?.writeText(`${window.location.origin}${link}`).then(() => toast("Davet bağlantısı kopyalandı."));
   return (
     <>
       <div className="section-title">Hane üyeleri</div>
       <p className="small muted">Aile bireyleri ve yardımcılar: ziyaretçi davet edebilir, kargo bildirimi alabilir. Davet bağlantısını kendilerine iletin. En fazla {HOUSEHOLD_LIMIT} üye.</p>
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <div className="stack" style={{ gap: "var(--s-3)" }}>
-          {adding ? <HouseholdForm units={home.data?.units ?? []} onDone={() => setAdding(false)} /> : (
+          {adding ? <HouseholdForm units={home.data?.units ?? []} onDone={(h) => { setAdding(false); if (h?.invite_link) { setLinks((x) => ({ ...x, [h.id]: h.invite_link! })); copy(h.invite_link); } }} /> : (
             <button className="btn btn--primary" style={{ width: "100%" }} type="button" disabled={active.length >= HOUSEHOLD_LIMIT} onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Hane üyesi davet et</button>
           )}
-          {q.data.length === 0 ? <Empty title="Hane üyesi yok" icon={<Users aria-hidden="true" />} /> : q.data.map((h) => <HouseholdItem key={h.id} h={h} onCopy={() => navigator.clipboard?.writeText(h.invite_link).then(() => toast("Davet bağlantısı kopyalandı."))} />)}
+          {q.data.length === 0 ? <Empty title="Hane üyesi yok" icon={<Users aria-hidden="true" />} /> : q.data.map((h) => <HouseholdItem key={h.id} h={h} onCopy={links[h.id] ? () => copy(links[h.id]!) : undefined} />)}
         </div>
       )}
     </>
   );
 }
 
-function HouseholdItem({ h, onCopy }: { h: Household; onCopy: () => void }) {
+function HouseholdItem({ h, onCopy }: { h: Household; onCopy?: () => void }) {
   const end = useSiteMutation<Record<string, never>, Household>("POST", `/resident/household/${h.id}/end`);
   const perms = PERMS.filter((p) => h.permissions[p]).map(householdPermission);
   return (
@@ -56,7 +58,8 @@ function HouseholdItem({ h, onCopy }: { h: Household; onCopy: () => void }) {
         <div className="r-item__body">{perms.length ? perms.join(", ") : "Yetki yok"}</div>
         {h.status !== "ended" && (
           <div className="row" style={{ gap: "var(--s-2)", marginTop: "var(--s-2)" }}>
-            {h.status === "invited" && <button className="btn btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Davet bağlantısı</button>}
+            {h.status === "invited" && onCopy && <button className="btn btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Davet bağlantısı</button>}
+            {h.status === "invited" && !onCopy && <span className="small muted">Davet bağlantısı yalnız oluşturulduğunda gösterilir; kaybolduysa üyeliği bitirip yeniden davet edin.</span>}
             <ConfirmButton className="btn btn--ghost btn--sm" danger title={`${h.full_name} — hane üyeliğini bitir`} confirmLabel="Bitir" body="Kişi uygulamaya erişemez; ziyaretçi ve kargo yetkileri kalkar." onConfirm={() => end.mutateAsync({})}>Bitir</ConfirmButton>
           </div>
         )}
@@ -65,7 +68,7 @@ function HouseholdItem({ h, onCopy }: { h: Household; onCopy: () => void }) {
   );
 }
 
-function HouseholdForm({ units, onDone }: { units: MyUnit[]; onDone: () => void }) {
+function HouseholdForm({ units, onDone }: { units: MyUnit[]; onDone: (created?: Household) => void }) {
   const [f, setF] = useState({ full_name: "", phone: "", unit_id: units[0]?.unit_id ?? "" });
   const [perms, setPerms] = useState<Record<Perm, boolean>>({ visitors: true, packages: true, reservations: false, requests: false });
   const [phoneErr, setPhoneErr] = useState<string>();
@@ -88,7 +91,7 @@ function HouseholdForm({ units, onDone }: { units: MyUnit[]; onDone: () => void 
         </fieldset>
         <p className="small muted mb-0">Hane üyesi borç ve ekstre göremez; aidat sorumluluğu sizde kalır.</p>
       </div>
-      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.full_name.trim() || !f.phone}>Davet et</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
+      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!f.full_name.trim() || !f.phone}>Davet et</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => onDone()}>Vazgeç</button></div>
     </form>
   );
 }

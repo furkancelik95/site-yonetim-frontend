@@ -7,8 +7,8 @@ import { useDocumentTitle } from "../../components/ui";
 function Bare({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   const { status, logout } = useAuth();
   return (
-    <main id="main" className="auth" style={{ gridTemplateColumns: "1fr", maxWidth: 560 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth auth--single">
+      <div className="auth__panel" style={{ width: "min(100%, 560px)" }}>
         <div className="empty">
           {icon}
           <h1 className="empty__title">{title}</h1>

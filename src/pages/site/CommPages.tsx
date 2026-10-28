@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Download, Plus, Printer, Siren, Trash2 } from "lucide-react";
+import { Bell, Building2, CheckCircle2, Clock, Download, Eye, HelpCircle, History as HistoryIcon, Languages, ListChecks, Mail, MapPin, Megaphone, MessageSquareText, Pencil, Phone, PieChart, Plus, Printer, ShieldCheck, Siren, Smartphone, Trash2, Users } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page } from "../../api/types";
+import { Donut } from "../../components/charts";
 import { PhotoInput } from "../../components/PhotoInput";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { downloadCsv } from "../../lib/csv";
@@ -24,7 +25,7 @@ export const EM_KIND: Record<string, string> = { earthquake: "Deprem", fire: "Ya
 export const INSTR: [string, string][] = [["earthquake", "Deprem"], ["fire", "Yangın"], ["flood", "Su baskını"], ["gas", "Gaz kaçağı"]];
 const ST: Record<string, [string, "ok" | "info" | "danger" | "muted"]> = { safe: ["Güvende", "ok"], muster: ["Toplanma alanında", "info"], help: ["Yardım istiyor", "danger"], none: ["Yanıt yok", "muted"] };
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
-  <div className="row" role="tablist" aria-label={label} style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className={`btn btn--sm${v === k ? " btn--primary" : ""}`} onClick={() => set(k)}>{l}</button>)}</div>
+  <div className="tabs" role="tablist" aria-label={label}>{items.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={v === k} className="tabs__tab" onClick={() => set(k)}>{l}</button>)}</div>
 );
 
 // ===================================================================== 71 Okuma raporu
@@ -40,21 +41,34 @@ export function ReadReportPage() {
   return (
     <div className="stack">
       <PageHead title={`Okuma raporu · ${r.title}`} subtitle={<><Link className="print-hide" to={`/s/${site.slug}/duyurular`}>Duyurular</Link> · {site.name} · rapor zamanı {formatDateTime(r.generated_at)}</>} actions={<button className="btn print-hide" type="button" onClick={() => window.print()}><Printer aria-hidden="true" /> Yazdır / PDF</button>} />
-      <div className="grid grid--kpi">
-        <Kpi label="Alıcı" value={r.recipient_count} />
-        <Kpi label="Okuyan" value={r.read_count} />
-        {r.requires_ack && <Kpi label="Onaylayan" value={r.acks.length} tone="ok" />}
-        {r.requires_ack && <Kpi label="Onaylamayan" value={r.not_acked ?? 0} tone={r.not_acked ? "warn" : undefined} />}
+      <div className="grid grid--kpi rise">
+        <Kpi label="Alıcı" icon={<Users aria-hidden="true" />} value={r.recipient_count} note="duyurunun ulaştığı kişi" />
+        <Kpi label="Okuyan" icon={<Eye aria-hidden="true" />} value={r.read_count} tone="accent" note={r.recipient_count ? `%${Math.round((r.read_count / r.recipient_count) * 100)} okundu` : undefined} />
+        {r.requires_ack && <Kpi label="Onaylayan" icon={<CheckCircle2 aria-hidden="true" />} value={r.acks.length} tone="ok" note="okudum, anladım dedi" />}
+        {r.requires_ack && <Kpi label="Onaylamayan" icon={<Clock aria-hidden="true" />} value={r.not_acked ?? 0} tone={r.not_acked ? "warn" : undefined} note="süre dolunca SMS yedeği" />}
       </div>
-      <div className="card"><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
-        <div className="kv"><span className="kv__k">Yayın</span><span className="kv__v">{formatDateTime(r.published_at)}</span></div>
-        <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{audience(r.audience)}</span></div>
-        {r.requires_ack && <div className="kv"><span className="kv__k">Son onay</span><span className="kv__v">{formatDateTime(r.ack_deadline)}</span></div>}
-        {r.sms_fallback && <div className="kv"><span className="kv__k">SMS yedeği</span><span className="kv__v">{r.sms_fallback.due ? `${r.sms_fallback.count} kişiye bir kez` : "süre dolunca onaylamayanlara bir kez"} · {r.sms_fallback.note}</span></div>}
-      </div></div>
+      <div className="ops-charts">
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><Megaphone aria-hidden="true" /></span><span className="card__title">Duyuru bilgisi</span></div>
+          <div className="card__body stack" style={{ gap: "var(--s-1)" }}>
+            <div className="kv"><span className="kv__k">Yayın</span><span className="kv__v">{formatDateTime(r.published_at)}</span></div>
+            <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{audience(r.audience)}</span></div>
+            {r.requires_ack && <div className="kv"><span className="kv__k">Son onay</span><span className="kv__v">{formatDateTime(r.ack_deadline)}</span></div>}
+            {r.sms_fallback && <div className="kv"><span className="kv__k">SMS yedeği</span><span className="kv__v">{r.sms_fallback.due ? `${r.sms_fallback.count} kişiye bir kez` : "süre dolunca onaylamayanlara bir kez"} · {r.sms_fallback.note}</span></div>}
+          </div>
+        </div>
+        <div className="card print-hide">
+          <div className="card__head"><span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span><span className="card__title">Okunma durumu</span><span className="card__meta ml-auto">{r.recipient_count} alıcı</span></div>
+          <div className="card__body ops-pie">
+            <Donut label="Okunma durumu" centerSub="alıcı" segments={r.requires_ack
+              ? [{ label: "Onayladı", value: r.acks.length, tone: "ok" }, { label: "Okudu, onaylamadı", value: Math.max(0, r.read_count - r.acks.length), tone: "info" }, { label: "Okumadı", value: Math.max(0, r.recipient_count - r.read_count), tone: "muted" }]
+              : [{ label: "Okudu", value: r.read_count, tone: "ok" }, { label: "Okumadı", value: Math.max(0, r.recipient_count - r.read_count), tone: "muted" }]} />
+          </div>
+        </div>
+      </div>
       {r.requires_ack ? (
-        <div className="card"><div className="card__head"><span className="card__title">Onaylayanlar</span></div><div className="card__body card__body--flush">
-          {r.acks.length === 0 ? <Empty title="Henüz onay yok" /> : (
+        <div className="card"><div className="card__head"><span className="card__icon card__icon--ok"><CheckCircle2 aria-hidden="true" /></span><span className="card__title">Onaylayanlar</span><span className="card__meta ml-auto">{r.acks.length} kişi</span></div><div className="card__body card__body--flush">
+          {r.acks.length === 0 ? <Empty title="Henüz onay yok" icon={<CheckCircle2 aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data"><caption className="visually-hidden">Okuma onayları</caption>
               <thead><tr><th scope="col">Kişi</th><th scope="col">Bölüm</th><th scope="col">Onay zamanı</th><th scope="col">Kanal</th></tr></thead>
               <tbody>{r.acks.map((a, i) => <tr key={i}><td className="cell-main">{a.name}</td><td className="small">{a.units.join(", ")}</td><td className="small num">{formatDateTime(a.at)}</td><td className="small">Uygulama</td></tr>)}</tbody>
@@ -75,9 +89,17 @@ export function NotificationTemplatesPage() {
   return (
     <div className="stack">
       <PageHead title="Bildirim şablonları" subtitle="Sistem bildirimlerinin metnini sitenize göre düzenleyin. Zorunlu değişkenler silinemez; SMS'te Türkçe karakter 70, diğerleri 160 karakterde bir parça sayılır." />
+      {q.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Şablon" icon={<MessageSquareText aria-hidden="true" />} value={q.data.length} note="sistem bildirimi" />
+          <Kpi label="Özelleştirilen" tone="accent" icon={<Pencil aria-hidden="true" />} value={q.data.filter((t) => t.customized).length} note="sitenize göre düzenlenmiş" />
+          <Kpi label="SMS şablonu" icon={<Smartphone aria-hidden="true" />} value={q.data.filter((t) => t.channel === "sms").length} note={`${q.data.filter((t) => t.sms?.some((x) => x.segments > 1)).length} tanesi birden çok parça`} />
+          <Kpi label="Dil" icon={<Languages aria-hidden="true" />} value={new Set(q.data.flatMap((t) => t.variants.map((v) => v.lang))).size} note="metni olan dil sayısı" />
+        </div>
+      ) : !q.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.map((t) => (
         <div key={t.code} className="card">
-          <div className="card__head"><span className="card__title">{t.name}</span><span className="card__meta">{t.channel === "sms" ? "SMS" : t.channel === "email" ? "E-posta" : "Uygulama bildirimi"} · sürüm {t.version}</span><span className="ml-auto">{t.customized ? <Badge tone="info">Özelleştirildi</Badge> : <Badge tone="muted">Sistem</Badge>}</span></div>
+          <div className="card__head"><span className="card__icon card__icon--accent">{t.channel === "sms" ? <Smartphone aria-hidden="true" /> : t.channel === "email" ? <Mail aria-hidden="true" /> : <Bell aria-hidden="true" />}</span><span className="card__title">{t.name}</span><span className="card__meta">{t.channel === "sms" ? "SMS" : t.channel === "email" ? "E-posta" : "Uygulama bildirimi"} · sürüm {t.version}</span><span className="ml-auto">{t.customized ? <Badge tone="info">Özelleştirildi</Badge> : <Badge tone="muted">Sistem</Badge>}</span></div>
           {open === t.code ? <TplForm t={t} onDone={() => setOpen(null)} /> : (
             <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
               {t.variants.map((v) => <div key={v.lang} className="small"><strong>{v.lang.toUpperCase()}</strong> · {v.body}{t.sms && <span className="xs muted"> ({t.sms.find((x) => x.lang === v.lang)?.chars} karakter, {t.sms.find((x) => x.lang === v.lang)?.segments} SMS)</span>}</div>)}
@@ -134,9 +156,27 @@ export function EmergencyPage() {
   const q = useSiteGet<Active | null>("/emergencies/active", undefined, { refetchInterval: 10000 });
   return (
     <div className="stack">
-      <PageHead title="Acil durum" subtitle="Acil durumda herkese anında ulaşın, kimin güvende kimin yardım beklediğini görün. Başlatma onay gerektirmez, kayda geçer." />
-      {tabs([["durum", q.data ? "Aktif acil durum" : "Acil durum"], ["kart", "Acil bilgi kartı"], ["gecmis", "Geçmiş"]], s.sekme, (k) => set({ sekme: k }), "Acil durum")}
+      <PageHead title="Acil durum" eyebrow="Operasyon" subtitle="Acil durumda herkese anında ulaşın, kimin güvende kimin yardım beklediğini görün. Başlatma onay gerektirmez, kayda geçer.">
+        {tabs([["durum", q.data ? "Aktif acil durum" : "Acil durum"], ["kart", "Acil bilgi kartı"], ["gecmis", "Geçmiş"]], s.sekme, (k) => set({ sekme: k }), "Acil durum")}
+      </PageHead>
+      {!(s.sekme !== "kart" && s.sekme !== "gecmis" && q.data) && <EmKpis active={!!q.data} />}
       {s.sekme === "kart" ? <InfoCardEditor manage={can(P.announcementsPublish)} /> : s.sekme === "gecmis" ? <History /> : q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data ? <Board e={q.data} canEnd={start} /> : start ? <StartForm /> : <Empty title="Aktif acil durum yok" icon={<Siren aria-hidden="true" />} />}
+    </div>
+  );
+}
+
+/** Hazırlık göstergeleri (aktif acil durum panosu kendi sayılarını gösterir): bilgi kartı ve geçmiş. */
+function EmKpis({ active }: { active: boolean }) {
+  const card = useSiteGet<InfoCard>("/emergency-info-card");
+  const hist = useSiteGet<PastEm[]>("/emergencies");
+  if (!card.data || !hist.data) return card.isError ? null : <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const past = hist.data.filter((e) => e.ended_at);
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Durum" tone={active ? "danger" : "ok"} icon={<Siren aria-hidden="true" />} value={active ? "Aktif" : "Normal"} small note={active ? "acil durum sürüyor" : "aktif acil durum yok"} />
+      <Kpi label="Toplanma alanı" tone={card.data.muster_points.length ? undefined : "warn"} icon={<MapPin aria-hidden="true" />} value={card.data.muster_points.length} note={card.data.updated_at ? `kart sürüm ${card.data.version}` : "bilgi kartı yayınlanmadı"} />
+      <Kpi label="Acil telefon" icon={<Phone aria-hidden="true" />} value={card.data.phones.length} note="sakin kartında görünür" />
+      <Kpi label="Geçmiş acil durum" icon={<HistoryIcon aria-hidden="true" />} value={past.length} note={past[0] ? `son: ${formatDate(past[0].started_at)}` : "kayıt yok"} />
     </div>
   );
 }
@@ -178,18 +218,19 @@ function Board({ e, canEnd }: { e: Active; canEnd: boolean }) {
   const blocks = [...new Map(e.rows.map((r) => [r.block_id, r.block_name])).entries()];
   const rows = e.rows.filter((r) => !filter || r.status === filter);
   const exportNone = () => downloadCsv(`yanit-yok-${formatDate(new Date().toISOString())}.csv`, [["Blok", "Bölüm"], ...e.rows.filter((r) => r.status === "none").map((r) => [r.block_name, r.unit_name])]);
+  // Parça döner: KPI ızgarası üst bandın hemen ardına gelsin (.hero + .grid--kpi)
   return (
-    <div className="stack">
-      <Alert tone="danger" title={`${EM_KIND[e.kind]} — acil durum aktif`}>{e.message} <span className="small">· {e.started_by}, {formatDateTime(e.started_at)}</span></Alert>
-      <div className="grid grid--kpi">
-        <Kpi label="Güvende" value={e.totals.safe} tone="ok" />
-        <Kpi label="Toplanma alanında" value={e.totals.muster} />
-        <Kpi label="Yardım istiyor" value={e.totals.help} tone={e.totals.help ? "danger" : undefined} />
-        <Kpi label="Yanıt yok" value={`${e.totals.none}/${e.totals.total}`} tone={e.totals.none ? "warn" : undefined} />
+    <>
+      <div className="grid grid--kpi rise">
+        <Kpi label="Güvende" icon={<ShieldCheck aria-hidden="true" />} value={e.totals.safe} tone="ok" note="güvendeyim dedi" />
+        <Kpi label="Toplanma alanında" icon={<MapPin aria-hidden="true" />} value={e.totals.muster} tone="accent" note="yoklamada işaretlendi" />
+        <Kpi label="Yardım istiyor" icon={<Siren aria-hidden="true" />} value={e.totals.help} tone={e.totals.help ? "danger" : undefined} note="öncelikli ulaşılacaklar" />
+        <Kpi label="Yanıt yok" icon={<HelpCircle aria-hidden="true" />} value={`${e.totals.none}/${e.totals.total}`} tone={e.totals.none ? "warn" : undefined} note="henüz bildirim vermedi" />
       </div>
-      {help.length > 0 && <div className="card" style={{ borderColor: "var(--danger-line)" }}><div className="card__head"><span className="card__title">Yardım isteyenler</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>{help.map((r) => <div key={r.unit_id} className="small"><strong>{r.block_name} · {r.unit_name}</strong> — {r.by}, {formatDateTime(r.at)}{r.note && ` · "${r.note}"`}</div>)}</div></div>}
+      <Alert tone="danger" title={`${EM_KIND[e.kind]} — acil durum aktif`}>{e.message} <span className="small">· {e.started_by}, {formatDateTime(e.started_at)}</span></Alert>
+      {help.length > 0 && <div className="card" style={{ borderColor: "var(--danger-line)" }}><div className="card__head"><span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span><span className="card__title">Yardım isteyenler</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>{help.map((r) => <div key={r.unit_id} className="small"><strong>{r.block_name} · {r.unit_name}</strong> — {r.by}, {formatDateTime(r.at)}{r.note && ` · "${r.note}"`}</div>)}</div></div>}
       <div className="card">
-        <div className="card__head"><span className="card__title">Bölüm durumu</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><select className="field__input" style={{ minHeight: 36 }} aria-label="Duruma göre süz" value={filter} onChange={(x) => setFilter(x.target.value)}><option value="">Tümü</option>{Object.entries(ST).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select><button className="btn btn--sm" type="button" onClick={exportNone}><Download aria-hidden="true" /> Yanıt yok listesi</button></span></div>
+        <div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Bölüm durumu</span><span className="ml-auto row" style={{ gap: "var(--s-2)" }}><select className="field__input" style={{ minHeight: 36 }} aria-label="Duruma göre süz" value={filter} onChange={(x) => setFilter(x.target.value)}><option value="">Tümü</option>{Object.entries(ST).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</select><button className="btn btn--sm" type="button" onClick={exportNone}><Download aria-hidden="true" /> Yanıt yok listesi</button></span></div>
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           {blocks.map(([bid, bname]) => { const br = rows.filter((r) => r.block_id === bid); if (!br.length) return null; return (
             <div key={bid}><div className="small strong" style={{ marginBottom: 4 }}>{bname} · {e.rows.filter((r) => r.block_id === bid && r.status !== "none").length}/{e.rows.filter((r) => r.block_id === bid).length} yanıt</div>
@@ -212,7 +253,7 @@ function Board({ e, canEnd }: { e: Active; canEnd: boolean }) {
         </div>
       </div>
       {canEnd && <div><ConfirmButton className="btn" title="Acil durumu bitir" confirmLabel="Bitir" body={<p className="mb-0">Özet rapor üretilir; "güvendeyim" ve yoklama verileri 30 gün sonra silinir.</p>} onConfirm={() => end.mutateAsync({})}>Acil durumu bitir</ConfirmButton></div>}
-    </div>
+    </>
   );
 }
 
@@ -221,8 +262,8 @@ function History() {
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   const past = q.data.filter((e) => e.ended_at);
-  if (!past.length) return <Empty title="Geçmiş acil durum yok" />;
-  return <div className="stack">{past.map((e) => <div key={e.id} className="card"><div className="card__body stack" style={{ gap: 4 }}><div className="strong">{EM_KIND[e.kind]} · {formatDateTime(e.started_at)} – {formatDateTime(e.ended_at)}</div><div className="small">{e.message}</div>{e.summary && <div className="small">{e.summary.safe} güvende · {e.summary.muster} toplanma alanında · {e.summary.help} yardım · {e.summary.none} yanıt yok (toplam {e.summary.total})</div>}<div className="xs muted">{e.started_by} başlattı, {e.ended_by} bitirdi · ayrıntılı veri {formatDate(e.purge_on)} tarihinde silinir</div></div></div>)}</div>;
+  if (!past.length) return <div className="card"><Empty title="Geçmiş acil durum yok" icon={<HistoryIcon aria-hidden="true" />} /></div>;
+  return <div className="stack">{past.map((e) => <div key={e.id} className="card"><div className="card__head"><span className="card__icon card__icon--danger"><Siren aria-hidden="true" /></span><span className="card__title">{EM_KIND[e.kind]}</span><span className="card__meta ml-auto">{formatDate(e.started_at)}</span></div><div className="card__body stack" style={{ gap: 4 }}><div className="strong">{formatDateTime(e.started_at)} – {formatDateTime(e.ended_at)}</div><div className="small">{e.message}</div>{e.summary && <div className="small">{e.summary.safe} güvende · {e.summary.muster} toplanma alanında · {e.summary.help} yardım · {e.summary.none} yanıt yok (toplam {e.summary.total})</div>}<div className="xs muted">{e.started_by} başlattı, {e.ended_by} bitirdi · ayrıntılı veri {formatDate(e.purge_on)} tarihinde silinir</div></div></div>)}</div>;
 }
 
 function InfoCardEditor({ manage }: { manage: boolean }) {
@@ -245,7 +286,7 @@ function InfoCardForm({ c, manage }: { c: InfoCard; manage: boolean }) {
     <form className="stack" noValidate onSubmit={(e) => { e.preventDefault(); save(); }}>
       <FormError error={m.error} />
       <p className="small muted mb-0">Sakin uygulaması kartı cihaza kaydeder; internet yokken de açılır. {c.updated_at ? `Son yayın: sürüm ${c.version}, ${c.updated_by}, ${formatDateTime(c.updated_at)}.` : "Henüz yayınlanmadı."}</p>
-      <div className="card"><div className="card__head"><span className="card__title">Toplanma alanları</span></div><div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+      <div className="card"><div className="card__head"><span className="card__icon card__icon--accent"><MapPin aria-hidden="true" /></span><span className="card__title">Toplanma alanları</span></div><div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         {fieldError(m.error, "muster_points") && <span className="field__error" role="alert">{fieldError(m.error, "muster_points")}</span>}
         {mps.map((p, i) => (
           <div key={p.id || i} className="stack" style={{ gap: "var(--s-2)", borderTop: i ? "1px solid var(--line)" : undefined, paddingTop: i ? "var(--s-2)" : undefined }}>
@@ -262,7 +303,7 @@ function InfoCardForm({ c, manage }: { c: InfoCard; manage: boolean }) {
         ))}
         {manage && <div><button type="button" className="btn btn--sm" onClick={() => setMps((x) => [...x, { id: "", name: "", directions: "", map: null }])}><Plus aria-hidden="true" /> Toplanma alanı</button></div>}
       </div></div>
-      <div className="card"><div className="card__head"><span className="card__title">Acil telefonlar</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+      <div className="card"><div className="card__head"><span className="card__icon card__icon--danger"><Phone aria-hidden="true" /></span><span className="card__title">Acil telefonlar</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         {phones.map((p, i) => (
           <div key={i} className="grid grid--kpi" style={{ alignItems: "end" }}>
             <Field label="Ad" error={fieldError(m.error, `phones.${i}.label`)}>{(pp) => <input {...pp} className="field__input" maxLength={40} disabled={!manage} value={p.label} onChange={(e) => setPhones((x) => x.map((y, j) => (j === i ? { ...y, label: e.target.value } : y)))} />}</Field>
@@ -272,10 +313,10 @@ function InfoCardForm({ c, manage }: { c: InfoCard; manage: boolean }) {
         ))}
         {manage && <div><button type="button" className="btn btn--sm" onClick={() => setPhones((x) => [...x, { label: "", number: "" }])}><Plus aria-hidden="true" /> Numara</button></div>}
       </div></div>
-      <div className="card"><div className="card__head"><span className="card__title">Kısa talimatlar</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+      <div className="card"><div className="card__head"><span className="card__icon card__icon--warn"><ListChecks aria-hidden="true" /></span><span className="card__title">Kısa talimatlar</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         {INSTR.map(([k, l]) => <Field key={k} label={l}>{(pp) => <textarea {...pp} className="field__input" rows={2} maxLength={400} disabled={!manage} value={ins[k] ?? ""} onChange={(e) => setIns((x) => ({ ...x, [k]: e.target.value }))} />}</Field>)}
       </div></div>
-      <div className="card"><div className="card__head"><span className="card__title">Blok tahliye notları</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+      <div className="card"><div className="card__head"><span className="card__icon card__icon--accent"><Building2 aria-hidden="true" /></span><span className="card__title">Blok tahliye notları</span></div><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         {(blocks.data?.items ?? []).map((b) => <Field key={b.id} label={b.name}>{(pp) => <input {...pp} className="field__input" maxLength={200} disabled={!manage} placeholder="ör. B kapısından çıkın, merdiven 2 kullanılmaz" value={notes[b.id] ?? ""} onChange={(e) => setNotes((x) => ({ ...x, [b.id]: e.target.value }))} />}</Field>)}
       </div></div>
       {manage && <div><SubmitButton busy={m.isPending}>Kartı yayınla</SubmitButton></div>}

@@ -44,7 +44,7 @@ export function setMfaRequiredHandler(handler: (() => void) | null) {
   onMfaRequired = handler;
 }
 
-type Query = Record<string, string | number | boolean | null | undefined>;
+type Query = Record<string, string | number | boolean | null | undefined | readonly string[]>;
 
 export interface RequestOptions {
   query?: Query;
@@ -61,7 +61,9 @@ function buildUrl(path: string, query?: Query) {
   const url = new URL(BASE + path, window.location.origin);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+      // Dizi → tekrarlanan parametre (?roles=a&roles=b)
+      if (Array.isArray(v)) for (const item of v) url.searchParams.append(k, String(item));
+      else if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     }
   }
   return url.pathname + url.search;

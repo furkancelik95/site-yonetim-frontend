@@ -1,27 +1,46 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Smartphone, Wallet, Wrench } from "lucide-react";
 import type { Schemas } from "../../api/types";
 import { Alert, Field } from "../../components/ui";
 import { phoneDigits, phoneMask } from "../../lib/input";
 
 export type CodeSent = Schemas["CodeSentOut"];
 
-/** Giriş ekranlarının ortak çerçevesi (marka + panel). */
+/** Giriş ekranlarının ortak çerçevesi: marka paneli + işlem paneli (Premium tasarım düzeni). */
 export function AuthFrame({ title, sub, children, aside }: { title?: string; sub?: string; children: ReactNode; aside?: ReactNode }) {
   return (
-    <main id="main" className="auth" style={aside ? undefined : { gridTemplateColumns: "1fr", maxWidth: 560 }}>
-      <div className="auth__panel">
+    <main id="main" className="auth">
+      {/* Marka paneli: ürünün ne yaptığı yazar; sahte istatistik ya da müşteri sözü yok */}
+      <section className="auth__side" aria-label="SiteYönetimi hakkında">
+        <div className="hero__grid" aria-hidden="true" />
         <div className="auth__brand">
           <span className="sidebar__mark" aria-hidden="true">SY</span>
           <span>
-            <span className="sidebar__name">{title ?? "SiteYönetimi"}</span>
+            <span className="sidebar__name">SiteYönetimi</span>
             <br />
-            <span className="sidebar__sub">{sub ?? "Site ve apartman yönetim platformu"}</span>
+            <span className="sidebar__sub">Site ve apartman yönetim platformu</span>
           </span>
         </div>
-        {children}
+        <div>
+          <p className="auth__headline display strong">Sitenizi tek ekrandan yönetin.</p>
+          <p className="auth__lead">
+            Aidat, tahsilat, talep, duyuru ve güvenlik — yönetim şirketi, site yöneticisi ve sakinler için tek platform.
+          </p>
+          <ul className="auth__features">
+            <li><span className="auth__feature-icon" aria-hidden="true"><Wallet /></span>Aidat ve tahsilat takibi, banka aktarımı</li>
+            <li><span className="auth__feature-icon" aria-hidden="true"><Wrench /></span>Talep, duyuru, rezervasyon ve güvenlik</li>
+            <li><span className="auth__feature-icon" aria-hidden="true"><Smartphone /></span>Sakinler için telefondan erişim</li>
+          </ul>
+        </div>
+        <div className="auth__foot">© {new Date().getFullYear()} SiteYönetimi</div>
+      </section>
+      <div className="auth__main">
+        <div className="auth__panel">
+          {(title || sub) && <p className="small muted mb-0">{[title, sub].filter(Boolean).join(" · ")}</p>}
+          {children}
+        </div>
+        {aside}
       </div>
-      {aside}
     </main>
   );
 }
