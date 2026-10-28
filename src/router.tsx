@@ -10,6 +10,7 @@ import { LoginPage } from "./pages/auth/LoginPage";
 import { InviteAcceptPage } from "./pages/auth/InviteAcceptPage";
 import { AccountInvitePage, MfaRequiredPage, PasswordResetPage } from "./pages/auth/AccountPages";
 import { VendorQuotePage } from "./pages/auth/VendorQuotePage";
+import { ConsentPage } from "./pages/auth/ConsentPage";
 import { PrivacyNoticePage, PublicRegistrationPage } from "./pages/auth/PublicRegistrationPage";
 import { NoAccessPage, NotFoundPage } from "./pages/auth/StatusPages";
 import { SiteIndex } from "./site/SiteIndex";
@@ -163,6 +164,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/", element: <RootIndex portfolio={<L c={Portfolio} />} /> },
           { path: "/parola-degistir", element: <ChangePasswordPage /> },
+          { path: "/aydinlatma-onayi", element: <ConsentPage /> },
           { path: "/iki-adimli-dogrulama", element: <MfaRequiredPage /> },
           { path: "/profil", element: <AppShell title="Profil"><L c={Profile} /></AppShell> },
           { path: "/yetkisiz", element: <NoAccessPage /> },

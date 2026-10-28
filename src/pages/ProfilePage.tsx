@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { BellRing, KeyRound, LogOut, MonitorSmartphone, ShieldAlert, ShieldCheck, Smartphone } from "lucide-react";
+import { BellRing, FileCheck2, KeyRound, LogOut, MonitorSmartphone, ShieldAlert, ShieldCheck, Smartphone } from "lucide-react";
 import { api } from "../api/client";
 import type { Written } from "../api/types";
 import { useToast } from "../components/toast";
@@ -59,6 +59,27 @@ export function ProfilePage({ passwordPath = "/parola-degistir" }: { passwordPat
       <div className="grid grid--2">
         <NotificationPreferences />
         <SecurityEvents q={events} />
+      </div>
+      <PrivacyConsents />
+    </div>
+  );
+}
+
+const CONSENT_SOURCE: Record<string, string> = { login: "giriş ekranında", registration: "kayıt başvurusunda", invitation: "davet kabulünde", publisher: "yayınlarken", seed: "kurulumda" };
+
+/** KVKK: onaylanan aydınlatma metinleri ve tarihleri (PLT-04 profil, RAP-04). Açık rıza ve
+ * "verilerimi indir" site bazındadır (sakin: Kişisel verilerim). */
+function PrivacyConsents() {
+  const q = useMeGet<Schemas["ConsentStateOut"]>("/consents");
+  return (
+    <div className="card">
+      <div className="card__head"><span className="card__icon card__icon--accent"><FileCheck2 aria-hidden="true" /></span><span className="card__title">Onayladığım aydınlatma metinleri</span></div>
+      <div className="card__body">
+        {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.given.length === 0 ? <Empty title="Onay kaydı yok">Sitelerinizde yayınlanmış aydınlatma metni yok.</Empty> : (
+          <ul className="stack" style={{ gap: 4, margin: 0, paddingLeft: "1.1rem" }}>
+            {q.data.given.map((g) => <li key={`${g.site_id}-${g.version}`} className="small">{g.site_name} — sürüm {g.version}, {formatDateTime(g.accepted_at)} ({CONSENT_SOURCE[g.source] ?? g.source})</li>)}
+          </ul>
+        )}
       </div>
     </div>
   );

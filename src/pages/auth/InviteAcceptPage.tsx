@@ -83,7 +83,7 @@ export function InviteAcceptPage() {
                   {(p) => <input {...p} data-field="email" className="field__input" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setErrs((x) => ({ ...x, email: undefined })); }} />}
                 </Field>
               )}
-              <p className="small mb-0">Kişisel verilerinizin işlenmesine ilişkin <Link to="/aydinlatma" target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.</p>
+              <p className="small mb-0">Kişisel verilerinizin işlenmesine ilişkin <Link to={inv.data ? `/aydinlatma?site=${encodeURIComponent(inv.data.site_slug)}` : "/aydinlatma"} target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.</p>
               <div>
                 <label className="check check--rich">
                   <input id="inv-kvkk_ack" type="checkbox" checked={ack} aria-invalid={err("kvkk_ack") ? true : undefined} onChange={(e) => { setAck(e.target.checked); if (e.target.checked) setErrs((x) => ({ ...x, kvkk_ack: undefined })); }} />

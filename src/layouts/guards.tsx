@@ -8,7 +8,8 @@ import { MfaGraceBanner } from "../pages/auth/AccountPages";
 import { makeSiteCtx, SiteContext, type SiteDetail } from "../site/SiteContext";
 import { AppShell } from "./AppShell";
 
-/** Oturum yoksa girişe gönderir; parola değişikliği ya da 2FA kurulumu zorunluysa önce oraya. */
+/** Oturum yoksa girişe gönderir; parola değişikliği ya da 2FA kurulumu zorunluysa önce oraya; güncel
+ * aydınlatma metni onaylanmadıysa (PM kararı P6) onay ekranına. */
 export function RequireAuth() {
   const { status, me } = useAuth();
   const location = useLocation();
@@ -25,6 +26,10 @@ export function RequireAuth() {
   if (!me.must_change_password && me.mfa_setup_required && location.pathname !== "/iki-adimli-dogrulama") {
     return <Navigate to="/iki-adimli-dogrulama" replace />;
   }
+  if (!me.must_change_password && me.consent_required && location.pathname !== CONSENT_PATH) {
+    const from = location.pathname + location.search;
+    return <Navigate to={`${CONSENT_PATH}${from !== "/" ? `?donus=${encodeURIComponent(from)}` : ""}`} replace />;
+  }
   return (
     <>
       <MfaGraceBanner />
@@ -32,6 +37,8 @@ export function RequireAuth() {
     </>
   );
 }
+
+export const CONSENT_PATH = "/aydinlatma-onayi";
 
 export const siteKey = (slug: string) => ["site", slug] as const;
 
