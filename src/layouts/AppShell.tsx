@@ -58,6 +58,7 @@ import {
   Vote,
   Wallet,
   Wrench,
+  UserCog,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
@@ -157,6 +158,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {can(P.announcementsPublish) && <Item to={`${base}/bildirim-sablonlari`} icon={<MessageSquareText aria-hidden="true" />} label="Bildirim Şablonları" />}
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
+          {can(P.membersManage) && <Item to={`${base}/roller`} icon={<UserCog aria-hidden="true" />} label="Roller ve yetkiler" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.modulesManage) && shows(M.visitors, P.visitors) && <Item to={`${base}/ayarlar/guvenlik`} icon={<DoorOpen aria-hidden="true" />} label="Güvenlik Ayarları" />}
           {shows(M.visitors, P.securityIncidents) && can(P.modulesManage) && <Item to={`${base}/devriye`} icon={<Route aria-hidden="true" />} label="Devriye" />}
@@ -216,8 +218,13 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
     return () => window.removeEventListener("keydown", onKey);
   }, [navOpen]);
 
-  // Site dışında (portföy) yönetim şirketindeki rol gösterilir
-  const siteRole = siteCtx?.site.role ?? me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  // Sitede: ana rol + diğer roller (P18 çoklu rol; tamamı ipucunda). Site dışında (portföy)
+  // yönetim şirketindeki rol gösterilir.
+  const siteRoles = siteCtx?.roles ?? [];
+  const siteRole = siteRoles.length
+    ? siteRoles[0] + (siteRoles.length > 1 ? ` +${siteRoles.length - 1}` : "")
+    : me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  const roleTitle = siteRoles.length > 1 ? `Rolleriniz: ${siteRoles.join(", ")}` : undefined;
   return (
     <>
       <a className="skip-link" href="#main">
@@ -284,7 +291,8 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             {/* Ad alanı profile gider (oturumlar, güvenlik olayları, bildirim tercihleri) */}
             <Link to="/profil" className="userbox__link" title={`${me.full_name} — profil`}>
               <span className="userbox__name">{me.full_name}</span>
-              <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              <span className="userbox__role" title={roleTitle}>{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              {roleTitle && <span className="visually-hidden">{roleTitle}</span>}
               <span className="visually-hidden">Profil</span>
             </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>

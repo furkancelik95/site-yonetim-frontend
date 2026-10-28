@@ -16,7 +16,8 @@ import { useSite } from "../../site/SiteContext";
 
 type RegLink = Schemas["LinkOut"];
 type Registration = Schemas["RegistrationOut"];
-type Approved = Schemas["ApprovedOut"];
+// Geçici: backend onayda temporary_password vermiyor (P16c ekranları #39 ile gelir).
+type Approved = Schemas["ApprovedOut"] & { temporary_password?: string | null };
 
 type RegSettings = Schemas["RegistrationSettingsOut"];
 type Invitation = Schemas["InvitationOut"];
