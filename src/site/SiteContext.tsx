@@ -41,6 +41,8 @@ export const P = {
   documentsRead: "documents.read",
   documentsManage: "documents.manage",
   documentsConfidential: "documents.confidential",
+  transparencyManage: "transparency.manage",
+  transparencyPublish: "transparency.publish",
   privacyManage: "privacy.manage",
   notificationsManage: "notifications.manage",
   reportsSchedule: "reports.schedule",

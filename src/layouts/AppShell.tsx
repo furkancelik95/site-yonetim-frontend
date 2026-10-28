@@ -64,6 +64,7 @@ import {
   Wrench,
   Cog,
   UserCog,
+  FileBarChart,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
@@ -133,6 +134,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
         {can(P.expensesRead) && <Item to={`${base}/tedarikciler`} icon={<Truck aria-hidden="true" />} label="Tedarikçiler" />}
         {can(P.cashRead) && <Item to={`${base}/kasa`} icon={<Landmark aria-hidden="true" />} label="Kasa ve Banka" />}
         {can(P.reportsRead) && <Item to={`${base}/raporlar`} icon={<BarChart3 aria-hidden="true" />} label="Raporlar" />}
+        {(can(P.reportsRead) || can(P.transparencyManage)) && <Item to={`${base}/seffaflik-raporu`} icon={<FileBarChart aria-hidden="true" />} label="Şeffaflık Raporu" />}
         {can(P.unitsManage) && <Item to={`${base}/iceri-aktar`} icon={<FileSpreadsheet aria-hidden="true" />} label="İçeri Aktar" />}
       </Group>
       {can(P.financeRead) && (
