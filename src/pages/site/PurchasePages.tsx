@@ -1,82 +1,124 @@
 import { useState, type FormEvent } from "react";
-import { AlertTriangle, Ban, CheckCircle2, Copy, Hourglass, Inbox, Landmark, Link2, PackageCheck, Plus, Printer, ReceiptText, ShoppingCart, Star, Trash2, Truck, Users, Wallet } from "lucide-react";
+import { AlertTriangle, Ban, CheckCircle2, Copy, FileText, Hourglass, Inbox, Landmark, Link2, PackageCheck, Plus, Printer, ReceiptText, ShoppingCart, Star, Trash2, Truck, Users, Wallet } from "lucide-react";
 import { Link, useParams } from "react-router";
+import Decimal from "decimal.js";
+import { api, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { CashAccounts } from "../../api/types";
+import type { CashAccounts, Page, Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
 import { PhotoInput } from "../../components/PhotoInput";
-import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { useToast } from "../../components/toast";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { invoiceStatus, invoiceTone, poStatus, poTone, prStatus, prTone, vendorStatus, vendorTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 62–67'deki şekiller. */
-export interface VendorRow { id: string; name: string; tax_no: string; phone: string | null; email: string | null; iban_masked: string | null; category: string | null; status: string; note: string | null; rating_avg: number | null; rating_count: number; order_count: number }
-interface PrItem { description: string; qty: number; unit: string; est_unit_price: string; stock_item_id: string | null }
-interface Quote { id: string; vendor_id: string; vendor_name: string; lines: { unit_price: string }[]; total: string; delivery_days: number; payment_terms: string; valid_until: string; note: string | null; file_name: string | null; source: string; created_by: string; created_at: string; rating_avg: number | null; rating_count: number }
-interface PrLink { token: string; vendor_name: string; expires_at: string; used_at: string | null; state: string }
-interface Pr {
-  id: string; number: string; title: string; reason: string; category_id: string; category_name: string; items: PrItem[]; estimated_total: string;
-  budget: { annual: string; spent: string; committed: string; remaining: string } | null; over_budget: boolean; required_quotes: number; status: string;
-  selected_quote_id: string | null; exception_reason: string | null; decisions: { stage: string; decision: string; by: string; at: string; note: string | null }[]; reject_reason: string | null;
-  created_by: string; created_by_id: string; created_at: string; quotes: Quote[]; links: PrLink[]; order_id: string | null; order_number: string | null; quote_count?: number;
-}
-interface PoLine { description: string; qty: number; unit: string; unit_price: string; total: string; stock_item_id: string | null; received: number }
-interface Invoice { id: string; order_id: string; order_number: string; vendor_name: string; number: string; date: string; due_date: string; total: string; expected_total: string; diffs: string[]; status: string; decision: { by: string; at: string; note: string } | null; created_by: string; created_by_id: string; paid_on: string | null; overdue?: boolean }
-interface Po { id: string; number: string; pr_id: string; pr_number: string; vendor_name: string; lines: PoLine[]; total: string; status: string; created_by: string; created_at: string; receipts: { id: string; lines: { qty: number }[]; note: string | null; photo: string | null; rating: number | null; by: string; at: string }[]; invoices: Invoice[] }
-interface Settings { thresholds: { max: string; quotes: number }[]; above_quotes: number; tolerance_percent: number; link_days: number }
-interface Budget { has_budget: boolean; annual: string; spent: string; committed: string; remaining: string }
+/** Üretilmiş şemadan (servis istekleri 62–67, backend `api/v1/purchasing.py`). */
+export type VendorRow = Schemas["VendorOut"];
+type Pr = Schemas["PurchaseRequestOut"];
+type PrRow = Schemas["PurchaseRequestRow"];
+type Quote = Schemas["PurchaseQuoteOut"];
+type Po = Schemas["PurchaseOrderOut"];
+type PoRow = Schemas["PurchaseOrderRow"];
+type PoWrite = Schemas["PurchaseOrderWriteOut"];
+type Invoice = Schemas["VendorInvoiceOut"];
+type Payables = Schemas["PayablesOut"];
+type Settings = Schemas["PurchaseSettingsOut"];
+type Budget = Schemas["PurchaseBudgetOut"];
+type LinkCreated = Schemas["QuoteLinkCreated"];
+type FileOut = Schemas["PurchaseFileOut"];
 
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
   <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
 );
-const money = (v: string | number) => Number(v).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (v: string) => Number(v).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Miktar metni ("2.5") → ekranda "2,5". */
+const qtyText = (v: string) => v.replace(".", ",");
+/** Kullanıcının yazdığı miktar ("2,5") → API metni ("2.5"). */
+const qtyInput = (v: string) => v.trim().replace(",", ".") || "0";
+/** Önizleme toplamı (para hesabı Decimal ile; backend asıl tutarı hesaplar). */
+const previewTotal = (rows: { qty: string; price: string }[]) =>
+  rows.reduce((s, r) => { try { return s.plus(new Decimal(qtyInput(r.qty)).times(parseMoneyInput(r.price) ?? "0")); } catch { return s; } }, new Decimal(0)).toFixed(2);
 const useBase = () => `/s/${useSite().site.slug}`;
+
+/** Kayda bağlı belgeyi (teklif, irsaliye, fatura) yetkili uçtan açar. */
+function FileButton({ id, name }: { id: string | null; name: string | null }) {
+  const { site } = useSite();
+  const toast = useToast();
+  if (!id) return null;
+  return <button className="btn btn--ghost btn--sm" type="button" style={{ paddingLeft: 0 }} onClick={() => openDocument(`/sites/${site.slug}/files/${id}`).catch(() => toast("Belge açılamadı.", "danger"))}><FileText aria-hidden="true" /> {name ?? "Belge"}</button>;
+}
+
+/** Kayıt oluştuktan sonra belge yükler (multipart; PDF/JPG/PNG/WEBP, ≤ 10 MB). Hata bildirim olarak gösterilir. */
+function useAttach() {
+  const { site } = useSite();
+  const toast = useToast();
+  return async (path: string, file: File | Blob | null, name?: string) => {
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file, name ?? (file instanceof File ? file.name : "belge.jpg"));
+    try {
+      const res = await api<{ data: FileOut; message: string }>("POST", `/sites/${site.slug}${path}`, { form });
+      toast(res.message);
+    } catch (e) {
+      toast(`Belge eklenemedi: ${e instanceof Error ? e.message : "bilinmeyen hata"}`, "danger");
+    }
+  };
+}
+
+function FilePick({ label, hint, onPick }: { label: string; hint?: string; onPick: (f: File | null) => void }) {
+  return <Field label={label} hint={hint ?? "PDF, JPG, PNG ya da WEBP · en çok 10 MB"}>{(pp) => <input {...pp} className="field__input" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => onPick(e.target.files?.[0] ?? null)} />}</Field>;
+}
 
 // ===================================================================== 64–67 Satın alma
 /** Satın alma (SAT-01..05): talepler, siparişler, tedarikçi faturaları, ödenecekler ve ayarlar. */
 export function PurchasePage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ sekme: "talep", durum: "" });
+  const [s, set] = useUrlState({ sekme: "talep", durum: "", page: "1" });
   const items: [string, string][] = [["talep", "Talepler"], ["siparis", "Siparişler"], ["fatura", "Faturalar"], ["odenecek", "Ödenecekler"], ...(can(P.expensesManage) ? ([["ayar", "Ayarlar"]] as [string, string][]) : [])];
+  const page = Number(s.page) || 1;
+  const onPage = (p: number) => set({ page: String(p) });
   return (
     <div className="stack">
       <PageHead title="Satın alma" subtitle="Talep → teklif → onay → sipariş → kabul → fatura eşleşmesi → ödeme. Onaysız sipariş verilmez; talep eden kendi talebini onaylayamaz." />
       <PurchaseKpis />
-      {tabs(items, s.sekme, (k) => set({ sekme: k }), "Satın alma")}
-      {s.sekme === "siparis" ? <Orders /> : s.sekme === "fatura" ? <Invoices /> : s.sekme === "odenecek" ? <Payables /> : s.sekme === "ayar" ? <SettingsForm /> : <Requests status={s.durum} onStatus={(v) => set({ durum: v })} />}
+      {tabs(items, s.sekme, (k) => set({ sekme: k, page: "1", durum: "" }), "Satın alma")}
+      {s.sekme === "siparis" ? <Orders page={page} onPage={onPage} /> : s.sekme === "fatura" ? <Invoices page={page} onPage={onPage} /> : s.sekme === "odenecek" ? <Payables /> : s.sekme === "ayar" ? <SettingsForm /> : <Requests status={s.durum} onStatus={(v) => set({ durum: v, page: "1" })} page={page} onPage={onPage} />}
     </div>
   );
 }
 
 const OPEN_PR = ["quoting", "exception_pending", "approval_pending", "approved"];
 
-/** Bandın altındaki dört gösterge: talep, onay, sipariş ve ödenecek tutarı aynı uçlardan okur. */
+/** Bandın altındaki dört gösterge: talep, onay, sipariş ve ödenecek tutarı aynı uçlardan okur (son 200 talep/sipariş). */
 function PurchaseKpis() {
-  const prs = useSiteGet<Pr[]>("/purchase-requests");
-  const pos = useSiteGet<Po[]>("/purchase-orders");
-  const pay = useSiteGet<{ invoices: Invoice[]; direct_expenses: { count: number; total: string }; total: string }>("/payables");
+  const prs = useSiteGet<Page<PrRow>>("/purchase-requests", { page_size: 200 });
+  const pos = useSiteGet<Page<PoRow>>("/purchase-orders", { page_size: 200 });
+  const pay = useSiteGet<Payables>("/payables");
   if (prs.isError || pos.isError || pay.isError) return null;
   if (!prs.data || !pos.data || !pay.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
-  const open = prs.data.filter((p) => OPEN_PR.includes(p.status));
-  const waiting = prs.data.filter((p) => p.status === "exception_pending" || p.status === "approval_pending");
-  const openPo = pos.data.filter((o) => o.status === "sent" || o.status === "partial");
+  const open = prs.data.items.filter((p) => OPEN_PR.includes(p.status));
+  const waiting = prs.data.items.filter((p) => p.status === "exception_pending" || p.status === "approval_pending");
+  const openPo = pos.data.items.filter((o) => o.status === "sent" || o.status === "partial");
   const overdue = pay.data.invoices.filter((i) => i.overdue).length;
+  const sum = (xs: string[]) => xs.reduce((t, x) => t.plus(x), new Decimal(0)).toFixed(2);
   return (
     <div className="grid grid--kpi rise">
-      <Kpi label="Açık talep" icon={<ShoppingCart aria-hidden="true" />} value={open.length} note={`${formatMoneyShort(open.reduce((t, p) => t + Number(p.estimated_total), 0).toFixed(2))} tahmini`} />
+      <Kpi label="Açık talep" icon={<ShoppingCart aria-hidden="true" />} value={open.length} note={`${formatMoneyShort(sum(open.map((p) => p.estimated_total)))} tahmini`} />
       <Kpi label="Onay bekleyen" tone={waiting.length ? "warn" : undefined} icon={<Hourglass aria-hidden="true" />} value={waiting.length} note="istisna ya da satın alma onayı" />
-      <Kpi label="Teslim bekleyen sipariş" icon={<Truck aria-hidden="true" />} value={openPo.length} note={`${formatMoneyShort(openPo.reduce((t, o) => t + Number(o.total), 0).toFixed(2))} sipariş tutarı`} />
+      <Kpi label="Teslim bekleyen sipariş" icon={<Truck aria-hidden="true" />} value={openPo.length} note={`${formatMoneyShort(sum(openPo.map((o) => o.total)))} sipariş tutarı`} />
       <Kpi label="Ödenecek" tone={overdue ? "danger" : "accent"} icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(pay.data.total)} note={overdue ? `${overdue} fatura vadesi geçti` : `${pay.data.invoices.length} fatura + siparişsiz gider`} />
     </div>
   );
 }
 
-function Requests({ status, onStatus }: { status: string; onStatus: (v: string) => void }) {
+function Requests({ status, onStatus, page, onPage }: { status: string; onStatus: (v: string) => void; page: number; onPage: (p: number) => void }) {
   const base = useBase();
-  const q = useSiteGet<Pr[]>("/purchase-requests", { status: status || undefined });
+  const { can } = useSite();
+  const q = useSiteGet<Page<PrRow>>("/purchase-requests", { status: status || undefined, page, page_size: 50 });
   const [adding, setAdding] = useState(false);
+  const canOpen = can(P.expensesManage) || can(P.requestsAssign);
   return (
     <div className="stack">
       {adding && <NewRequest onDone={() => setAdding(false)} />}
@@ -85,29 +127,30 @@ function Requests({ status, onStatus }: { status: string; onStatus: (v: string) 
           <span className="card__icon card__icon--accent"><ShoppingCart aria-hidden="true" /></span>
           <div>
             <div className="card__title">Satın alma talepleri</div>
-            {q.data && <div className="card__meta">{q.data.length} kayıt</div>}
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
           </div>
           <div className="card__tools">
             <div className="field"><label className="field__label" htmlFor="pr-st">Durum</label><select id="pr-st" className="field__input" value={status} onChange={(e) => onStatus(e.target.value)}><option value="">Tümü</option>{["quoting", "exception_pending", "approval_pending", "approved", "ordered", "rejected", "cancelled"].map((k) => <option key={k} value={k}>{prStatus(k)}</option>)}</select></div>
-            <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Satın alma talebi</button>
+            {canOpen && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Satın alma talebi</button>}
           </div>
         </div>
         <div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Satın alma talebi yok" icon={<ShoppingCart aria-hidden="true" />} /> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Satın alma talebi yok" icon={<ShoppingCart aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Satın alma talepleri</caption>
             <thead><tr><th scope="col">Talep</th><th scope="col">Kategori</th><th scope="col" className="right">Tahmini</th><th scope="col">Teklif</th><th scope="col">Durum</th></tr></thead>
-            <tbody>{q.data.map((p) => (
+            <tbody>{q.data.items.map((p) => (
               <tr key={p.id}>
                 <td><Link className="cell-main" to={`${base}/satin-alma/${p.id}`}>{p.number} · {p.title}</Link><div className="cell-sub">{p.created_by}, {formatDate(p.created_at)}</div></td>
                 <td className="small">{p.category_name}{p.over_budget && <div><Badge tone="danger">Bütçe aşımı</Badge></div>}</td>
                 <td className="right"><Money value={p.estimated_total} /></td>
-                <td className="small num">{p.quote_count ?? p.quotes.length}/{p.required_quotes}</td>
+                <td className="small num">{p.quote_count}/{p.required_quotes}</td>
                 <td><Badge tone={prTone(p.status)}>{prStatus(p.status)}</Badge>{p.order_number && <div className="cell-sub">{p.order_number}</div>}</td>
               </tr>
             ))}</tbody>
           </table></div>
         )}
       </div></div>
+      {q.data && <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={onPage} />}
     </div>
   );
 }
@@ -121,13 +164,13 @@ function NewRequest({ onDone }: { onDone: () => void }) {
   const bud = useSiteGet<Budget>("/purchase-budget", { category_id: cat }, { enabled: !!cat });
   const set = useSiteGet<Settings>("/purchase-settings");
   const m = useSiteMutation<Record<string, unknown>, Pr>("POST", "/purchase-requests", { onSuccess: onDone });
-  const total = items.reduce((s, i) => s + Number(i.qty.replace(",", ".") || 0) * Number(parseMoneyInput(i.price) ?? 0), 0);
-  const need = set.data ? (() => { for (const t of set.data.thresholds) if (total < Number(t.max)) return t.quotes; return set.data.above_quotes; })() : null;
-  const over = bud.data?.has_budget && total > Number(bud.data.remaining);
+  const total = previewTotal(items);
+  const need = set.data ? (() => { for (const t of set.data.thresholds) if (new Decimal(total).lessThan(t.max)) return t.quotes; return set.data.above_quotes; })() : null;
+  const over = bud.data?.has_budget && new Decimal(total).greaterThan(bud.data.remaining);
   const upItem = (k: number, patch: Partial<(typeof items)[number]>) => setItems((x) => x.map((it, i) => (i === k ? { ...it, ...patch } : it)));
   function submit(e: FormEvent) {
     e.preventDefault();
-    m.mutate({ ...f, category_id: cat, items: items.map((i) => ({ description: i.description, qty: Number(i.qty.replace(",", ".")), unit: i.unit, est_unit_price: parseMoneyInput(i.price) ?? "0", stock_item_id: i.stock_item_id || null })) });
+    m.mutate({ ...f, category_id: cat || null, items: items.map((i) => ({ description: i.description, qty: qtyInput(i.qty), unit: i.unit, est_unit_price: parseMoneyInput(i.price), stock_item_id: i.stock_item_id || null })) });
   }
   return (
     <form className="card" noValidate onSubmit={submit}>
@@ -144,22 +187,22 @@ function NewRequest({ onDone }: { onDone: () => void }) {
           {fieldError(m.error, "items") && <span className="field__error" role="alert">{fieldError(m.error, "items")}</span>}
           {items.map((it, k) => (
             <div key={k} className="grid grid--kpi" style={{ alignItems: "end", borderTop: k ? "1px solid var(--line)" : undefined, paddingTop: k ? "var(--s-2)" : undefined }}>
-              <Field label={`${k + 1}. kalem`}>{(p) => <input {...p} className="field__input" maxLength={120} value={it.description} onChange={(e) => upItem(k, { description: e.target.value })} />}</Field>
+              <Field label={`${k + 1}. kalem`} error={fieldError(m.error, `items.${k}.description`)}>{(p) => <input {...p} className="field__input" maxLength={120} value={it.description} onChange={(e) => upItem(k, { description: e.target.value })} />}</Field>
               <Field label="Miktar" error={fieldError(m.error, `items.${k}.qty`)}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={it.qty} onChange={(e) => upItem(k, { qty: e.target.value })} />}</Field>
               <Field label="Birim">{(p) => <input {...p} className="field__input" maxLength={12} value={it.unit} onChange={(e) => upItem(k, { unit: e.target.value })} />}</Field>
               <Field label="Tahmini birim fiyat (₺)" error={fieldError(m.error, `items.${k}.est_unit_price`)}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={it.price} onChange={(e) => upItem(k, { price: e.target.value })} />}</Field>
-              <Field label="Stok kartı" hint="Kabulde stoğa girer">{(p) => <select {...p} className="field__input" value={it.stock_item_id} onChange={(e) => upItem(k, { stock_item_id: e.target.value })}><option value="">— stoksuz —</option>{(stock.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}</Field>
+              <Field label="Stok kartı" hint="Kabulde stoğa girer" error={fieldError(m.error, `items.${k}.stock_item_id`)}>{(p) => <select {...p} className="field__input" value={it.stock_item_id} onChange={(e) => upItem(k, { stock_item_id: e.target.value })}><option value="">— stoksuz —</option>{(stock.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}</Field>
               {items.length > 1 && <div><button type="button" className="btn btn--ghost btn--sm" aria-label={`${k + 1}. kalemi kaldır`} onClick={() => setItems((x) => x.filter((_, i) => i !== k))}><Trash2 aria-hidden="true" /></button></div>}
             </div>
           ))}
           <div><button type="button" className="btn btn--sm" onClick={() => setItems((x) => [...x, { description: "", qty: "1", unit: "adet", price: "", stock_item_id: "" }])}><Plus aria-hidden="true" /> Kalem</button></div>
         </fieldset>
-        <div className="kv"><span className="kv__k strong">Tahmini toplam</span><span className="kv__v strong">{formatMoney(total.toFixed(2))}</span></div>
+        <div className="kv"><span className="kv__k strong">Tahmini toplam</span><span className="kv__v strong">{formatMoney(total)}</span></div>
         {bud.data && (bud.data.has_budget
           ? <div className="small">Kategori bütçesi {formatMoney(bud.data.annual)} · bu yıl harcanan {formatMoney(bud.data.spent)} · açık taahhüt {formatMoney(bud.data.committed)} · <strong>kalan {formatMoney(bud.data.remaining)}</strong></div>
           : <div className="small muted">Bu kategori için işletme projesinde bütçe kalemi yok.</div>)}
         {over && <Alert tone="warn" title="Bütçe aşımı">Tahmini tutar kalan bütçeyi aşıyor; talep "bütçe aşımı" işaretiyle onaya gider.</Alert>}
-        {need != null && total > 0 && <div className="small">Bu tutar için en az <strong>{need} teklif</strong> gerekir.</div>}
+        {need != null && new Decimal(total).greaterThan(0) && <div className="small">Bu tutar için en az <strong>{need} teklif</strong> gerekir.</div>}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Talebi aç</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
@@ -170,11 +213,13 @@ function NewRequest({ onDone }: { onDone: () => void }) {
 export function PurchaseRequestPage() {
   const { prId = "" } = useParams();
   const base = useBase();
+  const { can } = useSite();
   const q = useSiteGet<Pr>(`/purchase-requests/${prId}`);
   useDocumentTitle(q.data ? `${q.data.number} · Satın alma` : "Satın alma talebi");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   const p = q.data;
+  const buyer = can(P.expensesManage) || can(P.requestsAssign);
   return (
     <div className="stack">
       <PageHead title={`${p.number} · ${p.title}`} subtitle={<><Link to={`${base}/satin-alma`}>Satın alma</Link> · {p.category_name} · {p.created_by}, {formatDateTime(p.created_at)}</>} actions={<Badge tone={prTone(p.status)}>{prStatus(p.status)}</Badge>} />
@@ -187,55 +232,57 @@ export function PurchaseRequestPage() {
       {p.status === "rejected" && <Alert tone="danger" title="Reddedildi">{p.reject_reason}</Alert>}
       <div className="grid grid--2">
         <div className="card"><div className="card__head"><span className="card__title">Kalemler</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
-          {p.items.map((i, k) => <div key={k} className="kv"><span className="kv__k">{i.description} · {i.qty} {i.unit}</span><span className="kv__v">{formatMoney(i.est_unit_price)}</span></div>)}
+          {p.items.map((i, k) => <div key={k} className="kv"><span className="kv__k">{i.description} · {qtyText(i.qty)} {i.unit}{i.stock_item_name && <span className="xs muted"> · stok: {i.stock_item_name}</span>}</span><span className="kv__v">{formatMoney(i.est_unit_price)}</span></div>)}
           <div className="kv"><span className="kv__k strong">Tahmini toplam</span><span className="kv__v strong"><Money value={p.estimated_total} /></span></div>
           <p className="small mb-0">{p.reason}</p>
         </div></div>
         <div className="card"><div className="card__head"><span className="card__title">Bütçe ve kural</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
-          {p.budget ? <><div className="kv"><span className="kv__k">Yıllık bütçe</span><span className="kv__v"><Money value={p.budget.annual} /></span></div><div className="kv"><span className="kv__k">Harcanan + taahhüt</span><span className="kv__v">{formatMoney((Number(p.budget.spent) + Number(p.budget.committed)).toFixed(2))}</span></div><div className="kv"><span className="kv__k">Talep anında kalan</span><span className="kv__v"><Money value={p.budget.remaining} /></span></div></> : <p className="small muted mb-0">Kategoride bütçe kalemi yok.</p>}
+          {p.budget ? <><div className="kv"><span className="kv__k">Yıllık bütçe</span><span className="kv__v"><Money value={p.budget.annual} /></span></div><div className="kv"><span className="kv__k">Harcanan + taahhüt</span><span className="kv__v">{formatMoney(new Decimal(p.budget.spent).plus(p.budget.committed).toFixed(2))}</span></div><div className="kv"><span className="kv__k">Talep anında kalan</span><span className="kv__v"><Money value={p.budget.remaining} /></span></div></> : <p className="small muted mb-0">Kategoride bütçe kalemi yok.</p>}
           {p.over_budget && <Badge tone="danger">Bütçe aşımı</Badge>}
-          <div className="small">Gereken teklif: <strong>{p.required_quotes}</strong> · mevcut: <strong>{p.quotes.length}</strong></div>
+          <div className="small">Gereken teklif: <strong>{p.required_quotes}</strong> · mevcut: <strong>{p.quote_count}</strong></div>
           {p.exception_reason && <div className="small">Teklif istisnası gerekçesi: {p.exception_reason}</div>}
-          {p.decisions.map((d, i) => <div key={i} className="small muted">{d.stage === "exception" ? "İstisna" : "Satın alma"}: {d.decision === "approve" ? "onaylandı" : "reddedildi"} — {d.by}, {formatDateTime(d.at)}{d.note && ` · ${d.note}`}</div>)}
+          {p.decisions.map((d, i) => <div key={i} className="small muted">{d.stage === "exception" ? "İstisna" : d.stage === "order" ? "Sipariş" : "Satın alma"}: {d.decision === "approve" ? "onaylandı" : d.decision === "reject" ? "reddedildi" : "geri çekildi"} — {d.by}, {formatDateTime(d.at)}{d.note && ` · ${d.note}`}</div>)}
         </div></div>
       </div>
-      <QuotesCard p={p} />
-      {p.status === "quoting" && <QuoteInputs p={p} />}
+      <QuotesCard p={p} buyer={buyer} />
+      {p.status === "quoting" && buyer && <QuoteInputs p={p} />}
       <DecisionCard p={p} />
-      {p.status === "approved" && <OrderCreate p={p} />}
+      {p.status === "approved" && can(P.expensesManage) && <OrderCreate p={p} />}
       {p.order_id && <Alert tone="info" title="Sipariş">{p.order_number} — <Link to={`${base}/satin-alma/siparis/${p.order_id}`}>siparişe git</Link></Alert>}
-      {!["ordered", "rejected", "cancelled"].includes(p.status) && <div><CancelPr id={p.id} /></div>}
+      {buyer && !["ordered", "rejected", "cancelled"].includes(p.status) && <div><CancelPr id={p.id} /></div>}
     </div>
   );
 }
 
-function QuotesCard({ p }: { p: Pr }) {
+function QuotesCard({ p, buyer }: { p: Pr; buyer: boolean }) {
   const [sel, setSel] = useState(p.selected_quote_id ?? "");
   const [reason, setReason] = useState("");
   const m = useSiteMutation<Record<string, unknown>, Pr>("POST", `/purchase-requests/${p.id}/select-quote`);
-  const min = p.quotes.length ? Math.min(...p.quotes.map((q) => Number(q.total))) : 0;
+  const totals = p.quotes.map((q) => new Decimal(q.total));
+  const min = totals.length ? Decimal.min(...totals) : null;
   const short = p.quotes.length < p.required_quotes;
+  const choosing = p.status === "quoting" && buyer;
   return (
     <div className="card">
       <div className="card__head"><span className="card__title">Teklif karşılaştırma</span><span className="card__meta ml-auto">{p.quotes.length}/{p.required_quotes} teklif</span></div>
       <div className="card__body card__body--flush">
         {p.quotes.length === 0 ? <Empty title="Henüz teklif yok">Teklifi siz girin ya da tedarikçiye link gönderin.</Empty> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Teklif karşılaştırma</caption>
-            <thead><tr>{p.status === "quoting" && <th scope="col"><span className="visually-hidden">Seç</span></th>}<th scope="col">Tedarikçi</th>{p.items.map((i, k) => <th key={k} scope="col" className="right">{i.description}<div className="cell-sub">{i.qty} {i.unit}</div></th>)}<th scope="col" className="right">Toplam</th><th scope="col">Teslim / vade</th></tr></thead>
+            <thead><tr>{choosing && <th scope="col"><span className="visually-hidden">Seç</span></th>}<th scope="col">Tedarikçi</th>{p.items.map((i, k) => <th key={k} scope="col" className="right">{i.description}<div className="cell-sub">{qtyText(i.qty)} {i.unit}</div></th>)}<th scope="col" className="right">Toplam</th><th scope="col">Teslim / vade</th></tr></thead>
             <tbody>{p.quotes.map((q) => (
               <tr key={q.id} aria-selected={p.selected_quote_id === q.id}>
-                {p.status === "quoting" && <td><input type="radio" name={`q-${p.id}`} aria-label={`${q.vendor_name} teklifini seç`} checked={sel === q.id} onChange={() => setSel(q.id)} /></td>}
-                <td><div className="cell-main">{q.vendor_name}{p.selected_quote_id === q.id && <> <Badge tone="ok">Seçildi</Badge></>}</div><div className="cell-sub">{q.source === "vendor_link" ? <Badge tone="info">Tedarikçi girdi</Badge> : `${q.created_by} girdi`}{q.rating_avg != null && <> · <Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {q.rating_avg} ({q.rating_count})</>}{q.file_name && ` · ${q.file_name}`}</div></td>
+                {choosing && <td><input type="radio" name={`q-${p.id}`} aria-label={`${q.vendor_name} teklifini seç`} checked={sel === q.id} onChange={() => setSel(q.id)} /></td>}
+                <td><div className="cell-main">{q.vendor_name}{p.selected_quote_id === q.id && <> <Badge tone="ok">Seçildi</Badge></>}</div><div className="cell-sub">{q.source === "vendor_link" ? <Badge tone="info">Tedarikçi girdi</Badge> : `${q.created_by} girdi`}{q.rating_avg != null && <> · <Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {q.rating_avg.replace(".", ",")} ({q.rating_count})</>}</div><QuoteFile q={q} editable={choosing} /></td>
                 {q.lines.map((l, k) => <td key={k} className="right num">{money(l.unit_price)}</td>)}
-                <td className="right strong">{formatMoney(q.total)}{Number(q.total) === min && p.quotes.length > 1 && <div><Badge tone="ok">En düşük</Badge></div>}</td>
+                <td className="right strong">{formatMoney(q.total)}{min && min.equals(q.total) && p.quotes.length > 1 && <div><Badge tone="ok">En düşük</Badge></div>}</td>
                 <td className="small">{q.delivery_days} gün · {q.payment_terms}<div className="cell-sub">geçerli {formatDate(q.valid_until)}</div></td>
               </tr>
             ))}</tbody>
           </table></div>
         )}
       </div>
-      {p.status === "quoting" && p.quotes.length > 0 && (
-        <form className="card__foot stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ quote_id: sel, exception_reason: short ? reason : undefined }); }}>
+      {choosing && p.quotes.length > 0 && (
+        <form className="card__foot stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ quote_id: sel || null, exception_reason: short ? reason : null }); }}>
           <FormError error={m.error} />
           {short && <Field label="Eksik teklif gerekçesi" required hint={`${p.required_quotes} teklif gerekiyor; teklif istisnası onaya düşer`} error={fieldError(m.error, "exception_reason")}>{(pp) => <textarea {...pp} className="field__input" rows={2} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />}</Field>}
           <div><SubmitButton busy={m.isPending} disabled={!sel}>{short ? "Seç ve istisna onayına gönder" : "Seç ve onaya gönder"}</SubmitButton></div>
@@ -245,45 +292,62 @@ function QuotesCard({ p }: { p: Pr }) {
   );
 }
 
+/** Teklif belgesi: varsa açılır; yoksa (teklif aşamasında) eklenebilir. */
+function QuoteFile({ q, editable }: { q: Quote; editable: boolean }) {
+  const attach = useAttach();
+  const [busy, setBusy] = useState(false);
+  if (q.file_id) return <FileButton id={q.file_id} name={q.file_name} />;
+  if (!editable) return null;
+  return (
+    <label className="xs" style={{ cursor: "pointer" }}>
+      <span className="muted">{busy ? "Yükleniyor…" : "Belge ekle"}</span>
+      <input type="file" className="visually-hidden" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={busy} onChange={async (e) => { setBusy(true); await attach(`/purchase-quotes/${q.id}/file`, e.target.files?.[0] ?? null); setBusy(false); }} />
+    </label>
+  );
+}
+
 function QuoteInputs({ p }: { p: Pr }) {
-  const vendors = useSiteGet<VendorRow[]>("/vendors", { status: "active" });
+  const vendors = useSiteGet<Page<VendorRow>>("/vendors", { status: "active", page_size: 200 });
   const quoted = new Set(p.quotes.map((q) => q.vendor_id));
-  const avail = (vendors.data ?? []).filter((v) => !quoted.has(v.id));
+  const avail = (vendors.data?.items ?? []).filter((v) => !quoted.has(v.id));
   const [vid, setVid] = useState("");
   const vendor = vid || avail[0]?.id || "";
   const [prices, setPrices] = useState<string[]>(p.items.map(() => ""));
-  const [f, setF] = useState({ delivery_days: "7", payment_terms: "30 gün vadeli", valid_until: todayIso(), note: "", file_name: "" });
-  const add = useSiteMutation<Record<string, unknown>, Quote>("POST", `/purchase-requests/${p.id}/quotes`, { onSuccess: () => { setPrices(p.items.map(() => "")); setVid(""); } });
-  const link = useSiteMutation<{ vendor_id: string }, { token: string; expires_at: string; vendor_name: string }>("POST", `/purchase-requests/${p.id}/quote-links`);
+  const [file, setFile] = useState<File | null>(null);
+  const [f, setF] = useState({ delivery_days: "7", payment_terms: "30 gün vadeli", valid_until: todayIso(), note: "" });
+  const attach = useAttach();
+  const add = useSiteMutation<Record<string, unknown>, Quote>("POST", `/purchase-requests/${p.id}/quotes`, { onSuccess: async (q) => { if (q && file) await attach(`/purchase-quotes/${q.id}/file`, file); setPrices(p.items.map(() => "")); setVid(""); setFile(null); } });
+  const link = useSiteMutation<{ vendor_id: string }, LinkCreated>("POST", `/purchase-requests/${p.id}/quote-links`);
   const url = link.data ? `${window.location.origin}/teklif/${link.data.data.token}` : "";
   const base = useBase();
-  if (vendors.data && vendors.data.length === 0) return <Alert tone="info" title="Tedarikçi yok">Teklif için önce <Link to={`${base}/tedarikciler`}>Tedarikçiler</Link> ekranından tedarikçi ekleyin.</Alert>;
+  if (vendors.data && vendors.data.items.length === 0) return <Alert tone="info" title="Tedarikçi yok">Teklif için önce <Link to={`${base}/tedarikciler`}>Tedarikçiler</Link> ekranından aktif bir tedarikçi ekleyin.</Alert>;
   return (
     <div className="grid grid--2">
-      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ vendor_id: vendor, lines: prices.map((x) => ({ unit_price: parseMoneyInput(x) ?? "0" })), delivery_days: Number(f.delivery_days), payment_terms: f.payment_terms, valid_until: f.valid_until, note: f.note || null, file_name: f.file_name || null }); }}>
+      <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); add.mutate({ vendor_id: vendor || null, lines: prices.map((x) => ({ unit_price: parseMoneyInput(x) })), delivery_days: f.delivery_days === "" ? null : Number(f.delivery_days), payment_terms: f.payment_terms, valid_until: f.valid_until || null, note: f.note || null }); }}>
         <div className="card__head"><span className="card__title">Teklifi ben gireyim</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
           <FormError error={add.error} />
           <Field label="Tedarikçi" error={fieldError(add.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" value={vendor} onChange={(e) => setVid(e.target.value)}>{avail.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>}</Field>
-          {p.items.map((i, k) => <Field key={k} label={`${i.description} — birim fiyat (₺)`} hint={`${i.qty} ${i.unit}`} error={fieldError(add.error, `lines.${k}`)}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={prices[k]} onChange={(e) => setPrices((x) => x.map((v, j) => (j === k ? e.target.value : v)))} />}</Field>)}
+          {fieldError(add.error, "lines") && <span className="field__error" role="alert">{fieldError(add.error, "lines")}</span>}
+          {p.items.map((i, k) => <Field key={k} label={`${i.description} — birim fiyat (₺)`} hint={`${qtyText(i.qty)} ${i.unit}`} error={fieldError(add.error, `lines.${k}`)}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={prices[k]} onChange={(e) => setPrices((x) => x.map((v, j) => (j === k ? e.target.value : v)))} />}</Field>)}
           <div className="grid grid--2">
-            <Field label="Teslim (gün)" error={fieldError(add.error, "delivery_days")}>{(pp) => <input {...pp} className="field__input" inputMode="numeric" value={f.delivery_days} onChange={(e) => setF((x) => ({ ...x, delivery_days: e.target.value }))} />}</Field>
+            <Field label="Teslim (gün)" error={fieldError(add.error, "delivery_days")}>{(pp) => <input {...pp} className="field__input" inputMode="numeric" value={f.delivery_days} onChange={(e) => setF((x) => ({ ...x, delivery_days: e.target.value.replace(/\D/g, "") }))} />}</Field>
             <Field label="Geçerlilik" error={fieldError(add.error, "valid_until")}>{(pp) => <input {...pp} className="field__input" type="date" min={todayIso()} value={f.valid_until} onChange={(e) => setF((x) => ({ ...x, valid_until: e.target.value }))} />}</Field>
           </div>
           <Field label="Ödeme koşulu" error={fieldError(add.error, "payment_terms")}>{(pp) => <input {...pp} className="field__input" maxLength={80} value={f.payment_terms} onChange={(e) => setF((x) => ({ ...x, payment_terms: e.target.value }))} />}</Field>
-          <Field label="Teklif belgesi" hint="Dosya deposu belge modülüyle gelecek; şimdilik dosya adı">{(pp) => <input {...pp} className="field__input" maxLength={120} placeholder="ör. teklif-2026-117.pdf" value={f.file_name} onChange={(e) => setF((x) => ({ ...x, file_name: e.target.value }))} />}</Field>
+          <FilePick label="Teklif belgesi (isteğe bağlı)" onPick={setFile} />
         </div>
         <div className="card__foot"><SubmitButton busy={add.isPending} disabled={!vendor}>Teklifi ekle</SubmitButton></div>
       </form>
       <div className="card">
         <div className="card__head"><span className="card__title">Tedarikçiye link gönder</span></div>
         <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
-          <p className="small muted mb-0">Tedarikçi hesap açmadan teklifini girer. Link tek kullanımlık, süreli ve yalnız bu talebe bağlıdır; tedarikçi başka hiçbir veriyi görmez.</p>
+          <p className="small muted mb-0">Tedarikçi hesap açmadan teklifini girer. Link tek kullanımlık, süreli ve yalnız bu talebe bağlıdır; tedarikçi başka hiçbir veriyi görmez. E-posta gönderimi henüz yok (K5): linki kopyalayıp iletin. Link yalnız oluşturulurken bir kez gösterilir.</p>
           <FormError error={link.error} />
-          <Field label="Tedarikçi">{(pp) => <select {...pp} className="field__input" value={vendor} onChange={(e) => setVid(e.target.value)}>{avail.map((v) => <option key={v.id} value={v.id}>{v.name}{v.email ? ` (${v.email})` : ""}</option>)}</select>}</Field>
+          <Field label="Tedarikçi" error={fieldError(link.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" value={vendor} onChange={(e) => setVid(e.target.value)}>{avail.map((v) => <option key={v.id} value={v.id}>{v.name}{v.email ? ` (${v.email})` : ""}</option>)}</select>}</Field>
           <div><button className="btn" type="button" disabled={!vendor || link.isPending} onClick={() => link.mutate({ vendor_id: vendor })}><Link2 aria-hidden="true" /> Link oluştur</button></div>
           {url && <div className="stack" style={{ gap: "var(--s-1)" }}><label className="field__label" htmlFor={`ql-${p.id}`}>{link.data!.data.vendor_name} linki</label><div className="row" style={{ gap: "var(--s-2)" }}><input id={`ql-${p.id}`} className="field__input mono" readOnly value={url} onFocus={(e) => e.target.select()} /><button type="button" className="btn btn--sm" onClick={() => navigator.clipboard?.writeText(url)}><Copy aria-hidden="true" /> Kopyala</button></div><span className="xs muted">Son geçerlilik {formatDateTime(link.data!.data.expires_at)}</span></div>}
-          {p.links.length > 0 && <div className="stack" style={{ gap: 2 }}>{p.links.map((l) => <div key={l.token} className="small">{l.vendor_name} — {l.state === "used" ? <Badge tone="ok">Kullanıldı</Badge> : l.state === "expired" ? <Badge tone="muted">Süresi doldu</Badge> : <Badge tone="info">Açık, {formatDate(l.expires_at)}'e kadar</Badge>}</div>)}</div>}
+          {p.links.length > 0 && <div className="stack" style={{ gap: 2 }}>{p.links.map((l) => <div key={l.id} className="small">{l.vendor_name} — {l.state === "used" ? <Badge tone="ok">Kullanıldı</Badge> : l.state === "expired" ? <Badge tone="muted">Süresi doldu / kapandı</Badge> : <Badge tone="info">Açık, {formatDate(l.expires_at)}'e kadar</Badge>}</div>)}</div>}
         </div>
       </div>
     </div>
@@ -292,18 +356,22 @@ function QuoteInputs({ p }: { p: Pr }) {
 
 function DecisionCard({ p }: { p: Pr }) {
   const me = useMe();
-  const { can } = useSite();
+  const { can, site } = useSite();
   const [note, setNote] = useState("");
   const m = useSiteMutation<{ decision: string; note: string }, Pr>("POST", `/purchase-requests/${p.id}/decide`);
-  if (!["exception_pending", "approval_pending"].includes(p.status)) return null;
+  if (!["exception_pending", "approval_pending"].includes(p.status)) {
+    return p.status === "approved" && p.approval ? <Alert tone="info" title="Sipariş onayı bekleniyor">Siparişin onay kuralına göre onay talebi #{p.approval.number} açıldı; karar <Link to={`/s/${site.slug}/onaylar`}>Onaylar</Link> ekranından verilir.</Alert> : null;
+  }
   const sel = p.quotes.find((q) => q.id === p.selected_quote_id);
   const own = me.user_id === p.created_by_id;
+  const viaRule = !!p.approval;
   return (
     <div className="card" style={{ borderColor: "var(--warn-line)" }}>
       <div className="card__head"><span className="card__title">{p.status === "exception_pending" ? "Teklif istisnası onayı" : "Satın alma onayı"}</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         <div className="small">Seçilen: <strong>{sel?.vendor_name}</strong> — {sel && formatMoney(sel.total)}{p.over_budget && <> · <Badge tone="danger">Bütçe aşımı</Badge></>}</div>
-        {own ? <p className="small muted mb-0">Talebi siz açtınız; kendi talebinizi onaylayamazsınız. Onay başka bir yetkiliden bekleniyor.</p> : !can(P.expensesManage) ? <p className="small muted mb-0">Onay yetkiniz yok.</p> : (
+        {viaRule && <p className="small mb-0">Sitenin onay kuralı uygulanıyor (onay talebi #{p.approval!.number}); karar <Link to={`/s/${site.slug}/onaylar`}>Onaylar</Link> ekranından ya da burada, onaycı olarak atandıysanız verilir.</p>}
+        {own ? <p className="small muted mb-0">Talebi siz açtınız; kendi talebinizi onaylayamazsınız. Onay başka bir yetkiliden bekleniyor.</p> : !viaRule && !can(P.expensesManage) ? <p className="small muted mb-0">Onay yetkiniz yok.</p> : (
           <>
             <FormError error={m.error} />
             <Field label="Not" hint="Retde zorunlu" error={fieldError(m.error, "note")}>{(pp) => <input {...pp} className="field__input" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
@@ -313,18 +381,18 @@ function DecisionCard({ p }: { p: Pr }) {
             </div>
           </>
         )}
-        <p className="xs muted mb-0">Backend bu adımı onay kuralları modülündeki "{p.status === "exception_pending" ? "Teklif istisnası" : "Satın alma talebi"}" işlem türüne bağlayacak; o zaman karar Onaylar ekranından da verilir.</p>
       </div>
     </div>
   );
 }
 
 function OrderCreate({ p }: { p: Pr }) {
-  const m = useSiteMutation<{ pr_id: string }, Po>("POST", "/purchase-orders");
+  const m = useSiteMutation<{ pr_id: string }, PoWrite>("POST", "/purchase-orders");
   const sel = p.quotes.find((q) => q.id === p.selected_quote_id);
+  if (p.approval) return null;
   return (
     <div className="card"><div className="card__body row row--between" style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>
-      <div><div className="strong">Sipariş oluştur</div><div className="small muted">{sel?.vendor_name} · {sel && formatMoney(sel.total)} · numaralı sipariş tedarikçiye iletilir</div></div>
+      <div><div className="strong">Sipariş oluştur</div><div className="small muted">{sel?.vendor_name} · {sel && formatMoney(sel.total)} · numaralı sipariş oluşur; e-posta gönderimi henüz yok (K5), sipariş formunu yazdırıp iletin</div></div>
       <FormError error={m.error} />
       <button className="btn btn--primary" type="button" disabled={m.isPending} onClick={() => m.mutate({ pr_id: p.id })}><Truck aria-hidden="true" /> Siparişi oluştur</button>
     </div></div>
@@ -333,27 +401,30 @@ function OrderCreate({ p }: { p: Pr }) {
 
 function CancelPr({ id }: { id: string }) {
   const m = useSiteMutation<Record<string, never>, Pr>("POST", `/purchase-requests/${id}/cancel`);
-  return <ConfirmButton className="btn btn--ghost btn--sm" title="Talebi iptal et" confirmLabel="İptal et" danger body={<p className="mb-0">Açık teklif linkleri kapanır.</p>} onConfirm={() => m.mutateAsync({})}>Talebi iptal et</ConfirmButton>;
+  return <ConfirmButton className="btn btn--ghost btn--sm" title="Talebi iptal et" confirmLabel="İptal et" danger body={<p className="mb-0">Açık teklif linkleri kapanır; bekleyen onay talebi geri çekilir.</p>} onConfirm={() => m.mutateAsync({})}>Talebi iptal et</ConfirmButton>;
 }
 
-function Orders() {
+function Orders({ page, onPage }: { page: number; onPage: (p: number) => void }) {
   const base = useBase();
-  const q = useSiteGet<Po[]>("/purchase-orders");
+  const q = useSiteGet<Page<PoRow>>("/purchase-orders", { page, page_size: 50 });
   return (
-    <div className="card">
-      <div className="card__head">
-        <span className="card__icon card__icon--accent"><Truck aria-hidden="true" /></span>
-        <span className="card__title">Siparişler</span>
-        {q.data && <span className="card__meta ml-auto">{q.data.length} kayıt</span>}
-      </div>
-      <div className="card__body card__body--flush">
-      {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Sipariş yok" icon={<Truck aria-hidden="true" />} /> : (
-        <div className="table-wrap"><table className="data"><caption className="visually-hidden">Siparişler</caption>
-          <thead><tr><th scope="col">Sipariş</th><th scope="col">Tedarikçi</th><th scope="col" className="right">Tutar</th><th scope="col">Durum</th></tr></thead>
-          <tbody>{q.data.map((o) => <tr key={o.id}><td><Link className="cell-main" to={`${base}/satin-alma/siparis/${o.id}`}>{o.number}</Link><div className="cell-sub">{o.pr_number} · {formatDate(o.created_at)}</div></td><td>{o.vendor_name}</td><td className="right"><Money value={o.total} /></td><td><Badge tone={poTone(o.status)}>{poStatus(o.status)}</Badge></td></tr>)}</tbody>
-        </table></div>
-      )}
-    </div></div>
+    <div className="stack">
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><Truck aria-hidden="true" /></span>
+          <span className="card__title">Siparişler</span>
+          {q.data && <span className="card__meta ml-auto">{q.data.total} kayıt</span>}
+        </div>
+        <div className="card__body card__body--flush">
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Sipariş yok" icon={<Truck aria-hidden="true" />} /> : (
+          <div className="table-wrap"><table className="data"><caption className="visually-hidden">Siparişler</caption>
+            <thead><tr><th scope="col">Sipariş</th><th scope="col">Tedarikçi</th><th scope="col" className="right">Tutar</th><th scope="col">Durum</th></tr></thead>
+            <tbody>{q.data.items.map((o) => <tr key={o.id}><td><Link className="cell-main" to={`${base}/satin-alma/siparis/${o.id}`}>{o.number}</Link><div className="cell-sub">{o.pr_number} · {formatDate(o.created_at)}</div></td><td>{o.vendor_name}</td><td className="right"><Money value={o.total} /></td><td><Badge tone={poTone(o.status)}>{poStatus(o.status)}</Badge></td></tr>)}</tbody>
+          </table></div>
+        )}
+      </div></div>
+      {q.data && <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={onPage} />}
+    </div>
   );
 }
 
@@ -361,55 +432,70 @@ function Orders() {
 export function PurchaseOrderPage() {
   const { poId = "" } = useParams();
   const base = useBase();
+  const { can } = useSite();
   const q = useSiteGet<Po>(`/purchase-orders/${poId}`);
   useDocumentTitle(q.data ? `${q.data.number} · Sipariş` : "Sipariş");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   const o = q.data;
+  const canReceive = can(P.expensesManage) || can(P.requestsAssign) || can(P.inventoryManage);
+  const open = o.lines.some((l) => new Decimal(l.received).greaterThan(l.invoiced));
+  const pending = o.invoices.some((i) => i.status === "diff_pending");
   return (
     <div className="stack">
       <PageHead title={`${o.number} · ${o.vendor_name}`} subtitle={<><Link to={`${base}/satin-alma?sekme=siparis`}>Siparişler</Link> · <Link to={`${base}/satin-alma/${o.pr_id}`}>{o.pr_number}</Link> · {o.created_by}, {formatDateTime(o.created_at)}</>}
         actions={<><Badge tone={poTone(o.status)}>{poStatus(o.status)}</Badge> <button className="btn btn--sm print-hide" type="button" onClick={() => window.print()}><Printer aria-hidden="true" /> Sipariş formu</button></>} />
       <div className="grid grid--kpi rise print-hide">
         <Kpi label="Sipariş tutarı" tone="accent" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(o.total)} note={`${o.lines.length} kalem`} />
-        <Kpi label="Teslim alınan kalem" tone={o.lines.every((l) => l.received >= l.qty) ? "ok" : "warn"} icon={<PackageCheck aria-hidden="true" />} value={`${o.lines.filter((l) => l.received >= l.qty).length}/${o.lines.length}`} note="tam teslim" />
+        <Kpi label="Teslim alınan kalem" tone={o.lines.every((l) => new Decimal(l.received).greaterThanOrEqualTo(l.qty)) ? "ok" : "warn"} icon={<PackageCheck aria-hidden="true" />} value={`${o.lines.filter((l) => new Decimal(l.received).greaterThanOrEqualTo(l.qty)).length}/${o.lines.length}`} note="tam teslim" />
         <Kpi label="Kabul kaydı" icon={<Truck aria-hidden="true" />} value={o.receipts.length} note={o.receipts.length ? `son: ${formatDate(o.receipts.map((r) => r.at).sort().at(-1))}` : "henüz kabul yok"} />
         <Kpi label="Fatura" tone={o.invoices.some((i) => i.status === "diff_pending" || i.status === "disputed") ? "danger" : undefined} icon={<ReceiptText aria-hidden="true" />} value={o.invoices.length} note={o.invoices.length ? invoiceStatus(o.invoices[o.invoices.length - 1]!.status) : "kabulden sonra girilir"} />
       </div>
       <div className="card">
         <div className="card__head"><span className="card__icon card__icon--accent"><ShoppingCart aria-hidden="true" /></span><span className="card__title">Sipariş kalemleri</span></div>
         <div className="card__body card__body--flush"><div className="table-wrap"><table className="data"><caption className="visually-hidden">Sipariş kalemleri</caption>
-        <thead><tr><th scope="col">Kalem</th><th scope="col" className="right">Miktar</th><th scope="col" className="right">Birim fiyat</th><th scope="col" className="right">Tutar</th><th scope="col" className="right">Teslim alınan</th></tr></thead>
-        <tbody>{o.lines.map((l, k) => <tr key={k}><td className="cell-main">{l.description}{l.stock_item_id && <div className="cell-sub">stoklu</div>}</td><td className="right num">{l.qty} {l.unit}</td><td className="right num">{money(l.unit_price)}</td><td className="right"><Money value={l.total} /></td><td className="right num">{l.received >= l.qty ? <Badge tone="ok">{l.received}</Badge> : l.received > 0 ? <Badge tone="warn">{l.received}</Badge> : "0"}</td></tr>)}
-          <tr><td colSpan={3} className="right strong">Toplam</td><td className="right strong"><Money value={o.total} /></td><td /></tr></tbody>
+        <thead><tr><th scope="col">Kalem</th><th scope="col" className="right">Miktar</th><th scope="col" className="right">Birim fiyat</th><th scope="col" className="right">Tutar</th><th scope="col" className="right">Teslim alınan</th><th scope="col" className="right print-hide">Faturalanan</th></tr></thead>
+        <tbody>{o.lines.map((l) => { const done = new Decimal(l.received).greaterThanOrEqualTo(l.qty); const some = new Decimal(l.received).greaterThan(0); return <tr key={l.id}><td className="cell-main">{l.description}{l.stock_item_id && <div className="cell-sub">stoklu</div>}</td><td className="right num">{qtyText(l.qty)} {l.unit}</td><td className="right num">{money(l.unit_price)}</td><td className="right"><Money value={l.total} /></td><td className="right num">{done ? <Badge tone="ok">{qtyText(l.received)}</Badge> : some ? <Badge tone="warn">{qtyText(l.received)}</Badge> : "0"}</td><td className="right num print-hide">{qtyText(l.invoiced)}</td></tr>; })}
+          <tr><td colSpan={3} className="right strong">Toplam</td><td className="right strong"><Money value={o.total} /></td><td /><td className="print-hide" /></tr></tbody>
       </table></div></div></div>
-      {(o.status === "sent" || o.status === "partial") && <ReceiptForm o={o} />}
+      {(o.status === "sent" || o.status === "partial") && canReceive && <ReceiptForm o={o} />}
       {o.receipts.length > 0 && <div className="card print-hide"><div className="card__head"><span className="card__title">Kabul kayıtları</span></div><div className="card__body stack" style={{ gap: "var(--s-1)" }}>
-        {o.receipts.map((r) => <div key={r.id} className="small">{formatDateTime(r.at)} · {r.by} · {r.lines.map((x, k) => (x.qty ? `${o.lines[k]!.description} ${x.qty}` : null)).filter(Boolean).join(", ")}{r.rating && <> · <Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {r.rating}</>}{r.note && ` · ${r.note}`}{r.photo && <img src={r.photo} alt="Kabul fotoğrafı" style={{ width: 32, height: 32, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle" }} />}</div>)}
+        {o.receipts.map((r) => <div key={r.id} className="small">{formatDateTime(r.at)} · {r.by} · {r.lines.map((x, k) => (new Decimal(x.qty).greaterThan(0) ? `${o.lines[k]!.description} ${qtyText(x.qty)}` : null)).filter(Boolean).join(", ")}{r.rating && <> · <Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {r.rating}</>}{r.note && ` · ${r.note}`} <FileButton id={r.file_id} name={r.file_name} /></div>)}
       </div></div>}
-      {o.lines.some((l) => l.received > 0) && !o.invoices.some((i) => i.status !== "disputed") && <InvoiceForm o={o} />}
+      {open && !pending && can(P.expensesManage) && <InvoiceForm o={o} />}
       {o.invoices.length > 0 && <div className="stack print-hide">{o.invoices.map((i) => <InvoiceCard key={i.id} i={i} />)}</div>}
     </div>
   );
 }
 
 function ReceiptForm({ o }: { o: Po }) {
-  const [qty, setQty] = useState<string[]>(o.lines.map((l) => String(l.qty - l.received)));
+  const remaining = (l: Po["lines"][number]) => new Decimal(l.qty).minus(l.received).toString();
+  const [qty, setQty] = useState<string[]>(o.lines.map((l) => qtyText(remaining(l))));
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
-  const m = useSiteMutation<Record<string, unknown>, Po>("POST", `/purchase-orders/${o.id}/receipts`, { onSuccess: () => { setNote(""); setPhoto(null); setRating(0); } });
+  const attach = useAttach();
+  const m = useSiteMutation<Record<string, unknown>, Po>("POST", `/purchase-orders/${o.id}/receipts`, {
+    onSuccess: async (po) => {
+      const last = po?.receipts[po.receipts.length - 1];
+      if (last && photo) await attach(`/purchase-receipts/${last.id}/file`, await (await fetch(photo)).blob(), "kabul-fotografi.jpg");
+      setNote(""); setPhoto(null); setRating(0);
+    },
+  });
   return (
-    <form className="card print-hide" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ lines: qty.map((x) => ({ qty: Number(x.replace(",", ".") || 0) })), note: note || null, photo, rating: rating || null }); }}>
+    <form className="card print-hide" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ lines: qty.map((x) => ({ qty: qtyInput(x) })), note: note || null, rating: rating || null }); }}>
       <div className="card__head"><span className="card__title">Mal / hizmet kabul</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         <FormError error={m.error} />
-        <div className="grid grid--kpi">{o.lines.map((l, k) => <Field key={k} label={`${l.description} (kalan ${l.qty - l.received} ${l.unit})`} error={fieldError(m.error, `lines.${k}`)}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={qty[k]} onChange={(e) => setQty((x) => x.map((v, j) => (j === k ? e.target.value : v)))} />}</Field>)}</div>
+        {fieldError(m.error, "lines") && <span className="field__error" role="alert">{fieldError(m.error, "lines")}</span>}
+        <div className="grid grid--kpi">{o.lines.map((l, k) => <Field key={k} label={`${l.description} (kalan ${qtyText(remaining(l))} ${l.unit})`} error={fieldError(m.error, `lines.${k}`)}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={qty[k]} onChange={(e) => setQty((x) => x.map((v, j) => (j === k ? e.target.value : v)))} />}</Field>)}</div>
         <Field label="Not" hint="Eksik/fazla, hasar, irsaliye no">{(pp) => <input {...pp} className="field__input" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
         <PhotoInput label="Fotoğraf / irsaliye" value={photo} onChange={setPhoto} />
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}><legend className="field__label">Tedarikçi puanı (isteğe bağlı)</legend>
           <div className="row" style={{ gap: 4 }}>{[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" className={`btn btn--sm${rating >= n ? " btn--primary" : ""}`} aria-pressed={rating === n} aria-label={`${n} puan`} onClick={() => setRating(rating === n ? 0 : n)}><Star aria-hidden="true" /></button>)}</div>
+          {fieldError(m.error, "rating") && <span className="field__error" role="alert">{fieldError(m.error, "rating")}</span>}
         </fieldset>
+        <p className="xs muted mb-0">Stoklu kalemler kabulle birlikte sistem adına stoğa girer; stok yetkiniz olması gerekmez.</p>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Kabulü kaydet</SubmitButton></div>
     </form>
@@ -417,12 +503,15 @@ function ReceiptForm({ o }: { o: Po }) {
 }
 
 function InvoiceForm({ o }: { o: Po }) {
-  const [f, setF] = useState({ number: "", date: todayIso(), due_date: todayIso(), file_name: "" });
-  const [lines, setLines] = useState(o.lines.map((l) => ({ qty: String(l.received), unit_price: money(l.unit_price) })));
-  const m = useSiteMutation<Record<string, unknown>, Invoice>("POST", "/vendor-invoices", { onSuccess: () => setF((x) => ({ ...x, number: "" })) });
-  const total = lines.reduce((s, l) => s + Number(l.qty.replace(",", ".") || 0) * Number(parseMoneyInput(l.unit_price) ?? 0), 0);
+  const open = (l: Po["lines"][number]) => new Decimal(l.received).minus(l.invoiced).toString();
+  const [f, setF] = useState({ number: "", date: todayIso(), due_date: todayIso() });
+  const [file, setFile] = useState<File | null>(null);
+  const [lines, setLines] = useState(o.lines.map((l) => ({ qty: qtyText(open(l)), price: money(l.unit_price) })));
+  const attach = useAttach();
+  const m = useSiteMutation<Record<string, unknown>, Invoice>("POST", "/vendor-invoices", { onSuccess: async (inv) => { if (inv && file) await attach(`/vendor-invoices/${inv.id}/file`, file); setF((x) => ({ ...x, number: "" })); setFile(null); } });
+  const total = previewTotal(lines);
   return (
-    <form className="card print-hide" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ order_id: o.id, ...f, file_name: f.file_name || null, lines: lines.map((l) => ({ qty: Number(l.qty.replace(",", ".") || 0), unit_price: parseMoneyInput(l.unit_price) ?? "0" })) }); }}>
+    <form className="card print-hide" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ order_id: o.id, number: f.number, date: f.date || null, due_date: f.due_date || null, lines: lines.map((l) => ({ qty: qtyInput(l.qty), unit_price: parseMoneyInput(l.price) })) }); }}>
       <div className="card__head"><span className="card__title">Tedarikçi faturası</span><span className="card__meta ml-auto">sipariş + kabul + fatura eşleşmesi</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
         <FormError error={m.error} />
@@ -430,18 +519,19 @@ function InvoiceForm({ o }: { o: Po }) {
           <Field label="Fatura no" required error={fieldError(m.error, "number")}>{(pp) => <input {...pp} className="field__input mono" maxLength={30} value={f.number} onChange={(e) => setF((x) => ({ ...x, number: e.target.value }))} />}</Field>
           <Field label="Fatura tarihi" error={fieldError(m.error, "date")}>{(pp) => <input {...pp} className="field__input" type="date" max={todayIso()} value={f.date} onChange={(e) => setF((x) => ({ ...x, date: e.target.value }))} />}</Field>
           <Field label="Vade" error={fieldError(m.error, "due_date")}>{(pp) => <input {...pp} className="field__input" type="date" min={f.date} value={f.due_date} onChange={(e) => setF((x) => ({ ...x, due_date: e.target.value }))} />}</Field>
-          <Field label="Belge" hint="PDF / e-Fatura XML adı">{(pp) => <input {...pp} className="field__input" maxLength={120} value={f.file_name} onChange={(e) => setF((x) => ({ ...x, file_name: e.target.value }))} />}</Field>
+          <FilePick label="Fatura görüntüsü" hint="PDF ya da görsel · ödenince gidere bağlanır" onPick={setFile} />
         </div>
+        {fieldError(m.error, "lines") && <span className="field__error" role="alert">{fieldError(m.error, "lines")}</span>}
         {o.lines.map((l, k) => (
           <fieldset key={k} className="stack" style={{ border: 0, padding: 0, margin: 0, gap: "var(--s-1)" }}>
-            <legend className="small strong">{l.description} <span className="xs muted">· sipariş {l.qty} × {money(l.unit_price)} · teslim {l.received}</span></legend>
+            <legend className="small strong">{l.description} <span className="xs muted">· sipariş {qtyText(l.qty)} × {money(l.unit_price)} · teslim {qtyText(l.received)} · faturalanmamış {qtyText(open(l))}</span></legend>
             <div className="grid grid--2">
-            <Field label="Faturadaki miktar">{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={lines[k]!.qty} onChange={(e) => setLines((x) => x.map((v, j) => (j === k ? { ...v, qty: e.target.value } : v)))} />}</Field>
-            <Field label="Faturadaki birim fiyat">{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={lines[k]!.unit_price} onChange={(e) => setLines((x) => x.map((v, j) => (j === k ? { ...v, unit_price: e.target.value } : v)))} />}</Field>
+              <Field label="Faturadaki miktar" error={fieldError(m.error, `lines.${k}`)}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={lines[k]!.qty} onChange={(e) => setLines((x) => x.map((v, j) => (j === k ? { ...v, qty: e.target.value } : v)))} />}</Field>
+              <Field label="Faturadaki birim fiyat">{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={lines[k]!.price} onChange={(e) => setLines((x) => x.map((v, j) => (j === k ? { ...v, price: e.target.value } : v)))} />}</Field>
             </div>
           </fieldset>
         ))}
-        <div className="kv"><span className="kv__k strong">Fatura toplamı</span><span className="kv__v strong">{formatMoney(total.toFixed(2))}</span></div>
+        <div className="kv"><span className="kv__k strong">Fatura toplamı</span><span className="kv__v strong">{formatMoney(total)}</span></div>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Faturayı kaydet ve eşleştir</SubmitButton></div>
     </form>
@@ -450,16 +540,18 @@ function InvoiceForm({ o }: { o: Po }) {
 
 function InvoiceCard({ i }: { i: Invoice }) {
   const me = useMe();
-  const { can } = useSite();
+  const { can, site } = useSite();
   const [note, setNote] = useState("");
   const m = useSiteMutation<{ decision: string; note: string }, Invoice>("POST", `/vendor-invoices/${i.id}/decide`);
+  const viaRule = !!i.approval_request_id;
   return (
     <div className="card"><div className="card__body stack" style={{ gap: "var(--s-2)" }}>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}><span className="strong">Fatura {i.number} · {formatDate(i.date)}</span><Badge tone={invoiceTone(i.status)}>{invoiceStatus(i.status)}</Badge></div>
-      <div className="small">Tutar {formatMoney(i.total)} · beklenen {formatMoney(i.expected_total)} · vade {formatDate(i.due_date)}</div>
+      <div className="small">Tutar {formatMoney(i.total)} · beklenen {formatMoney(i.expected_total)} · vade {formatDate(i.due_date)}{i.paid_on && ` · ödendi ${formatDate(i.paid_on)}`} <FileButton id={i.file_id} name={i.file_name} /></div>
       {i.diffs.length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: "1.1rem" }}>{i.diffs.map((d, k) => <li key={k}>{d}</li>)}</ul>}
       {i.decision && <div className="small muted">{i.decision.by}, {formatDateTime(i.decision.at)}: {i.decision.note}</div>}
-      {i.status === "diff_pending" && (me.user_id === i.created_by_id ? <p className="small muted mb-0">Faturayı siz girdiniz; farkı başka bir yetkili onaylar.</p> : can(P.expensesManage) && (
+      {i.status === "diff_pending" && viaRule && <p className="small mb-0">Fark, sitenin "Fatura farkı" onay kuralına düştü; karar <Link to={`/s/${site.slug}/onaylar`}>Onaylar</Link> ekranından ya da burada (onaycıysanız) verilir.</p>}
+      {i.status === "diff_pending" && (me.user_id === i.created_by_id ? <p className="small muted mb-0">Faturayı siz girdiniz; farkı başka bir yetkili onaylar.</p> : (viaRule || can(P.expensesManage)) && (
         <div className="stack" style={{ gap: "var(--s-2)" }}>
           <FormError error={m.error} />
           <Field label="Gerekçe" required error={fieldError(m.error, "note")}>{(pp) => <input {...pp} className="field__input" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} />}</Field>
@@ -470,10 +562,10 @@ function InvoiceCard({ i }: { i: Invoice }) {
   );
 }
 
-function Invoices() {
+function Invoices({ page, onPage }: { page: number; onPage: (p: number) => void }) {
   const base = useBase();
   const [st, setSt] = useState("");
-  const q = useSiteGet<Invoice[]>("/vendor-invoices", { status: st || undefined });
+  const q = useSiteGet<Page<Invoice>>("/vendor-invoices", { status: st || undefined, page, page_size: 50 });
   return (
     <div className="stack">
       <div className="card">
@@ -481,27 +573,29 @@ function Invoices() {
           <span className="card__icon card__icon--accent"><ReceiptText aria-hidden="true" /></span>
           <div>
             <div className="card__title">Tedarikçi faturaları</div>
-            {q.data && <div className="card__meta">{q.data.length} kayıt</div>}
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
           </div>
           <div className="card__tools">
-            <div className="field"><label className="field__label" htmlFor="vi-st">Durum</label><select id="vi-st" className="field__input" value={st} onChange={(e) => setSt(e.target.value)}><option value="">Tümü</option>{["diff_pending", "matched", "paid", "disputed"].map((k) => <option key={k} value={k}>{invoiceStatus(k)}</option>)}</select></div>
+            <div className="field"><label className="field__label" htmlFor="vi-st">Durum</label><select id="vi-st" className="field__input" value={st} onChange={(e) => { setSt(e.target.value); onPage(1); }}><option value="">Tümü</option>{["diff_pending", "matched", "paid", "disputed"].map((k) => <option key={k} value={k}>{invoiceStatus(k)}</option>)}</select></div>
           </div>
         </div>
         <div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Tedarikçi faturası yok">Fatura, siparişin ayrıntısından kabulden sonra girilir.</Empty> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Tedarikçi faturası yok">Fatura, siparişin ayrıntısından kabulden sonra girilir.</Empty> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Tedarikçi faturaları</caption>
             <thead><tr><th scope="col">Fatura</th><th scope="col">Tedarikçi</th><th scope="col" className="right">Tutar</th><th scope="col">Vade</th><th scope="col">Durum</th></tr></thead>
-            <tbody>{q.data.map((i) => <tr key={i.id}><td><div className="cell-main">{i.number}</div><div className="cell-sub"><Link to={`${base}/satin-alma/siparis/${i.order_id}`}>{i.order_number}</Link></div></td><td>{i.vendor_name}</td><td className="right"><Money value={i.total} /></td><td className="small">{formatDate(i.due_date)}</td><td><Badge tone={invoiceTone(i.status)}>{invoiceStatus(i.status)}</Badge></td></tr>)}</tbody>
+            <tbody>{q.data.items.map((i) => <tr key={i.id}><td><div className="cell-main">{i.number}</div><div className="cell-sub"><Link to={`${base}/satin-alma/siparis/${i.order_id}`}>{i.order_number}</Link></div></td><td>{i.vendor_name}</td><td className="right"><Money value={i.total} /></td><td className="small">{formatDate(i.due_date)}</td><td><Badge tone={invoiceTone(i.status)}>{invoiceStatus(i.status)}</Badge></td></tr>)}</tbody>
           </table></div>
         )}
       </div></div>
+      {q.data && <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={onPage} />}
     </div>
   );
 }
 
 function Payables() {
   const base = useBase();
-  const q = useSiteGet<{ invoices: Invoice[]; direct_expenses: { count: number; total: string }; total: string }>("/payables");
+  const { can } = useSite();
+  const q = useSiteGet<Payables>("/payables");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   const overdue = q.data.invoices.filter((i) => i.overdue);
@@ -520,11 +614,11 @@ function Payables() {
         {q.data.invoices.length === 0 ? <Empty title="Ödenecek fatura yok" icon={<CheckCircle2 aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Ödenecekler</caption>
             <thead><tr><th scope="col">Vade</th><th scope="col">Tedarikçi / fatura</th><th scope="col" className="right">Tutar</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
-            <tbody>{q.data.invoices.map((i) => <tr key={i.id}><td className="small">{formatDate(i.due_date)}{i.overdue && <div><Badge tone="danger">Vadesi geçti</Badge></div>}</td><td><div className="cell-main">{i.vendor_name}</div><div className="cell-sub">{i.number} · {i.order_number}</div></td><td className="right"><Money value={i.total} /></td><td className="right"><MarkPaid i={i} /></td></tr>)}</tbody>
+            <tbody>{q.data.invoices.map((i) => <tr key={i.id}><td className="small">{formatDate(i.due_date)}{i.overdue && <div><Badge tone="danger">Vadesi geçti</Badge></div>}</td><td><div className="cell-main">{i.vendor_name}</div><div className="cell-sub">{i.number} · <Link to={`${base}/satin-alma/siparis/${i.order_id}`}>{i.order_number}</Link></div></td><td className="right"><Money value={i.total} /></td><td className="right">{can(P.expensesManage) && <MarkPaid i={i} />}</td></tr>)}</tbody>
           </table></div>
         )}
       </div></div>
-      <p className="small muted">Platform para hareketi başlatmaz: ödemeyi site bankasından yapın, burada "ödendi" işaretleyin. Banka ekstresindeki çıkışla eşleştirme banka içe aktarımında yapılır.</p>
+      <p className="small muted">Platform para hareketi başlatmaz: ödemeyi site bankasından yapın, burada "ödendi" işaretleyin. İşaretlemeyle aynı anda gider kaydı yazılır ve seçilen hesaptan çıkış düşer; banka ekstresindeki çıkışla eşleştirme banka içe aktarımında yapılır.</p>
     </div>
   );
 }
@@ -534,12 +628,12 @@ function MarkPaid({ i }: { i: Invoice }) {
   const accs = cash.data?.items.filter((c) => c.is_active) ?? [];
   const [f, setF] = useState({ paid_on: todayIso(), cash_account_id: "" });
   const acc = f.cash_account_id || accs.find((a) => a.kind === "bank")?.id || accs[0]?.id || "";
-  const m = useSiteMutation<Record<string, unknown>, Invoice>("POST", `/vendor-invoices/${i.id}/mark-paid`);
+  const m = useSiteMutation<Record<string, unknown>, Invoice>("POST", `/vendor-invoices/${i.id}/mark-paid`, { money: true });
   return (
     <ConfirmButton className="btn btn--sm btn--primary" title={`${i.vendor_name} ${i.number} — ödendi`} confirmLabel="Ödendi olarak işaretle"
       body={<div className="stack" style={{ gap: "var(--s-3)" }}>
-        <div className="small">Tutar: <strong>{formatMoney(i.total)}</strong></div>
-        <div className="field"><label className="field__label" htmlFor={`mp-d-${i.id}`}>Ödeme tarihi</label><input id={`mp-d-${i.id}`} className="field__input" type="date" max={todayIso()} value={f.paid_on} onChange={(e) => setF((x) => ({ ...x, paid_on: e.target.value }))} /></div>
+        <div className="small">Tutar: <strong>{formatMoney(i.total)}</strong> — gider kaydı yazılır ve seçilen hesaptan düşer.</div>
+        <div className="field"><label className="field__label" htmlFor={`mp-d-${i.id}`}>Ödeme tarihi</label><input id={`mp-d-${i.id}`} className="field__input" type="date" min={i.date} max={todayIso()} value={f.paid_on} onChange={(e) => setF((x) => ({ ...x, paid_on: e.target.value }))} /></div>
         <div className="field"><label className="field__label" htmlFor={`mp-a-${i.id}`}>Ödenen hesap</label><select id={`mp-a-${i.id}`} className="field__input" value={acc} onChange={(e) => setF((x) => ({ ...x, cash_account_id: e.target.value }))}>{accs.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
       </div>}
       onConfirm={() => m.mutateAsync({ ...f, cash_account_id: acc })}>Ödendi</ConfirmButton>
@@ -553,10 +647,10 @@ function SettingsForm() {
 }
 function SettingsInner({ s }: { s: Settings }) {
   const [th, setTh] = useState(s.thresholds.map((t) => ({ max: money(t.max), quotes: String(t.quotes) })));
-  const [f, setF] = useState({ above_quotes: String(s.above_quotes), tolerance_percent: String(s.tolerance_percent), link_days: String(s.link_days) });
+  const [f, setF] = useState({ above_quotes: String(s.above_quotes), tolerance_percent: s.tolerance_percent.replace(".", ","), link_days: String(s.link_days) });
   const m = useSiteMutation<Record<string, unknown>, Settings>("PUT", "/purchase-settings");
   return (
-    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ thresholds: th.map((t) => ({ max: parseMoneyInput(t.max) ?? "0", quotes: Number(t.quotes) })), above_quotes: Number(f.above_quotes), tolerance_percent: Number(f.tolerance_percent.replace(",", ".")), link_days: Number(f.link_days) }); }}>
+    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ thresholds: th.map((t) => ({ max: parseMoneyInput(t.max) ?? "0.00", quotes: Number(t.quotes) || 0 })), above_quotes: Number(f.above_quotes) || 0, tolerance_percent: f.tolerance_percent.trim().replace(",", ".") || "0", link_days: Number(f.link_days) || 0 }); }}>
       <div className="card__head"><span className="card__title">Asgari teklif sayısı ve eşleşme</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
@@ -574,7 +668,7 @@ function SettingsInner({ s }: { s: Settings }) {
           <Field label="Fatura tutar toleransı (%)" error={fieldError(m.error, "tolerance_percent")}>{(pp) => <input {...pp} className="field__input" inputMode="decimal" value={f.tolerance_percent} onChange={(e) => setF((x) => ({ ...x, tolerance_percent: e.target.value }))} />}</Field>
           <Field label="Teklif linki geçerliliği (gün)" error={fieldError(m.error, "link_days")}>{(pp) => <input {...pp} className="field__input" inputMode="numeric" value={f.link_days} onChange={(e) => setF((x) => ({ ...x, link_days: e.target.value }))} />}</Field>
         </div>
-        <p className="xs muted mb-0">Miktar farkına tolerans yoktur: faturadaki miktar teslim alınanla aynı olmalı.</p>
+        <p className="xs muted mb-0">Miktar farkına tolerans yoktur: faturadaki miktar teslim alınanla aynı olmalı. Onay zinciri (kim onaylar, tutar eşikleri) Onay kuralları ekranından: "Satın alma talebi", "Teklif istisnası", "Sipariş", "Fatura farkı".</p>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
     </form>
@@ -585,13 +679,13 @@ function SettingsInner({ s }: { s: Settings }) {
 /** Tedarikçi kartı (SAT-06): unvan, vergi no, iletişim, IBAN (maskeli), kategori, durum, ortalama puan. */
 export function VendorsPage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ q: "", durum: "" });
-  const q = useSiteGet<VendorRow[]>("/vendors", { q: s.q || undefined, status: s.durum || undefined });
-  const all = useSiteGet<VendorRow[]>("/vendors");
+  const [s, set] = useUrlState({ q: "", durum: "", page: "1" });
+  const q = useSiteGet<Page<VendorRow>>("/vendors", { q: s.q || undefined, status: s.durum || undefined, page: s.page, page_size: 50 });
+  const all = useSiteGet<Page<VendorRow>>("/vendors", { page_size: 200 });
   const [edit, setEdit] = useState<VendorRow | "new" | null>(null);
-  const vs = all.data ?? [];
+  const vs = all.data?.items ?? [];
   const rated = vs.filter((v) => v.rating_avg != null && v.rating_count > 0);
-  const avg = rated.length ? rated.reduce((t, v) => t + (v.rating_avg ?? 0) * v.rating_count, 0) / rated.reduce((t, v) => t + v.rating_count, 0) : null;
+  const avg = rated.length ? rated.reduce((t, v) => t + Number(v.rating_avg ?? 0) * v.rating_count, 0) / rated.reduce((t, v) => t + v.rating_count, 0) : null;
   return (
     <div className="stack">
       <PageHead title="Tedarikçiler" subtitle="Teklif, sipariş ve faturada kullanılan tedarikçi kartları. IBAN yalnız ödeme için tutulur ve maskeli gösterilir."
@@ -610,27 +704,28 @@ export function VendorsPage() {
           <span className="card__icon card__icon--accent"><Truck aria-hidden="true" /></span>
           <div>
             <div className="card__title">Tedarikçi kartları</div>
-            {q.data && <div className="card__meta">{q.data.length} kayıt</div>}
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
           </div>
           <div className="card__tools">
-            <div className="field"><label className="field__label" htmlFor="vd-q">Ara</label><input id="vd-q" className="field__input" type="search" placeholder="Unvan ya da vergi no" value={s.q} onChange={(e) => set({ q: e.target.value })} /></div>
-            <div className="field"><label className="field__label" htmlFor="vd-s">Durum</label><select id="vd-s" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select></div>
+            <div className="field"><label className="field__label" htmlFor="vd-q">Ara</label><input id="vd-q" className="field__input" type="search" placeholder="Unvan ya da vergi no" value={s.q} onChange={(e) => set({ q: e.target.value, page: "1" })} /></div>
+            <div className="field"><label className="field__label" htmlFor="vd-s">Durum</label><select id="vd-s" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select></div>
           </div>
         </div>
         <div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Tedarikçi yok" /> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Tedarikçi yok" /> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Tedarikçiler</caption>
             <thead><tr><th scope="col">Tedarikçi</th><th scope="col">İletişim</th><th scope="col">Puan</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
-            <tbody>{q.data.map((v) => <tr key={v.id}>
+            <tbody>{q.data.items.map((v) => <tr key={v.id}>
               <td><div className="cell-person"><Avatar name={v.name} size="sm" soft /><div><div className="cell-main">{v.name}</div><div className="cell-sub">VKN {v.tax_no}{v.category && ` · ${v.category}`}{v.iban_masked && ` · ${v.iban_masked}`}</div></div></div></td>
               <td className="small">{v.phone && <div>{v.phone}</div>}{v.email && <div>{v.email}</div>}</td>
-              <td className="small">{v.rating_avg != null ? <><Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {v.rating_avg} ({v.rating_count})</> : "—"}<div className="cell-sub">{v.order_count} sipariş</div></td>
+              <td className="small">{v.rating_avg != null ? <><Star aria-hidden="true" style={{ width: 12, height: 12, verticalAlign: "-1px" }} /> {v.rating_avg.replace(".", ",")} ({v.rating_count})</> : "—"}<div className="cell-sub">{v.order_count} sipariş</div></td>
               <td><Badge tone={vendorTone(v.status)}>{vendorStatus(v.status)}</Badge></td>
               <td className="right">{can(P.expensesManage) && <button className="btn btn--sm btn--ghost" type="button" onClick={() => setEdit(v)}>Düzenle</button>}</td>
             </tr>)}</tbody>
           </table></div>
         )}
       </div></div>
+      {q.data && <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} />}
     </div>
   );
 }
@@ -648,10 +743,10 @@ function VendorForm({ v, onDone }: { v: VendorRow | null; onDone: () => void }) 
           <Field label="Unvan" required error={fieldError(m.error, "name")}>{(p) => <input {...p} className="field__input" maxLength={120} autoComplete="organization" value={f.name} onChange={up("name")} />}</Field>
           <Field label="Vergi / T.C. kimlik no" required error={fieldError(m.error, "tax_no")}>{(p) => <input {...p} className="field__input mono" inputMode="numeric" maxLength={11} value={f.tax_no} onChange={up("tax_no")} />}</Field>
           <Field label="Telefon" error={fieldError(m.error, "phone")}>{(p) => <input {...p} className="field__input" type="tel" inputMode="tel" autoComplete="tel" value={f.phone} onChange={up("phone")} />}</Field>
-          <Field label="E-posta" hint="Teklif linki ve sipariş buraya gider" error={fieldError(m.error, "email")}>{(p) => <input {...p} className="field__input" type="email" autoComplete="email" maxLength={254} value={f.email} onChange={up("email")} />}</Field>
+          <Field label="E-posta" hint="Teklif linki ve sipariş buraya iletilir" error={fieldError(m.error, "email")}>{(p) => <input {...p} className="field__input" type="email" autoComplete="email" maxLength={254} value={f.email} onChange={up("email")} />}</Field>
           <Field label="IBAN" hint={v?.iban_masked ? `Kayıtlı: ${v.iban_masked} — değiştirmek için yazın` : "TR ile başlayan 26 karakter"} error={fieldError(m.error, "iban")}>{(p) => <input {...p} className="field__input mono" maxLength={34} autoComplete="off" value={f.iban} onChange={up("iban")} />}</Field>
           <Field label="Kategori" hint="ör. Asansör bakım, temizlik malzemesi">{(p) => <input {...p} className="field__input" maxLength={60} value={f.category} onChange={up("category")} />}</Field>
-          <Field label="Durum">{(p) => <select {...p} className="field__input" value={f.status} onChange={up("status")}>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select>}</Field>
+          <Field label="Durum" error={fieldError(m.error, "status")}>{(p) => <select {...p} className="field__input" value={f.status} onChange={up("status")}>{["active", "passive", "blacklist"].map((k) => <option key={k} value={k}>{vendorStatus(k)}</option>)}</select>}</Field>
           <Field label="Not">{(p) => <input {...p} className="field__input" maxLength={200} value={f.note} onChange={up("note")} />}</Field>
         </div>
       </div>
