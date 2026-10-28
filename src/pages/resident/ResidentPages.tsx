@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Package, Receipt, Users, Wrench } from "lucide-react";
+import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Package, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError, openDocument } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
 import { PollResults } from "../../components/PollResults";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Loading, Money, Pager, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, IconChip, Loading, Money, Pager, Segmented, SubmitButton, fieldError, todayLong, useDocumentTitle } from "../../components/ui";
+import { heroUrl } from "../../lib/cover";
 import { formatDate, formatDateTime, formatIban, formatMoney } from "../../lib/format";
+import { categoryIcon } from "../../lib/icons";
 import { installmentStatus, installmentTone, planStatus, planStatusTone } from "../../lib/labels";
-import { CATEGORIES, accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
+import { accountKind, importance, importanceTone, ledgerSource, priorityTone, requestCategory, requestPriority, requestStatus, requestStatusTone } from "../../lib/labels";
 import { M, useSite } from "../../site/SiteContext";
 import { NotificationsPage } from "../NotificationsPage";
 import { ProfilePage } from "../ProfilePage";
@@ -20,7 +22,8 @@ type Home = Schemas["HomeOut"];
 type Ann = Schemas["AnnouncementOut"];
 type Req = Schemas["RequestOut"];
 type MyPackage = Schemas["MyPackage"];
-type SiteExpenses = Schemas["SiteExpensesOut"];
+// Geçici: /resident/expenses backend'den kalktı (K32, şeffaflık raporu geldi); ekran P12/P03 dalıyla yönlenecek.
+type SiteExpenses = { total: number; total_amount: string; page: number; page_size: number; items: { id: string; date: string; description: string; amount: string; category?: string | null; document_id?: string | null; vendor?: string | null }[] };
 
 /** Personel sakin ekranını açarsa servis 403/404 döner; ne olduğunu açıkça söyle. */
 function StaffNotice({ error }: { error: unknown }) {
@@ -47,9 +50,19 @@ export function ResidentHomePage() {
   const balance = new Decimal(h.total_balance);
   const nextDue = h.accounts.map((a) => a.oldest_open_due_date).filter(Boolean).sort()[0];
   const base = `/sakin/${site.slug}`;
+  // Bant alt satırı: sakinin bölümleri (gerçek veri; selamlama ya da uydurma metin yok)
+  const unitNames = [...new Set(h.accounts.map((a) => a.unit_name))].join(" · ");
 
   return (
     <>
+      {/* Site fotoğraflı açık bant: yazı koyu, fotoğraf alta doğru zemine erir */}
+      <section className="r-hero" aria-label={site.name}>
+        <img className="r-hero__photo" src={heroUrl(site.id)} alt="" decoding="async" fetchPriority="high" />
+        <div className="r-hero__veil" aria-hidden="true" />
+        <div className="r-hero__eyebrow">{todayLong()}</div>
+        <div className="r-hero__title">{site.name}</div>
+        {unitNames && <div className="r-hero__sub">{unitNames}</div>}
+      </section>
       <ResidentAlerts />
       {/* Borç kartı — sakinin uygulamayı açma sebebinin çoğu bu */}
       <div className="balance">
@@ -121,22 +134,20 @@ export function ResidentHomePage() {
         </div>
       </div>
 
-      {/* Hane üyeleri ve araçlar (YAP-04/05): sakin kendisi yönetir */}
-      <div className="card">
-        <div className="card__body">
-          <div className="section-title">Hanem</div>
-          <div className="row" style={{ gap: "var(--s-2)" }}>
-            <Link className="btn" to={`${base}/hane`}><Users aria-hidden="true" /> Hane üyeleri</Link>
-            <Link className="btn" to={`${base}/araclar`}><Car aria-hidden="true" /> Araçlarım</Link>
-            <Link className="btn" to={`${base}/ziyaretci`}><UserRoundCheck aria-hidden="true" /> Ziyaretçiler</Link>
-            <Link className="btn" to={`${base}/tadilat`}><Hammer aria-hidden="true" /> Tadilat ve taşınma</Link>
-            <Link className="btn" to={`${base}/emanet`}><KeyRound aria-hidden="true" /> Emanet ve sayaçlar</Link>
-            <Link className="btn" to={`${base}/rezervasyon`}><CalendarCheck aria-hidden="true" /> Rezervasyon</Link>
-            <Link className="btn" to={`${base}/acil-durum`}><Siren aria-hidden="true" /> Acil durum bilgileri</Link>
-            {shows(M.documents) && <Link className="btn" to={`${base}/belgeler`}><FileText aria-hidden="true" /> Belgeler</Link>}
-            <Link className="btn" to={`${base}/kvkk`}><ShieldCheck aria-hidden="true" /> Kişisel verilerim</Link>
-          </div>
-        </div>
+      {/* Hane üyeleri ve araçlar (YAP-04/05): sakin kendisi yönetir — daire ikonlu kutular */}
+      <div>
+        <div className="section-title">Hanem</div>
+        <nav className="quick" aria-label="Hanem">
+          <Link className="quick__tile" to={`${base}/hane`}><span className="quick__icon" aria-hidden="true"><Users /></span><span className="quick__label">Hane üyeleri</span></Link>
+          <Link className="quick__tile" to={`${base}/araclar`}><span className="quick__icon" aria-hidden="true"><Car /></span><span className="quick__label">Araçlarım</span></Link>
+          <Link className="quick__tile" to={`${base}/ziyaretci`}><span className="quick__icon" aria-hidden="true"><UserRoundCheck /></span><span className="quick__label">Ziyaretçiler</span></Link>
+          <Link className="quick__tile" to={`${base}/tadilat`}><span className="quick__icon" aria-hidden="true"><Hammer /></span><span className="quick__label">Tadilat ve taşınma</span></Link>
+          <Link className="quick__tile" to={`${base}/emanet`}><span className="quick__icon" aria-hidden="true"><KeyRound /></span><span className="quick__label">Emanet ve sayaçlar</span></Link>
+          <Link className="quick__tile" to={`${base}/rezervasyon`}><span className="quick__icon" aria-hidden="true"><CalendarCheck /></span><span className="quick__label">Rezervasyon</span></Link>
+          <Link className="quick__tile" to={`${base}/acil-durum`}><span className="quick__icon" aria-hidden="true"><Siren /></span><span className="quick__label">Acil durum bilgileri</span></Link>
+          {shows(M.documents) && <Link className="quick__tile" to={`${base}/belgeler`}><span className="quick__icon" aria-hidden="true"><FileText /></span><span className="quick__label">Belgeler</span></Link>}
+          <Link className="quick__tile" to={`${base}/kvkk`}><span className="quick__icon" aria-hidden="true"><ShieldCheck /></span><span className="quick__label">Kişisel verilerim</span></Link>
+        </nav>
       </div>
 
       {pk.data && pk.data.length > 0 && (
@@ -150,21 +161,36 @@ export function ResidentHomePage() {
       {/* Modül kapalıysa servis null döner; bölüm gösterilmez */}
       {h.announcements && (
         <div>
-          <div className="section-title">Duyurular</div>
+          <div className="r-section__head">
+            <div className="section-title">Duyurular</div>
+            <Link className="card__more" to={`${base}/duyurular`}>Tümü <ChevronRight aria-hidden="true" size={14} /></Link>
+          </div>
           <div className="stack" style={{ gap: "var(--s-3)" }}>
             {h.announcements.length === 0 && <p className="small muted">Duyuru yok.</p>}
             {h.announcements.map((a) => <AnnouncementItem key={a.id} a={a} short />)}
           </div>
-          <Link className="btn mt-4" style={{ width: "100%" }} to={`${base}/duyurular`}>Tüm duyurular <ChevronRight aria-hidden="true" /></Link>
         </div>
       )}
 
       {h.open_requests && <div>
         <div className="section-title">Taleplerim</div>
         {h.open_requests.length > 0 ? (
-          <Alert tone="info" title={`${h.open_requests.length} açık talebiniz var`}>Durumunu Taleplerim sekmesinden izleyebilirsiniz.</Alert>
+          <Link className="attn__card attn__card--info" to={`${base}/taleplerim`}>
+            <span className="attn__icon" aria-hidden="true"><Wrench /></span>
+            <span className="attn__main">
+              <span className="attn__title">{h.open_requests.length} açık talebiniz var</span>
+              <span className="attn__body">Durumunu Taleplerim sekmesinden izleyebilirsiniz.</span>
+              <span className="attn__link">Taleplerime git <ChevronRight aria-hidden="true" /></span>
+            </span>
+          </Link>
         ) : (
-          <div className="r-item"><div style={{ flex: 1 }}><div className="r-item__title">Açık talebiniz yok</div><div className="r-item__body">Arıza ya da isteğinizi buradan iletebilirsiniz.</div></div></div>
+          <div className="attn__card attn__card--ok" role="status">
+            <span className="attn__icon" aria-hidden="true"><Wrench /></span>
+            <span className="attn__main">
+              <span className="attn__title">Açık talebiniz yok</span>
+              <span className="attn__body">Arıza ya da isteğinizi buradan iletebilirsiniz.</span>
+            </span>
+          </div>
         )}
         <Link className="btn btn--primary mt-4" style={{ width: "100%" }} to={`${base}/taleplerim`}><Wrench aria-hidden="true" /> Talep oluştur</Link>
       </div>}
@@ -174,17 +200,21 @@ export function ResidentHomePage() {
 
 function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
   const body = short && a.body.length > 110 ? a.body.slice(0, 110) + "…" : a.body;
+  const tone = a.importance === "normal" ? undefined : importanceTone(a.importance);
   return (
-    <div className="r-item">
-      <div style={{ flex: 1 }}>
-        <div className="r-item__title">{a.title}</div>
-        <div className="r-item__meta">
-          {formatDateTime(a.published_at)} {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+    <article className="ann">
+      <IconChip tone={tone === "danger" || tone === "warn" ? tone : undefined}><Megaphone /></IconChip>
+      <div className="ann__main">
+        <div className="ann__title">{a.title}</div>
+        <div className="ann__meta">
+          <span>{formatDateTime(a.published_at)}</span>
+          {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+          {a.is_pinned && <Badge tone="muted">Sabit</Badge>}
         </div>
-        <div className="r-item__body" style={{ whiteSpace: "pre-wrap" }}>{body}</div>
-        {!short && (a as AnnAck).requires_ack && <AckButton id={a.id} ackedAt={(a as AnnAck).acked_at} />}
+        <div className="ann__body">{body}</div>
+        {!short && (a as AnnAck).requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={(a as AnnAck).acked_at} /></div>}
       </div>
-    </div>
+    </article>
   );
 }
 type AnnAck = Ann & { requires_ack?: boolean; acked_at?: string | null };
@@ -205,13 +235,12 @@ export function ResidentStatementPage() {
   return (
     <>
       {accounts.length > 1 && (
-        <div className="row" role="group" aria-label="Hesap" style={{ gap: "var(--s-2)" }}>
-          {accounts.map((a) => (
-            <button key={a.id} type="button" className={`btn btn--sm${a.id === accountId ? " btn--primary" : ""}`} aria-pressed={a.id === accountId} onClick={() => { setAccount(a.id); setPage(1); }}>
-              {a.unit_name} · {accountKind(a.kind)}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Hesap"
+          value={accountId}
+          onChange={(v) => { setAccount(v); setPage(1); }}
+          options={accounts.map((a) => ({ value: a.id, label: `${a.unit_name} · ${accountKind(a.kind)}` }))}
+        />
       )}
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <>
@@ -238,21 +267,35 @@ export function ResidentStatementPage() {
 
           <div>
             <div className="section-title">Hareketler</div>
-            <div className="stack" style={{ gap: "var(--s-2)" }}>
-              {q.data.entries.items.map((e) => (
-                <div key={e.id} className="r-item">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="r-item__title">{e.description}</div>
-                    <div className="r-item__meta">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
-                  </div>
-                  <div className="right">
-                    {Number(e.debit) !== 0 ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}
-                    <div className="xs muted">bakiye <Money value={e.running_balance} /></div>
-                  </div>
-                </div>
-              ))}
+            <div className="card">
+              <div className="card__body card__body--flush">
+                {q.data.entries.items.length === 0 ? (
+                  <p className="small muted" style={{ padding: "var(--s-5)", margin: 0 }}>Bu hesapta hareket yok.</p>
+                ) : (
+                  <ul className="txn">
+                    {q.data.entries.items.map((e) => {
+                      const debit = Number(e.debit) !== 0;
+                      return (
+                        <li key={e.id}>
+                          <span className={`txn__icon ${debit ? "txn__icon--warn" : "txn__icon--ok"}`} aria-hidden="true">
+                            {debit ? <Receipt /> : <Inbox />}
+                          </span>
+                          <div className="txn__main">
+                            <div className="txn__title">{e.description}</div>
+                            <div className="txn__sub">{formatDate(e.date)} · {ledgerSource(e.source)}{e.due_date ? ` · son ödeme ${formatDate(e.due_date)}` : ""}</div>
+                          </div>
+                          <div className="txn__right">
+                            <span className="txn__amount">{debit ? <Money value={e.debit} className="amount-pos" /> : <Money value={`-${e.credit}`} className="amount-neg" />}</span>
+                            <span className="xs muted">bakiye <Money value={e.running_balance} /></span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+              <Pager page={q.data.entries.page} pageSize={q.data.entries.page_size} total={q.data.entries.total} onPage={setPage} />
             </div>
-            <Pager page={q.data.entries.page} pageSize={q.data.entries.page_size} total={q.data.entries.total} onPage={setPage} />
           </div>
         </>
       )}
@@ -306,7 +349,7 @@ export function ResidentRequestsPage() {
   useDocumentTitle("Taleplerim");
   const [page, setPage] = useState(1);
   const q = useSiteGet<Page<Req>>("/resident/requests", { page, page_size: 20 });
-  const extras = useSiteGet<Record<string, ReqExtras>>("/resident/requests/extras");
+  const categories = useRequestCategories(true);
   const home = useSiteGet<Home>("/resident/home");
   const units = home.data?.units ?? [];
   // Yer: bölüm içi (bölüm seçilir) ya da ortak alan (konum yazılır) — HIZ-01
@@ -316,7 +359,7 @@ export function ResidentRequestsPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     const unitId = f.place === "unit" ? f.unit_id || units[0]?.unit_id || null : null;
-    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, priority: "normal", unit_id: unitId, location: f.location.trim() || null });
+    m.mutate({ title: f.title.trim(), description: f.description.trim() || null, category: f.category, unit_id: unitId, location: f.location.trim() || null });
   }
 
   if (q.isError) return <StaffNotice error={q.error} />;
@@ -327,7 +370,7 @@ export function ResidentRequestsPage() {
           <div className="section-title" style={{ margin: 0 }}>Yeni talep</div>
           <FormError error={m.error} />
           <Field label="Konu" required error={fieldError(m.error, "title")}>{(p) => <input {...p} className="field__input" value={f.title} onChange={(e) => setF((x) => ({ ...x, title: e.target.value }))} placeholder="ör. Banyoda su sızıntısı" />}</Field>
-          <Field label="Kategori">{(p) => <select {...p} className="field__input" value={f.category} onChange={(e) => setF((x) => ({ ...x, category: e.target.value }))}>{CATEGORIES.map((c) => <option key={c} value={c}>{requestCategory(c)}</option>)}</select>}</Field>
+          <Field label="Kategori" hint="Öncelik ve hedef süre kategoriye göre belirlenir" error={fieldError(m.error, "category")}>{(p) => <select {...p} className="field__input" value={f.category} onChange={(e) => setF((x) => ({ ...x, category: e.target.value }))}>{categories.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}</select>}</Field>
           <Field label="Yer" error={fieldError(m.error, "unit_id")}>{(p) => <select {...p} className="field__input" value={f.place === "unit" ? f.unit_id || units[0]?.unit_id || "unit" : "common"} onChange={(e) => setF((x) => (e.target.value === "common" ? { ...x, place: "common" } : { ...x, place: "unit", unit_id: e.target.value }))}>{units.map((u) => <option key={u.unit_id} value={u.unit_id}>Bölümüm ({u.unit_name})</option>)}<option value="common">Ortak alan</option></select>}</Field>
           <Field label={f.place === "common" ? "Konum" : "Bölüm içinde nerede?"} hint={f.place === "common" ? "ör. B blok asansör, otopark girişi" : "İsteğe bağlı; ör. mutfak, banyo"} error={fieldError(m.error, "location")}>{(p) => <input {...p} className="field__input" maxLength={120} value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} />}</Field>
           <Field label="Açıklama">{(p) => <textarea {...p} className="field__input" rows={3} value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
@@ -339,20 +382,25 @@ export function ResidentRequestsPage() {
         <div className="section-title">Taleplerim</div>
         {q.isPending ? <Loading /> : q.data.items.length === 0 ? <p className="small muted">Henüz talebiniz yok.</p> : (
           <div className="stack" style={{ gap: "var(--s-2)" }}>
-            {q.data.items.map((r) => (
-              <div key={r.id} className="r-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="r-item__title">#{r.number} {r.title}</div>
-                  <div className="r-item__meta">{requestCategory(r.category)} · {formatDateTime(r.created_at)}</div>
-                  {r.resolution && <div className="r-item__body">Çözüm: {r.resolution}</div>}
-                  <RequestExtrasBlock id={r.id} status={r.status} ex={extras.data?.[r.id]} />
-                </div>
-                <div className="stack" style={{ gap: 4, alignItems: "flex-end" }}>
-                  <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
-                  {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
-                </div>
-              </div>
-            ))}
+            {q.data.items.map((r) => {
+              const Icon = categoryIcon(r.category);
+              const done = r.status === "resolved" || r.status === "closed";
+              return (
+                <article key={r.id} className="ann">
+                  <IconChip tone={done ? "ok" : r.priority === "urgent" ? "danger" : r.priority === "high" ? "warn" : undefined}><Icon /></IconChip>
+                  <div className="ann__main">
+                    <div className="ann__title">#{r.number} {r.title}</div>
+                    <div className="ann__meta"><span>{r.category_name || requestCategory(r.category)}</span><span>·</span><span>{formatDateTime(r.created_at)}</span></div>
+                    {r.resolution && <div className="ann__body">Çözüm: {r.resolution}</div>}
+                    <RequestExtrasBlock r={r} />
+                  </div>
+                  <div className="ann__side">
+                    <Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge>
+                    {(r.priority === "high" || r.priority === "urgent") && <Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge>}
+                  </div>
+                </article>
+              );
+            })}
             <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
           </div>
         )}
@@ -385,22 +433,30 @@ export function ResidentExpensesPage() {
             <div className="balance__value">{formatMoney(q.data.total_amount)}</div>
             <div className="balance__due">{q.data.total} kayıt · aidatlarınızın nereye harcandığı</div>
           </div>
-          <div className="stack" style={{ gap: "var(--s-2)" }}>
-            {q.data.items.length === 0 && <Empty title="Bu yıl gider kaydı yok" icon={<Package aria-hidden="true" />} />}
-            {q.data.items.map((e) => (
-              <div key={e.id} className="r-item">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="r-item__title">{e.description}</div>
-                  <div className="r-item__meta">{formatDate(e.date)} · {e.category}{e.vendor ? ` · ${e.vendor}` : ""}</div>
-                  {e.document_id && (
-                    <button className="btn btn--ghost btn--sm" type="button" style={{ paddingLeft: 0 }} onClick={() => openDocument(`/sites/${site.slug}/resident/files/${e.document_id}`).catch(() => toast("Belge açılamadı.", "danger"))}>
-                      <FileText aria-hidden="true" /> Faturayı gör
-                    </button>
-                  )}
-                </div>
-                <Money value={e.amount} />
-              </div>
-            ))}
+          <div className="card">
+            <div className="card__body card__body--flush">
+              {q.data.items.length === 0 ? (
+                <Empty title="Bu yıl gider kaydı yok" icon={<Package aria-hidden="true" />} />
+              ) : (
+                <ul className="txn">
+                  {q.data.items.map((e) => (
+                    <li key={e.id}>
+                      <span className="txn__icon" aria-hidden="true"><Inbox /></span>
+                      <div className="txn__main">
+                        <div className="txn__title">{e.description}</div>
+                        <div className="txn__sub">{formatDate(e.date)} · {e.category}{e.vendor ? ` · ${e.vendor}` : ""}</div>
+                        {e.document_id && (
+                          <button className="btn btn--ghost btn--sm" type="button" style={{ paddingLeft: 0, marginTop: 2 }} onClick={() => openDocument(`/sites/${site.slug}/resident/files/${e.document_id}`).catch(() => toast("Belge açılamadı.", "danger"))}>
+                            <FileText aria-hidden="true" /> Faturayı gör
+                          </button>
+                        )}
+                      </div>
+                      <span className="txn__amount"><Money value={e.amount} /></span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} />
           </div>
         </>
@@ -475,4 +531,5 @@ export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePa
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
-import { RequestExtrasBlock, type ReqExtras } from "./ResidentServicePages";
+import { RequestExtrasBlock } from "./ResidentServicePages";
+import { useRequestCategories } from "../site/requestCategories";

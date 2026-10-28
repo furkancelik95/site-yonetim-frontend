@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { ArrowLeftRight, Landmark, Plus, Wallet } from "lucide-react";
+import { ArrowLeftRight, Banknote, Landmark, Layers, PieChart, Plus, Wallet } from "lucide-react";
+import { Donut } from "../../components/charts";
+import Decimal from "decimal.js";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { CashAccounts, Schemas } from "../../api/types";
 import { Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
@@ -9,6 +11,11 @@ import { cashAccountKind } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
 type Account = Schemas["CashAccountOut"];
+
+/** Türe göre bakiye toplamı (yalnız aktif hesaplar) */
+function sumKind(items: Account[], kind: string): string {
+  return items.filter((a) => a.is_active && a.kind === kind).reduce((s, a) => s.plus(a.balance), new Decimal(0)).toFixed(2);
+}
 
 export function CashPage() {
   const { can } = useSite();
@@ -31,25 +38,60 @@ export function CashPage() {
         }
       />
 
-      {panel === "account" && <NewAccountForm onDone={() => setPanel(null)} />}
-      {panel === "transfer" && q.data && <TransferForm accounts={q.data.items.filter((a) => a.is_active)} onDone={() => setPanel(null)} />}
-
       {q.isPending ? (
-        <Loading />
+        <>
+          <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+          <Loading />
+        </>
       ) : q.isError ? (
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
       ) : q.data.items.length === 0 ? (
-        <div className="card"><Empty title="Henüz hesap yok" icon={<Landmark aria-hidden="true" />}>Kasa ya da banka hesabı açın.</Empty></div>
+        <>
+          {panel === "account" && <NewAccountForm onDone={() => setPanel(null)} />}
+          <div className="card"><Empty title="Henüz hesap yok" icon={<Landmark aria-hidden="true" />}>Kasa ya da banka hesabı açın.</Empty></div>
+        </>
       ) : (
         <>
-          <div className="grid grid--kpi">
-            <Kpi label="Toplam bakiye" tone="accent" value={formatMoneyShort(q.data.total_balance)} note={formatMoney(q.data.total_balance)} />
+          <div className="grid grid--kpi rise">
+            <Kpi label="Toplam bakiye" tone="accent" icon={<Layers aria-hidden="true" />} value={formatMoneyShort(q.data.total_balance)} note={formatMoney(q.data.total_balance)} />
+            <Kpi label="Banka" icon={<Landmark aria-hidden="true" />} value={formatMoneyShort(sumKind(q.data.items, "bank"))} note={`${q.data.items.filter((a) => a.is_active && a.kind === "bank").length} hesap`} />
+            <Kpi label="Kasa" tone="warn" icon={<Banknote aria-hidden="true" />} value={formatMoneyShort(sumKind(q.data.items, "cash"))} note={`${q.data.items.filter((a) => a.is_active && a.kind === "cash").length} hesap`} />
+            <Kpi label="Hesap" icon={<Wallet aria-hidden="true" />} value={q.data.items.filter((a) => a.is_active).length} note={`${q.data.items.filter((a) => !a.is_active).length} pasif`} />
           </div>
-          <div className="grid grid--sites">
-            {q.data.items.map((a) => <AccountCard key={a.id} a={a} />)}
+          {panel === "account" && <NewAccountForm onDone={() => setPanel(null)} />}
+          {panel === "transfer" && <TransferForm accounts={q.data.items.filter((a) => a.is_active)} onDone={() => setPanel(null)} />}
+          <div className="grid grid--main fin-cash">
+            <div className="grid grid--sites">
+              {q.data.items.map((a) => <AccountCard key={a.id} a={a} />)}
+            </div>
+            <BalanceSplit items={q.data.items} />
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** Aktif hesapların bakiye payı (yalnız artı bakiyeler; eksi bakiye halkada gösterilemez, listede yazar) */
+function BalanceSplit({ items }: { items: Account[] }) {
+  const active = items.filter((a) => a.is_active && Number(a.balance) > 0);
+  if (active.length === 0) return null;
+  return (
+    <div className="card">
+      <div className="card__head">
+        <span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span>
+        <span className="card__title">Bakiye dağılımı</span>
+        <span className="card__meta ml-auto">aktif hesaplar</span>
+      </div>
+      <div className="card__body fin-pie">
+        <Donut
+          label="Hesaplara göre bakiye"
+          centerSub="toplam"
+          center={formatMoneyShort(active.reduce((s, a) => s.plus(a.balance), new Decimal(0)).toFixed(2))}
+          format={(v) => formatMoneyShort(v.toFixed(2))}
+          segments={active.map((a) => ({ label: a.name, value: Number(a.balance) }))}
+        />
+      </div>
     </div>
   );
 }

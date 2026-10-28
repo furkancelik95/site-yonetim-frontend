@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+
+// Test gelen kutusu yalnız geliştirme/demo derlemesinde menüde (backend üretimde 404 döner).
+const SHOW_TEST_INBOX = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
 import { Link, NavLink, useLocation } from "react-router";
 import {
   AlertTriangle,
@@ -58,10 +61,14 @@ import {
   Vote,
   Wallet,
   Wrench,
+  Cog,
+  UserCog,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
 import { NotificationBell } from "../components/NotificationBell";
+import { QuickSearch } from "../components/QuickSearch";
+import { Avatar } from "../components/ui";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
 
@@ -153,8 +160,10 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           )}
           {(can(P.announcementsPublish) || can(P.securityIncidents) || can(P.visitors)) && <Item to={`${base}/acil-durum`} icon={<Siren aria-hidden="true" />} label="Acil Durum" />}
           {can(P.announcementsPublish) && <Item to={`${base}/bildirim-sablonlari`} icon={<MessageSquareText aria-hidden="true" />} label="Bildirim Şablonları" />}
+          {can(P.notificationsManage) && <Item to={`${base}/sms-hesabi`} icon={<MessageSquareText aria-hidden="true" />} label="SMS Hesabı ve Gönderim" />}
           {can(P.peopleManage) && <Item to={`${base}/kayit-basvurulari`} icon={<UserPlus aria-hidden="true" />} label="Sakin Kaydı" />}
           {can(P.membersManage) && <Item to={`${base}/kullanicilar`} icon={<Users aria-hidden="true" />} label="Kullanıcılar" />}
+          {can(P.membersManage) && <Item to={`${base}/roller`} icon={<UserCog aria-hidden="true" />} label="Roller ve yetkiler" />}
           {can(P.modulesManage) && <Item to={`${base}/moduller`} icon={<SlidersHorizontal aria-hidden="true" />} label="Modüller" />}
           {can(P.modulesManage) && shows(M.visitors, P.visitors) && <Item to={`${base}/ayarlar/guvenlik`} icon={<DoorOpen aria-hidden="true" />} label="Güvenlik Ayarları" />}
           {shows(M.visitors, P.securityIncidents) && can(P.modulesManage) && <Item to={`${base}/devriye`} icon={<Route aria-hidden="true" />} label="Devriye" />}
@@ -176,6 +185,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {can(P.inventoryRead) && <Item to={`${base}/teknik-varliklar`} icon={<Cog aria-hidden="true" />} label="Teknik Varlıklar" />}
           {can(P.expensesRead) && <Item to={`${base}/sigorta`} icon={<Umbrella aria-hidden="true" />} label="Sigorta ve Hasar" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
           {staff && <Item to={`${base}/vardiya`} icon={<CalendarClock aria-hidden="true" />} label="Vardiya Planı" />}
@@ -214,8 +224,13 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
     return () => window.removeEventListener("keydown", onKey);
   }, [navOpen]);
 
-  // Site dışında (portföy) yönetim şirketindeki rol gösterilir
-  const siteRole = siteCtx?.site.role ?? me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  // Sitede: ana rol + diğer roller (P18 çoklu rol; tamamı ipucunda). Site dışında (portföy)
+  // yönetim şirketindeki rol gösterilir.
+  const siteRoles = siteCtx?.roles ?? [];
+  const siteRole = siteRoles.length
+    ? siteRoles[0] + (siteRoles.length > 1 ? ` +${siteRoles.length - 1}` : "")
+    : me.sites.find((s) => s.organization_role)?.organization_role ?? undefined;
+  const roleTitle = siteRoles.length > 1 ? `Rolleriniz: ${siteRoles.join(", ")}` : undefined;
   return (
     <>
       <a className="skip-link" href="#main">
@@ -243,6 +258,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                 <Item to="/yonetim/endeksler" icon={<BarChart3 aria-hidden="true" />} label="Endeks değerleri" />
                 <Item to="/yonetim/destek" icon={<LifeBuoy aria-hidden="true" />} label="Destek" />
                 <Item to="/yonetim/bilgi-bankasi" icon={<HelpCircle aria-hidden="true" />} label="Bilgi bankası" />
+                {SHOW_TEST_INBOX && <Item to="/yonetim/test-gelen-kutusu" icon={<MessageSquareText aria-hidden="true" />} label="Test gelen kutusu" />}
               </Group>
             ) : (
               <>
@@ -282,7 +298,8 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             {/* Ad alanı profile gider (oturumlar, güvenlik olayları, bildirim tercihleri) */}
             <Link to="/profil" className="userbox__link" title={`${me.full_name} — profil`}>
               <span className="userbox__name">{me.full_name}</span>
-              <span className="userbox__role">{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              <span className="userbox__role" title={roleTitle}>{platform ? "Platform yöneticisi" : (siteRole ?? "—")}</span>
+              {roleTitle && <span className="visually-hidden">{roleTitle}</span>}
               <span className="visually-hidden">Profil</span>
             </Link>
             <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>
@@ -308,8 +325,14 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
             </button>
             <span className="topbar__title">{title ?? siteCtx?.site.name ?? (platform ? "Platform" : "SiteYönetimi")}</span>
             <div className="topbar__spacer" />
+            <QuickSearch />
             {platform && <span className="badge badge--info">Platform</span>}
             {siteCtx && <NotificationBell to={`/s/${siteCtx.site.slug}/bildirimler`} />}
+            {/* Dar ekranda kenar çubuğu gizli: profile giden avatar üst çubukta da durur */}
+            <Link to="/profil" className="topbar__user" title={`${me.full_name} — profil`}>
+              <Avatar name={me.full_name} />
+              <span className="visually-hidden">Profil</span>
+            </Link>
           </header>
           <main id="main" className="page" tabIndex={-1}>
             {siteCtx && <SupportSessionBanner />}

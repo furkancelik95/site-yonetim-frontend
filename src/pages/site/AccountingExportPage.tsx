@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { Download, FileSpreadsheet } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, FileText, History, PieChart, Wallet } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { Donut } from "../../components/charts";
 import { Alert, ConfirmButton, Empty, ErrorState, FormError, Kpi, Loading, Money, PageHead, Pager, SubmitButton } from "../../components/ui";
-import { formatDate, formatDateTime, formatMoney } from "../../lib/format";
+import { formatDate, formatDateTime, formatMoney, formatMoneyShort } from "../../lib/format";
 import { download } from "../../api/client";
 import type { Schemas } from "../../api/types";
 import { useUrlState } from "../../lib/hooks";
@@ -30,23 +31,44 @@ export function AccountingExportPage() {
   const hist = useSiteGet<Schemas["Page_AccountingExportOut_"]>("/accounting/exports", { page, page_size: 20 });
   const file = (b: Batch, format: "csv" | "xlsx" = "csv") => download(`/sites/${site.slug}/accounting/exports/${b.id}/file`, { format }, b.file_name);
   const run = useSiteMutation<{ period: string }, Batch>("POST", "/accounting/exports", { onSuccess: (b) => { if (b) void file(b); } });
+  const bySource = (() => {
+    const m = new Map<string, number>();
+    for (const v of pv.data?.vouchers ?? []) m.set(v.source, (m.get(v.source) ?? 0) + Number(v.amount));
+    return [...m.entries()].filter(([, v]) => v > 0).map(([k, v]) => ({ label: voucherSource(k), value: v }));
+  })();
   return (
     <div className="stack">
       <PageHead title="Muhasebe aktarımı" subtitle="Dönemin fişlerini muhasebe programına aktarılacak dosyaya yazın. Aktarılan fiş kilitlenir; düzeltme ters fişle yapılır." />
+      {pv.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Bekleyen fiş" icon={<FileText aria-hidden="true" />} value={pv.data.vouchers.length} note={`${pv.data.period} · aktarılmayı bekliyor`} />
+          <Kpi label="Tutar" tone="accent" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(pv.data.total)} note={formatMoney(pv.data.total)} />
+          <Kpi label="Daha önce aktarılan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={pv.data.already_exported} note="bu dönemde kilitli fiş" />
+          <Kpi label="Aktarım dosyası" icon={<History aria-hidden="true" />} value={hist.data ? hist.data.total : "—"} note={hist.data && hist.data.items.length > 0 ? `son: ${formatDate(hist.data.items.map((b) => b.created_at).sort().at(-1))}` : "henüz yok"} />
+        </div>
+      ) : pv.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : null}
       <Alert tone="info" title="Genel fiş dosyası">Fişler genel CSV (ya da Excel) olarak üretilir ve sunucuda saklanır. Kivi'ye özel biçim Kivi görüşmesinden sonra eklenecek (K7); hesap kodları aşağıda öneri olarak dolu, mali müşavir teyidi gerekir.</Alert>
-      <div className="filters"><div className="field"><label className="field__label" htmlFor="ae-p">Dönem</label><input id="ae-p" className="field__input" type="month" value={s.donem} onChange={(e) => set({ donem: e.target.value })} /></div></div>
-      {pv.isPending ? <Loading /> : pv.isError ? <ErrorState error={pv.error} /> : (
-        <div className="card">
-          <div className="card__head"><span className="card__icon card__icon--accent"><FileSpreadsheet aria-hidden="true" /></span><span className="card__title">Aktarılmamış fişler</span></div>
-          <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
-            <div className="grid grid--kpi">
-              <Kpi label="Fiş" value={pv.data.vouchers.length} />
-              <Kpi label="Tutar" small value={formatMoney(pv.data.total)} />
-              <Kpi label="Daha önce aktarılan" value={pv.data.already_exported} />
-            </div>
-            {pv.data.missing_mappings.length > 0 && <Alert tone="danger" title="Hesap kodu eksik">{pv.data.missing_mappings.join(", ")} için borç/alacak hesap kodu girilmeden aktarım başlatılamaz.</Alert>}
-            <FormError error={run.error} />
+      <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><FileSpreadsheet aria-hidden="true" /></span>
+          <div>
+            <div className="card__title">Aktarılmamış fişler</div>
+            {pv.data && <div className="card__meta">{pv.data.vouchers.length} fiş</div>}
           </div>
+          <div className="card__tools">
+            <div className="field"><label className="field__label" htmlFor="ae-p">Dönem</label><input id="ae-p" className="field__input" type="month" value={s.donem} onChange={(e) => set({ donem: e.target.value })} /></div>
+          </div>
+        </div>
+        {pv.isPending ? <div className="card__body"><Loading /></div> : pv.isError ? <div className="card__body"><ErrorState error={pv.error} /></div> : (<>
+          {(pv.data.missing_mappings.length > 0 || run.error) && (
+            <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+              {pv.data.missing_mappings.length > 0 && <Alert tone="danger" title="Hesap kodu eksik">{pv.data.missing_mappings.join(", ")} için borç/alacak hesap kodu girilmeden aktarım başlatılamaz.</Alert>}
+              <FormError error={run.error} />
+            </div>
+          )}
+          {pv.data.vouchers.length === 0 && <Empty title="Bu dönemde aktarılacak fiş yok" icon={<CheckCircle2 aria-hidden="true" />} />}
           {pv.data.vouchers.length > 0 && (
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Aktarılacak fişler</caption>
@@ -60,11 +82,12 @@ export function AccountingExportPage() {
               <ConfirmButton className="btn btn--primary" disabled={pv.data.vouchers.length === 0 || pv.data.missing_mappings.length > 0} title="Fişleri dosyaya yaz" confirmLabel="Dosyayı üret" body={`${pv.data.vouchers.length} fiş dosyaya yazılıp kilitlenecek; aynı fişler bir daha aktarılmaz. Dosya hemen iner ve geçmişte saklanır.`} onConfirm={() => run.mutateAsync({ period: s.donem })}><Download aria-hidden="true" /> Dosyayı üret</ConfirmButton>
             </div>
           )}
-        </div>
-      )}
+        </>)}
+      </div>
       {manage && <MappingCard />}
+      <div className={bySource.length > 0 ? "grid grid--main" : "stack"}>
       <div className="card">
-        <div className="card__head"><span className="card__title">Aktarım geçmişi</span></div>
+        <div className="card__head"><span className="card__icon"><History aria-hidden="true" /></span><span className="card__title">Aktarım geçmişi</span></div>
         <div className="card__body card__body--flush">
           {hist.isPending ? <Loading /> : !hist.data || hist.data.items.length === 0 ? <Empty title="Henüz aktarım yok" /> : (
             <div className="table-wrap"><table className="data">
@@ -75,6 +98,18 @@ export function AccountingExportPage() {
           )}
         </div>
         {hist.data && hist.data.total > hist.data.page_size && <div className="card__foot"><Pager page={hist.data.page} pageSize={hist.data.page_size} total={hist.data.total} onPage={setPage} /></div>}
+      </div>
+      {bySource.length > 0 && (
+        <div className="card">
+          <div className="card__head">
+            <span className="card__icon card__icon--accent"><PieChart aria-hidden="true" /></span>
+            <span className="card__title">Bekleyen fişler kaynağa göre</span>
+          </div>
+          <div className="card__body fin-pie">
+            <Donut segments={bySource} label="Aktarılmamış fişlerin kaynağa göre tutarı" center={formatMoneyShort(pv.data?.total)} centerSub="toplam" format={(v) => formatMoneyShort(v.toFixed(2))} />
+          </div>
+        </div>
+      )}
       </div>
       <p className="small muted">Bağlantı: <Link to={`/s/${site.slug}/donem-kapanisi`}>Dönem kapanışı</Link> kontrol listesi aktarılmamış fiş varken dönemi kilitletmez.</p>
     </div>

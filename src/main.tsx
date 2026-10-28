@@ -2,14 +2,21 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/500.css";
-import "@fontsource/ibm-plex-sans/600.css";
-import "@fontsource/ibm-plex-sans/700.css";
+// Yazı tipleri yerel paketten gelir, Google Fonts'a istek gitmez (KVKK).
+// Inter: gövde ve tablolar (tabular rakam). Plus Jakarta Sans: başlık ve büyük sayılar.
+import "@fontsource-variable/inter/index.css";
+import "@fontsource-variable/plus-jakarta-sans/index.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles/app.css";
 import "./styles/extra.css";
+// Sayfa grubu stilleri (yalnız o gruba özgü düzenler)
+import "./styles/p-finans.css";
+import "./styles/p-finans-2.css";
+import "./styles/p-yapi.css";
+import "./styles/p-operasyon.css";
+import "./styles/p-yonetim.css";
+import "./styles/p-sakin.css";
 import { ApiError } from "./api/client";
 import { AuthProvider } from "./auth/AuthContext";
 import { router } from "./router";

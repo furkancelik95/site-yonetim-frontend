@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CheckCircle2, Circle, Lock } from "lucide-react";
+import { CalendarDays, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, LockOpen, Unlock } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import { Alert, Badge, ConfirmButton, ErrorState, Loading, PageHead } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, ErrorState, Kpi, Loading, PageHead } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { fiscalAction, fiscalStatus, fiscalStatusTone } from "../../lib/labels";
@@ -23,13 +23,32 @@ export function FiscalPeriodsPage() {
   return (
     <div className="stack">
       <PageHead title="Dönem kapanışı" subtitle="Ay sonunda kontrol listesiyle dönemi kapatın ve kilitleyin; kilitli döneme kayıt eklenmez ve o döneme ait kayıt ters kaydedilemez; düzeltme gerekirse kilit gerekçeyle süreli açılır." />
+      {q.data ? (
+        <div className="grid grid--kpi rise">
+          <Kpi label="Kilitli" tone="ok" icon={<Lock aria-hidden="true" />} value={q.data.filter((p) => p.status === "locked").length} note={`${s.yil} yılında`} />
+          <Kpi label="Kapanışta" tone="warn" icon={<Clock aria-hidden="true" />} value={q.data.filter((p) => p.status === "closing").length} note="ikinci yetkili kilitleyecek" />
+          <Kpi label="Açık geçmiş dönem" tone={q.data.some((p) => p.is_past && p.status === "open") ? "danger" : undefined} icon={<LockOpen aria-hidden="true" />} value={q.data.filter((p) => p.is_past && p.status === "open").length} note="ay bitti, henüz kapanmadı" />
+          <Kpi label="Süreli açık" icon={<Unlock aria-hidden="true" />} value={q.data.filter((p) => p.status === "temp_open").length} note="gerekçeyle açılan" />
+        </div>
+      ) : q.isPending ? (
+        <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
+      ) : null}
       <div className="filters">
         <div className="field"><label className="field__label" htmlFor="fp-year">Yıl</label><select id="fp-year" className="field__input" value={s.yil} onChange={(e) => set({ yil: e.target.value, donem: "" })}>{[0, 1].map((d) => { const y = String(new Date().getFullYear() - d); return <option key={y} value={y}>{y}</option>; })}</select></div>
       </div>
       {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
         <div className="grid grid--2" style={{ alignItems: "start" }}>
           <div className="card">
-            <div className="card__head"><span className="card__title">Dönemler</span></div>
+            <div className="card__head">
+              <span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span>
+              <div>
+                <div className="card__title">Dönemler</div>
+                <div className="card__meta">{q.data.length} ay</div>
+              </div>
+              <div className="card__tools">
+                <div className="field"><label className="field__label" htmlFor="fp-year">Yıl</label><select id="fp-year" className="field__input" value={s.yil} onChange={(e) => set({ yil: e.target.value, donem: "" })}>{[0, 1].map((d) => { const y = String(new Date().getFullYear() - d); return <option key={y} value={y}>{y}</option>; })}</select></div>
+              </div>
+            </div>
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Mali dönemler</caption>
               <thead><tr><th scope="col">Dönem</th><th scope="col">Durum</th><th scope="col">Kilitleyen</th></tr></thead>
@@ -66,7 +85,7 @@ function PeriodDetail({ period }: { period: string }) {
   const blocking = items.filter((i) => i.required && !i.ok && (ex[i.key] ?? "").trim().length < 10);
   return (
     <div className="card">
-      <div className="card__head"><span className="card__title">{p.label}</span><span className="ml-auto"><Badge tone={fiscalStatusTone(p.status)}>{fiscalStatus(p.status)}</Badge></span></div>
+      <div className="card__head"><span className="card__icon card__icon--ok"><ClipboardCheck aria-hidden="true" /></span><div><div className="card__title">{p.label}</div><div className="card__meta">{items.filter((i) => i.ok).length}/{items.length} madde tamam</div></div><span className="ml-auto"><Badge tone={fiscalStatusTone(p.status)}>{fiscalStatus(p.status)}</Badge></span></div>
       <div className="card__body card__body--flush">
         <ul className="checklist">
           {items.map((i) => (

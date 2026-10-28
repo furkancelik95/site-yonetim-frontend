@@ -1,46 +1,67 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, History, Undo2 } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, History, Rows3, Undo2, Wallet } from "lucide-react";
 import { api } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Schemas, Written } from "../../api/types";
+import type { Page, Schemas, Written } from "../../api/types";
 import { ExcelButton } from "../../components/ExcelButton";
 import { useToast } from "../../components/toast";
-import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDateTime, formatDecimal, formatMoney, parseMoneyInput } from "../../lib/format";
-import { downloadCsv } from "../../lib/csv";
+import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { formatDate, formatDateTime, formatDecimal, formatMoney, parseMoneyInput } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { importStatus, importType, unitUsage } from "../../lib/labels";
 import { useSite } from "../../site/SiteContext";
 
 type Preview = Schemas["ImportPreviewOut"];
 type Result = Schemas["ImportResultOut"];
-/** Servis isteği 25'teki şekiller. */
-interface CsvIssue { row_number: number; column: string | null; message: string; severity: "error" | "warning" }
-interface CsvPreview { import_id: string; type: "vehicles" | "opening_balances"; rows: Record<string, unknown>[]; issues: CsvIssue[]; total_rows: number; importable_count: number; total_amount: string | null; expires_at: string }
-interface CsvResult { created: number; skipped: string[]; total_amount: string | null }
-interface ImportBatch { id: string; type: "units" | "vehicles" | "opening_balances"; file_name: string; status: "previewed" | "imported" | "rolled_back"; row_count: number; created_count: number; created_by: string; created_at: string; rollback_until: string | null; rollback_blocked_by: string | null; total_amount: string | null; can_rollback: boolean }
+type VehiclePreview = Schemas["VehicleImportPreviewOut"];
+type OpeningPreview = Schemas["OpeningImportPreviewOut"];
+type CsvResult = Schemas["ImportConfirmOut"];
+type ImportBatch = Schemas["ImportBatchOut"];
 
 const MAX_BYTES = 5 * 1024 * 1024; // backend: en fazla 5 MB
 const TABS = [["daireler", "Bölümler ve kişiler"], ["araclar", "Araçlar"], ["acilis", "Açılış bakiyeleri"]] as const;
 const CSV = {
-  vehicles: { file: "arac-aktarim-sablonu.csv", header: ["Bölüm", "Plaka", "Marka", "Renk"], sample: ["A-4", "34ABC123", "Renault Clio", "Beyaz"], hint: "Sütunlar: Bölüm (kod, ör. A-4), Plaka, Marka, Renk. Plaka başka bölümde kayıtlıysa yine de eklenir; önizlemede görürsünüz." },
-  "opening-balances": { file: "acilis-bakiyesi-sablonu.csv", header: ["Referans", "Tutar", "Tarih"], sample: ["REFERANS-KODU", "1250,00", "2026-10-01"], hint: "Sütunlar: Referans (cari hesabın referans kodu), Tutar (borç artı, alacak eksi), Tarih. Toplam, eski sistemdeki toplamla tutmadan aktarılamaz." },
+  vehicles: { file: "arac-aktarim-sablonu.xlsx", hint: "Sütunlar: Bölüm (kod, ör. A-4), Plaka, Marka, Renk. Plaka başka bölümde kayıtlıysa yine de eklenir; önizlemede görürsünüz." },
+  "opening-balances": { file: "acilis-bakiyesi-sablonu.xlsx", hint: "Sütunlar: Referans (cari hesabın referans kodu), Tutar (borç artı, alacak eksi; 1.250,00 olur), Tarih. Toplam, eski sistemdeki toplamla tutmadan aktarılamaz." },
 } as const;
 
 
-/** İçeri aktarım (YAP-06): bölümler (gerçek uç), araçlar ve açılış bakiyeleri (istek 25); geçmiş ve geri alma. */
+/** İçeri aktarım (YAP-06): bölümler ve kişiler (aynı ad + telefon tek kişi, K16), araçlar ve açılış bakiyeleri; geçmiş ve 7 gün içinde geri alma. */
 export function ImportPage() {
   const [s, set] = useUrlState({ tip: "daireler" });
   return (
     <div className="stack">
       <PageHead title="İçeri aktarım" subtitle="Eski sistemden veri taşıma. Şablonu indirin, doldurun, yükleyin; önce önizleme gösterilir, onaylamadan hiçbir şey kaydedilmez." />
-      <div className="row" role="tablist" aria-label="Aktarım türü" style={{ gap: "var(--s-2)" }}>
-        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.tip === k} className={`btn btn--sm${s.tip === k ? " btn--primary" : ""}`} onClick={() => set({ tip: k })}>{l}</button>)}
+      <ImportKpis />
+      <div className="tabs" role="tablist" aria-label="Aktarım türü">
+        {TABS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.tip === k} onClick={() => set({ tip: k })}>{l}</button>)}
       </div>
       {s.tip === "araclar" ? <CsvImport key="v" type="vehicles" /> : s.tip === "acilis" ? <CsvImport key="o" type="opening-balances" /> : <UnitsImport />}
       <ImportHistory />
+    </div>
+  );
+}
+
+/** Bandın altındaki göstergeler: aktarım geçmişinden (/imports) okunur. */
+function ImportKpis() {
+  // Uç sayfalı (en çok 200). Toplam dosya sayısı `total`'dan; ayrıntılı sayılar yüklenen sayfadan —
+  // kayıt 200'ü aşarsa bu sayılar eksik kalacağı için gösterilmez.
+  const q = useSiteGet<Page<ImportBatch>>("/imports", { page_size: 200 });
+  if (q.isError) return null;
+  if (!q.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const items = q.data.items;
+  const complete = q.data.total <= items.length;
+  const done = items.filter((b) => b.status === "imported");
+  const lastB = [...items].sort((a, b) => a.created_at.localeCompare(b.created_at)).at(-1);
+  const last = lastB?.created_at;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Tamamlanan aktarım" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={complete ? done.length : "—"} note={`${q.data.total} dosya yüklendi`} />
+      <Kpi label="Oluşturulan kayıt" icon={<Rows3 aria-hidden="true" />} value={complete ? done.reduce((t, b) => t + b.created_count, 0) : "—"} note="bölüm, araç, bakiye" />
+      <Kpi label="Geri alınabilir" tone={items.some((b) => b.can_rollback) ? "accent" : undefined} icon={<Undo2 aria-hidden="true" />} value={items.filter((b) => b.can_rollback).length} note="7 gün içinde" />
+      <Kpi label="Son aktarım" icon={<History aria-hidden="true" />} value={last ? formatDate(last) : "—"} small note={lastB ? `${importType(lastB.type)} · ${lastB.created_by}` : "henüz yok"} />
     </div>
   );
 }
@@ -97,12 +118,28 @@ function UnitsImport() {
       {preview && (
         <>
           <div className="grid grid--kpi">
-            <Kpi label="Satır" value={preview.total_rows} />
-            <Kpi label="Aktarılacak" tone="ok" value={preview.importable_count} note={`${preview.new_count} yeni · ${preview.existing_count} zaten var`} />
-            <Kpi label="Hata" tone={preview.error_count > 0 ? "danger" : undefined} value={preview.error_count} />
-            <Kpi label="Uyarı" tone={preview.warning_count > 0 ? "warn" : undefined} value={preview.warning_count} />
+            <Kpi label="Satır" icon={<Rows3 aria-hidden="true" />} value={preview.total_rows} note="dosyada" />
+            <Kpi label="Aktarılacak" icon={<CheckCircle2 aria-hidden="true" />} tone="ok" value={preview.importable_count} note={`${preview.new_count} yeni · ${preview.existing_count} zaten var`} />
+            <Kpi label="Hata" icon={<AlertTriangle aria-hidden="true" />} tone={preview.error_count > 0 ? "danger" : undefined} value={preview.error_count} note="aktarılmaz" />
+            <Kpi label="Uyarı" icon={<AlertCircle aria-hidden="true" />} tone={preview.warning_count > 0 ? "warn" : undefined} value={preview.warning_count} note="aktarılır, kontrol edin" />
           </div>
           <Issues issues={preview.issues} />
+          {preview.person_merges.length > 0 && (
+            <div className="card">
+              <div className="card__head"><span className="card__title">Tek kişide birleşecek kayıtlar</span><span className="card__meta ml-auto">ad + telefon aynı (K16)</span></div>
+              <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
+                <caption className="visually-hidden">Birleştirilecek kişiler</caption>
+                <thead><tr><th scope="col">Kişi</th><th scope="col">Telefon</th><th scope="col">Satırlar</th><th scope="col" /></tr></thead>
+                <tbody>{preview.person_merges.map((m) => (
+                  <tr key={`${m.full_name}-${m.row_numbers.join(",")}`}>
+                    <td className="cell-main">{m.full_name}</td><td className="small mono">{m.phone ?? "—"}</td><td className="small num">{m.row_numbers.join(", ")}</td>
+                    <td>{m.existing ? <Badge tone="info">Sitede kayıtlı kişi</Badge> : <Badge>Dosyada tekrar</Badge>}</td>
+                  </tr>
+                ))}</tbody>
+              </table></div></div>
+              <div className="card__foot small muted">Kişi tek kayıt olur, birden çok bölüme bağlanır. Farklı kişilerse telefonu düzeltip yeniden yükleyin.</div>
+            </div>
+          )}
           <div className="card">
             <div className="card__head"><span className="card__title">Önizleme</span></div>
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
@@ -164,7 +201,7 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
   const [recon, setRecon] = useState("");
   const [result, setResult] = useState<CsvResult | null>(null);
   const upload = useMutation({
-    mutationFn: (f: File) => { const fd = new FormData(); fd.set("file", f); return api<CsvPreview>("POST", `/sites/${site.slug}/imports/${type}`, { form: fd }); },
+    mutationFn: (f: File) => { const fd = new FormData(); fd.set("file", f); return api<VehiclePreview | OpeningPreview>("POST", `/sites/${site.slug}/imports/${type}`, { form: fd }); },
     onSuccess: () => setResult(null),
   });
   const p = upload.data;
@@ -176,7 +213,7 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
   function submit(e: FormEvent) {
     e.preventDefault();
     if (!file) return setFileErr("Bir dosya seçin.");
-    if (!/\.csv$/i.test(file.name)) return setFileErr("Yalnız .csv dosyası yüklenebilir (Excel'de Farklı Kaydet › CSV UTF-8).");
+    if (!/\.(csv|xlsx)$/i.test(file.name)) return setFileErr("Yalnız .xlsx ya da .csv yüklenebilir.");
     if (file.size > MAX_BYTES) return setFileErr("Dosya en fazla 5 MB olabilir.");
     setFileErr(undefined);
     upload.mutate(file);
@@ -185,7 +222,7 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
     <>
       <div className="row row--between" style={{ gap: "var(--s-2)" }}>
         <p className="small muted mb-0">{tpl.hint}</p>
-        <button className="btn" type="button" onClick={() => downloadCsv(tpl.file, [tpl.header, tpl.sample])}><Download aria-hidden="true" /> Şablonu indir</button>
+        <ExcelButton path={`/sites/${site.slug}/imports/${type}/template.xlsx`} fileName={tpl.file} label="Şablonu indir" />
       </div>
       {result && (
         <Alert tone="ok" title="Aktarım tamamlandı">
@@ -197,9 +234,9 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
         <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
           <FormError error={upload.error} />
           <div className="field">
-            <label className="field__label" htmlFor={`imp-${type}`}>CSV dosyası</label>
-            <input id={`imp-${type}`} className="field__input" type="file" accept=".csv,text/csv" aria-invalid={fileErr ? true : undefined} aria-describedby={`imp-${type}-hint`} onChange={(e) => { setFile(e.target.files?.[0] ?? null); upload.reset(); }} />
-            <span className="field__hint" id={`imp-${type}-hint`}>.csv (noktalı virgül ya da virgül), en fazla 5 MB.</span>
+            <label className="field__label" htmlFor={`imp-${type}`}>Excel ya da CSV dosyası</label>
+            <input id={`imp-${type}`} className="field__input" type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-invalid={fileErr ? true : undefined} aria-describedby={`imp-${type}-hint`} onChange={(e) => { setFile(e.target.files?.[0] ?? null); upload.reset(); }} />
+            <span className="field__hint" id={`imp-${type}-hint`}>.xlsx ya da .csv (noktalı virgül ya da virgül), en fazla 5 MB.</span>
             {fileErr && <span className="field__error" role="alert">{fileErr}</span>}
           </div>
         </div>
@@ -208,26 +245,26 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
       {p && (
         <>
           <div className="grid grid--kpi">
-            <Kpi label="Satır" value={p.total_rows} />
-            <Kpi label="Aktarılacak" tone="ok" value={p.importable_count} />
-            <Kpi label="Hata" tone={errors > 0 ? "danger" : undefined} value={errors} />
-            {opening && <Kpi label="Yüklenen toplam" value={formatMoney(p.total_amount)} small />}
+            <Kpi label="Satır" icon={<Rows3 aria-hidden="true" />} value={p.total_rows} note="dosyada" />
+            <Kpi label="Aktarılacak" icon={<CheckCircle2 aria-hidden="true" />} tone="ok" value={p.importable_count} />
+            <Kpi label="Hata" icon={<AlertTriangle aria-hidden="true" />} tone={errors > 0 ? "danger" : undefined} value={errors} note="aktarılmaz" />
+            {p.type === "opening_balances" && <Kpi label="Yüklenen toplam" icon={<Wallet aria-hidden="true" />} value={formatMoney(p.total_amount)} small />}
           </div>
           <Issues issues={p.issues} />
           <div className="card">
             <div className="card__head"><span className="card__title">Önizleme</span></div>
             <div className="card__body card__body--flush"><div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Aktarılacak satırlar</caption>
-              {opening ? (
+              {p.type === "opening_balances" ? (
                 <>
                   <thead><tr><th scope="col">Satır</th><th scope="col">Hesap</th><th scope="col" className="right">Tutar</th><th scope="col">Yön</th><th scope="col">Tarih</th><th scope="col" /></tr></thead>
                   <tbody>{p.rows.map((r) => (
-                    <tr key={String(r.row_number)}>
-                      <td className="num">{String(r.row_number)}</td>
-                      <td><div className="cell-main mono">{String(r.reference_code ?? "")}</div><div className="cell-sub">{[r.unit_name, r.person_name].filter(Boolean).join(" · ")}</div></td>
-                      <td className="right num">{r.amount != null ? formatMoney(String(r.amount)) : "—"}</td>
+                    <tr key={r.row_number}>
+                      <td className="num">{r.row_number}</td>
+                      <td><div className="cell-main mono">{r.reference_code}</div><div className="cell-sub">{[r.unit_name, r.person_name].filter(Boolean).join(" · ")}</div></td>
+                      <td className="right num">{r.amount != null ? formatMoney(r.amount) : "—"}</td>
                       <td className="small">{r.direction === "credit" ? "Alacak" : "Borç"}</td>
-                      <td className="small nowrap">{String(r.date ?? "")}</td>
+                      <td className="small nowrap">{r.date}</td>
                       <td>{r.ok ? <Badge tone="ok">Hazır</Badge> : <Badge tone="danger">Hatalı</Badge>}</td>
                     </tr>
                   ))}</tbody>
@@ -236,10 +273,10 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
                 <>
                   <thead><tr><th scope="col">Satır</th><th scope="col">Bölüm</th><th scope="col">Plaka</th><th scope="col">Marka / renk</th><th scope="col" /></tr></thead>
                   <tbody>{p.rows.map((r) => (
-                    <tr key={String(r.row_number)}>
-                      <td className="num">{String(r.row_number)}</td>
-                      <td className="small">{String(r.unit_name ?? "")}</td>
-                      <td className="mono">{String(r.plate_display ?? "")}</td>
+                    <tr key={r.row_number}>
+                      <td className="num">{r.row_number}</td>
+                      <td className="small">{r.unit_name ?? ""}</td>
+                      <td className="mono">{r.plate_display}</td>
                       <td className="small">{[r.brand_model, r.color].filter(Boolean).join(" · ") || "—"}</td>
                       <td>{r.ok ? <Badge tone="ok">Hazır</Badge> : <Badge tone="danger">Hatalı</Badge>}</td>
                     </tr>
@@ -270,29 +307,31 @@ function CsvImport({ type }: { type: "vehicles" | "opening-balances" }) {
 }
 
 function ImportHistory() {
-  const q = useSiteGet<ImportBatch[]>("/imports");
+  const [page, setPage] = useState(1);
+  const q = useSiteGet<Page<ImportBatch>>("/imports", { page, page_size: 20 });
   return (
     <div className="card">
       <div className="card__head"><span className="card__icon"><History aria-hidden="true" /></span><span className="card__title">Aktarım geçmişi</span><span className="card__meta ml-auto">7 gün içinde geri alınabilir</span></div>
       <div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : !q.data || q.data.length === 0 ? <Empty title="Henüz aktarım yok" /> : (
+        {q.isPending ? <Loading /> : !q.data || q.data.items.length === 0 ? <Empty title="Henüz aktarım yok" /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Aktarım geçmişi</caption>
             <thead><tr><th scope="col">Tarih</th><th scope="col">Tür</th><th scope="col">Dosya</th><th scope="col" className="right">Satır → kayıt</th><th scope="col">Yapan</th><th scope="col">Durum</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
-            <tbody>{q.data.map((b) => (
+            <tbody>{q.data.items.map((b) => (
               <tr key={b.id} style={b.status === "rolled_back" ? { opacity: 0.6 } : undefined}>
                 <td className="small nowrap">{formatDateTime(b.created_at)}</td>
                 <td className="small">{importType(b.type)}</td>
                 <td className="small">{b.file_name}{b.total_amount && <div className="cell-sub">{formatMoney(b.total_amount)}</div>}</td>
                 <td className="right num">{b.row_count} → {b.created_count}</td>
-                <td className="small">{b.created_by}</td>
+                <td className="small">{b.created_by ?? "—"}</td>
                 <td><Badge tone={b.status === "imported" ? "ok" : b.status === "rolled_back" ? "muted" : "info"}>{importStatus(b.status)}</Badge></td>
-                <td className="right">{b.can_rollback ? <RollbackButton b={b} /> : b.status === "imported" ? <span className="small muted" title={b.rollback_blocked_by ?? undefined}>{b.rollback_blocked_by ? "Geri alma backend'de" : "Süre doldu"}</span> : null}</td>
+                <td className="right">{b.can_rollback ? <RollbackButton b={b} /> : b.status === "imported" ? <span className="small muted">{b.rollback_blocked_by ?? "Süre doldu"}</span> : null}</td>
               </tr>
             ))}</tbody>
           </table></div>
         )}
       </div>
+      {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} /></div>}
     </div>
   );
 }

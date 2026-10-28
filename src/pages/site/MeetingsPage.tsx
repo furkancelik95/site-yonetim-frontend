@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
-import { CalendarDays, Plus, Printer, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarDays, CalendarX, CheckCircle2, Plus, Printer, Trash2 } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { agendaResult, agendaResultTone, meetingKind, meetingStatus, meetingStatusTone } from "../../lib/labels";
@@ -16,6 +16,17 @@ const KINDS = ["general_ordinary", "general_extraordinary", "board"] as const;
 const RESULTS = ["accepted", "rejected", "postponed", "info"] as const;
 const daysFromNow = (iso: string) => Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5);
 
+/** Takvim yaprağı: gün büyük, ay kısaltma — tarih metin olarak ayrıca yazılı olduğundan dekoratif. */
+function DateBox({ iso, muted }: { iso: string; muted?: boolean }) {
+  const d = new Date(iso);
+  return (
+    <span className={`datebox${muted ? " datebox--muted" : ""}`} aria-hidden="true">
+      <div className="datebox__d">{d.getDate()}</div>
+      <div className="datebox__m">{d.toLocaleDateString("tr-TR", { month: "short" })}</div>
+    </span>
+  );
+}
+
 /** Toplantılar ve genel kurul (Apsiyon "Toplantılar"): planla, gündem, karar, tutanak. */
 export function MeetingsPage() {
   const { site, can } = useSite();
@@ -27,18 +38,25 @@ export function MeetingsPage() {
     <div className="stack">
       <PageHead
         title="Toplantılar"
+        eyebrow="Yönetim"
         subtitle="Genel kurul ve yönetim kurulu toplantıları: gündem, kararlar, tutanak."
         actions={manage && <button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus aria-hidden="true" /> Toplantı planla</button>}
-      />
+      >
+        <div className="tabs" role="tablist" aria-label="Toplantı durumu">
+          {[["", "Tümü"], ["planned", "Planlanan"], ["held", "Yapılan"], ["cancelled", "İptal"]].map(([k, l]) => (
+            <button key={k} type="button" role="tab" aria-selected={s.durum === k} className="tabs__tab" onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
+          ))}
+        </div>
+      </PageHead>
+      <MeetingKpis />
       {adding && <NewMeeting onDone={() => setAdding(false)} />}
 
-      <div className="row" role="tablist" aria-label="Toplantı durumu" style={{ gap: "var(--s-2)" }}>
-        {[["", "Tümü"], ["planned", "Planlanan"], ["held", "Yapılan"], ["cancelled", "İptal"]].map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={s.durum === k} className={`btn btn--sm${s.durum === k ? " btn--primary" : ""}`} onClick={() => set({ durum: k!, page: "1" })}>{l}</button>
-        ))}
-      </div>
-
       <div className="card">
+        <div className="card__head">
+          <span className="card__icon card__icon--accent"><CalendarDays aria-hidden="true" /></span>
+          <span className="card__title">Toplantı listesi</span>
+          {q.data && <span className="card__meta ml-auto">{q.data.total} toplantı</span>}
+        </div>
         <div className="card__body card__body--flush">
           {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? (
             <Empty title="Toplantı yok" icon={<CalendarDays aria-hidden="true" />}>Olağan genel kurul yılda en az bir kez yapılır. İlk toplantıyı planlayarak başlayın.</Empty>
@@ -50,7 +68,12 @@ export function MeetingsPage() {
                 <tbody>
                   {q.data.items.map((m) => (
                     <tr key={m.id}>
-                      <td><Link className="cell-main" to={`/s/${site.slug}/toplantilar/${m.id}`}>{m.title}</Link><div className="cell-sub">{meetingKind(m.kind)} · #{m.number}</div></td>
+                      <td>
+                        <div className="cell-person">
+                          <DateBox iso={m.scheduled_at} muted={m.status !== "planned"} />
+                          <div><Link className="cell-main" to={`/s/${site.slug}/toplantilar/${m.id}`}>{m.title}</Link><div className="cell-sub">{meetingKind(m.kind)} · #{m.number}</div></div>
+                        </div>
+                      </td>
                       <td className="small nowrap">{formatDateTime(m.scheduled_at)}</td>
                       <td className="small">{m.location}</td>
                       <td className="small nowrap">{m.agenda.length} madde</td>
@@ -64,6 +87,27 @@ export function MeetingsPage() {
         </div>
         {q.data && q.data.total > q.data.page_size && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
       </div>
+    </div>
+  );
+}
+
+/** Bant altı göstergeler: sıradaki toplantı, planlanan / yapılan / iptal sayıları. Kaynak /meetings (durum süzgeçli). */
+function MeetingKpis() {
+  const planned = useSiteGet<Page<Meeting>>("/meetings", { status: "planned", page: 1, page_size: 50 });
+  const held = useSiteGet<Page<Meeting>>("/meetings", { status: "held", page: 1, page_size: 1 });
+  const cancelled = useSiteGet<Page<Meeting>>("/meetings", { status: "cancelled", page: 1, page_size: 1 });
+  if (planned.isError || held.isError || cancelled.isError) return null;
+  if (!planned.data || !held.data || !cancelled.data) {
+    return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  }
+  const next = [...planned.data.items].filter((m) => daysFromNow(m.scheduled_at) >= 0).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
+  const days = next ? daysFromNow(next.scheduled_at) : null;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Sıradaki toplantı" tone="accent" icon={<CalendarClock aria-hidden="true" />} value={next ? formatDate(next.scheduled_at) : "—"} small note={next ? `${meetingKind(next.kind)} · ${days === 0 ? "bugün" : `${days} gün sonra`}` : "planlanmış toplantı yok"} />
+      <Kpi label="Planlanan" icon={<CalendarDays aria-hidden="true" />} value={planned.data.total} note="gündemi hazır, yapılmayı bekliyor" />
+      <Kpi label="Yapılan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={held.data.total} note="kararları kayıtlı" />
+      <Kpi label="İptal" icon={<CalendarX aria-hidden="true" />} value={cancelled.data.total} note="gerekçesiyle kayıtlı" />
     </div>
   );
 }

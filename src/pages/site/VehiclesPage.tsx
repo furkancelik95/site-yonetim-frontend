@@ -1,52 +1,60 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
-import { Car, Plus } from "lucide-react";
+import { CalendarClock, Car, CircleOff, Clock, Plus } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { plateInput } from "../../lib/input";
 import { vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import { ParkingSpacesPanel } from "./ParkingSpacesPanel";
 
-/** Servis isteği 22'deki şekiller. */
-export interface Vehicle {
-  id: string; plate: string; plate_display: string; brand_model: string | null; color: string | null; unit_id: string; unit_name: string; owner_person_id: string | null; owner_name: string | null;
-  kind: "permanent" | "guest"; valid_until: string | null; status: "active" | "pending" | "inactive"; created_at: string;
-}
-interface VehicleSettings { plate_limit_per_unit: number; approval_required: boolean }
+export type Vehicle = Schemas["VehicleOut"];
+type VehicleSettings = Schemas["VehicleSettingsOut"];
 
 /** Araçlar (YAP-05): plaka kaydı; güvenlik kapı ekranında okur, sakin kendi aracını ekler. */
 export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?: boolean } = {}) {
   const { site, can } = useSite();
-  const [s, set] = useUrlState({ q: "", durum: "" });
+  const [s, set] = useUrlState({ q: "", durum: "", page: "1", sekme: "" });
   const [search, setSearch] = useState(s.q);
   const q = useDebounced(search, 300);
-  const list = useSiteGet<Vehicle[]>("/vehicles", { unit_id: unitId, status: s.durum || undefined, q: q || undefined });
+  const list = useSiteGet<Page<Vehicle>>("/vehicles", { unit_id: unitId, status: s.durum || undefined, q: q || undefined, page: embedded ? undefined : s.page, page_size: embedded ? 100 : 50 });
   const [adding, setAdding] = useState(false);
   const manage = can(P.unitsManage);
   const body = (
     <>
       {adding && <VehicleForm unitId={unitId} onDone={() => setAdding(false)} />}
-      {!embedded && (
-        <div className="filters">
-          <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value }); }} /></div>
-          <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
-        </div>
-      )}
-      <div className="card"><div className="card__body card__body--flush">
-        {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.length === 0 ? (
+      <div className="card">
+        {!embedded && (
+          <div className="card__head">
+            <span className="card__icon card__icon--accent"><Car aria-hidden="true" /></span>
+            <div>
+              <div className="card__title">Plaka listesi</div>
+              {list.data && <div className="card__meta">{list.data.total} kayıt</div>}
+            </div>
+            <div className="card__tools">
+              <div className="field"><label className="field__label" htmlFor="v-q">Ara</label><input id="v-q" className="field__input" type="search" placeholder="Plaka, bölüm ya da kişi" value={search} onChange={(e) => { setSearch(e.target.value); set({ q: e.target.value, page: "1" }); }} /></div>
+              <div className="field"><label className="field__label" htmlFor="v-st">Durum</label><select id="v-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["active", "pending", "inactive"].map((k) => <option key={k} value={k}>{vehicleStatus(k)}</option>)}</select></div>
+            </div>
+          </div>
+        )}
+        <div className="card__body card__body--flush">
+        {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.items.length === 0 ? (
           <Empty title="Kayıtlı araç yok" icon={<Car aria-hidden="true" />}>Kayıtlı plaka kapı ekranında görünür; sakinler kendi araçlarını uygulamadan ekler.</Empty>
         ) : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Araçlar</caption>
             <thead><tr><th scope="col">Plaka</th>{!unitId && <th scope="col">Bölüm</th>}<th scope="col">Kişi</th><th scope="col">Tür</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{list.data.map((v) => <VehicleRow key={v.id} v={v} showUnit={!unitId} manage={manage} slug={site.slug} />)}</tbody>
+            <tbody>{list.data.items.map((v) => <VehicleRow key={v.id} v={v} showUnit={!unitId} manage={manage} slug={site.slug} />)}</tbody>
           </table></div>
         )}
-      </div></div>
+      </div>
+      {!embedded && list.data && list.data.total > list.data.page_size && <div className="card__foot"><Pager page={list.data.page} pageSize={list.data.page_size} total={list.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
+      </div>
     </>
   );
   if (embedded) {
@@ -57,11 +65,43 @@ export function VehiclesPage({ unitId, embedded }: { unitId?: string; embedded?:
       </div>
     );
   }
+  const parking = s.sekme === "park";
   return (
     <div className="stack">
-      <PageHead title="Araçlar" subtitle="Sakinlerin plakaları; kapı ekranında sorgulanır. Plaka verisi KVKK kapsamındadır." actions={manage && <><Link className="btn" to={`/s/${site.slug}/iceri-aktar?tip=araclar`}>Excel'den aktar</Link><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((x) => !x)}><Plus aria-hidden="true" /> Araç ekle</button></>} />
-      {manage && <VehicleSettingsCard />}
-      {body}
+      <PageHead title="Araçlar" subtitle="Sakinlerin plakaları ve park yerleri; plaka kapı ekranında sorgulanır. Plaka verisi KVKK kapsamındadır." actions={manage && !parking && <><Link className="btn" to={`/s/${site.slug}/iceri-aktar?tip=araclar`}>Excel'den aktar</Link><button className="btn btn--primary" type="button" aria-expanded={adding} onClick={() => setAdding((x) => !x)}><Plus aria-hidden="true" /> Araç ekle</button></>} />
+      <VehicleKpis />
+      <div className="row" role="tablist" aria-label="Araçlar ve park yerleri" style={{ gap: "var(--s-2)" }}>
+        {[["", "Araçlar"], ["park", "Park yerleri"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={s.sekme === k} className={`btn btn--sm${s.sekme === k ? " btn--primary" : ""}`} onClick={() => set({ sekme: k! })}>{l}</button>)}
+      </div>
+      {parking ? <ParkingSpacesPanel /> : <>
+        {manage && <VehicleSettingsCard />}
+        {body}
+      </>}
+    </div>
+  );
+}
+
+/** Süzgeçsiz plaka listesinden sayılan özet: etkin, onay bekleyen, misafir, pasif. */
+function VehicleKpis() {
+  // Uç sayfalı döner: durum sayıları süzgeçli sorgunun `total`'ından; bölüm ve misafir sayısı
+  // etkin kayıtların ilk 200'ünden (uç sınırı). Daha fazlaysa o iki not yazılmaz, sayı uydurulmaz.
+  const act = useSiteGet<Page<Vehicle>>("/vehicles", { status: "active", page_size: 200 });
+  const pen = useSiteGet<Page<Vehicle>>("/vehicles", { status: "pending", page_size: 1 });
+  const ina = useSiteGet<Page<Vehicle>>("/vehicles", { status: "inactive", page_size: 1 });
+  if (act.isError || pen.isError || ina.isError) return null;
+  if (!act.data || !pen.data || !ina.data) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" aria-hidden="true" />)}</div>;
+  const complete = act.data.total <= act.data.items.length;
+  const active = act.data.total;
+  const pending = pen.data.total;
+  const inactive = ina.data.total;
+  const guest = act.data.items.filter((x) => x.kind === "guest").length;
+  const units = new Set(act.data.items.map((x) => x.unit_id)).size;
+  return (
+    <div className="grid grid--kpi rise">
+      <Kpi label="Etkin plaka" tone="accent" icon={<Car aria-hidden="true" />} value={active} note={complete ? `${units} bölümde` : "kapı ekranında sorgulanır"} />
+      <Kpi label="Onay bekleyen" icon={<Clock aria-hidden="true" />} tone={pending ? "warn" : undefined} value={pending} note={pending ? "sakin kaydı, onay gerekli" : "kuyruk boş"} />
+      <Kpi label="Misafir aracı" icon={<CalendarClock aria-hidden="true" />} value={complete ? guest : "—"} note="etkin, süreli kayıt" />
+      <Kpi label="Pasif" icon={<CircleOff aria-hidden="true" />} value={inactive} note="kapı ekranında görünmez" />
     </div>
   );
 }
@@ -70,9 +110,9 @@ function VehicleRow({ v, showUnit, manage, slug }: { v: Vehicle; showUnit: boole
   const upd = useSiteMutation<{ status: string }, Vehicle>("PATCH", `/vehicles/${v.id}`);
   return (
     <tr style={v.status === "inactive" ? { opacity: 0.6 } : undefined}>
-      <td><div className="cell-main mono">{v.plate_display}</div>{(v.brand_model || v.color) && <div className="cell-sub">{[v.brand_model, v.color].filter(Boolean).join(" · ")}</div>}</td>
+      <td><div className="cell-chip"><IconChip tone={v.status === "inactive" ? "muted" : v.status === "pending" ? "warn" : undefined}><Car /></IconChip><div><div className="cell-main mono">{v.plate_display}</div>{(v.brand_model || v.color) && <div className="cell-sub">{[v.brand_model, v.color].filter(Boolean).join(" · ")}</div>}</div></div></td>
       {showUnit && <td className="small"><Link to={`/s/${slug}/daireler/${v.unit_id}`}>{v.unit_name}</Link></td>}
-      <td className="small">{v.owner_name ?? "—"}</td>
+      <td className="small">{v.owner_name ? <div className="cell-person"><Avatar name={v.owner_name} size="sm" soft /><span>{v.owner_name}</span></div> : "—"}</td>
       <td className="small">{vehicleKind(v.kind)}{v.valid_until && <div className="cell-sub">{formatDate(v.valid_until)} tarihine kadar</div>}</td>
       <td><Badge tone={vehicleStatusTone(v.status)}>{vehicleStatus(v.status)}</Badge></td>
       {manage && (
