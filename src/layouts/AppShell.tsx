@@ -61,6 +61,7 @@ import {
   Vote,
   Wallet,
   Wrench,
+  Cog,
   UserCog,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
@@ -184,6 +185,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}
           {can(P.inventoryRead) && <Item to={`${base}/demirbas`} icon={<Boxes aria-hidden="true" />} label="Demirbaş ve Stok" />}
+          {can(P.inventoryRead) && <Item to={`${base}/teknik-varliklar`} icon={<Cog aria-hidden="true" />} label="Teknik Varlıklar" />}
           {can(P.expensesRead) && <Item to={`${base}/sigorta`} icon={<Umbrella aria-hidden="true" />} label="Sigorta ve Hasar" />}
           {staff && <Item to={`${base}/personel`} icon={<IdCard aria-hidden="true" />} label="Personel" />}
           {staff && <Item to={`${base}/vardiya`} icon={<CalendarClock aria-hidden="true" />} label="Vardiya Planı" />}

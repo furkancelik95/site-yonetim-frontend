@@ -55,6 +55,7 @@ export { SecuritySettingsPage } from "./SecuritySettingsPage";
 export { PatrolAdminPage } from "./PatrolAdminPage";
 export { OutagesPage, PermitsPage, RequestSettingsPage } from "./ServicePages";
 export { InspectionsPage, InsurancePage, KeysPage, MetersPage, TasksPage } from "./OpsPages";
+export { TechnicalAssetDetailPage, TechnicalAssetsPage } from "./TechnicalAssetsPages";
 export { ReservationAreasPage, ReservationsPage } from "./ReservationPages";
 export { PurchaseOrderPage, PurchasePage, PurchaseRequestPage, VendorsPage } from "./PurchasePages";
 export { ContractDetailPage } from "./ContractDetailPage";

@@ -295,6 +295,19 @@ export const readingTone = (v: string): Tone => (v === "ok" || v === "approved" 
 export const taskFrequency = label({ daily: "Her gün", weekdays: "Haftanın günleri", monthly: "Aylık" });
 export const taskStatus = label({ upcoming: "Sırada", due: "Şimdi", late: "Gecikti", done: "Tamamlandı", failed: "Tamamlanamadı" });
 export const taskTone = (v: string): Tone => (v === "done" ? "ok" : v === "late" || v === "failed" ? "danger" : v === "due" ? "warn" : "muted");
+export const meterStatus = label({ active: "Aktif", faulty: "Arızalı", replaced: "Değişti" });
+export const stockCountStatus = label({ applied: "Uygulandı", approval_pending: "Onay bekliyor", rejected: "Reddedildi", withdrawn: "Geri çekildi", failed: "Onaylandı – yürütülemedi" });
+export const stockCountTone = (v: string): Tone => (v === "applied" ? "ok" : v === "approval_pending" ? "info" : v === "rejected" || v === "failed" ? "danger" : "muted");
+export const techCategory = label({ elevator: "Asansör", generator: "Jeneratör", hydrophore: "Hidrofor", fire_system: "Yangın sistemi", camera: "Kamera", barrier: "Bariyer", electrical_panel: "Elektrik panosu", pool_equipment: "Havuz ekipmanı", hvac: "İklimlendirme (HVAC)", boiler: "Kazan", other: "Diğer" });
+export const TECH_CATEGORIES = ["elevator", "generator", "hydrophore", "fire_system", "camera", "barrier", "electrical_panel", "pool_equipment", "hvac", "boiler", "other"];
+export const techStatus = label({ working: "Çalışıyor", faulty: "Arızalı", out_of_service: "Devre dışı", nonconforming: "Uygunsuz (muayene)" });
+export const techStatusTone = (v: string): Tone => (v === "working" ? "ok" : v === "out_of_service" ? "muted" : "danger");
+export const dueWarning = label({ "60": "60 gün içinde", "30": "30 gün içinde", "7": "7 gün içinde", overdue: "Tarihi geçti" });
+export const dueWarningTone = (v: string | null | undefined): Tone => (v === "overdue" || v === "7" ? "danger" : v === "30" ? "warn" : v === "60" ? "info" : "ok");
+export const inspectionResult = label({ pass: "Olumlu", fail: "Olumsuz" });
+export const periodUnit = label({ week: "hafta", month: "ay" });
+export const maintenanceRunStatus = label({ open: "İş emri açık", done: "Yapıldı", skipped: "Yapılmadı" });
+export const timelineKind = label({ created: "Kart", inspection_pass: "Muayene", inspection_fail: "Muayene", maintenance_open: "Bakım", maintenance_done: "Bakım", maintenance_skipped: "Bakım", document: "Belge" });
 
 // Rezervasyon paketi (servis istekleri 59-61)
 export const resStatus = label({ pending: "Onay bekliyor", approved: "Onaylı", rejected: "Reddedildi", cancelled: "İptal", checked_in: "Geldi", no_show: "Gelmedi", completed: "Tamamlandı" });

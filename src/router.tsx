@@ -106,6 +106,9 @@ const siteScreens: [string, string][] = [
   ["sigorta", "InsurancePage"],
   ["sayaclar", "MetersPage"],
   ["gorevler", "TasksPage"],
+  // Teknik varlık, yasal muayene ve periyodik bakım (HIZ-06/07, K28)
+  ["teknik-varliklar", "TechnicalAssetsPage"],
+  ["teknik-varliklar/:assetId", "TechnicalAssetDetailPage"],
   // Rezervasyon paketi (servis istekleri 59-61)
   ["rezervasyon", "ReservationsPage"],
   ["rezervasyon/alanlar", "ReservationAreasPage"],
