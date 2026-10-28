@@ -39,13 +39,15 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/daireler/{id}` | **Daire ayrıntısı** — taraflar (geçmiş dahil), kiracı değişimi, hesaplar | `units.read` / `people.manage` | `units/{id}`, `parties` | **Y** |
 | `/s/{slug}/borclular` | **Borçlular** — KPI + tablo, gecikme günü | `finance.read` | `debtors` | R |
 | `/s/{slug}/cari/{id}` | **Cari ekstre** — hareketler, bakiye, son tahakkukun kalem dökümü ("bu tutar nasıl hesaplandı"), **tahsilat girişi** | `finance.read` / `finance.payment.record` | `accounts/{id}/statement`, `payments` | R |
-| `/s/{slug}/tahakkuk` | **Tahakkuk** — sıradaki dönemin önizlemesi (daire × kalem, uyarılar, kalem toplam kontrolü), kaydet, geçmiş koşular, ters kayıt | `finance.charge.post` | `charge-runs/preview`, `charge-runs` | R |
-| `/s/{slug}/isletme-projesi` | **İşletme projesi** — kalemler, dağıtım kuralı, ödeyen, durum | `finance.read` | `budget-plans/current` | R (yalnız görüntüleme) |
+| `/s/{slug}/tahakkuk` | **Tahakkuk** — sıradaki dönemin önizlemesi (kaynak, kıst, muafiyet, uyarılar, kalem toplam kontrolü), kaydet (onay kuralı varsa onaya), taslak (yenile/gönder/iptal), koşu dökümü, satır düzeltme ve geçmişi (D-10), ters kayıt; otomatik tahakkuk ayarı (FIN-05) | `finance.read` / `finance.charge.post` | `charge-runs/*`, `charge-schedule` | R |
+| `/s/{slug}/isletme-projesi` | **İşletme projesi** — kalemler, dağıtım kuralı, ödeyen, durum, kesinleştirme (onay kuralı varsa onaya); **Bütçe ve gerçekleşme** sekmesi: kategori × ay bütçe (taslak düzenleme, onaya gönder, revizyon), ay seçimli gerçekleşme (%90 sarı / %100 kırmızı) (FIN-17) | `finance.read` / `finance.budget.manage` | `budget-plans`, `budgets` | R |
+| `/s/{slug}/aidat-kurallari` | **Aidat kuralları** — kural listesi, sürüm geçmişi, yeni kural/sürüm formu (eşit, m², arsa payı, bölüm tipi, sabit, bileşik; kapsam, muafiyet, dayanak), deneme hesabı + bütçe gelir hedefi karşılaştırması, onaya gönder (K23) | `finance.read` / `finance.budget.manage` | `billing-rules` | R |
 | `/s/{slug}/giderler` | **Gider defteri** — KPI, filtre (yıl, durum, kategori), kategori dağılımı, tablo; satırda **Öde** ve **Geri al** açılır formları; Excel | `expenses.read` / `expenses.manage` | `expenses` | R |
 | `/s/{slug}/giderler/yeni` | **Yeni gider** — fatura yükleme, "ödendi" işaretlenince hesap ve tarih alanları açılır | `expenses.manage` | `expenses` (multipart) | R |
 | `/s/{slug}/kasa` | **Kasa ve banka** — hesap kartları, bakiye, hesap aç, aktarım | `finance.cash.read` / `.manage` | `cash-accounts`, `cash-transfers` | R |
 | `/s/{slug}/kasa/{id}` | **Hesap ekstresi** — tarih aralığı, elle hareket, yürüyen bakiye, sayfalama, Excel | `finance.cash.read` | `cash-accounts/{id}/statement` | R |
 | `/s/{slug}/raporlar` | **Gelir-gider raporu** — yıl seçimi, KPI, ay ay çubuk, kategori dökümü, işletme projesi karşılaştırması, Excel | `finance.reports.read` | `reports/income-expense` | R |
+| `/s/{slug}/seffaflik-raporu` | **Şeffaflık raporu** (RAP-02, K32) — aylık özet hazırlama (kapsam seçimi), yayına gönderme ("Şeffaflık raporu" onay kuralı; yoksa yönetici yayınlar), ret gerekçesi | `finance.reports.read` / `transparency.manage` | `transparency-reports` | R |
 | `/s/{slug}/iceri-aktar` | **Excel'den aktarım** — şablon indir, yükle, önizleme (satır satır hata/uyarı), onayla | `units.manage` | `imports/units` | R |
 | `/s/{slug}/talepler` | **Talepler** — liste, filtre, yeni talep | `requests.read` | `requests` | R |
 | `/s/{slug}/talep/{id}` | **Talep ayrıntısı** — durum değiştir (çözüldü/kapandıda çözüm notu zorunlu), ata, not, geçmiş | `requests.read` / `.assign` | `requests/{id}` | R |
@@ -58,7 +60,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/araclar` | **Araçlar** — plaka listesi, ekle/onayla/pasif, ayarlar (YAP-05) | `units.read` / `.manage` | `vehicles`, `settings/vehicles` (istek 22) | R (sahte servis) |
 | `/s/{slug}/kayit-basvurulari` | **Sakin kaydı** — Başvurular (istek 13), Davetler, Kayıt yöntemleri (YAP-07/08) | `people.manage` | `registrations`, `invitations`, `settings/registration` (istek 23) | R (sahte servis) |
 | `/s/{slug}/kayit-afisi` | **QR kayıt afişi** — tesis/blok/bölüm, A4/A5/etiket, yazdır; `?blok=`/`?bolum=` önseçim | `people.manage` | `registration-link`, `blocks`, `units` | R |
-| `/davet/{token}` | **Davetle kayıt** (oturumsuz) — telefon doğrula, bilgilendirme, geçici parola | — | `public/invitations/{token}` (istek 23) | R (sahte servis) |
+| `/davet/{token}` | **Davetle kayıt** (oturumsuz) — telefon doğrula, bilgilendirme; sonra telefon + SMS koduyla giriş | — | `public/invitations/{token}` (istek 23) | R (sahte servis) |
 | `/s/{slug}/ayarlar/ozel-alanlar` | **Özel alanlar** — bölüm/kişi alan tanımları, KVKK kategorisi, rol görünürlüğü, arşiv (YAP-10) | `modules.manage` | `custom-fields` (istek 24) | R (sahte servis) |
 | `/s/{slug}/iceri-aktar` | **İçeri aktarım** — sekmeler: bölümler (xlsx), araçlar ve açılış bakiyeleri (csv, mutabakat); aktarım geçmişi + geri alma (YAP-06) | `units.manage` | `imports/units`, istek 25 | R (sahte servis) |
 | `/s/{slug}/kurulum` | **Kurulum ve canlıya geçiş** — adımlar, finans modu (Mod P), kontrol listesi, canlıya al (YAP-01) | `modules.manage` | `setup` (istek 26) | R (sahte servis) |
@@ -68,13 +70,15 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/ek-ucretler` | **Dönem dışı ücretler** — elle ücret, kaynak bazında yansıma, iptal (FIN-06) | `finance.charge.post` | istek 31 | R (sahte servis) |
 | `/s/{slug}/donem-kapanisi` | **Dönem kapanışı** — kontrol listesi, gerekçeli istisna, kapanışta, kilit (iki kişi), süreli açma (FIN-13) | `finance.read` / `finance.charge.post` | istek 27 | R (sahte servis) |
 | `/s/{slug}/muhasebe-aktarimi` | **Muhasebe aktarımı** — fiş önizleme, dosya üret ve kilitle, hesap kodu eşlemesi, geçmiş (FIN-14) | `finance.charge.post` | istek 32 | R (sahte servis) |
-| `/s/{slug}/ayarlar/finans` | **Finans ayarları** — hatırlatma kademeleri, kıst, eşikler; yürürlük dönemli sürüm; karar bekleyenler (FIN-16) | `finance.charge.post` | istek 33 | R (sahte servis) |
+| `/s/{slug}/ayarlar/finans` | **Finans ayarları** — hatırlatma kademeleri, kıst, vade günü, tahakkuk kaynağı, gecikme (oran, yöntem, tolerans, tavan, asgari tutar), mahsup; yürürlük dönemli sürüm (FIN-16) | `finance.charge.post` | `finance-parameters` | R |
 | `/s/{slug}/kasa/{id}` | **Kasa ekstresi → Gün sonu sayımı** (yalnız kasa hesabı) (FIN-11) | `finance.cash.manage` | istek 28 | R (sahte servis) |
-| `/s/{slug}/tahakkuk` | **Tahakkuk → Fark raporu** — önceki döneme göre eşik üstü değişen hesaplar (FIN-05) | `finance.read` | istek 34 | R (sahte servis) |
+| `/s/{slug}/tahakkuk` | **Tahakkuk → Fark raporu** — önceki döneme göre eşik üstü değişen hesaplar; taslakta da (FIN-05) | `finance.read` | `charge-runs/preview/diff`, `charge-runs/{id}/diff` | R |
 | `/s/{slug}/personel` | **Personel** — bordro sicil no, bağlı giriş hesabı (K29); ayrılışta ileri vardiya / bekleyen izin uyarısı, erişim kendiliğinden kapanır (IK-01) | `staff.manage` | `staff`, istek 35 | R |
 | `/s/{slug}/vardiya` | **Vardiya planı** — şablonlar; personel × gün ızgarası, çakışma (çakışan vardiya, izin, 11 saat dinlenme), kopyala, yayınla (IK-02) | `people.read` (yazma `staff.manage`) | istek 36 | R |
 | `/s/{slug}/izinler` | **İzinler** — kaydet, onayla/reddet/iptal (onay kuralı varsa onay mekanizmasıyla), yıllık kullanım (IK-03) | `staff.manage` | istek 37 | R |
 | `/s/{slug}/vardiyam` | **Vardiyam** — yayınlanmış vardiyalarım, vardiyaya başla/bitir (QR kodu ya da o anki konum), izin talebi (K29; IK-02/03/04) | kartı bağlı personel | `staff` | R |
+| `/s/{slug}/kullanicilar` | **Kullanıcılar** — bir kişiye birden çok rol (izinler birleşir), tesis ya da blok kapsamı, başlangıç–bitiş; rol kaldırma; atama geçmişi (PLT-09, P18) | `members.manage` | istek 12 + P16a | R |
+| `/s/{slug}/roller` | **Roller ve yetkiler** — hazır şablonlar salt okunur; kopyala ve özelleştir (gruplu izin ağacı, hassasiyet); rol düzeyi = rol sırası (K20); arşiv | `members.manage` | P16a | R |
 | `/s/{slug}/puantaj` | **Puantaj** — günlük (plandan; istisna düzelt; kesinleştir) ve aylık aktarım (sicil no ile dosya, kilit) (IK-04/05) | `staff.manage` (aktarımı `finance.read` okur) | istek 38, 39 | R |
 | `/s/{slug}/guvenlik?sekme=masa` | **Kapı ekranı** — davet koduyla giriş, habersiz ziyaretçi (bilgi / sakin onayı, zaman aşımında gerekçeli karar), plaka sorgu + giriş/çıkış + ihlal, uzun bekleyen kargolar (GUV-01/03/04/05) | `security.visitors` | istek 41–44 | R (sahte servis) |
 | `/s/{slug}/guvenlik?sekme=nobet` | **Nöbet defteri** — not/olay/devir, ek not, devralma onayı (GUV-06) | `security.incidents` | istek 45 | R (sahte servis) |
@@ -85,11 +89,13 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/talepler/ayarlar` | **Talep ayarları** — kategori × öncelik SLA, çalışma takvimi, hazır yanıtlar, hizmet tarifesi (HIZ-03/04) | `requests.assign` | istek 47, 48, 51 | R (sahte servis) |
 | `/s/{slug}/talepler/ana-olaylar` | **Ana olaylar** — bağlı talepler, çözülünce hepsi kapanır (HIZ-02) | `requests.assign` | istek 49 | R (sahte servis) |
 | `/s/{slug}/tadilat-tasinma` | **Tadilat ve taşınma** — kurallar, onay/ret, kontrol listesiyle tamamlama, depozito (HIZ-05) | `requests.assign` | istek 52 | R (sahte servis) |
-| `/s/{slug}/anahtarlar` | **Anahtar ve emanet** — anahtar/kart/kumanda teslim-iade, gecikenler; sakin emanet anahtarı yetkili kişiye (OPS-01) | `requests.assign` / `visitors` | istek 53 | R (sahte servis) |
-| `/s/{slug}/denetimler` | **Denetim listeleri** — şablon, denetim, skor, olumsuz maddeden talep (OPS-03) | `requests.assign` | istek 55 | R (sahte servis) |
-| `/s/{slug}/sigorta` | **Sigorta ve hasar** — poliçe, bitiş uyarısı, hasar dosyası, tazminat (OPS-04) | `expenses.read` | istek 56 | R (sahte servis) |
-| `/s/{slug}/sayaclar` | **Sayaçlar** — sayaç kaydı, dönem okuması, fotoğraf, anormal tüketim onayı (OPS-05) | `units.manage` | istek 57 | R (sahte servis) |
-| `/s/{slug}/gorevler` | **Rutin görevler** — günlük görev listesi, fotoğraflı tamamlama, şablonlar, 7 günlük rapor (OPS-06) | `requests.read` | istek 58 | R (sahte servis) |
+| `/s/{slug}/anahtarlar` | **Anahtar ve emanet** — anahtar/kart/kumanda teslim-iade, gecikenler; sakin emanet anahtarı yetkili kişiye (OPS-01) | `requests.assign` / `visitors` | istek 53 | R |
+| `/s/{slug}/denetimler` | **Denetim listeleri** — şablon, denetim, skor, olumsuz maddeden talep (OPS-03) | `requests.assign` | istek 55 | R |
+| `/s/{slug}/sigorta` | **Sigorta ve hasar** — poliçe, bitiş uyarısı, hasar dosyası, tazminat, belge arşivine bağlı belgeler (OPS-04) | `expenses.read` | istek 56 | R |
+| `/s/{slug}/sayaclar` | **Sayaçlar** — sayaç kaydı, dönem okuması, fotoğraf, anormal tüketim onayı (OPS-05) | `units.manage` | istek 57 | R |
+| `/s/{slug}/gorevler` | **Rutin görevler** — günlük görev listesi, Görevlerim (personel kartına bağlı hesap, K29), fotoğraflı tamamlama, şablonlar, 7 günlük rapor (OPS-06) | `requests.read` | istek 58 | R |
+| `/s/{slug}/teknik-varliklar` | **Teknik varlıklar** — mali demirbaştan ayrı (K28): varlık kartı, yasal muayene takvimi (60/30/7 gün uyarısı), periyodik bakım planları ve iş emirleri (HIZ-06/07) | `inventory.read` / `.manage` | HIZ-06/07 | R |
+| `/s/{slug}/teknik-varliklar/{id}` | **Varlık kartı** — bilgiler, muayene takvimi ve sonucu (rapor zorunlu; olumsuzda iş emri), bakım, belgeler, zaman çizelgesi ve yıllık maliyet (HIZ-07) | `inventory.read` / `.manage` | HIZ-07 | R |
 | `/s/{slug}/rezervasyon` | **Rezervasyon** — günlük liste, kodla giriş doğrulama, onay, sakin adına rezervasyon, bekleme listesi, kullanım raporu (REZ-02/03) | `requests.assign` / `security.visitors` | istek 60, 61 | R (sahte servis) |
 | `/s/{slug}/rezervasyon/alanlar` | **Rezervasyon alanları ve kuralları** — saat, kapasite, ücret, kanal, onay, doğrulama, bekleme listesi, no-show (REZ-01) | `modules.manage` | istek 59 | R (sahte servis) |
 | `/s/{slug}/satin-alma` | **Satın alma** — talepler, siparişler, tedarikçi faturaları, ödenecekler, ayarlar (SAT-01..05) | `expenses.read` | istek 63–67 | R (sahte servis) |
@@ -99,7 +105,7 @@ Sol menü, izne ve açık modüle göre görünür. Menü grupları: **Genel** (
 | `/s/{slug}/sozlesmeler/{id}` | **Sözleşme ayrıntısı** — KPI ve ceza kuralları, aylık hizmet karnesi, ceza kesintisi onayı, endeksli artış (SAT-06) | `contracts.manage` | `GET /contracts/{id}`, `…/performance`, `…/scorecards/{dönem}`, `…/escalation` (istek 68–70) | R |
 | `/s/{slug}/duyurular/{id}/okuma-raporu` | **Okuma raporu** — alıcı/okuyan/onaylayan, zaman damgalı, yazdır (ILT-01) | `announcements.publish` | istek 71 | R (sahte servis) |
 | `/s/{slug}/bildirim-sablonlari` | **Bildirim şablonları** — TR/EN, değişken, SMS parça hesabı, sürüm (ILT-02) | `announcements.publish` | istek 72 | R (sahte servis) |
-| `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | istek 73, 74 | R (sahte servis) |
+| `/s/{slug}/acil-durum` | **Acil durum** — başlatma, blok/bölüm panosu, yardım listesi, toplanma yoklaması, bilgi kartı, geçmiş (ILT-04/06) | `announcements.publish` / `security.*` | `emergencies*`, `emergency-info-card`, `emergency-settings` | R |
 | `/s/{slug}/toplantilar/{id}/genel-kurul` | **Genel kurul** — format, karar türü, çağrı ve ispat; hazirun, fiziki vekâlet, nisap (kişi + arsa payı), salonda oylama; tutanak (TOP-01/03/04) | `meetings.manage` | istek 75–77 | R (sahte servis) |
 | `/s/{slug}/karar-defteri` | **Karar defteri** — kesinleşen kararlar sıra numarasıyla (TOP-04) | toplantı okuma | istek 77 | R (sahte servis) |
 | `/s/{slug}/dokumanlar` | **Belgeler** — kapsam, gizlilik, sürüm, SHA-256, geçerlilik uyarısı, gizli açılış kaydı (RAP-03) | yönetim rolleri | istek 78 | R (sahte servis) |
@@ -120,15 +126,15 @@ Mobil öncelikli (telefon genişliği), 760px üstünde masaüstü düzeni. Üst
 | `/sakin/{slug}/ekstre` | Kendi cari ekstresi | R |
 | `/sakin/{slug}/duyurular` | Duyurular | R |
 | `/sakin/{slug}/talepler` | Talepler + yeni talep | R |
-| `/sakin/{slug}/giderler` | **Sitenin gider dökümü + fatura görüntüsü** — şeffaflık vaadinin karşılığı | **Y** |
+| `/sakin/{slug}/seffaflik` | **Şeffaflık raporu** (RAP-02, K32): yönetimin onayladığı aylık gelir–gider özeti; kişi/bölüm yok. Eski gider dökümü ve fatura görüntüsü kaldırıldı (`/giderler` buraya yönlenir) | **Y** |
 | `/sakin/{slug}/hane` | **Hane üyeleri** — davet (bağlantı kopyala), yetkiler, bitir; en fazla 6 (YAP-04) | R (sahte servis, istek 20) |
 | `/sakin/{slug}/borcum` | **Borcum → Ödeme planım** — taksitler ve durumları (FIN-15) | R (sahte servis, istek 30) |
 | `/sakin/{slug}/ziyaretci` | **Ziyaretçiler** — ön davet (kod + QR), kapıda bekleyen onayı, kargo teslim yetkilisi (GUV-02/03/05) | R (sahte servis, istek 41, 42, 44) |
 | `/sakin/{slug}/tadilat` | **Tadilat ve taşınma** — kurallar, başvuru, durum (HIZ-05) | R (sahte servis, istek 52) |
-| `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (sahte servis, istek 53, 57) |
+| `/sakin/{slug}/emanet` | **Emanet ve sayaçlar** — anahtar emaneti ve yetkililer, sayaç okumaları ve tüketim (OPS-01/05) | R (istek 53, 57) |
 | `/teklif/{token}` | **Tedarikçi teklif formu** — oturumsuz, tek kullanımlık link (SAT-02) | R (sahte servis, istek 64) |
 | `/sakin/{slug}/rezervasyon` | **Rezervasyon** — alan ve saat seçimi, bekleme listesi ve teklif, kod/QR, iptal (REZ-02) | R (sahte servis, istek 60) |
-| `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R (sahte servis, istek 73, 74) |
+| `/sakin/{slug}/acil-durum` | **Acil durum** — güvendeyim / toplanma alanındayım / yardım lazım, çevrimdışı acil bilgi kartı (ILT-04/06) | R |
 | `/sakin/{slug}/belgeler` | **Belgeler** — açık ve bölüme özel belgeler (RAP-03) | R (sahte servis, istek 78) |
 | `/sakin/{slug}/kvkk` | **Kişisel verilerim** — KVKK başvurusu ve yanıtları (RAP-04) | R (sahte servis, istek 80) |
 | `/sakin/{slug}/araclar` | **Araçlarım** — plaka ekle/kaldır, sınır ve onay bilgisi (YAP-05) | R (sahte servis, istek 22) |

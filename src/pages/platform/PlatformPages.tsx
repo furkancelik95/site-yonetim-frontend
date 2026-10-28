@@ -382,3 +382,46 @@ export function IndexValuesPage() {
     </div>
   );
 }
+
+type TestInbox = Schemas["TestInboxOut"];
+
+/**
+ * Test gelen kutusu (yalnız geliştirme/demo): SMS/e-posta sağlayıcısı seçilene dek (K5) giriş
+ * kodları, davet bağlantıları ve bildirimler dışarı gitmez; burada görünür. Üretimde backend 404.
+ */
+export function TestInboxPage() {
+  const [to, setTo] = useState("");
+  const q = useQuery({ queryKey: ["platform", "test-inbox", to], queryFn: () => get<TestInbox>("/platform/test-inbox", { to: to.trim() }), refetchInterval: 5000 });
+  return (
+    <div className="stack">
+      <PageHead title="Test gelen kutusu" subtitle="Test sağlayıcısının son mesajları — SMS, e-posta ve mobil bildirim dışarı gönderilmedi." />
+      <div className="field" style={{ maxWidth: "20rem" }}>
+        <label className="field__label" htmlFor="ti-to">Alıcı (telefon E.164 ya da e-posta)</label>
+        <input id="ti-to" className="field__input" value={to} placeholder="+905321234567" onChange={(e) => setTo(e.target.value)} />
+      </div>
+      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (
+        <div className="card">
+          <div className="card__body card__body--flush">
+            {q.data.items.length === 0 ? <div className="card__body small muted">Mesaj yok.</div> : (
+              <div className="table-wrap">
+                <table className="data">
+                  <caption className="visually-hidden">Test sağlayıcısı mesajları</caption>
+                  <thead><tr><th scope="col">Zaman</th><th scope="col">Kanal</th><th scope="col">Alıcı</th><th scope="col">Mesaj</th></tr></thead>
+                  <tbody>{q.data.items.map((i) => (
+                    <tr key={i.id}>
+                      <td className="small nowrap">{new Date(i.at).toLocaleString("tr-TR")}</td>
+                      <td className="small">{i.channel}</td>
+                      <td className="mono small">{i.to}</td>
+                      <td className="small" style={{ wordBreak: "break-word" }}>{i.subject && <div className="strong">{i.subject}</div>}{i.body}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div className="card__foot"><p className="xs muted mb-0">{q.data.note}</p></div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 
 ## Ekran
 - Operasyon → **Kullanıcılar** (`/kullanicilar`): siteye erişen personel listesi, rol değiştirme,
-  erişimi kapatma/açma, **Kullanıcı ekle** (geçici parola bir kez gösterilir).
+  erişimi kapatma/açma, **Kullanıcı ekle** (P16c'den beri 72 saatlik davet bağlantısı gider; geçici parola yok).
 - Altta rollerin ne yapabildiğini anlatan sabit liste.
 
 Apsiyon: Yönetim → "Yetkililer", "Yetki Grupları". Apsiyon'da yetki grubu serbestçe tanımlanıyor;
@@ -59,3 +59,10 @@ Tümü `members.manage`. Kullanıcı kendi rolünü değiştiremez / kendi eriş
 - [ ] Son yönetici kuralı hem rol düşürmede hem kapatmada çalışıyor
 - [ ] Başka sitenin kullanıcısı 404; `members.manage` olmayan rol 403
 - [ ] Geçici parola loglara ve denetim kaydına yazılmıyor
+
+## Güncelleme — P16c (P5, 27.10.2026)
+Geçici parola kalktı. `POST …/members` yeni kullanıcıda `data.invitation` döner:
+`{ expires_at, sent_to: ["s***@ornek.com"], preview_url, test_provider }` — 72 saat geçerli davet
+bağlantısı e-postayla gider (sağlayıcı K5'e kadar test: dışarı gitmez; `preview_url` yalnız
+geliştirme/demo). Kişi `/hesap-davet/{token}` ekranında parolasını belirler. Listede
+`invitation_pending`, `mfa_enabled`; `POST …/members/{id}/resend-invitation` yeni bağlantı üretir.

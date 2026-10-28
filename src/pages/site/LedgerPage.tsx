@@ -102,7 +102,10 @@ export function LedgerPage() {
                         </IconChip>
                         <div>
                           <div className="cell-main">{e.description}</div>
-                          <div className="cell-sub">{ledgerSource(e.source)}</div>
+                          <div className="cell-sub">
+                            {e.source === "late_fee" ? <Badge tone="warn">Gecikme tazminatı</Badge> : ledgerSource(e.source)}
+                            {Number(e.advance_applied) > 0 && <> · Avanstan mahsup: {formatMoney(e.advance_applied)}</>}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -118,6 +121,7 @@ export function LedgerPage() {
         </div>
         <div className="card__foot">
           <Pager page={entries.page} pageSize={entries.page_size} total={entries.total} onPage={(p) => set({ page: String(p) })} />
+          {entries.items.some((e) => Number(e.advance_applied) > 0) && <p className="small muted mb-0">Fazla ödeme avans olarak kalır ve sonraki tahakkuktan kendiliğinden düşülür (D-6).</p>}
         </div>
       </div>
     </div>

@@ -10,9 +10,9 @@ import { useUrlState } from "../../lib/hooks";
 import { audience, channel, importance, importanceTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 
-/** Servis isteği 71: okuma onayı alanları liste yanıtına eklenir. */
-type Ann = Schemas["AnnouncementOut"] & { requires_ack?: boolean; ack_deadline?: string | null; ack_count?: number | null };
-interface Sched { id: string; title: string; importance: string; publish_at: string; requested_at: string; shifted: boolean; requires_ack: boolean; created_by: string }
+/** Servis isteği 71: okuma onayı ve zamanlama alanları backend yanıtında. */
+type Ann = Schemas["AnnouncementOut"];
+type Sched = Schemas["ScheduledAnnouncementOut"];
 interface Comm { quiet_from: string; quiet_to: string }
 type Block = Schemas["BlockOut"];
 
@@ -247,7 +247,7 @@ function QuietForm({ c }: { c: Comm }) {
           <Field label="Başlangıç" error={fieldError(m.error, "quiet_from")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_from} onChange={(e) => setF((x) => ({ ...x, quiet_from: e.target.value }))} />}</Field>
           <Field label="Bitiş" error={fieldError(m.error, "quiet_to")}>{(p) => <input {...p} className="field__input" type="time" value={f.quiet_to} onChange={(e) => setF((x) => ({ ...x, quiet_to: e.target.value }))} />}</Field>
         </div>
-        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı ve kota ayarı sağlayıcı seçilince eklenecek (K5).</p>
+        <p className="xs muted mb-0">Bu saatlerde push, SMS ve e-posta gönderilmez, bitişte gider. Kritik duyuru ve acil durum aşar. SMS hesabı, kota ve teslim kayıtları "SMS Hesabı ve Gönderim" ekranında.</p>
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending}>Kaydet</SubmitButton></div>
     </form>

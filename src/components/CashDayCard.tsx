@@ -3,14 +3,15 @@ import { ClipboardCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../api/hooks";
 import { Badge, Field, FormError, Loading, Money, SubmitButton, fieldError } from "./ui";
 import { formatDate, formatDateTime, parseMoneyInput } from "../lib/format";
+import type { Schemas } from "../api/types";
 
-/** Servis isteği 28'deki şekiller. */
-interface CashDay { date: string; system_balance: string; counted: string; difference: string; reason: string | null; closed_by: string; closed_at: string }
-interface Days { kind: string; open_days: string[]; closed: CashDay[] }
+type CashDay = Schemas["CashDayOut"];
+type Days = Schemas["CashDaysOut"];
 
 /**
  * Kasa gün sonu (FIN-11): hareketli her kasa günü fiziki sayımla kapatılır; fark varsa gerekçe zorunlu. Kapanan gün
- * değişmez, hata ertesi gün düzeltme fişiyle giderilir. Açık kasa günü dönem kapanışını engeller.
+ * değişmez, hata ertesi gün düzeltme fişiyle giderilir. "Kasa farkı" onay kuralı varsa farklı sayım onaya gider.
+ * Açık kasa günü dönem kapanışını engeller.
  */
 export function CashDayCard({ accountId, canManage }: { accountId: string; canManage: boolean }) {
   const q = useSiteGet<Days>(`/cash-accounts/${accountId}/days`);
@@ -44,12 +45,12 @@ export function CashDayCard({ accountId, canManage }: { accountId: string; canMa
             <caption className="visually-hidden">Kapatılan kasa günleri</caption>
             <thead><tr><th scope="col">Gün</th><th scope="col" className="right">Sistem</th><th scope="col" className="right">Sayım</th><th scope="col" className="right">Fark</th><th scope="col">Kapatan</th></tr></thead>
             <tbody>{d.closed.slice(0, 15).map((c) => (
-              <tr key={c.date}>
-                <td className="small nowrap">{formatDate(c.date)}</td>
+              <tr key={c.id}>
+                <td className="small nowrap">{formatDate(c.date)}{c.status !== "closed" && <> <Badge tone={c.status === "approval_pending" ? "warn" : "muted"}>{c.status === "approval_pending" ? "Fark onay bekliyor" : "Reddedildi"}</Badge></>}</td>
                 <td className="right"><Money value={c.system_balance} /></td>
                 <td className="right"><Money value={c.counted} /></td>
                 <td className="right">{Number(c.difference) === 0 ? <Badge tone="ok">Yok</Badge> : <><Money value={c.difference} /><div className="cell-sub">{c.reason}</div></>}</td>
-                <td className="small">{c.closed_by}<div className="cell-sub">{formatDateTime(c.closed_at)}</div></td>
+                <td className="small">{c.closed_by}{c.closed_at && <div className="cell-sub">{formatDateTime(c.closed_at)}</div>}</td>
               </tr>
             ))}</tbody>
           </table></div>

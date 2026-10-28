@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ClipboardCheck, Clock, Copy, History, Plus, Star, Trash2, Wallet } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
-import type { Schemas } from "../../api/types";
+import type { Page, Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
 import { BarChart } from "../../components/charts";
 import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
@@ -63,7 +63,7 @@ function General({ c, p }: { c: Contract; p: Perf }) {
       <div className="grid grid--kpi rise">
         <Kpi label="Bedel" icon={<Wallet aria-hidden="true" />} value={c.amount ? <Money value={c.amount} /> : "—"} note={c.latest_amount && c.latest_amount !== c.amount ? `ileri tarihli: ${formatMoney(c.latest_amount)}` : contractPeriod(c.period)} />
         <Kpi label="Bitişe" icon={<Clock aria-hidden="true" />} value={c.days_left >= 0 ? `${c.days_left} gün` : "Doldu"} tone={c.days_left <= 30 ? "danger" : c.days_left <= 60 ? "warn" : undefined} note={formatDate(c.end_date)} />
-        <Kpi label="Tedarikçi puanı" icon={<Star aria-hidden="true" />} value={p.vendor?.rating_avg ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : p.vendor_id ? "kart bilgisi satın alma paketiyle gelecek" : "tedarikçi kartı bağlı değil"} />
+        <Kpi label="Tedarikçi puanı" icon={<Star aria-hidden="true" />} value={p.vendor?.rating_avg?.replace(".", ",") ?? "—"} note={p.vendor ? `${p.vendor.rating_count} değerlendirme` : "tedarikçi kartı bağlı değil"} />
         <Kpi label="Son karne" icon={<ClipboardCheck aria-hidden="true" />} value={scored[0]?.total ?? "—"} note={scored[0]?.period ?? "henüz kesin karne yok"} />
       </div>
       {scored.length > 1 && (
@@ -100,7 +100,7 @@ function General({ c, p }: { c: Contract; p: Perf }) {
 }
 
 function PerfForm({ c, p, manage }: { c: Contract; p: Perf; manage: boolean }) {
-  const vendors = useSiteGet<VendorRow[]>("/vendors");
+  const vendors = useSiteGet<Page<VendorRow>>("/vendors", { page_size: 200 });
   const categories = useRequestCategories();
   const [vendorId, setVendorId] = useState(p.vendor_id ?? "");
   const [kpis, setKpis] = useState(p.kpis.map((k) => ({ id: k.id, name: k.name, source: k.source as string, target: plain(k.target), weight: String(k.weight), request_category: k.request_category ?? "" })));
@@ -121,7 +121,7 @@ function PerfForm({ c, p, manage }: { c: Contract; p: Perf; manage: boolean }) {
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); save(); }}>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
-        <Field label="Tedarikçi kartı" hint="Puan ve sipariş geçmişi için" error={fieldError(m.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" disabled={!manage} value={vendorId} onChange={(e) => setVendorId(e.target.value)}><option value="">— bağlı değil —</option>{(vendors.data ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>}</Field>
+        <Field label="Tedarikçi kartı" hint="Puan ve sipariş geçmişi için" error={fieldError(m.error, "vendor_id")}>{(pp) => <select {...pp} className="field__input" disabled={!manage} value={vendorId} onChange={(e) => setVendorId(e.target.value)}><option value="">— bağlı değil —</option>{(vendors.data?.items ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>}</Field>
         <fieldset style={{ border: 0, padding: 0, margin: 0 }} className="stack">
           <legend className="field__label">KPI'lar (aylık)</legend>
           {kpis.length === 0 && <p className="small muted mb-0">Henüz KPI yok. Kaynak modül kapalıysa ya da o ay veri yoksa değer karnede elle girilir.</p>}

@@ -128,7 +128,7 @@ export function PublicRegistrationPage() {
               {site.data?.document_required && f.relation === "owner" && <p className="small muted mb-0">Malik başvurusunda site yönetimi onay sırasında tapu ya da yetki belgesi isteyecektir.</p>}
 
               <p className="small mb-0">
-                Kişisel verilerinizin işlenmesine ilişkin <Link to="/aydinlatma" target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.
+                Kişisel verilerinizin işlenmesine ilişkin <Link to={site.data?.site_slug ? `/aydinlatma?site=${encodeURIComponent(site.data.site_slug)}` : "/aydinlatma"} target="_blank" rel="noopener">Aydınlatma Metni</Link>'ni okudum, bilgilendirildim.
               </p>
               <label className="check check--rich">
                 <input type="checkbox" checked={f.explicit_consent} onChange={(e) => setF((x) => ({ ...x, explicit_consent: e.target.checked }))} />
@@ -150,20 +150,35 @@ export function PublicRegistrationPage() {
   );
 }
 
-/** Aydınlatma metni — TASLAK. Saklama süreleri ve metin hukuk onayı bekliyor (açık karar K8). */
+/** Aydınlatma metni (RAP-04): `?site=<slug>` ile sitenin yayınlanmış son sürümü (oturumsuz);
+ * site yoksa ya da henüz yayın yoksa taslak metin gösterilir. */
 export function PrivacyNoticePage() {
   useDocumentTitle("Aydınlatma metni");
+  const [params] = useSearchParams();
+  const slug = params.get("site") ?? "";
+  const q = useQuery({ queryKey: ["public-privacy-notice", slug], queryFn: () => get<Schemas["PublicNoticeOut"]>(`/public/privacy-notice/${encodeURIComponent(slug)}`), enabled: !!slug, retry: false });
+  const published = q.data?.version != null && q.data.text;
   return (
     <main id="main" className="auth auth--single">
       <div className="auth__panel stack" style={{ gap: "var(--s-3)", lineHeight: 1.7, width: "min(100%, 720px)" }}>
-        <Alert tone="warn" title="Taslak">Bu metin hukuk onayı bekliyor (açık karar K8). Yayına almadan önce site yönetimi ve hukukçu tarafından tamamlanmalı.</Alert>
-        <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
-        <p className="mb-0"><strong>Veri sorumlusu:</strong> Kaydolduğunuz sitenin yönetimi.</p>
-        <p className="mb-0"><strong>İşlenen veriler:</strong> ad, soyad, cep telefonu, e-posta, bağımsız bölüm ve malik/kiracı bilgisi.</p>
-        <p className="mb-0"><strong>Amaç:</strong> aidat ve ortak gider takibi, duyuru ve talep hizmetleri, site güvenliği (634 sayılı Kat Mülkiyeti Kanunu kapsamındaki yükümlülükler).</p>
-        <p className="mb-0"><strong>Hukuki sebep:</strong> sözleşmenin ifası ve kanuni yükümlülük (KVKK m.5/2). Ticari ileti için ayrıca açık rıza istenir.</p>
-        <p className="mb-0"><strong>Aktarım:</strong> [barındırma kararı verilince doldurulacak — sunucu yeri, yurt dışına aktarım olup olmadığı]</p>
-        <p className="mb-0"><strong>Haklarınız:</strong> KVKK m.11 kapsamındaki başvurularınızı site yönetimine iletebilirsiniz.</p>
+        {slug && q.isPending ? <Loading /> : published ? (
+          <>
+            <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
+            <p className="small muted mb-0">{q.data!.site_name} · sürüm {q.data!.version}{q.data!.published_at ? ` · ${new Date(q.data!.published_at).toLocaleDateString("tr-TR")}` : ""}</p>
+            <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>{q.data!.text}</p>
+          </>
+        ) : (
+          <>
+            <Alert tone="warn" title="Taslak">{q.data ? `${q.data.site_name} henüz aydınlatma metni yayınlamadı. ` : ""}Bu genel taslak hukuk onayı bekliyor; site yönetimi yayınladığında burada onun metni görünür.</Alert>
+            <h1 className="mb-0">Kişisel Verilerin Korunması Aydınlatma Metni</h1>
+            <p className="mb-0"><strong>Veri sorumlusu:</strong> Kaydolduğunuz sitenin yönetimi.</p>
+            <p className="mb-0"><strong>İşlenen veriler:</strong> ad, soyad, cep telefonu, e-posta, bağımsız bölüm ve malik/kiracı bilgisi.</p>
+            <p className="mb-0"><strong>Amaç:</strong> aidat ve ortak gider takibi, duyuru ve talep hizmetleri, site güvenliği (634 sayılı Kat Mülkiyeti Kanunu kapsamındaki yükümlülükler).</p>
+            <p className="mb-0"><strong>Hukuki sebep:</strong> sözleşmenin ifası ve kanuni yükümlülük (KVKK m.5/2). Ticari ileti için ayrıca açık rıza istenir.</p>
+            <p className="mb-0"><strong>Saklama:</strong> finansal kayıtlar kanuni süre boyunca (10 yıl); ziyaretçi kayıtları site ayarına göre (varsayılan 6 ay).</p>
+            <p className="mb-0"><strong>Haklarınız:</strong> KVKK m.11 kapsamındaki başvurularınızı uygulamadaki "Kişisel verilerim" ekranından site yönetimine iletebilirsiniz.</p>
+          </>
+        )}
       </div>
     </main>
   );

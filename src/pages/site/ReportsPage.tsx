@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Decimal from "decimal.js";
-import { BarChart3, Landmark, PieChart, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { BarChart3, Info, Landmark, PieChart, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { Link } from "react-router";
 import { useSiteGet } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { BarChart, Donut } from "../../components/charts";
@@ -53,6 +54,20 @@ export function ReportsPage() {
       )}
 
       {c.data && <CollectionsCard c={c.data} />}
+      <MetricDefinitions slug={site.slug} />
+    </div>
+  );
+}
+
+/** "Bu metrik nasıl hesaplanır" — tek kaynak backend metrik sözlüğü (RAP-01, servis isteği 79). */
+function MetricDefinitions({ slug }: { slug: string }) {
+  const q = useSiteGet<Schemas["CatalogReportOut"][]>("/reports/catalog");
+  const metrics = (q.data ?? []).filter((x) => x.key === "income_expense" || x.key === "collections").flatMap((x) => x.metrics);
+  if (metrics.length === 0) return null;
+  return (
+    <div className="card">
+      <div className="card__head"><span className="card__icon"><Info aria-hidden="true" /></span><span className="card__title">Bu metrikler nasıl hesaplanır?</span><Link className="btn btn--ghost btn--sm ml-auto" to={`/s/${slug}/rapor-katalogu`}>Rapor kataloğu</Link></div>
+      <div className="card__body stack" style={{ gap: 4 }}>{metrics.map((m) => <div key={m.key} className="small"><strong>{m.name}:</strong> {m.definition}</div>)}</div>
     </div>
   );
 }
