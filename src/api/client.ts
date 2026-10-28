@@ -26,6 +26,18 @@ let accessToken: string | null = null;
 let onSessionLost: (() => void) | null = null;
 let onConsentRequired: (() => void) | null = null;
 let onMfaRequired: (() => void) | null = null;
+/** Sakin olarak görüntüleme (PLT-12, P15): yalnız bellekte; o sitenin isteklerine başlık eklenir. */
+let viewAs: { slug: string; sessionId: string } | null = null;
+
+/** Backend `X-View-As-Session` başlığını bekler (POST …/people/{id}/view-as-sessions yanıtındaki
+ * oturum kimliği). Başlık yalnız o sitenin (`/sites/{slug}/…`) isteklerine eklenir; `null` çıkar. */
+export const VIEW_AS_HEADER = "X-View-As-Session";
+export function setViewAsSession(slug: string | null, sessionId: string | null = null) {
+  viewAs = slug && sessionId ? { slug, sessionId } : null;
+}
+export function viewAsSession() {
+  return viewAs;
+}
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
@@ -144,6 +156,7 @@ async function send(method: string, path: string, opts: RequestOptions): Promise
   const headers: Record<string, string> = { Accept: "application/json" };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   if (opts.idempotencyKey) headers["Idempotency-Key"] = opts.idempotencyKey;
+  if (viewAs && path.startsWith(`/sites/${viewAs.slug}/`)) headers[VIEW_AS_HEADER] = viewAs.sessionId;
   let body: BodyInit | undefined;
   if (opts.form) {
     body = opts.form;
@@ -176,6 +189,8 @@ async function request(method: string, path: string, opts: RequestOptions = {}):
   if (!res.ok) {
     const error = await toError(res);
     if (error.code === "consent_required") onConsentRequired?.();
+    // Görüntüleme süresi doldu ya da kapatıldı: sonraki istekler kullanıcının kendi erişimiyle gider.
+    if (error.code === "view_as_ended") viewAs = null;
     throw error;
   }
   return res;

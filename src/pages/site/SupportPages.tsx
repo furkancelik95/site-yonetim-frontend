@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { BookOpen, Clock, LifeBuoy, MessageSquare, ShieldCheck, Smile, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useLocation } from "react-router";
 import { api, get } from "../../api/client";
@@ -8,6 +8,18 @@ import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, 
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
+
+import type { Page } from "../../api/types";
+
+/** Sayfalı listeyi (en çok 200) düz dizi olarak okur. */
+export async function getItems<T>(path: string, query?: Record<string, string | number | undefined>): Promise<T[]> {
+  return (await get<Page<T>>(path, { ...query, page_size: 200 })).items;
+}
+
+function useSiteItems<T>(path: string) {
+  const { site } = useSite();
+  return useQuery({ queryKey: ["site", site.slug, path, "items"], queryFn: () => getItems<T>(`/sites/${site.slug}${path}`), placeholderData: keepPreviousData });
+}
 
 /** Servis isteği 82–84'teki şekiller. */
 export interface Ticket { id: string; number: string; site_slug: string; site_name: string; category: string; priority: string; title: string; context: { path: string; app_version: string; user_agent: string; correlation_id: string }; status: string; messages: { by: string; side: string; body: string; at: string }[]; created_by: string; created_at: string; first_response_at: string | null; resolved_at: string | null; sla: { first_due: string; resolve_due: string; first_breached: boolean; resolve_breached: boolean } }
@@ -26,7 +38,7 @@ const tabs = (items: [string, string][], v: string, set: (k: string) => void, la
 export function SupportPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ sekme: "bilet" });
-  const sess = useSiteGet<Session[]>("/support-sessions");
+  const sess = useSiteItems<Session>("/support-sessions");
   const pending = (sess.data ?? []).filter((x) => x.status === "pending").length;
   return (
     <div className="stack">
@@ -40,7 +52,7 @@ export function SupportPage() {
 
 /** Bant altı göstergeler: biletlerin durumu (liste ile aynı sorgu) ve destek oturumu talepleri. */
 function SupportKpis({ sessions }: { sessions: Session[] | undefined }) {
-  const q = useSiteGet<Ticket[]>("/support-tickets");
+  const q = useSiteItems<Ticket>("/support-tickets");
   if (q.isError) return null;
   if (!q.data || !sessions) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
   const open = q.data.filter((t) => t.status !== "resolved" && t.status !== "closed");
@@ -61,7 +73,7 @@ function SupportKpis({ sessions }: { sessions: Session[] | undefined }) {
 function Tickets() {
   const location = useLocation();
   const [s] = useUrlState({ ekran: "" });
-  const q = useSiteGet<Ticket[]>("/support-tickets");
+  const q = useSiteItems<Ticket>("/support-tickets");
   const [f, setF] = useState({ title: "", body: "", category: "other", priority: "normal" });
   const m = useSiteMutation<Record<string, unknown>, Ticket>("POST", "/support-tickets", { onSuccess: () => setF({ title: "", body: "", category: "other", priority: "normal" }) });
   const ctx = { path: s.ekran || location.pathname, app_version: "web", user_agent: navigator.userAgent };
@@ -105,7 +117,7 @@ function TicketCard({ t }: { t: Ticket }) {
 }
 
 function Sessions({ canDecide }: { canDecide: boolean }) {
-  const q = useSiteGet<Session[]>("/support-sessions");
+  const q = useSiteItems<Session>("/support-sessions");
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} />;
   if (q.data.length === 0) return <Empty title="Destek oturumu talebi yok" />;
@@ -147,9 +159,9 @@ export function SupportSessionBanner() {
 /** Yardım ve bilgi bankası (PYN-06): rol ve ekrana göre makaleler, "faydalı mı?" geri bildirimi. */
 export function HelpCenterPage() {
   const [s, set] = useUrlState({ q: "", ekran: "" });
-  const q = useQuery({ queryKey: ["kb", s.q, s.ekran], queryFn: () => get<Article[]>("/knowledge-articles", { q: s.q || undefined, screen: s.ekran || undefined, audience: "staff" }) });
+  const q = useQuery({ queryKey: ["kb", s.q, s.ekran], queryFn: () => getItems<Article>("/knowledge-articles", { q: s.q || undefined, screen: s.ekran || undefined, audience: "staff" }) });
   // Göstergeler süzgeçsiz listeden; arama boşken q ile aynı sorgu
-  const all = useQuery({ queryKey: ["kb", "", ""], queryFn: () => get<Article[]>("/knowledge-articles", { q: undefined, screen: undefined, audience: "staff" }) });
+  const all = useQuery({ queryKey: ["kb", "", ""], queryFn: () => getItems<Article>("/knowledge-articles", { q: undefined, screen: undefined, audience: "staff" }) });
   const [sent, setSent] = useState<Record<string, boolean>>({});
   const [err, setErr] = useState<unknown>(null);
   async function fb(id: string, helpful: boolean) { setErr(null); try { await api("POST", `/knowledge-articles/${id}/feedback`, { body: { helpful } }); setSent((x) => ({ ...x, [id]: true })); } catch (e) { setErr(e); } }

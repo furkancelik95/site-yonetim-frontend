@@ -6,7 +6,7 @@ import type { Schemas, Written } from "../../api/types";
 import { useToast } from "../../components/toast";
 import { Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { S_ST, T_CAT, T_PRI, T_ST, type Article, type Session, type Ticket } from "../site/SupportPages";
+import { S_ST, T_CAT, T_PRI, T_ST, getItems, type Article, type Session, type Ticket } from "../site/SupportPages";
 
 type Overview = Schemas["OverviewOut"];
 
@@ -15,8 +15,8 @@ export function PlatformSupportPage() {
   const qc = useQueryClient();
   const toast = useToast();
   const [st, setSt] = useState("");
-  const t = useQuery({ queryKey: ["platform", "tickets", st], queryFn: () => get<Ticket[]>("/platform/support-tickets", { status: st || undefined }) });
-  const sessions = useQuery({ queryKey: ["platform", "sessions"], queryFn: () => get<Session[]>("/platform/support-sessions") });
+  const t = useQuery({ queryKey: ["platform", "tickets", st], queryFn: () => getItems<Ticket>("/platform/support-tickets", { status: st || undefined }) });
+  const sessions = useQuery({ queryKey: ["platform", "sessions"], queryFn: () => getItems<Session>("/platform/support-sessions") });
   const ov = useQuery({ queryKey: ["platform", "overview", "all"], queryFn: () => get<Overview>("/platform/overview", { page: 1, page_size: 200 }) });
   const siteList = ov.data?.sites.items ?? [];
   const [f, setF] = useState({ site_slug: "", reason: "", hours: "4" });
@@ -111,7 +111,7 @@ function PTicket({ t }: { t: Ticket }) {
 export function KnowledgeAdminPage() {
   const qc = useQueryClient();
   const toast = useToast();
-  const q = useQuery({ queryKey: ["platform", "kb"], queryFn: () => get<Article[]>("/knowledge-articles") });
+  const q = useQuery({ queryKey: ["platform", "kb"], queryFn: () => getItems<Article>("/knowledge-articles") });
   const [edit, setEdit] = useState<Article | null>(null);
   const [f, setF] = useState({ title: "", body: "", audience: "staff", screens: "" });
   const m = useMutation({
