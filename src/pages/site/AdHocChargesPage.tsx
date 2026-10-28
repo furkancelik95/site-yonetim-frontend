@@ -3,16 +3,17 @@ import { CheckCircle2, Clock, PieChart, Plus, Receipt, Wallet, XCircle } from "l
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { Donut } from "../../components/charts";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
-import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, Money, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { accountKind, adHocMode, adHocSource, adHocStatus } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
+import type { Schemas } from "../../api/types";
 
-/** Servis isteği 31'deki şekiller. */
-type Source = "reservation" | "service" | "renovation" | "penalty" | "other";
-interface Settings { sources: Record<Source, { mode: "immediate" | "next_period"; due_days: number }> }
-interface AdHoc { id: string; unit_name: string; account_kind: string; reference_code: string; person_name: string | null; source: Source; description: string; amount: string; due_date: string; mode: string; status: "posted" | "waiting_next_run" | "cancelled"; created_by: string; created_at: string; cancel_reason: string | null }
+type AdHoc = Schemas["AdHocChargeOut"];
+type Source = AdHoc["source"];
+/** Backend her kaynağı döner (`AdHocSettingsOut`); burada kaynak anahtarıyla sıkı tiplenir. */
+type Settings = { sources: Record<Source, Schemas["AdHocSourceSettingOut"]> };
 const SOURCES: Source[] = ["reservation", "service", "renovation", "penalty", "other"];
 const short = (v: number) => formatMoneyShort(v.toFixed(2));
 
@@ -23,12 +24,12 @@ const short = (v: number) => formatMoneyShort(v.toFixed(2));
 export function AdHocChargesPage() {
   const { can } = useSite();
   const manage = can(P.chargePost);
-  const [s, set] = useUrlState({ durum: "" });
-  const q = useSiteGet<AdHoc[]>("/ad-hoc-charges", { status: s.durum || undefined });
-  const all = useSiteGet<AdHoc[]>("/ad-hoc-charges");
+  const [s, set] = useUrlState({ durum: "", page: "1" });
+  const q = useSiteGet<Schemas["Page_AdHocChargeOut_"]>("/ad-hoc-charges", { status: s.durum || undefined, page: s.page, page_size: 50 });
+  const all = useSiteGet<Schemas["Page_AdHocChargeOut_"]>("/ad-hoc-charges", { page_size: 200 });
   const [adding, setAdding] = useState(false);
-  const rows = all.data ?? [];
-  const live = rows.filter((c) => c.status !== "cancelled");
+  const rows = all.data?.items ?? [];
+  const live = rows.filter((c) => c.status !== "cancelled" && c.status !== "rejected");
   const sum = (xs: AdHoc[]) => xs.reduce((t, c) => t + Number(c.amount), 0);
   const posted = rows.filter((c) => c.status === "posted");
   const waiting = rows.filter((c) => c.status === "waiting_next_run");
@@ -48,7 +49,6 @@ export function AdHocChargesPage() {
           <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
         )
       )}
-      <Alert tone="info">Sahte servis: ücret listede görünür ama cari hesaba yazılmaz; servis gelince "anında" ücretler cariye kendi vadesiyle, "sonraki aidat" ücretleri tahakkukta "ek kalemler" başlığıyla yazılacak.</Alert>
       {adding && <AdHocForm onDone={() => setAdding(false)} />}
       {manage && <SettingsCard />}
       <div className={bySource.length > 0 ? "grid grid--main" : "stack"}>
@@ -57,30 +57,31 @@ export function AdHocChargesPage() {
           <span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span>
           <div>
             <div className="card__title">Ücretler</div>
-            {q.data && <div className="card__meta">{q.data.length} kayıt</div>}
+            {q.data && <div className="card__meta">{q.data.total} kayıt</div>}
           </div>
           <div className="card__tools">
-            <div className="field"><label className="field__label" htmlFor="ah-st">Durum</label><select id="ah-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value })}><option value="">Tümü</option>{["posted", "waiting_next_run", "cancelled"].map((k) => <option key={k} value={k}>{adHocStatus(k)}</option>)}</select></div>
+            <div className="field"><label className="field__label" htmlFor="ah-st">Durum</label><select id="ah-st" className="field__input" value={s.durum} onChange={(e) => set({ durum: e.target.value, page: "1" })}><option value="">Tümü</option>{["approval_pending", "posted", "waiting_next_run", "cancelled", "rejected"].map((k) => <option key={k} value={k}>{adHocStatus(k)}</option>)}</select></div>
           </div>
         </div>
         <div className="card__body card__body--flush">
-        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Dönem dışı ücret yok" icon={<Receipt aria-hidden="true" />} /> : (
+        {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.items.length === 0 ? <Empty title="Dönem dışı ücret yok" icon={<Receipt aria-hidden="true" />} /> : (
           <div className="table-wrap"><table className="data">
             <caption className="visually-hidden">Dönem dışı ücretler</caption>
             <thead><tr><th scope="col">Bölüm / hesap</th><th scope="col">Ücret</th><th scope="col" className="right">Tutar</th><th scope="col">Vade</th><th scope="col">Durum</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
-            <tbody>{q.data.map((c) => (
-              <tr key={c.id} style={c.status === "cancelled" ? { opacity: 0.6 } : undefined}>
+            <tbody>{q.data.items.map((c) => (
+              <tr key={c.id} style={c.status === "cancelled" || c.status === "rejected" ? { opacity: 0.6 } : undefined}>
                 <td><div className="cell-person"><IconChip tone={c.status === "posted" ? "ok" : c.status === "waiting_next_run" ? undefined : "muted"}><Receipt aria-hidden="true" /></IconChip><div><div className="cell-main">{c.unit_name}</div><div className="cell-sub">{accountKind(c.account_kind)} · {c.person_name ?? "—"}</div></div></div></td>
                 <td><div>{c.description}</div><div className="cell-sub">{adHocSource(c.source)} · {c.created_by}, {formatDateTime(c.created_at)}</div>{c.cancel_reason && <div className="cell-sub">İptal: {c.cancel_reason}</div>}</td>
                 <td className="right"><Money value={c.amount} /></td>
-                <td className="small nowrap">{formatDate(c.due_date)}</td>
-                <td><Badge tone={c.status === "posted" ? "ok" : c.status === "waiting_next_run" ? "info" : "muted"}>{adHocStatus(c.status)}</Badge></td>
-                {manage && <td className="right">{c.status !== "cancelled" && <CancelButton c={c} />}</td>}
+                <td className="small nowrap">{c.due_date ? formatDate(c.due_date) : <span className="muted">tahakkuk vadesi</span>}</td>
+                <td><Badge tone={c.status === "posted" ? "ok" : c.status === "waiting_next_run" ? "info" : c.status === "approval_pending" ? "warn" : "muted"}>{adHocStatus(c.status)}</Badge></td>
+                {manage && <td className="right">{(c.status === "posted" || c.status === "waiting_next_run") && <CancelButton c={c} />}</td>}
               </tr>
             ))}</tbody>
           </table></div>
         )}
         </div>
+        {q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={(p) => set({ page: String(p) })} /></div>}
       </div>
       {bySource.length > 0 && (
         <div className="card">
@@ -114,7 +115,7 @@ function CancelButton({ c }: { c: AdHoc }) {
 function AdHocForm({ onDone }: { onDone: () => void }) {
   const [unit, setUnit] = useState<PickedUnit | null>(null);
   const [f, setF] = useState({ account_kind: "occupant", source: "service" as Source, description: "", amount: "", due_date: "" });
-  const m = useSiteMutation<Record<string, unknown>, AdHoc>("POST", "/ad-hoc-charges", { onSuccess: onDone });
+  const m = useSiteMutation<Record<string, unknown>, AdHoc>("POST", "/ad-hoc-charges", { money: true, onSuccess: onDone });
   function submit(e: FormEvent) {
     e.preventDefault();
     m.mutate({ ...f, unit_id: unit?.id, amount: parseMoneyInput(f.amount), due_date: f.due_date || null });
@@ -132,7 +133,7 @@ function AdHocForm({ onDone }: { onDone: () => void }) {
           <Field label="Vade" hint="Boş: kaynak ayarındaki gün" error={fieldError(m.error, "due_date")}>{(p) => <input {...p} className="field__input" type="date" min={todayIso()} value={f.due_date} onChange={(e) => setF((x) => ({ ...x, due_date: e.target.value }))} />}</Field>
         </div>
         <Field label="Açıklama" required error={fieldError(m.error, "description")}>{(p) => <input {...p} className="field__input" maxLength={200} placeholder="ör. Toplantı salonu kullanımı 18.10" value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
-        <p className="small muted mb-0">Elle ücretin onay mekanizmasına bağlanması ortak kararı bekliyor (K21); şimdilik doğrudan yetkiyle oluşur.</p>
+        <p className="small muted mb-0">"Anında" ücret cariye kendi vadesiyle yazılır; "sonraki aidat" ücreti bir sonraki tahakkukta "ek kalemler" başlığıyla yazılır. "Dönem dışı ücret" onay kuralı varsa ücret onaya gider.</p>
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={!unit || !f.amount || !f.description.trim()}>Oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>

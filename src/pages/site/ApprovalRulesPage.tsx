@@ -16,12 +16,18 @@ type Rule = Schemas["RuleOut"];
 type ActionTypeOut = Schemas["ActionTypeOut"];
 type RuleIn = Schemas["RuleIn"];
 type RuleWrite = Schemas["RuleWriteOut"];
-type SiteRole = string; // P16a: backend rol adları artık veri (/roles); fe #40 bunu tam bağlar
+type SiteRoleOut = Schemas["RoleOut"];
 type Quorum = Schemas["QuorumKind"];
 type Simulated = Schemas["SimulateOut"];
 
-/** Onaycı olabilecek roller (sakin onaycı olamaz). */
-const ROLES: SiteRole[] = ["Yönetici", "Yönetim Kurulu Üyesi", "Denetçi", "Muhasebe", "Güvenlik", "Teknik Personel"];
+/**
+ * Onaycı olabilecek roller: sitenin etkin personel rolleri (hazır + siteye özel, P18), düzey
+ * sırasıyla. Sakin onaycı olamaz; backend `/roles` sakini zaten döndürmez.
+ */
+function useApproverRoles(): string[] {
+  const q = useSiteGet<SiteRoleOut[]>("/roles");
+  return (q.data ?? []).filter((r) => r.is_active).map((r) => r.name);
+}
 const QUORUMS: Quorum[] = ["any", "all", "majority", "count"];
 
 const range = (r: Rule["current"]) =>
@@ -126,7 +132,7 @@ function RuleCard({ r, manage, connected, onEdit }: { r: Rule; manage: boolean; 
   );
 }
 
-type StepDraft = { roles: SiteRole[]; quorum: Quorum; count: string };
+type StepDraft = { roles: string[]; quorum: Quorum; count: string };
 
 /**
  * Kural formu. `resubmitId` verilirse kural değişikliği talebi düzeltilip yeniden gönderilir
@@ -151,6 +157,11 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
   });
   const [steps, setSteps] = useState<StepDraft[]>(v?.steps.map((s) => ({ roles: s.roles, quorum: s.quorum, count: s.count ? String(s.count) : "" })) ?? [{ roles: ["Yönetici"], quorum: "any", count: "" }]);
   const [moneyErr, setMoneyErr] = useState<string>();
+  const ROLES = useApproverRoles();
+  // Rol sırasından eskalasyon önerisi (K20): adımlardaki en üst rolün bir üst düzeyi
+  const stepRoles = [...new Set(steps.flatMap((s) => s.roles))].sort();
+  const suggestion = useSiteGet<Schemas["EscalationSuggestionOut"]>("/approval-rules/escalation-suggestion", { roles: stepRoles }, { enabled: stepRoles.length > 0 });
+  const suggested = suggestion.data?.role ?? null;
   const [warnings, setWarnings] = useState<string[]>([]);
   const m = useSiteMutation<RuleIn, RuleWrite>(rule ? "PUT" : "POST", rule ? `/approval-rules/${rule.id}` : "/approval-rules", {
     onSuccess: (d) => {
@@ -181,7 +192,7 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
       remind_after_days: Number(f.remind_after_days || 0),
       escalate_after_days: Number(f.escalate_after_days || 0),
       day_basis: f.day_basis as RuleIn["day_basis"],
-      escalation_role: (f.escalation_role || null) as RuleIn["escalation_role"],
+      escalation_role: f.escalation_role || null,
       effective_from: f.effective_from,
       basis_note: f.basis_note.trim() || null,
     };
@@ -245,7 +256,8 @@ export function RuleForm({ rule, initial, types, onDone, resubmitId, actionType 
           <Field label="Hatırlatma (gün)" hint="1–30" error={fieldError(act.error, "remind_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.remind_after_days} onChange={(e) => setF((x) => ({ ...x, remind_after_days: digits(e.target.value) }))} />}</Field>
           <Field label="Üst role iletme (gün)" hint="Hatırlatmadan sonra" error={fieldError(act.error, "escalate_after_days")}>{(p) => <input {...p} className="field__input" inputMode="numeric" value={f.escalate_after_days} onChange={(e) => setF((x) => ({ ...x, escalate_after_days: digits(e.target.value) }))} />}</Field>
           <Field label="Gün hesabı">{(p) => <select {...p} className="field__input" value={f.day_basis} onChange={set("day_basis")}>{["business", "calendar"].map((k) => <option key={k} value={k}>{dayBasis(k)}</option>)}</select>}</Field>
-          <Field label="İletilecek rol" hint="Boş: yalnız hatırlatma gider">{(p) => <select {...p} className="field__input" value={f.escalation_role} onChange={set("escalation_role")}><option value="">Yok</option>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>}</Field>
+          <Field label="İletilecek rol" hint={suggested ? `Rol sırasına göre öneri: ${suggested}` : "Boş: yalnız hatırlatma gider"} error={fieldError(act.error, "escalation_role")}>{(p) => <select {...p} className="field__input" value={f.escalation_role} onChange={set("escalation_role")}><option value="">Yok</option>{ROLES.map((r) => <option key={r} value={r}>{r}{r === suggested ? " (önerilen)" : ""}</option>)}</select>}</Field>
+          {suggested && f.escalation_role !== suggested && <div className="field" style={{ justifyContent: "flex-end" }}><button className="btn btn--sm" type="button" onClick={() => setF((x) => ({ ...x, escalation_role: suggested }))}>Öneriyi uygula: {suggested}</button></div>}
         </div>
         <Field label="Dayanak" hint="ör. 12.03.2026 tarihli yönetim kurulu kararı">{(p) => <input {...p} className="field__input" maxLength={300} value={f.basis_note} onChange={set("basis_note")} />}</Field>
         <p className="small muted mb-0">Otomatik onay ya da ret yoktur: süresi geçen talep hatırlatılır, seçildiyse üst role iletilir. Talep eden, onaycı listesinden kendiliğinden çıkar.</p>
