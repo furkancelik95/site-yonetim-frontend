@@ -540,11 +540,11 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
 function OwnAccountOnly({ children }: { children: ReactNode }) {
   const { site } = useSite();
   if (site.access_mode === "view_as") {
-    return <Alert tone="info" title="Bu ekran sakin olarak görüntülemede gösterilmez">Bildirimler ve profil, oturum açan kişinin kendi hesabına aittir; sakinin bu ekranları görüntülenemez.</Alert>;
+    return <Alert tone="info" title="Bu ekran sakin olarak görüntülemede gösterilmez">Profil, oturum açan kişinin kendi hesabına aittir; sakinin profili görüntülenemez.</Alert>;
   }
   return <>{children}</>;
 }
-export const ResidentNotificationsPage = () => <OwnAccountOnly><NotificationsPage staff={false} /></OwnAccountOnly>;
+export const ResidentNotificationsPage = () => <NotificationsPage staff={false} />;
 export const ResidentProfilePage = () => <OwnAccountOnly><ProfilePage /></OwnAccountOnly>;
 export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
