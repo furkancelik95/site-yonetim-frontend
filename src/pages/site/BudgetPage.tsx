@@ -22,6 +22,8 @@ export function BudgetPage() {
   const { can } = useSite();
   const [s, set] = useUrlState({ plan: "", sekme: "proje", yil: "", butce: "", ay: "" });
   const plans = useSiteGet<Page<Plan>>("/budget-plans", { page_size: 50 });
+  // Geçerli proje (tahakkukun kaynağı) backend'den: kesinleşmiş yoksa 404 → en yeni proje açılır
+  const current = useSiteGet<PlanDetail>("/budget-plans/current");
   const [creating, setCreating] = useState(false);
   const tabs: [string, string][] = [["proje", "İşletme projesi"], ["butce", "Bütçe ve gerçekleşme"]];
   const tabBar = (
@@ -40,8 +42,10 @@ export function BudgetPage() {
     );
   }
   const list = plans.data?.items ?? [];
-  // Varsayılan: kesinleşmiş (geçerli) proje, yoksa en yeni taslak
-  const selectedId = s.plan || list.find((p) => p.status === "finalized")?.id || list[0]?.id || "";
+  const currentId = current.data?.id;
+  const selectedId = s.plan || currentId || list[0]?.id || "";
+  // Geçerli proje sorgusu bitmeden varsayılan seçilmesin (önce taslak açılıp sonra değişmesin)
+  const waiting = !s.plan && current.isPending;
 
   return (
     <div className="stack">
@@ -52,7 +56,7 @@ export function BudgetPage() {
           <>
             {list.length > 1 && (
               <select className="field__input fin-plan-sel" aria-label="İşletme projesi" value={selectedId} onChange={(e) => set({ plan: e.target.value })}>
-                {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {budgetStatus(p.status)}</option>)}
+                {list.map((p) => <option key={p.id} value={p.id}>{p.name} — {budgetStatus(p.status)}{p.id === currentId ? " (geçerli)" : ""}</option>)}
               </select>
             )}
             {can(P.budgetManage) && <button className="btn" type="button" onClick={() => setCreating((v) => !v)} aria-expanded={creating}><Plus aria-hidden="true" /> Yeni proje</button>}
@@ -62,7 +66,7 @@ export function BudgetPage() {
         {tabBar}
       </PageHead>
 
-      {plans.isPending ? (
+      {plans.isPending || waiting ? (
         <>
           <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>
           <Loading />

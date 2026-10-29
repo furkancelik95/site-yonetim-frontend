@@ -5,7 +5,7 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { useMe } from "../../auth/AuthContext";
 import { BarChart } from "../../components/charts";
-import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
+import { Alert, Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, Pager, Segmented, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, formatDateTime, formatMoney, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { contractCategory, contractPeriod, escalationKind, kpiSource } from "../../lib/labels";
@@ -55,6 +55,24 @@ export function ContractDetailPage() {
   );
 }
 
+/** Karne geçmişi (GET /contracts/{id}/scorecards, yeniden eskiye, sayfalı). */
+export function ScorecardHistory({ contractId }: { contractId: string }) {
+  const [page, setPage] = useState(1);
+  const q = useSiteGet<Page<Schemas["ScorecardSummaryOut"]>>(`/contracts/${contractId}/scorecards`, { page, page_size: 12 });
+  return (
+    <div className="card"><div className="card__head"><span className="card__title">Karne geçmişi</span>{q.data && <span className="card__meta ml-auto">{q.data.total} dönem</span>}</div><div className="card__body card__body--flush">
+      {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.items.length === 0 ? <Empty title="Karne yok">KPI tanımlayıp ay sonunda karneyi kesinleştirin.</Empty> : (
+        <div className="table-wrap"><table className="data"><caption className="visually-hidden">Karne geçmişi</caption>
+          <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">Toplam skor</th><th scope="col">Durum</th><th scope="col" className="right">Kesinti</th></tr></thead>
+          <tbody>{q.data.items.map((x) => <tr key={x.period}><td>{x.period}</td><td className="right num">{x.total ?? "—"}</td><td>{x.status === "finalized" ? <Badge tone="ok">Kesinleşti</Badge> : <Badge tone="muted">Taslak</Badge>}</td><td className="right">{x.penalty ? <Money value={x.penalty} /> : x.penalty_status === "pending" ? <Badge tone="warn">Onay bekliyor</Badge> : x.penalty_status === "rejected" ? <span className="small muted">reddedildi</span> : "—"}</td></tr>)}</tbody>
+        </table></div>
+      )}
+    </div>
+    {q.data && <div className="card__foot"><Pager page={q.data.page} pageSize={q.data.page_size} total={q.data.total} onPage={setPage} /></div>}
+    </div>
+  );
+}
+
 function General({ c, p }: { c: Contract; p: Perf }) {
   const ep = p.escalation_preview;
   const scored = p.last_scorecards.filter((x) => x.total != null);
@@ -78,14 +96,7 @@ function General({ c, p }: { c: Contract; p: Perf }) {
       {ep.status === "due" && <Alert tone="info" title="Fiyat artışı karar bekliyor">{formatDate(ep.date)} tarihli artış: {formatMoney(ep.old_amount)} → {formatMoney(ep.new_amount)}. "Fiyat artışı" sekmesinden karar verin.</Alert>}
       {ep.status === "pending" && <Alert tone="info" title="Fiyat artışı onayda">{formatDate(ep.date)} tarihli yeni bedel ({formatMoney(ep.new_amount)}) onay kuralında bekliyor.</Alert>}
       {ep.status === "missing_index" && <Alert tone="warn" title="Endeks değeri eksik">{ep.index_period} dönemi endeksi girilmemiş; platform yöneticisine bildirildi.</Alert>}
-      <div className="card"><div className="card__head"><span className="card__title">Son 12 ay karneleri</span></div><div className="card__body card__body--flush">
-        {p.last_scorecards.length === 0 ? <Empty title="Karne yok">KPI tanımlayıp ay sonunda karneyi kesinleştirin.</Empty> : (
-          <div className="table-wrap"><table className="data"><caption className="visually-hidden">Karne geçmişi</caption>
-            <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">Toplam skor</th><th scope="col">Durum</th><th scope="col" className="right">Kesinti</th></tr></thead>
-            <tbody>{p.last_scorecards.map((x) => <tr key={x.period}><td>{x.period}</td><td className="right num">{x.total ?? "—"}</td><td>{x.status === "finalized" ? <Badge tone="ok">Kesinleşti</Badge> : <Badge tone="muted">Taslak</Badge>}</td><td className="right">{x.penalty ? <Money value={x.penalty} /> : x.penalty_status === "pending" ? <Badge tone="warn">Onay bekliyor</Badge> : x.penalty_status === "rejected" ? <span className="small muted">reddedildi</span> : "—"}</td></tr>)}</tbody>
-          </table></div>
-        )}
-      </div></div>
+      <ScorecardHistory contractId={c.id} />
       {c.amount_history.length > 0 && (
         <div className="card"><div className="card__head"><span className="card__icon card__icon--accent"><History aria-hidden="true" /></span><span className="card__title">Bedel geçmişi</span><span className="card__meta ml-auto">eski bedel silinmez; önceki aylar eski bedelle hesaplanır</span></div><div className="card__body card__body--flush">
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Bedel geçmişi</caption>
