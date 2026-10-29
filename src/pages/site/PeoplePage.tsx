@@ -5,6 +5,7 @@ import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { CustomValuesCard } from "../../components/CustomValuesCard";
 import { MaskedContact } from "../../components/MaskedContact";
+import { ViewAsButton } from "../../components/ViewAs";
 import { Alert, Avatar, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { useDebounced, useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
@@ -23,6 +24,8 @@ export function PeoplePage() {
   const list = useSiteGet<Page<Person>>("/people", { q: s.q || undefined, page: s.page, page_size: 50 });
   const [editing, setEditing] = useState<Person | null>(null);
   const manage = can(P.peopleManage);
+  const viewAs = can(P.viewAsResident) && site.access_mode !== "view_as";
+  const actions = manage || viewAs;
   // Özet göstergeler: süzgeçsiz kişi sayısı, mükerrer grup, maliksiz bölüm, bekleyen kayıt başvurusu
   const all = useSiteGet<Page<Person>>("/people", { page: 1, page_size: 1 });
   const dups = useSiteGet<DuplicateGroup[]>("/people/duplicates", undefined, { enabled: manage });
@@ -65,12 +68,12 @@ export function PeoplePage() {
           {list.isPending ? <Loading /> : list.isError ? <div className="card__body"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div> : list.data.items.length === 0 ? <Empty title="Kişi bulunamadı" icon={<Users aria-hidden="true" />} /> : (
             <div className="table-wrap"><table className="data">
               <caption className="visually-hidden">Kişiler</caption>
-              <thead><tr><th scope="col">Kişi</th><th scope="col">İletişim</th>{manage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
+              <thead><tr><th scope="col">Kişi</th><th scope="col">İletişim</th>{actions && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
               <tbody>{list.data.items.map((p) => (
                 <tr key={p.id}>
                   <td><div className="cell-person"><Avatar name={p.full_name} size="sm" soft /><span className="cell-main">{p.full_name}</span></div></td>
                   <td><MaskedContact personId={p.id} phone={p.phone} email={p.email} /></td>
-                  {manage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${p.full_name} düzenle`} onClick={() => setEditing(p)}><Pencil aria-hidden="true" /></button></td>}
+                  {actions && <td className="right nowrap">{viewAs && <ViewAsButton personId={p.id} personName={p.full_name} />}{manage && <button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${p.full_name} düzenle`} onClick={() => setEditing(p)}><Pencil aria-hidden="true" /></button>}</td>}
                 </tr>
               ))}</tbody>
             </table></div>

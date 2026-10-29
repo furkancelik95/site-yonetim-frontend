@@ -5,6 +5,8 @@ import { get } from "../api/client";
 import { homePath, showsPortfolio, useAuth } from "../auth/AuthContext";
 import { ErrorState, Loading } from "../components/ui";
 import { MfaGraceBanner } from "../pages/auth/AccountPages";
+import { ViewAsBar, useViewAs } from "../components/ViewAs";
+import { StepUpDialog } from "../components/StepUpDialog";
 import { makeSiteCtx, SiteContext, type SiteDetail } from "../site/SiteContext";
 import { AppShell } from "./AppShell";
 
@@ -32,6 +34,8 @@ export function RequireAuth() {
   }
   return (
     <>
+      <ViewAsBar />
+      <StepUpDialog mfa={!!me.mfa_enabled} canSms={!me.mfa_enabled && !!me.phone} />
       <MfaGraceBanner />
       <Outlet />
     </>
@@ -49,9 +53,13 @@ export function useSiteQuery(slug: string) {
 /** /s/:slug — site bilgisini (izinler, açık modüller) bir kez alır, bütün alt sayfalara verir. */
 export function SiteLayout() {
   const { slug = "" } = useParams();
+  const viewAs = useViewAs();
   const q = useSiteQuery(slug);
   const ctx = useMemo(() => (q.data ? makeSiteCtx(q.data) : null), [q.data]);
 
+  // Sakin olarak görüntülerken o sitenin istekleri sakinin erişimiyle gider: yönetim paneli yerine
+  // sakin ekranında kalınır (çıkış banttaki "Çık" düğmesiyle).
+  if (viewAs?.slug === slug) return <Navigate to={`/sakin/${slug}`} replace />;
   if (q.isPending) {
     return (
       <AppShell>

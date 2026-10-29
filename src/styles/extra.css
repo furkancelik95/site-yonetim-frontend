@@ -215,3 +215,14 @@ span.num, td.num, .nowrap { white-space: nowrap; }
 .patrol-points li.is-done { color: var(--fg-muted); }
 .patrol-points li .lucide { width: 18px; height: 18px; color: var(--ok-solid); }
 .patrol-points__dot { width: 18px; height: 18px; border-radius: 999px; border: 2px solid var(--line-strong); flex: none; }
+
+/* Sakin olarak görüntüleme bandı (PLT-12): her sayfanın üstünde, salt okunur olduğunu söyler */
+.viewas-bar {
+  display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;
+  padding: var(--s-2) var(--s-4); background: var(--warn-bg); color: var(--warn-fg);
+  border-bottom: 2px solid var(--warn-solid); font-size: .875rem;
+}
+.viewas-bar > svg { width: 20px; height: 20px; flex: none; }
+.viewas-bar__text { flex: 1 1 16rem; min-width: 0; }
+.viewas-bar__time { white-space: nowrap; }
+.viewas-bar .btn { min-height: 44px; margin-left: auto; }

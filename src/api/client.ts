@@ -26,17 +26,52 @@ let accessToken: string | null = null;
 let onSessionLost: (() => void) | null = null;
 let onConsentRequired: (() => void) | null = null;
 let onMfaRequired: (() => void) | null = null;
-/** Sakin olarak görüntüleme (PLT-12, P15): yalnız bellekte; o sitenin isteklerine başlık eklenir. */
-let viewAs: { slug: string; sessionId: string } | null = null;
+/** Sakin olarak görüntüleme (PLT-12, P15): yalnız bellekte; o sitenin isteklerine başlık eklenir.
+ * Sayfa yenilenince bilgi kaybolur (backend oturumu en çok 30 dk açık kalır, sonra kendiliğinden biter). */
+export interface ViewAsState {
+  slug: string;
+  sessionId: string;
+  /** Görüntülenen kişinin adı (bant için; POST yanıtındaki `person_name`). */
+  personName?: string;
+  /** Oturumun bitişi (POST yanıtındaki `ends_at`). */
+  endsAt?: string;
+  /** Çıkınca dönülecek yönetici ekranı. */
+  returnTo?: string;
+}
+let viewAs: ViewAsState | null = null;
+const viewAsListeners = new Set<() => void>();
+let onViewAsEnded: ((ended: ViewAsState) => void) | null = null;
 
 /** Backend `X-View-As-Session` başlığını bekler (POST …/people/{id}/view-as-sessions yanıtındaki
- * oturum kimliği). Başlık yalnız o sitenin (`/sites/{slug}/…`) isteklerine eklenir; `null` çıkar. */
+ * oturum kimliği). Başlık yalnız o sitenin (`/sites/{slug}` ve altı) isteklerine eklenir; `null` çıkar. */
 export const VIEW_AS_HEADER = "X-View-As-Session";
-export function setViewAsSession(slug: string | null, sessionId: string | null = null) {
-  viewAs = slug && sessionId ? { slug, sessionId } : null;
+export function setViewAsSession(slug: string | null, sessionId: string | null = null, info?: Omit<ViewAsState, "slug" | "sessionId">) {
+  viewAs = slug && sessionId ? { slug, sessionId, ...info } : null;
+  viewAsListeners.forEach((fn) => fn());
 }
 export function viewAsSession() {
   return viewAs;
+}
+/** Görüntüleme durumu değişince haber verir (useSyncExternalStore için). */
+export function subscribeViewAs(fn: () => void) {
+  viewAsListeners.add(fn);
+  return () => {
+    viewAsListeners.delete(fn);
+  };
+}
+/** Backend oturumu kapattıysa (403 `view_as_ended`: süre doldu ya da başka sekmeden çıkıldı) çağrılır. */
+export function setViewAsEndedHandler(handler: ((ended: ViewAsState) => void) | null) {
+  onViewAsEnded = handler;
+}
+function viewAsApplies(path: string) {
+  return !!viewAs && (path === `/sites/${viewAs.slug}` || path.startsWith(`/sites/${viewAs.slug}/`));
+}
+
+/** Hassas işlem kapısı (403 `step_up_required`): kullanıcıdan kimliğini yeniden doğrulaması istenir;
+ * işleyici `true` dönerse (POST /auth/step-up başarılı) istek bir kez yinelenir. */
+let onStepUpRequired: (() => Promise<boolean>) | null = null;
+export function setStepUpHandler(handler: (() => Promise<boolean>) | null) {
+  onStepUpRequired = handler;
 }
 
 export function setAccessToken(token: string | null) {
@@ -156,7 +191,7 @@ async function send(method: string, path: string, opts: RequestOptions): Promise
   const headers: Record<string, string> = { Accept: "application/json" };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   if (opts.idempotencyKey) headers["Idempotency-Key"] = opts.idempotencyKey;
-  if (viewAs && path.startsWith(`/sites/${viewAs.slug}/`)) headers[VIEW_AS_HEADER] = viewAs.sessionId;
+  if (viewAs && viewAsApplies(path)) headers[VIEW_AS_HEADER] = viewAs.sessionId;
   let body: BodyInit | undefined;
   if (opts.form) {
     body = opts.form;
@@ -186,11 +221,18 @@ async function request(method: string, path: string, opts: RequestOptions = {}):
       onSessionLost?.();
     }
   }
+  if (res.status === 403 && onStepUpRequired && !path.startsWith("/auth/") && (await errorCode(res)) === "step_up_required") {
+    if (await onStepUpRequired()) res = await send(method, path, opts);
+  }
   if (!res.ok) {
     const error = await toError(res);
     if (error.code === "consent_required") onConsentRequired?.();
     // Görüntüleme süresi doldu ya da kapatıldı: sonraki istekler kullanıcının kendi erişimiyle gider.
-    if (error.code === "view_as_ended") viewAs = null;
+    if (error.code === "view_as_ended" && viewAs) {
+      const ended = viewAs;
+      setViewAsSession(null);
+      onViewAsEnded?.(ended);
+    }
     throw error;
   }
   return res;

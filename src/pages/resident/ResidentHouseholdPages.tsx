@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Car, Copy, Plus, Users } from "lucide-react";
+import { Car, Copy, ParkingSquare, Plus, Users } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { ResidentHead } from "../../components/ResidentHead";
@@ -7,7 +7,7 @@ import { useToast } from "../../components/toast";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
 import { formatDate, todayIso } from "../../lib/format";
 import { formatPhone, isTrMobile, phoneDigits, phoneMask, plateInput, toE164 } from "../../lib/input";
-import { householdPermission, householdStatus, vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
+import { householdPermission, householdStatus, parkingKind, vehicleKind, vehicleStatus, vehicleStatusTone } from "../../lib/labels";
 
 type Perm = "visitors" | "packages" | "reservations" | "requests";
 type Household = Schemas["HouseholdOut"];
@@ -129,6 +129,7 @@ export function ResidentVehiclesPage() {
             {adding ? <VehicleForm units={home.data?.units ?? []} onDone={() => setAdding(false)} /> : (
               <button className="btn btn--primary" style={{ width: "100%" }} type="button" onClick={() => setAdding(true)}><Plus aria-hidden="true" /> Araç ekle</button>
             )}
+            <MyParkingSpaces />
           </div>
           <div className="r-split__col">
             <div className="section-title">Kayıtlı araçlar</div>
@@ -137,6 +138,27 @@ export function ResidentVehiclesPage() {
         </div>
       )}
     </>
+  );
+}
+
+/** Park yerim (GET /resident/parking-spaces): bölümlerime bugün tahsisli park yerleri (K30). */
+export function MyParkingSpaces() {
+  const q = useSiteGet<Schemas["ParkingSpaceOut"][]>("/resident/parking-spaces");
+  return (
+    <div className="stack" style={{ gap: "var(--s-2)" }}>
+      <div className="section-title">Park yerim</div>
+      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : q.data.length === 0 ? (
+        <Empty title="Size tahsisli park yeri yok" icon={<ParkingSquare aria-hidden="true" />}>Park yeri tahsisi site yönetimince yapılır.</Empty>
+      ) : q.data.map((s) => (
+        <div key={s.id} className="r-item">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="r-item__title"><span className="mono">{s.code}</span> <Badge tone="muted">{parkingKind(s.kind)}</Badge>{s.is_paid && <> <Badge tone="info">Ücretli</Badge></>}</div>
+            <div className="r-item__meta">{[s.location, s.current?.unit_name].filter(Boolean).join(" · ") || "—"}</div>
+            {s.current && <div className="r-item__body">{formatDate(s.current.start_date)}{s.current.end_date ? ` – ${formatDate(s.current.end_date)}` : " tarihinden beri"}</div>}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Link, useParams } from "react-router";
 import Decimal from "decimal.js";
 import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError } from "../../api/client";
@@ -197,15 +197,17 @@ export function ResidentHomePage() {
 }
 
 function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
+  const { site } = useSite();
   const body = short && a.body.length > 110 ? a.body.slice(0, 110) + "…" : a.body;
   const tone = a.importance === "normal" ? undefined : importanceTone(a.importance);
   return (
     <article className="ann">
       <IconChip tone={tone === "danger" || tone === "warn" ? tone : undefined}><Megaphone /></IconChip>
       <div className="ann__main">
-        <div className="ann__title">{a.title}</div>
+        <div className="ann__title"><Link to={`/sakin/${site.slug}/duyurular/${a.id}`}>{a.title}</Link></div>
         <div className="ann__meta">
           <span>{formatDateTime(a.published_at)}</span>
+          {!a.read_at && <Badge tone="info">Okunmadı</Badge>}
           {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
           {a.is_pinned && <Badge tone="muted">Sabit</Badge>}
         </div>
@@ -213,6 +215,49 @@ function AnnouncementItem({ a, short }: { a: Ann; short?: boolean }) {
         {!short && a.requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={a.acked_at} /></div>}
       </div>
     </article>
+  );
+}
+
+/**
+ * Duyuru ayrıntısı (GET /announcements/{id}). Açılınca okundu işaretlenir (POST …/read; ilk okuma anı
+ * backend'de korunur). Salt okunur erişimde (sakin olarak görüntüleme) işaretlenmez.
+ */
+export function ResidentAnnouncementPage() {
+  const { annId = "" } = useParams();
+  const { site } = useSite();
+  const q = useSiteGet<Ann>(`/announcements/${annId}`);
+  const read = useSiteMutation<Record<string, never>, Schemas["AnnouncementReadOut"]>("POST", `/announcements/${annId}/read`);
+  const sent = useRef(false);
+  const unread = !!q.data && !q.data.read_at;
+  const markRead = read.mutate;
+  useEffect(() => {
+    if (unread && !site.read_only && !sent.current) {
+      sent.current = true;
+      markRead({});
+    }
+  }, [unread, site.read_only, markRead]);
+  useDocumentTitle(q.data?.title ?? "Duyuru");
+  if (q.isPending) return <Loading />;
+  if (q.isError) return <StaffNotice error={q.error} />;
+  const a = q.data;
+  const tone = a.importance === "normal" ? undefined : importanceTone(a.importance);
+  return (
+    <div className="stack" style={{ gap: "var(--s-3)" }}>
+      <Link className="small" to={`/sakin/${site.slug}/duyurular`}>Tüm duyurular</Link>
+      <article className="ann">
+        <IconChip tone={tone === "danger" || tone === "warn" ? tone : undefined}><Megaphone /></IconChip>
+        <div className="ann__main">
+          <h1 className="ann__title" style={{ fontSize: "1.125rem", margin: 0 }}>{a.title}</h1>
+          <div className="ann__meta">
+            <span>{formatDateTime(a.published_at)}</span>
+            {a.importance !== "normal" && <Badge tone={importanceTone(a.importance)}>{importance(a.importance)}</Badge>}
+            {a.read_at && <span>Okundu: {formatDateTime(a.read_at)}</span>}
+          </div>
+          <div className="ann__body" style={{ whiteSpace: "pre-wrap" }}>{a.body}</div>
+          {a.requires_ack && <div className="mt-2"><AckButton id={a.id} ackedAt={a.acked_at} /></div>}
+        </div>
+      </article>
+    </div>
   );
 }
 
@@ -490,14 +535,23 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
 }
 
 /** Sakinin bildirimleri ve profili: personel ekranıyla aynı bileşen, kayda bağlantı yok. */
-export const ResidentNotificationsPage = () => <NotificationsPage staff={false} />;
-export const ResidentProfilePage = () => <ProfilePage />;
+/** Bildirim ve profil uçları oturum açan kullanıcının kendi hesabını döner; sakin olarak görüntülemede
+ * görüntüleyenin verisi sakininmiş gibi gösterilmesin. */
+function OwnAccountOnly({ children }: { children: ReactNode }) {
+  const { site } = useSite();
+  if (site.access_mode === "view_as") {
+    return <Alert tone="info" title="Bu ekran sakin olarak görüntülemede gösterilmez">Bildirimler ve profil, oturum açan kişinin kendi hesabına aittir; sakinin bu ekranları görüntülenemez.</Alert>;
+  }
+  return <>{children}</>;
+}
+export const ResidentNotificationsPage = () => <OwnAccountOnly><NotificationsPage staff={false} /></OwnAccountOnly>;
+export const ResidentProfilePage = () => <OwnAccountOnly><ProfilePage /></OwnAccountOnly>;
 export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
 export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
-export { ResidentTransparencyPage } from "./ResidentTransparencyPage";
+export { ResidentTransparencyPage, ResidentTransparencyReportPage } from "./ResidentTransparencyPage";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
 import { RequestExtrasBlock } from "./ResidentServicePages";
 import { useRequestCategories } from "../site/requestCategories";

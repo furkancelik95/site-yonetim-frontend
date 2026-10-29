@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, get, newIdempotencyKey } from "./client";
+import { ApiError, api, get, newIdempotencyKey } from "./client";
 import { useSite } from "../site/SiteContext";
 import { useToast } from "../components/toast";
 import type { Written } from "./types";
@@ -19,10 +19,12 @@ export function useSiteGet<T>(path: string, query?: Query, opts?: { enabled?: bo
 }
 
 /** Kişinin kendi hesabına ait kaynak (site dışı): useMeGet<T>("/sessions") → /me/sessions */
-export function useMeGet<T>(path: string, query?: Query) {
+export function useMeGet<T>(path: string, query?: Query, opts?: { enabled?: boolean; refetchInterval?: number }) {
   return useQuery({
     queryKey: ["me", path, query ?? {}],
     queryFn: ({ signal }) => get<T>(`/me${path}`, query, signal),
+    enabled: opts?.enabled,
+    refetchInterval: opts?.refetchInterval,
   });
 }
 
@@ -76,6 +78,11 @@ export function useSiteMutation<TBody, TOut>(
         form: opts?.form ? (vars as unknown as FormData) : undefined,
         idempotencyKey: opts?.money ? newIdempotencyKey() : undefined,
       });
+    },
+    onError: (err) => {
+      // Salt okunur erişim (sakin olarak görüntüleme, destek oturumu): her yazma yolu aynı açıklamayı
+      // gösterir — hatayı kendisi göstermeyen düğmelerde de kullanıcı neden olmadığını görsün.
+      if (err instanceof ApiError && err.code === "read_only") toast(err.message, "info");
     },
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["site", site.slug] });

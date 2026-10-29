@@ -1,5 +1,5 @@
 import { Fragment, useState, type FormEvent } from "react";
-import { AlertTriangle, BarChart3, CalendarClock, CheckCircle2, ClipboardList, FileWarning, Gauge, History, Hourglass, KeyRound, ListTodo, LogOut, Plus, Settings2, ShieldCheck, Trash2, TriangleAlert, UserCheck, Wallet, Wrench } from "lucide-react";
+import { AlertTriangle, BarChart3, Pencil, CalendarClock, CheckCircle2, ClipboardList, FileWarning, Gauge, History, Hourglass, KeyRound, ListTodo, LogOut, Plus, Settings2, ShieldCheck, Trash2, TriangleAlert, UserCheck, Wallet, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { AuthImage } from "../../components/AuthImage";
@@ -8,7 +8,7 @@ import { LinkedDocuments } from "../../components/LinkedDocuments";
 import { PhotoInput } from "../../components/PhotoInput";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, Money, PageHead, SubmitButton, fieldError } from "../../components/ui";
-import { formatDate, formatDateTime, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
+import { formatDate, formatDateTime, formatMoney, formatMoneyShort, parseMoneyInput, todayIso } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { WEEKDAYS, claimStatus, claimTone, depositStatus, depositTone, itemType, keyKind, meterKind, meterStatus, policyKind, readingStatus, readingTone, stockCountStatus, stockCountTone, taskFrequency, taskStatus, taskTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
@@ -378,6 +378,7 @@ export function InsurancePage() {
   const pq = useSiteGet<Policy[]>("/insurance-policies");
   const cq = useSiteGet<Claim[]>("/insurance-claims");
   const [adding, setAdding] = useState<"policy" | "claim" | null>(null);
+  const [editing, setEditing] = useState<Policy | null>(null);
   const warn = (pq.data ?? []).filter((p) => p.warning);
   return (
     <div className="stack">
@@ -392,14 +393,15 @@ export function InsurancePage() {
       ) : !pq.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
       {warn.length > 0 && <Alert tone="warn" title="Bitişi yaklaşan poliçe">{warn.map((p) => `${policyKind(p.kind)} (${p.insurer}) — ${p.days_left < 0 ? "süresi doldu" : `${p.days_left} gün kaldı`}`).join(" · ")}</Alert>}
       {adding === "policy" && <PolicyForm onDone={() => setAdding(null)} />}
+      {editing && <PolicyForm key={editing.id} policy={editing} onDone={() => setEditing(null)} />}
       {adding === "claim" && <ClaimForm policies={pq.data ?? []} onDone={() => setAdding(null)} />}
       <div className="card">
         <div className="card__head"><span className="card__icon card__icon--accent"><ShieldCheck aria-hidden="true" /></span><span className="card__title">Poliçeler</span></div>
         <div className="card__body card__body--flush">
           {pq.isPending ? <Loading /> : pq.isError ? <div className="card__body"><ErrorState error={pq.error} /></div> : pq.data.length === 0 ? <Empty title="Poliçe yok" /> : (
             <div className="table-wrap"><table className="data"><caption className="visually-hidden">Poliçeler</caption>
-              <thead><tr><th scope="col">Poliçe</th><th scope="col">Dönem</th><th scope="col" className="right">Prim</th><th scope="col">Durum</th><th scope="col">Belgeler</th></tr></thead>
-              <tbody>{pq.data.map((p) => <tr key={p.id}><td><div className="cell-main">{policyKind(p.kind)}</div><div className="cell-sub">{p.insurer} · <span className="mono">{p.policy_no}</span>{p.area && ` · ${p.area}`}</div>{p.coverage && <div className="cell-sub">{p.coverage}</div>}</td><td className="small nowrap">{formatDate(p.start)} – {formatDate(p.end)}</td><td className="right"><Money value={p.premium} /></td><td>{p.days_left < 0 ? <Badge tone="danger">Süresi doldu</Badge> : p.warning ? <Badge tone="warn">{p.days_left} gün kaldı</Badge> : <Badge tone="ok">Geçerli</Badge>}</td><td><LinkedDocuments subjectType="insurance_policies" subjectId={p.id} docs={p.documents} canManage={canManage} compact /></td></tr>)}</tbody>
+              <thead><tr><th scope="col">Poliçe</th><th scope="col">Dönem</th><th scope="col" className="right">Prim</th><th scope="col">Durum</th><th scope="col">Belgeler</th>{canManage && <th scope="col"><span className="visually-hidden">İşlem</span></th>}</tr></thead>
+              <tbody>{pq.data.map((p) => <tr key={p.id}><td><div className="cell-main">{policyKind(p.kind)}</div><div className="cell-sub">{p.insurer} · <span className="mono">{p.policy_no}</span>{p.area && ` · ${p.area}`}</div>{p.coverage && <div className="cell-sub">{p.coverage}</div>}</td><td className="small nowrap">{formatDate(p.start)} – {formatDate(p.end)}</td><td className="right"><Money value={p.premium} /></td><td>{p.days_left < 0 ? <Badge tone="danger">Süresi doldu</Badge> : p.warning ? <Badge tone="warn">{p.days_left} gün kaldı</Badge> : <Badge tone="ok">Geçerli</Badge>}</td><td><LinkedDocuments subjectType="insurance_policies" subjectId={p.id} docs={p.documents} canManage={canManage} compact /></td>{canManage && <td className="right"><button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${policyKind(p.kind)} poliçesini düzenle`} onClick={() => { setAdding(null); setEditing(p); }}><Pencil aria-hidden="true" /></button></td>}</tr>)}</tbody>
             </table></div>
           )}
         </div>
@@ -420,12 +422,16 @@ export function InsurancePage() {
   );
 }
 
-function PolicyForm({ onDone }: { onDone: () => void }) {
-  const [f, setF] = useState({ kind: "building", insurer: "", policy_no: "", coverage: "", premium: "", start: todayIso(), end: "", area: "" });
-  const m = useSiteMutation<Record<string, unknown>, Policy>("POST", "/insurance-policies", { onSuccess: onDone });
+/** Poliçe ekleme ve düzenleme (PATCH /insurance-policies/{id}: gönderilmeyen alan değişmez). */
+function PolicyForm({ policy, onDone }: { policy?: Policy; onDone: () => void }) {
+  const [f, setF] = useState(policy
+    ? { kind: policy.kind as string, insurer: policy.insurer, policy_no: policy.policy_no, coverage: policy.coverage ?? "", premium: formatMoney(policy.premium, false), start: policy.start, end: policy.end, area: policy.area ?? "" }
+    : { kind: "building", insurer: "", policy_no: "", coverage: "", premium: "", start: todayIso(), end: "", area: "" });
+  const m = useSiteMutation<Record<string, unknown>, Policy>(policy ? "PATCH" : "POST", policy ? `/insurance-policies/${policy.id}` : "/insurance-policies", { onSuccess: onDone });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   return (
     <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ ...f, premium: parseMoneyInput(f.premium) ?? null, end: f.end || null, coverage: f.coverage || null, area: f.area || null }); }}>
+      {policy && <div className="card__head"><span className="card__title">{policyKind(policy.kind)} · {policy.insurer} — düzenle</span></div>}
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">
@@ -438,7 +444,7 @@ function PolicyForm({ onDone }: { onDone: () => void }) {
           <Field label="Bağlı alan">{(p) => <input {...p} className="field__input" value={f.area} onChange={up("area")} />}</Field>
         </div>
         <Field label="Kapsam">{(p) => <input {...p} className="field__input" maxLength={200} value={f.coverage} onChange={up("coverage")} />}</Field>
-        <p className="small muted mb-0">Poliçe belgesini kayıttan sonra satırdaki "Belge ekle" ile yükleyin.</p>
+        {!policy && <p className="small muted mb-0">Poliçe belgesini kayıttan sonra satırdaki "Belge ekle" ile yükleyin.</p>}
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Kaydet</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
@@ -484,6 +490,7 @@ export function MetersPage() {
   const [adding, setAdding] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reading, setReading] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const anomalies = (q.data?.rows ?? []).filter((r) => r.reading?.status === "anomaly").length;
   return (
     <div className="stack">
@@ -509,9 +516,10 @@ export function MetersPage() {
                   <td className="right num">{r.last?.value ? `${num(r.last.value)} ${r.meter.unit_label}` : "—"}</td>
                   <td className="right num">{r.reading?.value ? <>{num(r.reading.value)}{r.reading.consumption && <div className="cell-sub">tüketim {num(r.reading.consumption)}{r.reading.anomaly_percent != null && ` (%${r.reading.anomaly_percent})`}</div>}</> : "—"}{r.reading?.photo_id && <div><OpPhoto id={r.reading.photo_id} alt={`${r.meter.serial} sayaç fotoğrafı`} /></div>}</td>
                   <td>{r.reading ? <><Badge tone={readingTone(r.reading.status)}>{readingStatus(r.reading.status)}</Badge>{r.reading.reason && <div className="cell-sub">{r.reading.reason}</div>}</> : <Badge>Okunmadı</Badge>}</td>
-                  <td className="right nowrap">{r.reading?.status === "anomaly" ? <AnomalyActions id={r.reading.id} /> : (!r.reading || r.reading.status === "unreadable") && <button className="btn btn--sm" type="button" aria-expanded={reading === r.meter.id} onClick={() => setReading((v) => (v === r.meter.id ? null : r.meter.id))}>Oku</button>}</td>
+                  <td className="right nowrap">{r.reading?.status === "anomaly" ? <AnomalyActions id={r.reading.id} /> : (!r.reading || r.reading.status === "unreadable") && <button className="btn btn--sm" type="button" aria-expanded={reading === r.meter.id} onClick={() => { setEditing(null); setReading((v) => (v === r.meter.id ? null : r.meter.id)); }}>Oku</button>}{r.meter.status !== "replaced" && <> <button className="btn btn--ghost btn--sm btn--icon" type="button" aria-label={`${r.meter.serial} sayacını düzenle`} aria-expanded={editing === r.meter.id} onClick={() => { setReading(null); setEditing((v) => (v === r.meter.id ? null : r.meter.id)); }}><Pencil aria-hidden="true" /></button></>}</td>
                 </tr>
                 {reading === r.meter.id && <tr><td colSpan={5}><ReadForm meter={r.meter} period={s.donem} prev={r.last?.value ?? null} onDone={() => setReading(null)} /></td></tr>}
+                {editing === r.meter.id && <tr><td colSpan={5}><MeterForm meter={r.meter} onDone={() => setEditing(null)} /></td></tr>}
               </Fragment>
             ))}</tbody>
           </table></div>
@@ -540,13 +548,16 @@ function MeterSettings({ value, onDone }: { value: OpSettings; onDone: () => voi
   );
 }
 
-function MeterForm({ onDone }: { onDone: () => void }) {
-  const [unit, setUnit] = useState<PickedUnit | null>(null);
-  const [f, setF] = useState({ kind: "cold_water", serial: "", area: "", multiplier: "1", installed_on: "" });
-  const m = useSiteMutation<Record<string, unknown>, Meter>("POST", "/meters", { onSuccess: onDone });
+/** Sayaç ekleme ve düzenleme (PATCH /meters/{id}: gönderilmeyen alan değişmez; durum aktif/arızalı). */
+function MeterForm({ meter, onDone }: { meter?: Meter; onDone: () => void }) {
+  const [unit, setUnit] = useState<PickedUnit | null>(meter?.unit_id ? { id: meter.unit_id, name: meter.unit_name ?? "" } : null);
+  const [f, setF] = useState(meter
+    ? { kind: meter.kind as string, serial: meter.serial, area: meter.area ?? "", multiplier: meter.multiplier, installed_on: meter.installed_on ?? "", status: meter.status as string }
+    : { kind: "cold_water", serial: "", area: "", multiplier: "1", installed_on: "", status: "active" });
+  const m = useSiteMutation<Record<string, unknown>, Meter>(meter ? "PATCH" : "POST", meter ? `/meters/${meter.id}` : "/meters", { onSuccess: onDone });
   return (
-    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ kind: f.kind, serial: f.serial, unit_id: f.kind === "common" ? null : unit?.id ?? null, area: f.kind === "common" || !unit ? f.area || null : null, multiplier: f.multiplier.replace(",", ".") || "1", installed_on: f.installed_on || null }); }}>
-      <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
+    <form className={meter ? "stack" : "card"} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ kind: f.kind, serial: f.serial, unit_id: f.kind === "common" ? null : unit?.id ?? null, area: f.kind === "common" || !unit ? f.area || null : null, multiplier: f.multiplier.replace(",", ".") || "1", installed_on: f.installed_on || null, ...(meter ? { status: f.status } : {}) }); }}>
+      <div className={meter ? "stack" : "card__body stack"} style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">
           <Field label="Tip" error={fieldError(m.error, "kind")}>{(p) => <select {...p} className="field__input" value={f.kind} onChange={(e) => setF((x) => ({ ...x, kind: e.target.value }))}>{["cold_water", "hot_water", "heat", "electric", "gas", "common"].map((k) => <option key={k} value={k}>{meterKind(k)}</option>)}</select>}</Field>
@@ -554,9 +565,10 @@ function MeterForm({ onDone }: { onDone: () => void }) {
           {f.kind !== "common" ? <UnitPicker label="Bölüm" value={unit} onChange={setUnit} error={fieldError(m.error, "unit_id")} /> : <Field label="Ortak alan" required error={fieldError(m.error, "unit_id")}>{(p) => <input {...p} className="field__input" value={f.area} onChange={(e) => setF((x) => ({ ...x, area: e.target.value }))} />}</Field>}
           <Field label="Çarpan" error={fieldError(m.error, "multiplier")}>{(p) => <input {...p} className="field__input" inputMode="decimal" value={f.multiplier} onChange={(e) => setF((x) => ({ ...x, multiplier: e.target.value }))} />}</Field>
           <Field label="Kurulum tarihi">{(p) => <input {...p} className="field__input" type="date" max={todayIso()} value={f.installed_on} onChange={(e) => setF((x) => ({ ...x, installed_on: e.target.value }))} />}</Field>
+          {meter && <Field label="Durum" error={fieldError(m.error, "status")}>{(p) => <select {...p} className="field__input" value={f.status} onChange={(e) => setF((x) => ({ ...x, status: e.target.value }))}>{["active", "faulty"].map((k) => <option key={k} value={k}>{meterStatus(k)}</option>)}</select>}</Field>}
         </div>
       </div>
-      <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>Ekle</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
+      <div className={meter ? "row" : "card__foot row"} style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>{meter ? "Kaydet" : "Ekle"}</SubmitButton><button className="btn btn--ghost" type="button" onClick={onDone}>Vazgeç</button></div>
     </form>
   );
 }

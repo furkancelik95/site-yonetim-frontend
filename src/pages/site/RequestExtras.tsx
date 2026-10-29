@@ -58,7 +58,7 @@ export function MergeCard({ r }: { r: Detail }) {
   const create = useSiteMutation<Record<string, unknown>, unknown>("POST", "/outages");
   const [f, setF] = useState({ title: r.title, public_description: "" });
   const [open, setOpen] = useState(false);
-  if (r.outage) return <Alert tone="info" title={`Ana olaya bağlı: ${r.outage.title}`}>{r.outage.status === "resolved" ? "Ana olay çözüldü." : "Ana olay çözülünce bu talep de çözülür."} <Link to={`/s/${site.slug}/talepler/ana-olaylar`}>Ana olaylar</Link></Alert>;
+  if (r.outage) return <LinkedOutage requestId={r.id} outage={r.outage} canUnlink={manage} />;
   if (!manage || !q.data) return null;
   const d = q.data;
   if (d.similar.length === 0 && d.open_outages.length === 0) return null;
@@ -78,6 +78,22 @@ export function MergeCard({ r }: { r: Detail }) {
         ) : <div className="row" style={{ gap: "var(--s-2)" }}><button className="btn btn--sm btn--primary" type="button" onClick={() => setOpen(true)}>Ana olay oluştur</button><span className="small muted">ya da yok sayın; öneri kural tabanlıdır.</span></div>)}
       </div>
     </div>
+  );
+}
+
+/** Bağlı ana olay; açık olaydan talep ayrılabilir (POST /outages/{id}/unlink). Çözülmüş olayda backend reddeder, düğme gösterilmez. */
+function LinkedOutage({ requestId, outage, canUnlink }: { requestId: string; outage: NonNullable<Detail["outage"]>; canUnlink: boolean }) {
+  const { site } = useSite();
+  const m = useSiteMutation<{ request_id: string }, unknown>("POST", `/outages/${outage.id}/unlink`);
+  return (
+    <Alert tone="info" title={`Ana olaya bağlı: ${outage.title}`}>
+      {outage.status === "resolved" ? "Ana olay çözüldü." : "Ana olay çözülünce bu talep de çözülür."} <Link to={`/s/${site.slug}/talepler/ana-olaylar`}>Ana olaylar</Link>
+      {canUnlink && outage.status === "open" && (
+        <div className="mt-2">
+          <ConfirmButton className="btn btn--sm" title="Talebi ana olaydan ayır" confirmLabel="Ayır" body="Talep ana olayla birlikte çözülmez; kendi akışında devam eder." onConfirm={() => m.mutateAsync({ request_id: requestId })}>Ana olaydan ayır</ConfirmButton>
+        </div>
+      )}
+    </Alert>
   );
 }
 

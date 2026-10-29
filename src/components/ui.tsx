@@ -104,6 +104,14 @@ export function Alert({ tone, title, children }: { tone: Tone; title?: string; c
 /** Formun üstündeki genel hata (alan hataları alanların altında gösterilir). */
 export function FormError({ error }: { error: unknown }) {
   if (!error) return null;
+  // Salt okunur erişimde (sakin olarak görüntüleme, destek oturumu) backend yazmayı 403 `read_only` ile reddeder
+  if (error instanceof ApiError && error.code === "read_only") {
+    return (
+      <Alert tone="warn" title="Salt okunur görünüm">
+        {error.message}
+      </Alert>
+    );
+  }
   // ApiError: backend'in Türkçe mesajı. Düz Error: formun kendi doğrulaması. TypeError: ağ hatası.
   const message =
     error instanceof ApiError || (error instanceof Error && !(error instanceof TypeError))

@@ -9,6 +9,7 @@ import {
   setConsentRequiredHandler,
   setMfaRequiredHandler,
   setSessionLostHandler,
+  setViewAsSession,
 } from "../api/client";
 import type { Me, TokenResponse } from "../api/types";
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const reset = useCallback(() => {
     setAccessToken(null);
+    setViewAsSession(null); // sakin olarak görüntüleme oturumla birlikte biter
     setMe(null);
     setStatus("anonymous");
     queryClient.clear();

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { Fragment, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeftRight, Building2, Car, Copy, Home, KeyRound, Package, Pencil, Percent, Plus, Trash2, User, UserCheck, UserPlus, Users, Wallet, Wrench } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
@@ -227,7 +227,7 @@ function PersonSearch({ value, onChange }: { value: Person | null; onChange: (p:
   );
 }
 
-function HouseholdCard({ unitId }: { unitId: string }) {
+export function HouseholdCard({ unitId }: { unitId: string }) {
   const toast = useToast();
   const manage = true; // kart yalnız people.manage ile görünür
   const q = useSiteGet<Household[]>(`/units/${unitId}/household`);
@@ -254,14 +254,36 @@ function HouseholdCard({ unitId }: { unitId: string }) {
 
 function HouseholdRow({ h, manage, onCopy }: { h: Household; manage: boolean; onCopy?: () => void }) {
   const end = useSiteMutation<Record<string, never>, Household>("POST", `/household/${h.id}/end`);
+  const [editing, setEditing] = useState(false);
   return (
+    <Fragment>
     <tr style={h.status === "ended" ? { opacity: 0.6 } : undefined}>
       <td><div className="cell-person"><Avatar name={h.full_name} size="sm" soft /><div><div className="cell-main">{h.full_name}</div><div className="cell-sub">{formatPhone(h.phone)}</div></div></div></td>
       <td className="small">{PERMS.filter((p) => h.permissions[p]).map(householdPermission).join(", ") || "—"}</td>
       <td><Badge tone={h.status === "active" ? "ok" : h.status === "invited" ? "info" : "muted"}>{householdStatus(h.status)}</Badge></td>
       <td className="small">{h.invited_by ?? "—"}<div className="cell-sub">{formatDateTime(h.created_at)}</div></td>
-      {manage && <td className="right nowrap">{h.status === "invited" && onCopy && <button className="btn btn--ghost btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Davet bağlantısı</button>} {h.status !== "ended" && <ConfirmButton className="btn btn--ghost btn--sm" danger title={`${h.full_name} — hane üyeliğini bitir`} confirmLabel="Bitir" body="Kişi uygulamaya erişemez; ziyaretçi ve kargo yetkileri kalkar." onConfirm={() => end.mutateAsync({})}>Bitir</ConfirmButton>}</td>}
+      {manage && <td className="right nowrap">{h.status === "invited" && onCopy && <button className="btn btn--ghost btn--sm" type="button" onClick={onCopy}><Copy aria-hidden="true" /> Davet bağlantısı</button>} {h.status !== "ended" && <button className="btn btn--ghost btn--sm" type="button" aria-expanded={editing} onClick={() => setEditing((v) => !v)}><Pencil aria-hidden="true" /> Yetkiler</button>} {h.status !== "ended" && <ConfirmButton className="btn btn--ghost btn--sm" danger title={`${h.full_name} — hane üyeliğini bitir`} confirmLabel="Bitir" body="Kişi uygulamaya erişemez; ziyaretçi ve kargo yetkileri kalkar." onConfirm={() => end.mutateAsync({})}>Bitir</ConfirmButton>}</td>}
     </tr>
+    {editing && <tr><td colSpan={5}><HouseholdPermsForm h={h} onDone={() => setEditing(false)} /></td></tr>}
+    </Fragment>
+  );
+}
+
+/** Hane üyesinin yetkileri (PATCH /household/{id}; bitmiş üyelikte backend 409 döner). */
+function HouseholdPermsForm({ h, onDone }: { h: Household; onDone: () => void }) {
+  const [perms, setPerms] = useState<Record<Perm, boolean>>(() => Object.fromEntries(PERMS.map((p) => [p, !!h.permissions[p]])) as Record<Perm, boolean>);
+  const m = useSiteMutation<{ permissions: Record<Perm, boolean> }, Household>("PATCH", `/household/${h.id}`, { onSuccess: onDone });
+  return (
+    <form className="stack" style={{ gap: "var(--s-2)" }} noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ permissions: perms }); }}>
+      <FormError error={m.error} />
+      <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+        <legend className="small strong">{h.full_name} — yetkiler</legend>
+        <div className="row" style={{ gap: "var(--s-3)", flexWrap: "wrap" }}>
+          {PERMS.map((p) => <label key={p} className="check" style={{ minHeight: 44 }}><input type="checkbox" checked={perms[p]} onChange={(e) => setPerms((x) => ({ ...x, [p]: e.target.checked }))} /><span>{householdPermission(p)}</span></label>)}
+        </div>
+      </fieldset>
+      <div className="row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} className="btn btn--sm btn--primary">Yetkileri kaydet</SubmitButton><button className="btn btn--ghost btn--sm" type="button" onClick={onDone}>Vazgeç</button></div>
+    </form>
   );
 }
 

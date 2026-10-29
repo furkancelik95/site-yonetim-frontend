@@ -25,6 +25,9 @@ export function ResidentLayout() {
   if (!ctx) return <main id="main" className="page"><ErrorState error={q.error} onRetry={() => q.refetch()} /></main>;
 
   const base = `/sakin/${slug}`;
+  // Sakin olarak görüntüleme: üst satırda görüntülenen kişi; personel kısayolları, zil ve profil gizli
+  // (bildirim ve profil uçları sakinin değil görüntüleyenin kendi hesabını döner).
+  const viewAs = ctx.site.access_mode === "view_as";
   return (
     <SiteContext.Provider value={ctx}>
       <a className="skip-link" href="#main">İçeriğe geç</a>
@@ -33,12 +36,12 @@ export function ResidentLayout() {
           <div className="row row--between" style={{ flexWrap: "nowrap", gap: "var(--s-2)" }}>
             <div style={{ minWidth: 0 }}>
               <div className="r-header__site">{ctx.site.name}</div>
-              <div className="r-header__unit" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{me?.full_name}</div>
+              <div className="r-header__unit" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{viewAs ? ctx.site.view_as_person_name : me?.full_name}</div>
             </div>
             <div className="row" style={{ flexWrap: "nowrap", gap: "var(--s-1)" }}>
-              {isStaff && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}
-              <NotificationBell to={`${base}/bildirimler`} />
-              <Link className="btn btn--ghost btn--sm" to={`${base}/profil`}>Profil</Link>
+              {isStaff && !viewAs && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}
+              {!viewAs && <NotificationBell to={`${base}/bildirimler`} />}
+              {!viewAs && <Link className="btn btn--ghost btn--sm" to={`${base}/profil`}>Profil</Link>}
               <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>Çıkış</button>
             </div>
           </div>

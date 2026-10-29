@@ -15,6 +15,7 @@ const CATEGORIES = ["urgent", "financial", "security", "operations", "governance
 
 /** Bildirimin bağlandığı kayda giden adres; bilinmeyen tür ya da sakin ekranı için yok. */
 function linkOf(n: Notification, slug: string, staff: boolean): string | null {
+  if (!staff && n.link_entity === "transparency_reports" && n.link_id) return `/sakin/${slug}/seffaflik/${n.link_id}`;
   if (!staff || !n.link_entity) return null;
   if (n.link_entity === "approval_requests" && n.link_id) return `/s/${slug}/onaylar/${n.link_id}`;
   if (n.link_entity === "approval_delegations") return `/s/${slug}/onaylar?sekme=devir`;
