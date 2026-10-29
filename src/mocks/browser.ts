@@ -1,5 +1,4 @@
 import { setupWorker } from "msw/browser";
-import { handlers, saveMockState } from "./handlers";
+import { handlers } from "./handlers";
 
 export const worker = setupWorker(...handlers);
-worker.events.on("response:mocked", () => saveMockState());
