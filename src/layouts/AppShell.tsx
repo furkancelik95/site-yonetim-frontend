@@ -67,6 +67,8 @@ import {
   FileBarChart,
 } from "lucide-react";
 import { useAuth, useMe } from "../auth/AuthContext";
+import { useMeGet } from "../api/hooks";
+import type { Schemas } from "../api/types";
 import { SupportSessionBanner } from "../pages/site/SupportPages";
 import { NotificationBell } from "../components/NotificationBell";
 import { QuickSearch } from "../components/QuickSearch";
@@ -86,6 +88,17 @@ function Item({ to, icon, label, end, external }: { to: string; icon: ReactNode;
     <NavLink className="navlink" to={to} end={end}>
       {icon} <span>{label}</span>
     </NavLink>
+  );
+}
+
+/** Menüdeki site bağlantısında okunmamış bildirim sayısı; yalnız renkle değil sayı ve metinle. */
+export function SiteUnread({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="badge badge--info ml-auto" title={`${count} okunmamış bildirim`}>
+      <span aria-hidden="true">{count > 99 ? "99+" : count}</span>
+      <span className="visually-hidden">, {count} okunmamış bildirim</span>
+    </span>
   );
 }
 
@@ -230,6 +243,9 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
 
   // Sitede: ana rol + diğer roller (P18 çoklu rol; tamamı ipucunda). Site dışında (portföy)
   // yönetim şirketindeki rol gösterilir.
+  // Sitelere göre okunmamış bildirim (GET /me/notifications/summary): "Siteler" listesinde rozet
+  const unread = useMeGet<Schemas["SiteUnreadOut"][]>("/notifications/summary", undefined, { enabled: !platform && me.sites.length > 1, refetchInterval: 60_000 });
+  const unreadBySite = new Map((unread.data ?? []).map((u) => [u.site_id, u.unread_count]));
   const siteRoles = siteCtx?.roles ?? [];
   const siteRole = siteRoles.length
     ? siteRoles[0] + (siteRoles.length > 1 ? ` +${siteRoles.length - 1}` : "")
@@ -287,6 +303,7 @@ export function AppShell({ siteCtx, platform, title, children }: { siteCtx?: Sit
                         aria-current={siteCtx?.site.id === s.site_id ? "page" : undefined}
                       >
                         <Building2 aria-hidden="true" /> <span>{s.name}</span>
+                        <SiteUnread count={unreadBySite.get(s.site_id) ?? 0} />
                       </NavLink>
                     ))}
                   </Group>

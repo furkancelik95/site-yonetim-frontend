@@ -19,10 +19,12 @@ export function useSiteGet<T>(path: string, query?: Query, opts?: { enabled?: bo
 }
 
 /** Kişinin kendi hesabına ait kaynak (site dışı): useMeGet<T>("/sessions") → /me/sessions */
-export function useMeGet<T>(path: string, query?: Query) {
+export function useMeGet<T>(path: string, query?: Query, opts?: { enabled?: boolean; refetchInterval?: number }) {
   return useQuery({
     queryKey: ["me", path, query ?? {}],
     queryFn: ({ signal }) => get<T>(`/me${path}`, query, signal),
+    enabled: opts?.enabled,
+    refetchInterval: opts?.refetchInterval,
   });
 }
 
