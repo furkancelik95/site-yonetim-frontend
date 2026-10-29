@@ -46,6 +46,7 @@ export const P = {
   privacyManage: "privacy.manage",
   notificationsManage: "notifications.manage",
   reportsSchedule: "reports.schedule",
+  viewAsResident: "support.view_as_resident",
 } as const;
 
 export const M = {

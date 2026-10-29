@@ -5,6 +5,7 @@ import { useLocation } from "react-router";
 import { api, get } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import { Alert, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
+import { ViewAsSettingsCard } from "../../components/ViewAs";
 import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
@@ -45,7 +46,7 @@ export function SupportPage() {
       <PageHead title="Destek" subtitle="Platform desteğine ekran bağlamıyla bilet açın. Destek ekibi verinize yalnız sizin onayınızla, süreli ve salt okunur erişir." />
       <SupportKpis sessions={sess.data} />
       {tabs([["bilet", "Destek biletleri"], ["oturum", `Destek oturumları${pending ? ` (${pending})` : ""}`]], s.sekme, (k) => set({ sekme: k }), "Destek")}
-      {s.sekme === "oturum" ? <Sessions canDecide={can(P.membersManage)} /> : <Tickets />}
+      {s.sekme === "oturum" ? <>{can(P.membersManage) && <ViewAsSettingsCard />}<Sessions canDecide={can(P.membersManage)} /></> : <Tickets />}
     </div>
   );
 }

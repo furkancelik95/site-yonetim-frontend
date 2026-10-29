@@ -1,4 +1,4 @@
-import { ApiError, VIEW_AS_HEADER, get, setMfaRequiredHandler, setSessionLostHandler, setViewAsSession, viewAsSession } from "./client";
+import { ApiError, VIEW_AS_HEADER, get, setMfaRequiredHandler, setSessionLostHandler, setViewAsEndedHandler, setViewAsSession, viewAsSession } from "./client";
 import { safeBack } from "../pages/auth/authParts";
 
 function json(status: number, body: unknown) {
@@ -49,15 +49,24 @@ describe("sakin olarak görüntüleme başlığı (PLT-12)", () => {
     await get("/sites/aksu/resident/home");
     await get("/sites/baska/resident/home");
     await get("/me");
+    await get("/sites/aksu"); // site bilgisi (izinler) de sakinin erişimiyle gelsin
+    await get("/sites/aksu-2/resident/home");
     expect(headerOf(fetchMock.mock.calls[0]!)).toBe("s-1");
     expect(headerOf(fetchMock.mock.calls[1]!)).toBeUndefined();
     expect(headerOf(fetchMock.mock.calls[2]!)).toBeUndefined();
+    expect(headerOf(fetchMock.mock.calls[3]!)).toBe("s-1");
+    expect(headerOf(fetchMock.mock.calls[4]!)).toBeUndefined();
   });
 
   it("403 view_as_ended oturumu bırakır", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(403, { error: { code: "view_as_ended", message: "Sona erdi.", fields: null } })));
     setViewAsSession("aksu", "s-1");
+    const onEnded = vi.fn();
+    setViewAsEndedHandler(onEnded);
+    setViewAsSession("aksu", "s-1", { personName: "Ayşe" });
     await expect(get("/sites/aksu/resident/home")).rejects.toBeInstanceOf(ApiError);
     expect(viewAsSession()).toBeNull();
+    expect(onEnded).toHaveBeenCalledWith({ slug: "aksu", sessionId: "s-1", personName: "Ayşe" });
+    setViewAsEndedHandler(null);
   });
 });

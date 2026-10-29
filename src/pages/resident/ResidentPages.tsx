@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import Decimal from "decimal.js";
 import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
@@ -490,8 +490,17 @@ function ResidentPollCard({ p }: { p: ResidentPoll }) {
 }
 
 /** Sakinin bildirimleri ve profili: personel ekranıyla aynı bileşen, kayda bağlantı yok. */
-export const ResidentNotificationsPage = () => <NotificationsPage staff={false} />;
-export const ResidentProfilePage = () => <ProfilePage />;
+/** Bildirim ve profil uçları oturum açan kullanıcının kendi hesabını döner; sakin olarak görüntülemede
+ * görüntüleyenin verisi sakininmiş gibi gösterilmesin. */
+function OwnAccountOnly({ children }: { children: ReactNode }) {
+  const { site } = useSite();
+  if (site.access_mode === "view_as") {
+    return <Alert tone="info" title="Bu ekran sakin olarak görüntülemede gösterilmez">Bildirimler ve profil, oturum açan kişinin kendi hesabına aittir; sakinin bu ekranları görüntülenemez.</Alert>;
+  }
+  return <>{children}</>;
+}
+export const ResidentNotificationsPage = () => <OwnAccountOnly><NotificationsPage staff={false} /></OwnAccountOnly>;
+export const ResidentProfilePage = () => <OwnAccountOnly><ProfilePage /></OwnAccountOnly>;
 export { ResidentHouseholdPage, ResidentVehiclesPage } from "./ResidentHouseholdPages";
 export { ResidentVisitorsPage } from "./ResidentVisitorsPage";
 export { ResidentKeysMetersPage, ResidentPermitsPage } from "./ResidentServicePages";
