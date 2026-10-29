@@ -67,6 +67,13 @@ function viewAsApplies(path: string) {
   return !!viewAs && (path === `/sites/${viewAs.slug}` || path.startsWith(`/sites/${viewAs.slug}/`));
 }
 
+/** Hassas işlem kapısı (403 `step_up_required`): kullanıcıdan kimliğini yeniden doğrulaması istenir;
+ * işleyici `true` dönerse (POST /auth/step-up başarılı) istek bir kez yinelenir. */
+let onStepUpRequired: (() => Promise<boolean>) | null = null;
+export function setStepUpHandler(handler: (() => Promise<boolean>) | null) {
+  onStepUpRequired = handler;
+}
+
 export function setAccessToken(token: string | null) {
   accessToken = token;
 }
@@ -213,6 +220,9 @@ async function request(method: string, path: string, opts: RequestOptions = {}):
     } else {
       onSessionLost?.();
     }
+  }
+  if (res.status === 403 && onStepUpRequired && !path.startsWith("/auth/") && (await errorCode(res)) === "step_up_required") {
+    if (await onStepUpRequired()) res = await send(method, path, opts);
   }
   if (!res.ok) {
     const error = await toError(res);

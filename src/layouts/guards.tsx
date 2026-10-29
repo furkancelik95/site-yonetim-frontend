@@ -6,6 +6,7 @@ import { homePath, showsPortfolio, useAuth } from "../auth/AuthContext";
 import { ErrorState, Loading } from "../components/ui";
 import { MfaGraceBanner } from "../pages/auth/AccountPages";
 import { ViewAsBar, useViewAs } from "../components/ViewAs";
+import { StepUpDialog } from "../components/StepUpDialog";
 import { makeSiteCtx, SiteContext, type SiteDetail } from "../site/SiteContext";
 import { AppShell } from "./AppShell";
 
@@ -34,6 +35,7 @@ export function RequireAuth() {
   return (
     <>
       <ViewAsBar />
+      <StepUpDialog mfa={!!me.mfa_enabled} canSms={!me.mfa_enabled && !!me.phone} />
       <MfaGraceBanner />
       <Outlet />
     </>
