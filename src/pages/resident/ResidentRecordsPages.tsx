@@ -79,7 +79,8 @@ export function ResidentPrivacyPage() {
               </label>
             ))}
           </>}
-          <div><button className="btn btn--sm" type="button" onClick={exportMine}><Download aria-hidden="true" /> Verilerimi indir (JSON)</button></div>
+          {/* Veri paketi sakinin kendi indirmesidir; görüntülemede backend 403 döner, personel paketi başvurudan alır. */}
+          {site.access_mode !== "view_as" && <div><button className="btn btn--sm" type="button" onClick={exportMine}><Download aria-hidden="true" /> Verilerimi indir (JSON)</button></div>}
         </div>
       </div>
       <div className="section-title">Yeni başvuru</div>

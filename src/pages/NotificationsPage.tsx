@@ -52,13 +52,15 @@ export function NotificationsPage({ staff }: { staff: boolean }) {
   const q = useSiteGet<NotificationPage>("/notifications", { unread: s.durum === "okunmamis" ? true : undefined, category: s.kategori || undefined, page: s.page, page_size: 30 });
   const read = useSiteMutation<{ ids: string[] | null }, Schemas["NotificationReadOut"]>("POST", "/notifications/read");
   const unread = q.data?.unread_count ?? 0;
+  // Sakin olarak görüntülemede salt okunur: okundu işareti sakinin kaydını değiştirirdi (backend 403 read_only).
+  const canMark = !site.read_only;
 
   return (
     <div className="stack">
       <PageHead
         title="Bildirimler"
         subtitle="Sizi ilgilendiren olaylar. SMS ve e-posta gönderimi henüz yok; bildirimler yalnız burada görünür."
-        actions={unread > 0 && (
+        actions={canMark && unread > 0 && (
           <button className="btn" type="button" disabled={read.isPending} onClick={() => read.mutate({ ids: null })}>
             <CheckCheck aria-hidden="true" /> Tümünü okundu say
           </button>
@@ -95,7 +97,7 @@ export function NotificationsPage({ staff }: { staff: boolean }) {
           <ul className="notif-list">
             {q.data.items.map((n) => {
               const to = linkOf(n, site.slug, staff);
-              const markRead = () => { if (!n.read_at) read.mutate({ ids: [n.id] }); };
+              const markRead = () => { if (canMark && !n.read_at) read.mutate({ ids: [n.id] }); };
               return (
                 <li key={n.id} className={`notif${n.read_at ? "" : " notif--unread"}`}>
                   <div className="notif__main">
@@ -107,7 +109,7 @@ export function NotificationsPage({ staff }: { staff: boolean }) {
                     {n.body && <p className="small mb-0">{n.body}</p>}
                     <span className="small muted">{formatDateTime(n.created_at)}</span>
                   </div>
-                  {!n.read_at && (
+                  {canMark && !n.read_at && (
                     <button className="btn btn--ghost btn--sm" type="button" disabled={read.isPending} onClick={markRead} aria-label={`${n.title}: okundu say`}>Okundu</button>
                   )}
                 </li>

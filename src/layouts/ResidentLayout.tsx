@@ -40,7 +40,7 @@ export function ResidentLayout() {
             </div>
             <div className="row" style={{ flexWrap: "nowrap", gap: "var(--s-1)" }}>
               {isStaff && !viewAs && <Link className="btn btn--sm" to={`/s/${slug}`}><ArrowLeft aria-hidden="true" /> Panel</Link>}
-              {!viewAs && <NotificationBell to={`${base}/bildirimler`} />}
+              <NotificationBell to={`${base}/bildirimler`} />
               {!viewAs && <Link className="btn btn--ghost btn--sm" to={`${base}/profil`}>Profil</Link>}
               <button className="btn btn--ghost btn--sm" type="button" onClick={logout}>Çıkış</button>
             </div>
