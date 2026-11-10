@@ -30,6 +30,8 @@ export interface Session { id: string; site_slug: string; site_name: string; rea
 export const T_CAT: Record<string, string> = { login: "Giriş", payment: "Ödeme", finance: "Finans hesabı", import: "Veri aktarımı", security: "Güvenlik modu", other: "Diğer" };
 export const T_PRI: Record<string, [string, "danger" | "warn" | "muted"]> = { critical: ["Kritik", "danger"], high: ["Yüksek", "warn"], normal: ["Normal", "muted"] };
 export const T_ST: Record<string, [string, "info" | "warn" | "ok" | "muted"]> = { open: ["Açık", "info"], answered: ["Yanıtlandı", "warn"], waiting_customer: ["Yanıtınız bekleniyor", "warn"], resolved: ["Çözüldü", "ok"], closed: ["Kapandı", "muted"] };
+/** Platform destek ekibinin bakışı: "bekleniyor" müşterinin yanıtıdır. */
+export const T_ST_PLATFORM: typeof T_ST = { ...T_ST, waiting_customer: ["Müşteri yanıtı bekleniyor", "warn"] };
 export const S_ST: Record<string, [string, "warn" | "danger" | "muted" | "info"]> = { pending: ["Onay bekliyor", "warn"], active: ["Aktif", "danger"], rejected: ["Reddedildi", "muted"], expired: ["Sona erdi", "muted"] };
 const tabs = (items: [string, string][], v: string, set: (k: string) => void, label: string) => (
   <Segmented label={label} value={v} onChange={set} options={items.map(([k, l]) => ({ value: k, label: l }))} />
@@ -77,7 +79,9 @@ function Tickets() {
   const q = useSiteItems<Ticket>("/support-tickets");
   const [f, setF] = useState({ title: "", body: "", category: "other", priority: "normal" });
   const m = useSiteMutation<Record<string, unknown>, Ticket>("POST", "/support-tickets", { onSuccess: () => setF({ title: "", body: "", category: "other", priority: "normal" }) });
-  const ctx = { path: s.ekran || location.pathname, app_version: "web", user_agent: navigator.userAgent };
+  // Bağlam: ?ekran= ya da menüden gelinen sayfa (AppShell Destek bağlantısı state.from taşır); yoksa bu sayfa
+  const from = (location.state as { from?: string } | null)?.from;
+  const ctx = { path: s.ekran || from || location.pathname, app_version: "web", user_agent: navigator.userAgent };
   return (
     <div className="stack">
       <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ ...f, context: ctx }); }}>
@@ -151,9 +155,11 @@ function SessionCard({ s, canDecide }: { s: Session; canDecide: boolean }) {
 
 /** Aktif destek oturumu bandı (her site ekranında). */
 export function SupportSessionBanner() {
+  const { can } = useSite();
   const s = useSiteGet<Session | null>("/support-sessions/active", undefined, { refetchInterval: 60000 });
   if (!s.data) return null;
-  return <Alert tone="warn" title="Destek oturumu aktif">Platform destek ekibi ({s.data.requested_by}) {formatDateTime(s.data.ends_at)} saatine kadar verinizi salt okunur görebilir. Destek ekranından bitirebilirsiniz.</Alert>;
+  // Bitirme yalnız kullanıcı yönetimi yetkisiyle (Destek » Oturumlar, SessionCard ile aynı izin)
+  return <Alert tone="warn" title="Destek oturumu aktif">Platform destek ekibi ({s.data.requested_by}) {formatDateTime(s.data.ends_at)} saatine kadar verinizi salt okunur görebilir.{can(P.membersManage) ? " Destek ekranından bitirebilirsiniz." : ""}</Alert>;
 }
 
 // ===================================================================== 83 Yardım

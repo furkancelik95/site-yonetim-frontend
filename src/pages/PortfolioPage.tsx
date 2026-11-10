@@ -60,7 +60,7 @@ export function PortfolioPage() {
                           <div className="site-card__stat-value"><Money value={s.finance.open_balance} tone="balance" className="nowrap" /></div>
                         </div>
                         <div className="site-card__stat">
-                          <div className="site-card__stat-label">Borçlu</div>
+                          <div className="site-card__stat-label">Borçlu hesap</div>
                           <div className="site-card__stat-value num">{s.finance.debtor_count}</div>
                         </div>
                         <div className="site-card__stat">

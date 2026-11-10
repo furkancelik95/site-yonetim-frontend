@@ -6,7 +6,7 @@ import type { Schemas } from "../../api/types";
 import { Avatar, Badge, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
 import { categoryIcon } from "../../lib/icons";
-import { priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone, slaState, slaTone } from "../../lib/labels";
+import { REQUEST_STATUSES, priorityTone, requestCategory, requestEvent, requestPriority, requestStatus, requestStatusTone, slaState, slaTone } from "../../lib/labels";
 import { P, useSite } from "../../site/SiteContext";
 import { DepartmentAssign } from "./Departments";
 import { ExtrasCard, InternalNotes, MergeCard, SlaCard } from "./RequestExtras";
@@ -71,7 +71,7 @@ export function RequestDetailPage() {
               <li key={e.id} className="is-done">
                 <div className="timeline__title">
                   {requestEvent(e.kind)}
-                  {e.new_status && <> → <Badge tone={requestStatusTone(e.new_status)}>{requestStatus(e.new_status)}</Badge></>}
+                  {e.new_status && requestEvent(e.kind) !== requestStatus(e.new_status) && <> → <Badge tone={requestStatusTone(e.new_status)}>{requestStatus(e.new_status)}</Badge></>}
                 </div>
                 {e.description && <div style={{ whiteSpace: "pre-wrap" }} className="small">{e.description}</div>}
                 <div className="timeline__meta">{e.actor_name ?? "—"} · {formatDateTime(e.created_at)}</div>
@@ -103,7 +103,9 @@ function DetailKpis({ r }: { r: Detail }) {
 
 /** Yalnız dokümandaki akışta izin verilen geçişler (backend `allowed_transitions`, K18). */
 function StatusForm({ r }: { r: Detail }) {
-  const [status, setStatus] = useState<Detail["status"]>(r.allowed_transitions[0] ?? r.status);
+  // Backend geçişleri sırasız (küme) döner: akış sırasına diz, varsayılan "İptal" değil bir sonraki adım olsun.
+  const options = [...r.allowed_transitions].sort((a, b) => REQUEST_STATUSES.indexOf(a) - REQUEST_STATUSES.indexOf(b));
+  const [status, setStatus] = useState<Detail["status"]>(options.find((x) => x !== "cancelled") ?? options[0] ?? r.status);
   const [resolution, setResolution] = useState("");
   const [err, setErr] = useState<string>();
   const m = useSiteMutation<{ status: string; resolution: string | null }, Detail>("POST", `/requests/${r.id}/status`, { onSuccess: () => setResolution("") });
@@ -111,7 +113,7 @@ function StatusForm({ r }: { r: Detail }) {
     e.preventDefault();
     if (NEEDS_RESOLUTION.has(status) && !resolution.trim()) return setErr(status === "cancelled" ? "İptal için gerekçe yazın." : "Çözüldü için çözüm notu zorunlu.");
     setErr(undefined);
-    m.mutate({ status, resolution: resolution.trim() || null });
+    m.mutate({ status, resolution: NEEDS_RESOLUTION.has(status) ? resolution.trim() || null : null });
   }
   return (
     <form className="card" onSubmit={submit} noValidate>
@@ -119,12 +121,16 @@ function StatusForm({ r }: { r: Detail }) {
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <Field label="Yeni durum">
-          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{r.allowed_transitions.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}</select>}
+          {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{options.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}</select>}
         </Field>
         {r.status === "resolved" && r.reported_by_person_id && <p className="small muted mb-0">Sakin onayı bekleniyor; talep sakin onaylayınca ya da yanıt gelmezse kendiliğinden kapanır.</p>}
-        <Field label={status === "cancelled" ? "İptal gerekçesi" : "Çözüm notu"} required={NEEDS_RESOLUTION.has(status)} error={err ?? fieldError(m.error, "resolution")}>
-          {(p) => <textarea {...p} className="field__input" rows={2} value={resolution} onChange={(e) => setResolution(e.target.value)} />}
-        </Field>
+        {/* Not yalnız Çözüldü (çözüm) ve İptal (gerekçe) için saklanır; diğer geçişlerde alan gösterilmez —
+            ara not için "Yorum" ya da "İç not" kullanılır. */}
+        {NEEDS_RESOLUTION.has(status) ? (
+          <Field label={status === "cancelled" ? "İptal gerekçesi" : "Çözüm notu"} required error={err ?? fieldError(m.error, "resolution")}>
+            {(p) => <textarea {...p} className="field__input" rows={2} value={resolution} onChange={(e) => setResolution(e.target.value)} />}
+          </Field>
+        ) : <p className="small muted mb-0">Ara bilgi için aşağıdaki yorum ya da iç not alanını kullanın.</p>}
       </div>
       <div className="card__foot"><SubmitButton busy={m.isPending} className="btn btn--primary" disabled={status === r.status}>Kaydet</SubmitButton></div>
     </form>

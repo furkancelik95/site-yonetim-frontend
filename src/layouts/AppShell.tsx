@@ -76,7 +76,10 @@ import { Avatar } from "../components/ui";
 import { initials } from "../lib/format";
 import { M, P, type SiteCtx } from "../site/SiteContext";
 
-function Item({ to, icon, label, end, external }: { to: string; icon: ReactNode; label: string; end?: boolean; external?: boolean }) {
+function Item({ to, icon, label, end, external, keepFrom }: { to: string; icon: ReactNode; label: string; end?: boolean; external?: boolean; keepFrom?: boolean }) {
+  // keepFrom: Destek gibi bağlama ihtiyaç duyan ekranlar, kullanıcının geldiği sayfayı (state.from) alır.
+  const loc = useLocation();
+  const from = loc.pathname === to ? (loc.state as { from?: string } | null)?.from : loc.pathname;
   if (external) {
     return (
       <a className="navlink" href={to} target="_blank" rel="noopener">
@@ -85,7 +88,7 @@ function Item({ to, icon, label, end, external }: { to: string; icon: ReactNode;
     );
   }
   return (
-    <NavLink className="navlink" to={to} end={end}>
+    <NavLink className="navlink" to={to} end={end} state={keepFrom && from ? { from } : undefined}>
       {icon} <span>{label}</span>
     </NavLink>
   );
@@ -197,7 +200,7 @@ function SiteNav({ ctx }: { ctx: SiteCtx }) {
           {(can(P.financeRead) || can(P.requestsRead) || can(P.auditRead) || can(P.expensesRead)) && <Item to={`${base}/rapor-katalogu`} icon={<BarChart3 aria-hidden="true" />} label="Rapor Kataloğu" />}
           {(can(P.chargePost) || can(P.auditRead)) && <Item to={`${base}/denetim-paketi`} icon={<FileCheck2 aria-hidden="true" />} label="Denetim Paketi" />}
           {can(P.privacyManage) && <Item to={`${base}/kvkk`} icon={<ShieldCheck aria-hidden="true" />} label="KVKK" />}
-          {(can(P.membersManage) || can(P.financeRead) || can(P.modulesManage)) && <Item to={`${base}/destek`} icon={<LifeBuoy aria-hidden="true" />} label="Destek" />}
+          {(can(P.membersManage) || can(P.financeRead) || can(P.modulesManage)) && <Item to={`${base}/destek`} icon={<LifeBuoy aria-hidden="true" />} label="Destek" keepFrom />}
           <Item to={`${base}/yardim`} icon={<HelpCircle aria-hidden="true" />} label="Yardım" />
           {surveys && <Item to={`${base}/anketler`} icon={<Vote aria-hidden="true" />} label="Anketler" />}
           {can(P.expensesRead) && <Item to={`${base}/sozlesmeler`} icon={<FileSignature aria-hidden="true" />} label="Sözleşmeler" />}

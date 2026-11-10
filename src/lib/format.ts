@@ -36,14 +36,14 @@ export function formatMoney(v: MoneyIn, withSymbol = true): string {
   return withSymbol ? `${s} ₺` : s;
 }
 
-/** KPI için kısa gösterim: 2,4 M ₺ · 141 B ₺ */
+/** KPI için kısa gösterim: 2,4 mn ₺ · 141 bin ₺ (Türkçe kısaltma; "B" İngilizcede milyar sanılıyordu) */
 export function formatMoneyShort(v: MoneyIn): string {
   const d = toDecimal(v);
   if (!d) return "—";
   const abs = d.abs();
   const one = new Intl.NumberFormat(TR, { maximumFractionDigits: 1 });
-  if (abs.gte(1_000_000)) return `${one.format(Number(d.div(1_000_000).toFixed(1)))} M ₺`;
-  if (abs.gte(10_000)) return `${new Intl.NumberFormat(TR, { maximumFractionDigits: 0 }).format(Number(d.div(1000).toFixed(0)))} B ₺`;
+  if (abs.gte(1_000_000)) return `${one.format(Number(d.div(1_000_000).toFixed(1)))} mn ₺`;
+  if (abs.gte(10_000)) return `${new Intl.NumberFormat(TR, { maximumFractionDigits: 0 }).format(Number(d.div(1000).toFixed(0)))} bin ₺`;
   return formatMoney(v);
 }
 

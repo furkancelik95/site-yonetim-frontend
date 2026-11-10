@@ -2,7 +2,7 @@ import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "re
 import { createBrowserRouter, Outlet } from "react-router";
 import { ToastProvider } from "./components/toast";
 import { Loading, NotFound } from "./components/ui";
-import { PlatformLayout, RequireAuth, RootIndex, SiteLayout } from "./layouts/guards";
+import { PlatformLayout, RequireAuth, RequireScreen, RootIndex, SiteLayout } from "./layouts/guards";
 import { AppShell } from "./layouts/AppShell";
 import { ResidentLayout } from "./layouts/ResidentLayout";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
@@ -175,7 +175,7 @@ export const router = createBrowserRouter([
             element: <SiteLayout />,
             children: [
               { index: true, element: <SiteIndex dashboard={<L c={Dashboard} />} /> },
-              ...siteScreens.map(([path, name]) => ({ path, element: <L c={page(site, name)} /> })),
+              ...siteScreens.map(([path, name]) => ({ path, element: <RequireScreen path={path}><L c={page(site, name)} /></RequireScreen> })),
               { path: "*", element: <NotFound /> },
             ],
           },
@@ -215,6 +215,7 @@ export const router = createBrowserRouter([
               { path: "acil-durum", element: <L c={page(resident, "ResidentEmergencyPage")} /> },
               { path: "belgeler", element: <L c={page(resident, "ResidentDocumentsPage")} /> },
               { path: "kvkk", element: <L c={page(resident, "ResidentPrivacyPage")} /> },
+              { path: "sss", element: <L c={page(resident, "ResidentHelpPage")} /> },
               { path: "*", element: <NotFound /> },
             ],
           },

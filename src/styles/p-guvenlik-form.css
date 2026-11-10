@@ -1,0 +1,7 @@
+/* Güvenlik masası formları: bölüm arama sonuçları formun ÜSTÜNDE açılır (test raporu: bölüm seçilince
+   form aşağı-yukarı kayıyor, yanlış alana tıklanıyordu). Liste akıştan çıkar; alttaki alanlar yerinde kalır. */
+.unitpick-overlay > .field { position: relative; }
+.unitpick-overlay > .field > .card {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 20;
+  box-shadow: var(--shadow-md);
+}

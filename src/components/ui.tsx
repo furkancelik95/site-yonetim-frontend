@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Info, Lock, Minus, SearchX } from "lucide-react";
 import { ApiError } from "../api/client";
+import { ContextHelp } from "./ContextHelp";
 import { formatMoney, initials, moneySign } from "../lib/format";
 
 /* ---------- Durumlar: yükleniyor / hata / boş ---------- */
@@ -189,6 +190,7 @@ export function PageHead({ title, subtitle, actions, eyebrow, photo, band = true
           {shown && <div className="hero__eyebrow">{shown}</div>}
           <h1>{title}</h1>
           {subtitle && <p className="hero__sub">{subtitle}</p>}
+          <ContextHelp />
         </div>
         {actions && <div className="hero__actions">{actions}</div>}
       </div>

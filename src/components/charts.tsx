@@ -126,7 +126,9 @@ export function BarChart({
 }) {
   const max = niceMax(Math.max(0, ...data.map((d) => d.value)));
   const hi = highlight ?? data.reduce((bi, d, i, a) => (d.value > (a[bi]?.value ?? -Infinity) ? i : bi), 0);
-  const ticks = [0.5, 1];
+  // Hiç değer yoksa ölçek anlamsız ("%1 / %0,5"): kılavuz çizgileri etiketsiz kalır
+  const empty = data.every((d) => d.value <= 0);
+  const ticks = empty ? [] : [0.5, 1];
   const summary = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
   return (
     <div className={`barchart${compact ? " barchart--compact" : ""}`} role="img" aria-label={`${label}: ${summary}`}>
