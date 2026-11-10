@@ -25,8 +25,8 @@ const TABS = [
 
 /**
  * Onay kutusu (ONY-02): kararımı bekleyen talepler, kendi taleplerim, geçmiş; yetki devri (ONY-03).
- * Onaycı olmak rol atamasından gelir, ayrı izin gerekmez. Şu an onaydan geçen tek işlem
- * "onay kuralı değişikliği"; diğer akışlar bağlandıkça buraya düşer (backend K21).
+ * Onaycı olmak rol atamasından gelir, ayrı izin gerekmez. Onay kuralı tanımlı her işlem
+ * (tahakkuk, iade, ödeme planı, satın alma, kayıt başvurusu, rol ataması…) 202 ile buraya düşer (backend K21).
  */
 export function ApprovalsPage() {
   const { can, site } = useSite();
@@ -71,7 +71,7 @@ function RequestList({ tab, page, onPage, empty }: { tab: string; page: string; 
     <div className="card">
       <div className="card__body card__body--flush">
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} onRetry={() => q.refetch()} /></div> : q.data.items.length === 0 ? (
-          <Empty title={empty} icon={<Inbox aria-hidden="true" />}>Şu an onaydan geçen tek işlem onay kuralı değişikliği; kayıt başvurusu, iade ve tahakkuk bağlandıkça burada görünecek.</Empty>
+          <Empty title={empty} icon={<Inbox aria-hidden="true" />}>Onay kuralı tanımlı işlemler (tahakkuk, iade, ödeme planı, satın alma, kayıt başvurusu gibi) onaya düştüğünde burada görünür. Kuralları Onay kuralları ekranından yönetebilirsiniz.</Empty>
         ) : (
           <div className="table-wrap">
             <table className="data">
