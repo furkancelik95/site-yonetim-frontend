@@ -1,18 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
-import { Copy, Plus, RefreshCw, UserRoundCheck } from "lucide-react";
+import { Copy, History, Plus, RefreshCw, UserRoundCheck } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { ResidentHead } from "../../components/ResidentHead";
 import { useToast } from "../../components/toast";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Loading, SubmitButton, fieldError, useDocumentTitle } from "../../components/ui";
-import { formatDate, todayIso } from "../../lib/format";
+import { formatDate, formatTime, todayIso } from "../../lib/format";
 import { plateInput } from "../../lib/input";
-import { WEEKDAYS, inviteStatus, inviteType, visitRequestStatus } from "../../lib/labels";
+import { WEEKDAYS, inviteStatus, inviteType, visitRequestStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
 
 type Invite = Schemas["VisitorInviteOut"];
 type Approval = Schemas["VisitRequestOut"];
 type Delegate = Schemas["ParcelDelegateOut"];
+type MyVisitor = Schemas["MyVisitorOut"];
 
 /**
  * Ziyaretçiler (GUV-02/03, sakin): ön davet (tek kullanımlık / tarih aralıklı / süreli kalıcı) — 6 haneli kod ve QR;
@@ -56,6 +57,7 @@ export function ResidentVisitorsPage() {
               <div className="card__body stack" style={{ gap: "var(--s-1)" }}>{decided.map((a) => <div key={a.id} className="small">{a.full_name} · <Badge tone={a.status === "allowed" ? "ok" : "danger"}>{visitRequestStatus(a.status)}</Badge> <span className="muted">({a.decision_source === "resident" ? "sizin kararınız" : "görevli kararı"})</span></div>)}</div>
             </details>
           )}
+          <VisitorHistory />
           <Delegates />
         </div>
       </div>
@@ -142,6 +144,26 @@ function InviteForm({ onDone }: { onDone: (created?: Invite) => void }) {
       </div>
       <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending} disabled={f.visitor_name.trim().length < 3}>Davet oluştur</SubmitButton><button className="btn btn--ghost" type="button" onClick={() => onDone()}>Vazgeç</button></div>
     </form>
+  );
+}
+
+/** Ziyaretçi geçmişim: son 30 gün, en çok 100 kayıt; güvenliğin kapıda kaydettikleri de dahil. */
+function VisitorHistory() {
+  const q = useSiteGet<MyVisitor[]>("/resident/visitors");
+  return (
+    <details className="card">
+      <summary className="card__head" style={{ cursor: "pointer" }}><History aria-hidden="true" /> <span className="card__title">Ziyaretçi geçmişim</span>{q.data && <span className="card__meta ml-auto">son 30 gün · {q.data.length}</span>}</summary>
+      <div className="card__body stack" style={{ gap: "var(--s-2)" }}>
+        {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data.length === 0 ? <p className="small muted mb-0">Son 30 günde ziyaretçi kaydı yok.</p> : q.data.map((v) => (
+          <div key={v.id} className="r-item">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="r-item__title">{v.full_name} <Badge tone={visitorTone(v.status)}>{visitorStatus(v.status)}</Badge></div>
+              <div className="r-item__meta">{visitorKind(v.kind)} · {v.unit_name} · {formatDate(v.visit_date)}{v.entered_at && ` · giriş ${formatTime(v.entered_at)}`}{v.exited_at && ` · çıkış ${formatTime(v.exited_at)}`}{v.plate && ` · ${v.plate}`}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
 

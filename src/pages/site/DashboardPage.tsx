@@ -106,7 +106,7 @@ export function DashboardPage() {
 
   // "Bugün ne yapmalıyım?" — panonun tepesinde sayı değil, eylem durur (referans).
   const actions: { tone: Tone; title: string; body: string; to: string; link: string }[] = [];
-  if (d.requests && d.requests.urgent > 0 && shows(M.requests, P.requestsRead)) {
+  if (d.requests && d.requests.urgent > 0 && (shows(M.requests, P.requestsRead) || shows(M.requests, P.requestsAssigned))) {
     actions.push({ tone: "danger", title: `${d.requests.urgent} acil talep var`, body: "Acil öncelikli talepler bekliyor.", to: `${base}/talepler`, link: "Taleplere git" });
   }
   if (f && new Decimal(f.over_30_days).gt(0)) {
@@ -143,7 +143,7 @@ export function DashboardPage() {
             value={formatPercent(shownRate)}
             delta={otherRate !== null ? { tone: "info", label: `${period === "month" ? "toplam" : "bu ay"} ${formatPercent(otherRate)}` } : undefined}
           />
-          <Kpi label="Açık bakiye" tone="danger" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(f.open_balance)} note={`${f.debtor_count} borçlu hesap`} />
+          <Kpi label="Toplam açık bakiye" tone="danger" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(f.open_balance)} note={`${f.debtor_count} borçlu hesap`} />
           <Kpi label={period === "month" ? "Bu ay tahakkuk" : "Toplam tahakkuk"} icon={<ReceiptText aria-hidden="true" />} value={formatMoneyShort(charged)} note={`${formatMoneyShort(collected)} tahsil edildi`} />
           {d.cash_balance !== null && d.cash_balance !== undefined ? (
             <Kpi label="Kasa ve banka" tone="accent" icon={<Landmark aria-hidden="true" />} value={formatMoneyShort(d.cash_balance)} note="tüm hesapların toplamı" />

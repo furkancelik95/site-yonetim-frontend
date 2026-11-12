@@ -66,7 +66,7 @@ export function CollectionKpis({ data }: { data: Collections | undefined }) {
         delta={prev ? { tone: diff >= 0 ? "ok" : "danger", dir: diff > 0 ? "up" : diff < 0 ? "down" : "flat", label: `geçen ay ${formatPercent(prev.rate)}` } : undefined}
       />
       <Kpi
-        label="Kalan alacak"
+        label="Aidat dönem kalanı"
         tone={outstanding > 0 ? "danger" : "ok"}
         icon={<CircleDollarSign aria-hidden="true" />}
         value={short(outstanding)}

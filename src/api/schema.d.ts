@@ -917,6 +917,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/customers/{organization_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Müşteri adını düzenle */
+        patch: operations["update_customer_api_v1_platform_customers__organization_id__patch"];
+        trace?: never;
+    };
     "/api/v1/platform/sites": {
         parameters: {
             query?: never;
@@ -926,12 +943,37 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Site aç */
+        /**
+         * Site aç
+         * @description Adres eki (`slug`) kurala göre düzeltilir (docs/04 §11); düzeltildiyse yanıtta
+         *     `slug_adjusted` ve mesajda kullanılan ek bildirilir.
+         */
         post: operations["create_site_endpoint_api_v1_platform_sites_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Site adı ve adresini düzenle
+         * @description Gönderilen alanlar değişir; boş metin adres/il/ilçeyi temizler. Aynı ad (Türkçe büyük/
+         *     küçük harf duyarsız) başka sitede varsa 409 `site_already_exists`.
+         */
+        patch: operations["update_site_api_v1_platform_sites__site_id__patch"];
         trace?: never;
     };
     "/api/v1/platform/sites/{site_id}/plan": {
@@ -960,7 +1002,8 @@ export interface paths {
         };
         /**
          * Tüm tesislerin destek biletleri
-         * @description Öncelik (kritik önce), sonra en yeni. SLA aşımı yanıtta hesaplanır.
+         * @description Öncelik (kritik önce), sonra en yeni. SLA aşımı yanıtta hesaplanır; `summary` tüm
+         *     tesislerin açık biletlerini veritabanında sayar (sayfa ve süzgeçten bağımsız).
          */
         get: operations["platform_tickets_api_v1_platform_support_tickets_get"];
         put?: never;
@@ -1013,7 +1056,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Bilgi bankası yönetimi (yayında ya da arşivde) */
+        get: operations["platform_articles_api_v1_platform_knowledge_articles_get"];
         put?: never;
         /** Makale yayınla */
         post: operations["create_article_api_v1_platform_knowledge_articles_post"];
@@ -1040,6 +1084,40 @@ export interface paths {
         patch: operations["update_article_api_v1_platform_knowledge_articles__article_id__patch"];
         trace?: never;
     };
+    "/api/v1/platform/knowledge-articles/{article_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Makaleyi yayından kaldır (silme yok) */
+        post: operations["archive_article_api_v1_platform_knowledge_articles__article_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/knowledge-articles/{article_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arşivdeki makaleyi yeniden yayınla */
+        post: operations["restore_article_api_v1_platform_knowledge_articles__article_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge-articles": {
         parameters: {
             query?: never;
@@ -1050,7 +1128,7 @@ export interface paths {
         /**
          * Bilgi bankası (arama, ekran, okuyucu)
          * @description Makale tüm tesisler için ortak. `screen` yol önekiyle eşleşir (`satin-alma` makalesi
-         *     `satin-alma/talepler` ekranında da görünür).
+         *     `satin-alma/talepler` ekranında da görünür). Yayından kaldırılan (arşiv) makale görünmez.
          */
         get: operations["list_articles_api_v1_knowledge_articles_get"];
         put?: never;
@@ -1085,7 +1163,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Sitenin destek biletleri */
+        /**
+         * Sitenin destek biletleri
+         * @description `summary` açık biletlerin SLA özeti (veritabanında; sayfa ve süzgeçten bağımsız).
+         */
         get: operations["list_tickets_api_v1_sites__slug__support_tickets_get"];
         put?: never;
         /** Destek bileti aç */
@@ -1575,6 +1656,27 @@ export interface paths {
         put?: never;
         /** Ziyaretçi davet et */
         post: operations["create_invite_api_v1_sites__slug__resident_visitor_invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{slug}/resident/visitors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ziyaretçi geçmişim (son 30 gün)
+         * @description Bölümlerime gelen ziyaretçiler — güvenliğin doğrudan kaydettikleri dahil. Telefon ve not
+         *     dönmez; saklama süresi dolup anonimleşen kayıtta ad "Anonim".
+         */
+        get: operations["my_visitors_api_v1_sites__slug__resident_visitors_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2200,7 +2302,9 @@ export interface paths {
         put?: never;
         /**
          * Malik/kiracı ekle
-         * @description Gerekli cari hesapları da açar: malik `-M` (kiracı yoksa `-O`), kiracı `-K` (docs/03 §5).
+         * @description Gerekli cari hesapları da açar: malik `-M` (kiracı yoksa `-O`), kiracı `-K`; kiracı
+         *     eklenince malikin `-O` hesabı başlangıç ayı geçince ve bakiyesi sıfırsa kapanır (hemen ya da
+         *     günlük yapı işiyle; docs/03 §5).
          */
         post: operations["add_party_api_v1_sites__slug__units__unit_id__parties_post"];
         delete?: never;
@@ -4140,6 +4244,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{slug}/requests/assignable-staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Talep atanabilecek personel
+         * @description Tesis kapsamlı rolünde `requests.assign` ya da `requests.assigned` olan etkin kullanıcılar
+         *     (ada göre). Personel ile departman arasında veri bağı yok; departman süzgeci verilmez.
+         */
+        get: operations["assignable_staff_api_v1_sites__slug__requests_assignable_staff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{slug}/requests": {
         parameters: {
             query?: never;
@@ -4274,6 +4399,7 @@ export interface paths {
         /**
          * Bu talepler aynı arıza olabilir
          * @description Kural tabanlı öneri (yapay zekâ yok): aynı kategori + konum/blok + zaman penceresi.
+         *     Başka talepleri listelediği için yalnız `requests.assign`.
          */
         get: operations["merge_suggestions_api_v1_sites__slug__requests__request_id__merge_suggestions_get"];
         put?: never;
@@ -5836,7 +5962,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bu sitedeki onaylarım ve açık rızam */
+        /**
+         * Bu sitedeki onaylarım ve açık rızam
+         * @description Sakin olarak görüntülemede görüntülenen sakinin onayları (PLT-12).
+         */
         get: operations["my_privacy_api_v1_sites__slug__my_privacy_get"];
         put?: never;
         post?: never;
@@ -5870,7 +5999,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Verilerimi indir (kişisel veri paketi, JSON) */
+        /**
+         * Verilerimi indir (kişisel veri paketi, JSON)
+         * @description Sakin olarak görüntülemede 403 `read_only`: paket bir ekran değil, sakinin kişisel verisinin
+         *     dışa aktarımıdır (KVKK m.11 hakkı ilgili kişinindir); personel paketi başvuru üzerinden
+         *     `privacy-requests/{id}/data-package` ile `privacy.manage` izniyle alır.
+         */
         get: operations["my_data_export_api_v1_sites__slug__my_privacy_data_export_get"];
         put?: never;
         post?: never;
@@ -11259,9 +11393,32 @@ export interface components {
         AssignIn: {
             /**
              * Assignee
-             * @description personel ya da firma adı
+             * @description firma ya da serbest metin (geriye uyum); `assignee_id` varsa yok sayılır
              */
-            assignee: string;
+            assignee?: string | null;
+            /**
+             * Assignee Id
+             * @description personel (GET …/requests/assignable-staff `id`)
+             */
+            assignee_id?: string | null;
+        };
+        /** AssignableOut */
+        AssignableOut: {
+            /**
+             * Id
+             * Format: uuid
+             * @description kullanıcı kimliği — `assign` gövdesinde `assignee_id`
+             */
+            id: string;
+            /** Full Name */
+            full_name: string;
+            /** Roles */
+            roles: string[];
+            /**
+             * All Requests
+             * @description true: tüm talepleri görür (requests.assign); false: yalnız kendine atananları
+             */
+            all_requests: boolean;
         };
         /** AttendanceEventIn */
         AttendanceEventIn: {
@@ -11481,7 +11638,10 @@ export interface components {
             after: {
                 [key: string]: unknown;
             } | null;
-            /** Ip */
+            /**
+             * Ip
+             * @description people.read yoksa `***`
+             */
             ip: string | null;
             /** @description user (kişi) · system (gece işi, demo) · delegate · support_session */
             actor_type: components["schemas"]["ActorType"];
@@ -14248,6 +14408,29 @@ export interface components {
              * @description Yalnız bu yanıtta, bir kez gösterilir. Saklanmaz; güvenli yolla iletin.
              */
             temporary_password: string;
+        };
+        /**
+         * CustomerPatch
+         * @description Yalnız müşteri (yönetim şirketi) adı; vergi no ve plan buradan değişmez. Müşteride
+         *     iletişim/adres alanı yok (yetkilinin iletişimi kullanıcı hesabındadır).
+         */
+        CustomerPatch: {
+            /** Name */
+            name: string;
+        };
+        /** CustomerSummaryOut */
+        CustomerSummaryOut: {
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Name */
+            name: string;
+            /** Tax Number */
+            tax_number: string | null;
+            /** Plan Id */
+            plan_id: string | null;
         };
         /** CustomerUsageOut */
         CustomerUsageOut: {
@@ -17178,6 +17361,11 @@ export interface components {
             updated_at: string;
             /** Updated By */
             updated_by: string;
+            /**
+             * Archived At
+             * @description yayından kaldırıldı (arşiv); yardımda ve aramada görünmez
+             */
+            archived_at?: string | null;
         };
         /** KnowledgeArticlePatch */
         KnowledgeArticlePatch: {
@@ -18115,6 +18303,42 @@ export interface components {
             /** Replaced By */
             replaced_by: string | null;
         };
+        /**
+         * MeterPatch
+         * @description Kısmi düzenleme: yalnız gönderilen alanlar değişir; gönderilmeyen alan olduğu gibi kalır
+         *     (ör. `status` gönderilmezse sayaç durumu korunur). Bölüm verilip `area` verilmezse ortak alan
+         *     adı temizlenir.
+         */
+        MeterPatch: {
+            /** Kind */
+            kind?: string | null;
+            /** Serial */
+            serial?: string | null;
+            /** Unit Id */
+            unit_id?: string | null;
+            /**
+             * Area
+             * @description ortak alan sayacında
+             */
+            area?: string | null;
+            /**
+             * Unit Label
+             * @description boş: m³ / kWh / birim
+             */
+            unit_label?: string | null;
+            /**
+             * Multiplier
+             * @description "1" — tüketim çarpanı
+             */
+            multiplier?: number | string | null;
+            /** Installed On */
+            installed_on?: string | null;
+            /**
+             * Status
+             * @description active · faulty
+             */
+            status?: string | null;
+        };
         /** MeterPeriodOut */
         MeterPeriodOut: {
             /** Period */
@@ -18572,6 +18796,36 @@ export interface components {
             muster_point: string | null;
             /** At */
             at: string | null;
+        };
+        /** MyVisitorOut */
+        MyVisitorOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Unit Id
+             * Format: uuid
+             */
+            unit_id: string;
+            /** Unit Name */
+            unit_name: string;
+            /** Full Name */
+            full_name: string;
+            kind: components["schemas"]["VisitorKind"];
+            /** Plate */
+            plate: string | null;
+            /**
+             * Visit Date
+             * Format: date
+             */
+            visit_date: string;
+            status: components["schemas"]["VisitorStatus"];
+            /** Entered At */
+            entered_at: string | null;
+            /** Exited At */
+            exited_at: string | null;
         };
         /** MyVote */
         MyVote: {
@@ -19756,17 +20010,6 @@ export interface components {
             /** Total */
             total: number;
         };
-        /** Page[SupportTicketOut] */
-        Page_SupportTicketOut_: {
-            /** Items */
-            items: components["schemas"]["SupportTicketOut"][];
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Total */
-            total: number;
-        };
         /** Page[TimesheetExportOut] */
         Page_TimesheetExportOut_: {
             /** Items */
@@ -20081,6 +20324,16 @@ export interface components {
             party: components["schemas"]["PartyOut"];
             /** Opened Accounts */
             opened_accounts: components["schemas"]["site_yonetim__api__v1__structure__AccountOut"][];
+            /**
+             * Closed Accounts
+             * @description kiracı eklenince sonlandırılan malik oturan (`-O`) hesapları
+             */
+            closed_accounts?: components["schemas"]["site_yonetim__api__v1__structure__AccountOut"][];
+            /**
+             * Kept Open Accounts
+             * @description şimdilik açık kalan, günlük yapı işinin kapatacağı malik oturan hesapları
+             */
+            kept_open_accounts?: components["schemas"]["PendingCloseAccountOut"][];
         };
         /** PartyCreate */
         PartyCreate: {
@@ -20700,6 +20953,41 @@ export interface components {
             /** Deadline */
             deadline: string | null;
         };
+        /** PendingCloseAccountOut */
+        PendingCloseAccountOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Reference Code */
+            reference_code: string;
+            /**
+             * Person Id
+             * Format: uuid
+             */
+            person_id: string;
+            /** Is Closed */
+            is_closed: boolean;
+            /**
+             * Pending Close
+             * @description true: günlük yapı işi (`run-structure-jobs`) koşullar sağlanınca kapatacak
+             */
+            pending_close: boolean;
+            /**
+             * Close From
+             * Format: date
+             * @description en erken kapanış: kiracı başlangıç ayının ertesi ayının 1'i (kıst malik payı bu tarihe kadar bu hesaba yazılır)
+             */
+            close_from: string;
+            /**
+             * Has Balance
+             * @description true: bakiye sıfırlanana kadar açık kalır
+             */
+            has_balance: boolean;
+        };
         /** PendingNoticeOut */
         PendingNoticeOut: {
             /**
@@ -21078,7 +21366,18 @@ export interface components {
             max_storage_mb: number | null;
             /** Allowed Modules */
             allowed_modules: string[];
+            /** @description site: siteye atanır · organization: yönetim şirketi planı (portföy), siteye atanamaz */
+            scope: components["schemas"]["PlanScope"];
         };
+        /**
+         * PlanScope
+         * @description Plan kime satılır: site planları (Başlangıç/Standart/Pro) ya da yönetim şirketi planı.
+         *
+         *     Ayrı sütun yok: şirket planı, çoklu site portföyünü (`portfolio`) açan plandır — docs/01'de
+         *     yalnız "Yönetim Şirketi" planı `portfolio`'yu içerir ("Pro: portfolio hariç hepsi").
+         * @enum {string}
+         */
+        PlanScope: "site" | "organization";
         /**
          * PlanStatus
          * @enum {string}
@@ -21137,6 +21436,31 @@ export interface components {
          * @enum {string}
          */
         PolicyKind: "building" | "liability" | "elevator" | "personnel" | "glass" | "other";
+        /**
+         * PolicyPatch
+         * @description Kısmi düzenleme: yalnız gönderilen alanlar değişir; gönderilmeyen alan olduğu gibi kalır.
+         *     Alan `null` gönderilirse temizlenir (zorunlu alanda 422).
+         */
+        PolicyPatch: {
+            /** Kind */
+            kind?: string | null;
+            /** Insurer */
+            insurer?: string | null;
+            /** Policy No */
+            policy_no?: string | null;
+            /** Coverage */
+            coverage?: string | null;
+            /** Premium */
+            premium?: string | null;
+            /** Start */
+            start?: string | null;
+            /** End */
+            end?: string | null;
+            /** Area */
+            area?: string | null;
+            /** Note */
+            note?: string | null;
+        };
         /**
          * PolicyWarning
          * @enum {string}
@@ -23108,6 +23432,12 @@ export interface components {
             /** Is Active */
             is_active: boolean;
         };
+        /**
+         * RequestChannel
+         * @description Talebin açıldığı kanal (K18: yalnız **sakinin açtığı** talep sakin onayıyla kapanır).
+         * @enum {string}
+         */
+        RequestChannel: "resident" | "staff";
         /** RequestConfirmIn */
         RequestConfirmIn: {
             /**
@@ -23185,7 +23515,7 @@ export interface components {
             status_label: string;
             /**
              * Allowed Transitions
-             * @description personelin seçebileceği durumlar (requests.assign yoksa boş)
+             * @description personelin seçebileceği durumlar (requests.assign / requests.assigned yoksa boş)
              */
             allowed_transitions: components["schemas"]["RequestStatus"][];
             /**
@@ -23209,8 +23539,18 @@ export interface components {
              * @description people.read ya da kendi talebi; yoksa null
              */
             reporter_name: string | null;
-            /** Assigned To */
+            /**
+             * Assigned To
+             * @description atanan kişinin adı ya da firma (görünen ad)
+             */
             assigned_to: string | null;
+            /**
+             * Assignee Id
+             * @description atanan personelin kullanıcı kimliği; firmaya / serbest metinle atanmışsa null
+             */
+            assignee_id: string | null;
+            /** @description resident: sakin açtı (kapanış sakin onayıyla) · staff: personel açtı */
+            channel: components["schemas"]["RequestChannel"];
             /** Department Id */
             department_id: string | null;
             /** Department Name */
@@ -23336,7 +23676,7 @@ export interface components {
             status_label: string;
             /**
              * Allowed Transitions
-             * @description personelin seçebileceği durumlar (requests.assign yoksa boş)
+             * @description personelin seçebileceği durumlar (requests.assign / requests.assigned yoksa boş)
              */
             allowed_transitions: components["schemas"]["RequestStatus"][];
             /**
@@ -23360,8 +23700,18 @@ export interface components {
              * @description people.read ya da kendi talebi; yoksa null
              */
             reporter_name: string | null;
-            /** Assigned To */
+            /**
+             * Assigned To
+             * @description atanan kişinin adı ya da firma (görünen ad)
+             */
             assigned_to: string | null;
+            /**
+             * Assignee Id
+             * @description atanan personelin kullanıcı kimliği; firmaya / serbest metinle atanmışsa null
+             */
+            assignee_id: string | null;
+            /** @description resident: sakin açtı (kapanış sakin onayıyla) · staff: personel açtı */
+            channel: components["schemas"]["RequestChannel"];
             /** Department Id */
             department_id: string | null;
             /** Department Name */
@@ -25706,6 +26056,44 @@ export interface components {
             /** Bank Name */
             bank_name?: string | null;
         };
+        /** SiteCreatedOut */
+        SiteCreatedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Plan Id */
+            plan_id: string | null;
+            /** Organization Id */
+            organization_id: string | null;
+            /** Property Kind */
+            property_kind: string;
+            /** City */
+            city: string | null;
+            /** District */
+            district: string | null;
+            /** Iban */
+            iban: string | null;
+            /** Bank Name */
+            bank_name: string | null;
+            /** Modules */
+            modules: string[];
+            /**
+             * Requested Slug
+             * @description istekte gönderilen adres eki (gönderilmediyse null; ad'dan üretildi)
+             */
+            requested_slug: string | null;
+            /**
+             * Slug Adjusted
+             * @description gönderilen adres eki kurala göre düzeltildi (küçük harf, Türkçe harf eşleme, boşluk → tire); kullanılan ek `slug`
+             */
+            slug_adjusted: boolean;
+        };
         /** SiteFinanceOut */
         SiteFinanceOut: {
             /**
@@ -25761,6 +26149,20 @@ export interface components {
             bank_name: string | null;
             /** Modules */
             modules: string[];
+        };
+        /**
+         * SitePatch
+         * @description Yalnız ad, adres ve konum; adres eki (`slug`) ve plan buradan değişmez.
+         */
+        SitePatch: {
+            /** Name */
+            name?: string | null;
+            /** Address */
+            address?: string | null;
+            /** City */
+            city?: string | null;
+            /** District */
+            district?: string | null;
         };
         /** SitePlanUpdate */
         SitePlanUpdate: {
@@ -26733,6 +27135,18 @@ export interface components {
              */
             on_call: boolean;
         };
+        /** SupportTicketPage */
+        SupportTicketPage: {
+            /** Items */
+            items: components["schemas"]["SupportTicketOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            summary: components["schemas"]["TicketSummaryOut"];
+        };
         /** TariffWriteOut */
         TariffWriteOut: {
             /**
@@ -27158,16 +27572,59 @@ export interface components {
              * Format: date-time
              */
             resolve_due: string;
-            /** First Breached */
+            /**
+             * First Breached
+             * @description ilk yanıt hedefi aşıldı (geç yanıt ya da hâlâ yok)
+             */
             first_breached: boolean;
-            /** Resolve Breached */
+            /**
+             * Resolve Breached
+             * @description çözüm hedefi aşıldı
+             */
             resolve_breached: boolean;
+            /**
+             * First Response Overdue
+             * @description açık, hiç yanıtlanmamış ve ilk yanıt hedefi geçmiş
+             */
+            first_response_overdue: boolean;
+            /**
+             * Breached
+             * @description SLA aşımı — ilk yanıt ya da çözüm hedefi aşıldı (iki ekranda tek tanım)
+             */
+            breached: boolean;
         };
         /**
          * TicketStatus
          * @enum {string}
          */
         TicketStatus: "open" | "answered" | "waiting_customer" | "resolved" | "closed";
+        /**
+         * TicketSummaryOut
+         * @description Açık biletlerin özeti — veritabanında sayılır; sayfadan ve `status` süzgecinden
+         *     bağımsızdır. Açık = çözüldü/kapandı dışındaki durumlar.
+         */
+        TicketSummaryOut: {
+            /**
+             * Open
+             * @description açık bilet sayısı
+             */
+            open: number;
+            /**
+             * Sla Breached
+             * @description açıkta SLA aşımı (`sla.breached`) olan bilet sayısı
+             */
+            sla_breached: number;
+            /**
+             * First Response Overdue
+             * @description açıkta hiç yanıtlanmamış ve ilk yanıt hedefi geçmiş bilet sayısı
+             */
+            first_response_overdue: number;
+            /**
+             * Critical
+             * @description açıkta kritik öncelikli bilet sayısı
+             */
+            critical: number;
+        };
         /** TimelinePlanOut */
         TimelinePlanOut: {
             /**
@@ -29010,6 +29467,12 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** Written[CustomerSummaryOut] */
+        Written_CustomerSummaryOut_: {
+            data: components["schemas"]["CustomerSummaryOut"];
+            /** Message */
+            message: string;
+        };
         /** Written[DelegationOut] */
         Written_DelegationOut_: {
             data: components["schemas"]["DelegationOut"];
@@ -29722,6 +30185,12 @@ export interface components {
         /** Written[ShiftTemplateOut] */
         Written_ShiftTemplateOut_: {
             data: components["schemas"]["ShiftTemplateOut"];
+            /** Message */
+            message: string;
+        };
+        /** Written[SiteCreatedOut] */
+        Written_SiteCreatedOut_: {
+            data: components["schemas"]["SiteCreatedOut"];
             /** Message */
             message: string;
         };
@@ -31744,6 +32213,8 @@ export interface operations {
     list_plans_api_v1_platform_plans_get: {
         parameters: {
             query?: {
+                /** @description site → yalnız siteye atanabilen planlar (site formu); boş → hepsi */
+                scope?: components["schemas"]["PlanScope"] | null;
                 page?: number;
                 page_size?: number;
             };
@@ -31806,6 +32277,41 @@ export interface operations {
             };
         };
     };
+    update_customer_api_v1_platform_customers__organization_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_CustomerSummaryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_site_endpoint_api_v1_platform_sites_post: {
         parameters: {
             query?: never;
@@ -31821,6 +32327,41 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_SiteCreatedOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_site_api_v1_platform_sites__site_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SitePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -31893,7 +32434,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page_SupportTicketOut_"];
+                    "application/json": components["schemas"]["SupportTicketPage"];
                 };
             };
             /** @description Validation Error */
@@ -32007,6 +32548,42 @@ export interface operations {
             };
         };
     };
+    platform_articles_api_v1_platform_knowledge_articles_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                audience?: components["schemas"]["ArticleAudience"] | null;
+                /** @description true: yayından kaldırılanlar */
+                archived?: boolean;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_KnowledgeArticleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_article_api_v1_platform_knowledge_articles_post: {
         parameters: {
             query?: never;
@@ -32054,6 +32631,68 @@ export interface operations {
                 "application/json": components["schemas"]["KnowledgeArticlePatch"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_KnowledgeArticleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_article_api_v1_platform_knowledge_articles__article_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Written_KnowledgeArticleOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_article_api_v1_platform_knowledge_articles__article_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -32166,7 +32805,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page_SupportTicketOut_"];
+                    "application/json": components["schemas"]["SupportTicketPage"];
                 };
             };
             /** @description Validation Error */
@@ -32686,6 +33325,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description `pickup_code_locked`: 5 hatalı denemeden sonra 15 dk */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -33455,6 +34101,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Written_VisitorInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_visitors_api_v1_sites__slug__resident_visitors_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyVisitorOut"][];
                 };
             };
             /** @description Validation Error */
@@ -37162,7 +37839,7 @@ export interface operations {
             query?: {
                 /** @description boşsa sıradaki dönemin 1'i */
                 charge_date?: string | null;
-                /** @description boşsa tahakkuk + 14 gün */
+                /** @description boşsa dönemin vade günü (finans parametresi `due_day`, K25); tahakkuk tarihinden önceye düşerse sonraki ayın aynı günü */
                 due_date?: string | null;
                 page?: number;
                 page_size?: number;
@@ -39646,6 +40323,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResidentPaymentPlanOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assignable_staff_api_v1_sites__slug__requests_assignable_staff_get: {
+        parameters: {
+            query?: {
+                /** @description ad araması */
+                q?: string | null;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignableOut"][];
                 };
             };
             /** @description Validation Error */
@@ -49497,7 +50208,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PolicyIn"];
+                "application/json": components["schemas"]["PolicyPatch"];
             };
         };
         responses: {
@@ -49704,7 +50415,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MeterIn"];
+                "application/json": components["schemas"]["MeterPatch"];
             };
         };
         responses: {

@@ -31,7 +31,7 @@ export function PortfolioPage() {
             <Kpi label="Site" icon={<Building2 aria-hidden="true" />} value={q.data.sites.length} note={`${formatInt(q.data.total_units)} bağımsız bölüm`} />
             <Kpi label="Tahsilat oranı" tone={rateTone(q.data.collection_rate)} icon={<TrendingUp aria-hidden="true" />} value={formatPercent(q.data.collection_rate)} note="finans izni olan siteler" />
             <Kpi label="Toplam tahakkuk" icon={<ReceiptText aria-hidden="true" />} value={formatMoneyShort(q.data.total_charged)} note={`${formatMoneyShort(q.data.total_collected)} tahsil edildi`} />
-            <Kpi label="Açık bakiye" tone="danger" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(q.data.total_open_balance)} />
+            <Kpi label="Toplam açık bakiye" tone="danger" icon={<Wallet aria-hidden="true" />} value={formatMoneyShort(q.data.total_open_balance)} />
           </div>
 
           <div>

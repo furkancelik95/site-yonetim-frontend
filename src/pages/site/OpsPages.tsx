@@ -209,7 +209,12 @@ function DepositActions({ d }: { d: DepKey }) {
 // ===================================================================== 55 Denetim listeleri
 /** Denetim listeleri (OPS-03): şablondan saha denetimi; olumsuz madde talep açar; skor. */
 export function InspectionsPage() {
+  const { can } = useSite();
+  // Şablon yönetimi requests.assign; teknik personel (requests.assigned) yalnız denetim yapar ve geçmişi görür
+  const manage = can(P.requestsAssign);
   const [s, set] = useUrlState({ sekme: "yeni" });
+  const sekme = s.sekme === "sablon" && !manage ? "yeni" : s.sekme;
+  const items: [string, string][] = manage ? [["yeni", "Denetim yap"], ["gecmis", "Geçmiş"], ["sablon", "Şablonlar"]] : [["yeni", "Denetim yap"], ["gecmis", "Geçmiş"]];
   const iq = useSiteGet<Inspection[]>("/inspections");
   const tq = useSiteGet<ChkTemplate[]>("/checklist-templates");
   const list = iq.data ?? [];
@@ -219,7 +224,7 @@ export function InspectionsPage() {
   return (
     <div className="stack">
       <PageHead title="Denetim listeleri" eyebrow="Operasyon" subtitle="Temizlik, havuz hijyeni, taşınma hasar kontrolü… Olumsuz madde otomatik talep açar.">
-        {tabs([["yeni", "Denetim yap"], ["gecmis", "Geçmiş"], ["sablon", "Şablonlar"]], s.sekme, (k) => set({ sekme: k }), "Denetim")}
+        {tabs(items, sekme, (k) => set({ sekme: k }), "Denetim")}
       </PageHead>
       {iq.data ? (
         <div className="grid grid--kpi rise">
@@ -229,7 +234,7 @@ export function InspectionsPage() {
           <Kpi label="Açılan talep" icon={<Wrench aria-hidden="true" />} value={opened} note="olumsuz maddeden otomatik" />
         </div>
       ) : !iq.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
-      {s.sekme === "gecmis" ? <InspectionHistory /> : s.sekme === "sablon" ? <ChkTemplates /> : <NewInspection />}
+      {sekme === "gecmis" ? <InspectionHistory /> : sekme === "sablon" ? <ChkTemplates /> : <NewInspection />}
     </div>
   );
 }
@@ -617,27 +622,30 @@ function AnomalyActions({ id }: { id: string }) {
 /** Görevli rutin görevleri (OPS-06, K29): şablondan günlük görev; fotoğraf zorunluysa fotoğrafsız tamamlanmaz; haftalık oran. */
 export function TasksPage() {
   const { can } = useSite();
-  const [s, set] = useUrlState({ sekme: "bugun", tarih: todayIso() });
-  const items: [string, string][] = [["bugun", "Günün görevleri"], ["benim", "Görevlerim"], ["sablon", "Görev şablonları"], ["rapor", "Haftalık rapor"]];
+  // /tasks ve /tasks/report requests.read ister; teknik personel (requests.assigned) yalnız /me/tasks görür
+  const all = can(P.requestsRead);
+  const [s, set] = useUrlState({ sekme: all ? "bugun" : "benim", tarih: todayIso() });
+  const items: [string, string][] = all ? [["bugun", "Günün görevleri"], ["benim", "Görevlerim"], ["sablon", "Görev şablonları"], ["rapor", "Haftalık rapor"]] : [["benim", "Görevlerim"]];
+  const sekme = all ? s.sekme : "benim";
   // Göstergeler her zaman bugünü anlatır (gün seçimi yalnız listeyi değiştirir)
-  const today = useSiteGet<TaskRow[]>("/tasks", { date: todayIso() }, { refetchInterval: 60000 });
-  const rep = useSiteGet<{ rate: number | null }>("/tasks/report");
+  const today = useSiteGet<TaskRow[]>(all ? "/tasks" : "/me/tasks", { date: todayIso() }, { refetchInterval: 60000 });
+  const rep = useSiteGet<{ rate: number | null }>("/tasks/report", undefined, { enabled: all });
   const t = today.data ?? [];
   const cnt = (st: string) => t.filter((x) => x.status === st).length;
   return (
     <div className="stack">
       <PageHead title="Rutin görevler" eyebrow="Operasyon" subtitle="Çöp, temizlik, havuz kontrolü gibi işler şablondan her gün üretilir; saat aralığı geçince 'gecikti'.">
-        {tabs(items, s.sekme, (k) => set({ sekme: k }), "Görevler")}
+        {items.length > 1 && tabs(items, sekme, (k) => set({ sekme: k }), "Görevler")}
       </PageHead>
       {today.data ? (
         <div className="grid grid--kpi rise">
-          <Kpi label="Bugünkü görev" icon={<ListTodo aria-hidden="true" />} value={t.length} note={`${cnt("upcoming") + cnt("due")} tanesi sırada ya da şimdi`} />
+          <Kpi label={all ? "Bugünkü görev" : "Bugün bana atanan"} icon={<ListTodo aria-hidden="true" />} value={t.length} note={`${cnt("upcoming") + cnt("due")} tanesi sırada ya da şimdi`} />
           <Kpi label="Tamamlanan" tone="ok" icon={<CheckCircle2 aria-hidden="true" />} value={cnt("done")} note={cnt("failed") ? `${cnt("failed")} tamamlanamadı` : "bugün kapatılan"} />
           <Kpi label="Geciken" tone={cnt("late") ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={cnt("late")} note="saat aralığı geçti" />
-          <Kpi label="Haftalık oran" tone={rep.data?.rate == null ? undefined : rep.data.rate >= 90 ? "ok" : rep.data.rate >= 70 ? "warn" : "danger"} icon={<Gauge aria-hidden="true" />} value={rep.data ? (rep.data.rate == null ? "—" : `%${rep.data.rate}`) : "…"} note="son 7 günde tamamlanma" />
+          {all && <Kpi label="Haftalık oran" tone={rep.data?.rate == null ? undefined : rep.data.rate >= 90 ? "ok" : rep.data.rate >= 70 ? "warn" : "danger"} icon={<Gauge aria-hidden="true" />} value={rep.data ? (rep.data.rate == null ? "—" : `%${rep.data.rate}`) : "…"} note="son 7 günde tamamlanma" />}
         </div>
       ) : !today.isError && <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>}
-      {s.sekme === "sablon" ? <TaskTemplates canManage={can(P.requestsAssign)} /> : s.sekme === "rapor" ? <TaskReportCard /> : <DayTasks mine={s.sekme === "benim"} date={s.tarih} setDate={(tarih) => set({ tarih })} />}
+      {sekme === "sablon" ? <TaskTemplates canManage={can(P.requestsAssign)} /> : sekme === "rapor" ? <TaskReportCard /> : <DayTasks mine={sekme === "benim"} date={s.tarih} setDate={(tarih) => set({ tarih })} />}
     </div>
   );
 }

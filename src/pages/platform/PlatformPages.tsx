@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, BarChart3, Building2, CalendarDays, Copy, Layers, ListOrdered, Plus, TrendingUp, Users } from "lucide-react";
+import { AlertTriangle, BarChart3, Building2, CalendarDays, Copy, Layers, ListOrdered, Pencil, Plus, TrendingUp, Users } from "lucide-react";
 import { api, get } from "../../api/client";
 import type { Page, Schemas, Written } from "../../api/types";
 import { BarChart, Donut } from "../../components/charts";
@@ -15,7 +15,59 @@ type Plan = Schemas["PlanOut"];
 type Customer = Schemas["CustomerOut"];
 type SiteOut = Schemas["SiteOut"];
 
-const usePlans = () => useQuery({ queryKey: ["platform", "plans"], queryFn: () => get<Page<Plan>>("/platform/plans", { page_size: 100 }) });
+/** scope="site": yönetim şirketi planları siteye atanamaz (422 `organization_plan`), site formunda listelenmez. */
+const usePlans = (scope?: "site" | "organization") =>
+  useQuery({ queryKey: ["platform", "plans", scope ?? "all"], queryFn: () => get<Page<Plan>>("/platform/plans", { page_size: 100, scope }) });
+
+/** Müşteri adını düzenle (PATCH /platform/customers/{id}). Pasife alma / silme ayrı kapsam. */
+function EditCustomerButton({ c }: { c: Schemas["CustomerUsageOut"] }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [name, setName] = useState(c.name);
+  const m = useMutation({
+    mutationFn: () => api<Written<unknown>>("PATCH", `/platform/customers/${c.id}`, { body: { name: name.trim() } }),
+    onSuccess: (r) => { toast(r.message); qc.invalidateQueries({ queryKey: ["platform"] }); },
+  });
+  return (
+    <ConfirmButton className="btn btn--ghost btn--sm" title="Müşteriyi düzenle" confirmLabel="Kaydet"
+      body={<Field label="Müşteri adı" required error={fieldError(m.error, "name")}>{(p) => <input {...p} className="field__input" maxLength={120} value={name} onChange={(e) => setName(e.target.value)} />}</Field>}
+      onConfirm={() => { if (name.trim().length < 2) throw new Error("Müşteri adını yazın."); return m.mutateAsync(); }}>
+      <Pencil aria-hidden="true" /> Düzenle
+    </ConfirmButton>
+  );
+}
+
+/** Site adı ve adresini düzenle (PATCH /platform/sites/{id}). Genel bakış adres bilgisi döndürmez: boş alan değişmez. */
+function EditSiteButton({ s }: { s: Schemas["SiteUsageOut"] }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const [f, setF] = useState({ name: s.name, city: "", district: "", address: "" });
+  const m = useMutation({
+    mutationFn: () => {
+      const body: Record<string, string> = { name: f.name.trim() };
+      for (const k of ["city", "district", "address"] as const) if (f[k].trim()) body[k] = f[k].trim();
+      return api<Written<SiteOut>>("PATCH", `/platform/sites/${s.id}`, { body });
+    },
+    onSuccess: (r) => { toast(r.message); qc.invalidateQueries({ queryKey: ["platform"] }); },
+  });
+  const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
+  return (
+    <ConfirmButton className="btn btn--ghost btn--sm" title={`${s.name} — düzenle`} confirmLabel="Kaydet"
+      body={
+        <div className="stack" style={{ gap: "var(--s-3)" }}>
+          <Field label="Site adı" required error={fieldError(m.error, "name")}>{(p) => <input {...p} className="field__input" maxLength={120} value={f.name} onChange={up("name")} />}</Field>
+          <div className="grid grid--2">
+            <Field label="İl" error={fieldError(m.error, "city")}>{(p) => <input {...p} className="field__input" value={f.city} onChange={up("city")} />}</Field>
+            <Field label="İlçe" error={fieldError(m.error, "district")}>{(p) => <input {...p} className="field__input" value={f.district} onChange={up("district")} />}</Field>
+          </div>
+          <Field label="Açık adres" hint="Boş bıraktığınız alan değişmez. Adres kısaltması (/s/…) değiştirilemez." error={fieldError(m.error, "address")}>{(p) => <textarea {...p} className="field__input" rows={2} value={f.address} onChange={up("address")} />}</Field>
+        </div>
+      }
+      onConfirm={() => { if (f.name.trim().length < 2) throw new Error("Site adını yazın."); return m.mutateAsync(); }}>
+      <Pencil aria-hidden="true" /> Düzenle
+    </ConfirmButton>
+  );
+}
 
 export function PlatformOverviewPage() {
   const qc = useQueryClient();
@@ -27,7 +79,7 @@ export function PlatformOverviewPage() {
     queryFn: () => get<Overview>("/platform/overview", { page, page_size: 50 }),
     placeholderData: keepPreviousData,
   });
-  const plans = usePlans();
+  const plans = usePlans("site");
   const [planDraft, setPlanDraft] = useState<Record<string, string>>({});
   const changePlan = useMutation({
     mutationFn: ({ siteId, planId }: { siteId: string; planId: string }) => api<Written<SiteOut>>("PATCH", `/platform/sites/${siteId}/plan`, { body: { plan_id: planId } }),
@@ -64,7 +116,7 @@ export function PlatformOverviewPage() {
                 <div className="table-wrap">
                   <table className="data">
                     <caption className="visually-hidden">Müşteriler</caption>
-                    <thead><tr><th scope="col">Müşteri</th><th scope="col">Plan</th><th scope="col" className="right">Site</th><th scope="col" className="right">Bölüm</th></tr></thead>
+                    <thead><tr><th scope="col">Müşteri</th><th scope="col">Plan</th><th scope="col" className="right">Site</th><th scope="col" className="right">Bölüm</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
                     <tbody>
                       {q.data.customers.items.map((c) => (
                         <tr key={c.id}>
@@ -72,6 +124,8 @@ export function PlatformOverviewPage() {
                           <td>{c.plan_name ? <Badge tone="info">{c.plan_name}</Badge> : <span className="subtle">—</span>}</td>
                           <td className="right num">{c.site_count}</td>
                           <td className="right num">{formatInt(c.units)}</td>
+                          {/* td.right değil: <dialog> hücrenin sağa hizasını miras alır */}
+                          <td><div className="row" style={{ justifyContent: "flex-end" }}><EditCustomerButton c={c} /></div></td>
                         </tr>
                       ))}
                     </tbody>
@@ -107,7 +161,7 @@ export function PlatformOverviewPage() {
               <div className="table-wrap">
                 <table className="data">
                   <caption className="visually-hidden">Siteler ve kullanım</caption>
-                  <thead><tr><th scope="col">Site</th><th scope="col">Müşteri</th><th scope="col" className="right">Bölüm / tavan</th><th scope="col">Plan</th></tr></thead>
+                  <thead><tr><th scope="col">Site</th><th scope="col">Müşteri</th><th scope="col" className="right">Bölüm / tavan</th><th scope="col">Plan</th><th scope="col"><span className="visually-hidden">İşlem</span></th></tr></thead>
                   <tbody>
                     {q.data.sites.items.map((s) => (
                       <tr key={s.id} className={s.over_cap ? "is-overdue" : undefined}>
@@ -145,6 +199,7 @@ export function PlatformOverviewPage() {
                             );
                           })()}
                         </td>
+                        <td><div className="row" style={{ justifyContent: "flex-end" }}><EditSiteButton s={s} /></div></td>
                       </tr>
                     ))}
                   </tbody>
@@ -159,8 +214,8 @@ export function PlatformOverviewPage() {
   );
 }
 
-function PlanSelect({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
-  const plans = usePlans();
+function PlanSelect({ value, onChange, error, scope }: { value: string; onChange: (v: string) => void; error?: string; scope?: "site" | "organization" }) {
+  const plans = usePlans(scope);
   const selected = plans.data?.items.find((p) => p.id === value);
   return (
     <Field label="Plan" required error={error} hint={selected ? `${selected.max_units ? `En fazla ${selected.max_units} bölüm · ` : ""}${selected.allowed_modules.map(moduleName).join(", ")}` : undefined}>
@@ -247,7 +302,7 @@ export function NewSitePage() {
   const customers = useQuery({ queryKey: ["platform", "overview", "customers"], queryFn: () => get<Overview>("/platform/overview", { page_size: 200 }) });
   const [f, setF] = useState({ name: "", slug: "", plan_id: "", organization_id: preset, property_kind: "residential", city: "", district: "", address: "", bank_name: "", iban: "" });
   const m = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api<Written<SiteOut>>("POST", "/platform/sites", { body }),
+    mutationFn: (body: Record<string, unknown>) => api<Written<Schemas["SiteCreatedOut"]>>("POST", "/platform/sites", { body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["platform"] }),
   });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -274,6 +329,7 @@ export function NewSitePage() {
       <div className="stack page--narrow">
         <PageHead title="Site açıldı" />
         <Alert tone="ok" title={s.name}>{m.data.message}</Alert>
+        {s.slug_adjusted && <Alert tone="info" title="Adres kısaltması düzeltildi">Yazdığınız <span className="mono">{s.requested_slug}</span> adres kuralına göre (küçük harf, Türkçe harfler, boşluk yerine tire) <span className="mono">{s.slug}</span> olarak kaydedildi.</Alert>}
         <div className="card">
           <div className="card__body">
             <div className="kv"><span className="kv__k">Adres</span><span className="kv__v mono">/s/{s.slug}</span></div>
@@ -308,7 +364,7 @@ export function NewSitePage() {
                 </select>
               )}
             </Field>
-            <PlanSelect value={f.plan_id} onChange={(v) => setF((x) => ({ ...x, plan_id: v }))} error={fieldError(m.error, "plan_id")} />
+            <PlanSelect scope="site" value={f.plan_id} onChange={(v) => setF((x) => ({ ...x, plan_id: v }))} error={fieldError(m.error, "plan_id")} />
             <Field label="Tür">{(p) => <select {...p} className="field__input" value={f.property_kind} onChange={up("property_kind")}>{["residential", "mixed", "office", "shopping_center"].map((k) => <option key={k} value={k}>{propertyKind(k)}</option>)}</select>}</Field>
             <Field label="İl">{(p) => <input {...p} className="field__input" value={f.city} onChange={up("city")} />}</Field>
             <Field label="İlçe">{(p) => <input {...p} className="field__input" value={f.district} onChange={up("district")} />}</Field>

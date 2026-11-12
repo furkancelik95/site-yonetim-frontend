@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { LogIn, LogOut, Package, SearchCheck, Siren, UserRound } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
+import { ApiError } from "../../api/client";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
 import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
@@ -306,7 +307,14 @@ function DeliverButton({ p }: { p: Pkg }) {
         // ad alanıyla aynı istekte denetlenir — ayrı doğrulama ucu yok.)
         if (!/^\d{4}$/.test(code)) throw new Error("Önce sakinin 4 haneli teslim kodunu yazın.");
         if (to.trim().length < 2) throw new Error("Kod yazıldı; şimdi teslim alanın adını yazın.");
-        return m.mutateAsync({ pickup_code: code, delivered_to: to.trim() });
+        return m.mutateAsync({ pickup_code: code, delivered_to: to.trim() }).catch((e: unknown) => {
+          // 5 hatalı denemede 15 dk kilit; kalan süre Retry-After başlığında
+          if (e instanceof ApiError && e.code === "pickup_code_locked") {
+            const dk = e.retryAfter ? Math.max(1, Math.ceil(e.retryAfter / 60)) : 15;
+            throw new Error(`Bu kargo için çok fazla hatalı kod girildi. ${dk} dakika sonra tekrar deneyin.`);
+          }
+          throw e;
+        });
       }}
     >
       Teslim et

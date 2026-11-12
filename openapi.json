@@ -2404,6 +2404,24 @@
         ],
         "parameters": [
           {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PlanScope"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "site → yalnız siteye atanabilen planlar (site formu); boş → hepsi",
+              "title": "Scope"
+            },
+            "description": "site → yalnız siteye atanabilen planlar (site formu); boş → hepsi"
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -2497,12 +2515,71 @@
         ]
       }
     },
+    "/api/v1/platform/customers/{organization_id}": {
+      "patch": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Müşteri adını düzenle",
+        "operationId": "update_customer_api_v1_platform_customers__organization_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_CustomerSummaryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/platform/sites": {
       "post": {
         "tags": [
           "platform"
         ],
         "summary": "Site aç",
+        "description": "Adres eki (`slug`) kurala göre düzeltilir (docs/04 §11); düzeltildiyse yanıtta\n`slug_adjusted` ve mesajda kullanılan ek bildirilir.",
         "operationId": "create_site_endpoint_api_v1_platform_sites_post",
         "requestBody": {
           "content": {
@@ -2520,7 +2597,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Written_SiteOut_"
+                  "$ref": "#/components/schemas/Written_SiteCreatedOut_"
                 }
               }
             }
@@ -2541,6 +2618,65 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/platform/sites/{site_id}": {
+      "patch": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Site adı ve adresini düzenle",
+        "description": "Gönderilen alanlar değişir; boş metin adres/il/ilçeyi temizler. Aynı ad (Türkçe büyük/\nküçük harf duyarsız) başka sitede varsa 409 `site_already_exists`.",
+        "operationId": "update_site_api_v1_platform_sites__site_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "site_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Site Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SitePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_SiteOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/platform/sites/{site_id}/plan": {
@@ -2607,7 +2743,7 @@
           "platform destek"
         ],
         "summary": "Tüm tesislerin destek biletleri",
-        "description": "Öncelik (kritik önce), sonra en yeni. SLA aşımı yanıtta hesaplanır.",
+        "description": "Öncelik (kritik önce), sonra en yeni. SLA aşımı yanıtta hesaplanır; `summary` tüm\ntesislerin açık biletlerini veritabanında sayar (sayfa ve süzgeçten bağımsız).",
         "operationId": "platform_tickets_api_v1_platform_support_tickets_get",
         "security": [
           {
@@ -2661,7 +2797,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_SupportTicketOut_"
+                  "$ref": "#/components/schemas/SupportTicketPage"
                 }
               }
             }
@@ -2849,15 +2985,20 @@
         ],
         "summary": "Makale yayınla",
         "operationId": "create_article_api_v1_platform_knowledge_articles_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/KnowledgeArticleIn"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -2880,12 +3021,111 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "platform destek"
+        ],
+        "summary": "Bilgi bankası yönetimi (yayında ya da arşivde)",
+        "operationId": "platform_articles_api_v1_platform_knowledge_articles_get",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "audience",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ArticleAudience"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Audience"
+            }
+          },
+          {
+            "name": "archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "true: yayından kaldırılanlar",
+              "default": false,
+              "title": "Archived"
+            },
+            "description": "true: yayından kaldırılanlar"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 200,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_KnowledgeArticleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/platform/knowledge-articles/{article_id}": {
@@ -2946,13 +3186,109 @@
         }
       }
     },
+    "/api/v1/platform/knowledge-articles/{article_id}/archive": {
+      "post": {
+        "tags": [
+          "platform destek"
+        ],
+        "summary": "Makaleyi yayından kaldır (silme yok)",
+        "operationId": "archive_article_api_v1_platform_knowledge_articles__article_id__archive_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Article Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_KnowledgeArticleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/knowledge-articles/{article_id}/restore": {
+      "post": {
+        "tags": [
+          "platform destek"
+        ],
+        "summary": "Arşivdeki makaleyi yeniden yayınla",
+        "operationId": "restore_article_api_v1_platform_knowledge_articles__article_id__restore_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Article Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Written_KnowledgeArticleOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/knowledge-articles": {
       "get": {
         "tags": [
           "bilgi bankası"
         ],
         "summary": "Bilgi bankası (arama, ekran, okuyucu)",
-        "description": "Makale tüm tesisler için ortak. `screen` yol önekiyle eşleşir (`satin-alma` makalesi\n`satin-alma/talepler` ekranında da görünür).",
+        "description": "Makale tüm tesisler için ortak. `screen` yol önekiyle eşleşir (`satin-alma` makalesi\n`satin-alma/talepler` ekranında da görünür). Yayından kaldırılan (arşiv) makale görünmez.",
         "operationId": "list_articles_api_v1_knowledge_articles_get",
         "security": [
           {
@@ -3122,6 +3458,7 @@
           "destek"
         ],
         "summary": "Sitenin destek biletleri",
+        "description": "`summary` açık biletlerin SLA özeti (veritabanında; sayfa ve süzgeçten bağımsız).",
         "operationId": "list_tickets_api_v1_sites__slug__support_tickets_get",
         "security": [
           {
@@ -3184,7 +3521,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_SupportTicketOut_"
+                  "$ref": "#/components/schemas/SupportTicketPage"
                 }
               }
             }
@@ -4131,6 +4468,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "`pickup_code_locked`: 5 hatalı denemeden sonra 15 dk"
           },
           "422": {
             "description": "Validation Error",
@@ -5553,6 +5893,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Written_VisitorInviteOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sites/{slug}/resident/visitors": {
+      "get": {
+        "tags": [
+          "güvenlik"
+        ],
+        "summary": "Ziyaretçi geçmişim (son 30 gün)",
+        "description": "Bölümlerime gelen ziyaretçiler — güvenliğin doğrudan kaydettikleri dahil. Telefon ve not\ndönmez; saklama süresi dolup anonimleşen kayıtta ad \"Anonim\".",
+        "operationId": "my_visitors_api_v1_sites__slug__resident_visitors_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyVisitorOut"
+                  },
+                  "title": "Response My Visitors Api V1 Sites  Slug  Resident Visitors Get"
                 }
               }
             }
@@ -8709,7 +9101,7 @@
           "site yapısı"
         ],
         "summary": "Malik/kiracı ekle",
-        "description": "Gerekli cari hesapları da açar: malik `-M` (kiracı yoksa `-O`), kiracı `-K` (docs/03 §5).",
+        "description": "Gerekli cari hesapları da açar: malik `-M` (kiracı yoksa `-O`), kiracı `-K`; kiracı\neklenince malikin `-O` hesabı başlangıç ayı geçince ve bakiyesi sıfırsa kapanır (hemen ya da\ngünlük yapı işiyle; docs/03 §5).",
         "operationId": "add_party_api_v1_sites__slug__units__unit_id__parties_post",
         "security": [
           {
@@ -12415,10 +12807,10 @@
                   "type": "null"
                 }
               ],
-              "description": "boşsa tahakkuk + 14 gün",
+              "description": "boşsa dönemin vade günü (finans parametresi `due_day`, K25); tahakkuk tarihinden önceye düşerse sonraki ayın aynı günü",
               "title": "Due Date"
             },
-            "description": "boşsa tahakkuk + 14 gün"
+            "description": "boşsa dönemin vade günü (finans parametresi `due_day`, K25); tahakkuk tarihinden önceye düşerse sonraki ayın aynı günü"
           },
           {
             "name": "page",
@@ -17069,6 +17461,77 @@
         }
       }
     },
+    "/api/v1/sites/{slug}/requests/assignable-staff": {
+      "get": {
+        "tags": [
+          "talep"
+        ],
+        "summary": "Talep atanabilecek personel",
+        "description": "Tesis kapsamlı rolünde `requests.assign` ya da `requests.assigned` olan etkin kullanıcılar\n(ada göre). Personel ile departman arasında veri bağı yok; departman süzgeci verilmez.",
+        "operationId": "assignable_staff_api_v1_sites__slug__requests_assignable_staff_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ad araması",
+              "title": "Q"
+            },
+            "description": "ad araması"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssignableOut"
+                  },
+                  "title": "Response Assignable Staff Api V1 Sites  Slug  Requests Assignable Staff Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sites/{slug}/requests": {
       "get": {
         "tags": [
@@ -17755,7 +18218,7 @@
           "talep"
         ],
         "summary": "Bu talepler aynı arıza olabilir",
-        "description": "Kural tabanlı öneri (yapay zekâ yok): aynı kategori + konum/blok + zaman penceresi.",
+        "description": "Kural tabanlı öneri (yapay zekâ yok): aynı kategori + konum/blok + zaman penceresi.\nBaşka talepleri listelediği için yalnız `requests.assign`.",
         "operationId": "merge_suggestions_api_v1_sites__slug__requests__request_id__merge_suggestions_get",
         "security": [
           {
@@ -24923,6 +25386,7 @@
           "kvkk"
         ],
         "summary": "Bu sitedeki onaylarım ve açık rızam",
+        "description": "Sakin olarak görüntülemede görüntülenen sakinin onayları (PLT-12).",
         "operationId": "my_privacy_api_v1_sites__slug__my_privacy_get",
         "security": [
           {
@@ -25035,6 +25499,7 @@
           "kvkk"
         ],
         "summary": "Verilerimi indir (kişisel veri paketi, JSON)",
+        "description": "Sakin olarak görüntülemede 403 `read_only`: paket bir ekran değil, sakinin kişisel verisinin\ndışa aktarımıdır (KVKK m.11 hakkı ilgili kişinindir); personel paketi başvuru üzerinden\n`privacy-requests/{id}/data-package` ile `privacy.manage` izniyle alır.",
         "operationId": "my_data_export_api_v1_sites__slug__my_privacy_data_export_get",
         "security": [
           {
@@ -35241,7 +35706,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PolicyIn"
+                "$ref": "#/components/schemas/PolicyPatch"
               }
             }
           }
@@ -35599,7 +36064,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MeterIn"
+                "$ref": "#/components/schemas/MeterPatch"
               }
             }
           }
@@ -45968,18 +46433,69 @@
       "AssignIn": {
         "properties": {
           "assignee": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 2,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Assignee",
-            "description": "personel ya da firma adı"
+            "description": "firma ya da serbest metin (geriye uyum); `assignee_id` varsa yok sayılır"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id",
+            "description": "personel (GET …/requests/assignable-staff `id`)"
+          }
+        },
+        "type": "object",
+        "title": "AssignIn"
+      },
+      "AssignableOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "kullanıcı kimliği — `assign` gövdesinde `assignee_id`"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "all_requests": {
+            "type": "boolean",
+            "title": "All Requests",
+            "description": "true: tüm talepleri görür (requests.assign); false: yalnız kendine atananları"
           }
         },
         "type": "object",
         "required": [
-          "assignee"
+          "id",
+          "full_name",
+          "roles",
+          "all_requests"
         ],
-        "title": "AssignIn"
+        "title": "AssignableOut"
       },
       "AttendanceEventIn": {
         "properties": {
@@ -46530,7 +47046,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ip"
+            "title": "Ip",
+            "description": "people.read yoksa `***`"
           },
           "actor_type": {
             "$ref": "#/components/schemas/ActorType",
@@ -53749,6 +54266,66 @@
           "temporary_password"
         ],
         "title": "CustomerOut"
+      },
+      "CustomerPatch": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CustomerPatch",
+        "description": "Yalnız müşteri (yönetim şirketi) adı; vergi no ve plan buradan değişmez. Müşteride\niletişim/adres alanı yok (yetkilinin iletişimi kullanıcı hesabındadır)."
+      },
+      "CustomerSummaryOut": {
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organization Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tax_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Number"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization_id",
+          "name",
+          "tax_number",
+          "plan_id"
+        ],
+        "title": "CustomerSummaryOut"
       },
       "CustomerUsageOut": {
         "properties": {
@@ -61243,6 +61820,19 @@
           "updated_by": {
             "type": "string",
             "title": "Updated By"
+          },
+          "archived_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived At",
+            "description": "yayından kaldırıldı (arşiv); yardımda ve aramada görünmez"
           }
         },
         "type": "object",
@@ -63774,6 +64364,116 @@
         ],
         "title": "MeterOut"
       },
+      "MeterPatch": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "area": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area",
+            "description": "ortak alan sayacında"
+          },
+          "unit_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Label",
+            "description": "boş: m³ / kWh / birim"
+          },
+          "multiplier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multiplier",
+            "description": "\"1\" — tüketim çarpanı"
+          },
+          "installed_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installed On"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "active · faulty"
+          }
+        },
+        "type": "object",
+        "title": "MeterPatch",
+        "description": "Kısmi düzenleme: yalnız gönderilen alanlar değişir; gönderilmeyen alan olduğu gibi kalır\n(ör. `status` gönderilmezse sayaç durumu korunur). Bölüm verilip `area` verilmezse ortak alan\nadı temizlenir."
+      },
       "MeterPeriodOut": {
         "properties": {
           "period": {
@@ -64919,6 +65619,88 @@
           "at"
         ],
         "title": "MyUnitSafetyOut"
+      },
+      "MyVisitorOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Unit Id"
+          },
+          "unit_name": {
+            "type": "string",
+            "title": "Unit Name"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/VisitorKind"
+          },
+          "plate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plate"
+          },
+          "visit_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Visit Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VisitorStatus"
+          },
+          "entered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entered At"
+          },
+          "exited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exited At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "unit_id",
+          "unit_name",
+          "full_name",
+          "kind",
+          "plate",
+          "visit_date",
+          "status",
+          "entered_at",
+          "exited_at"
+        ],
+        "title": "MyVisitorOut"
       },
       "MyVote": {
         "properties": {
@@ -68112,37 +68894,6 @@
         ],
         "title": "Page[SupportSessionOut]"
       },
-      "Page_SupportTicketOut_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/SupportTicketOut"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "page",
-          "page_size",
-          "total"
-        ],
-        "title": "Page[SupportTicketOut]"
-      },
       "Page_TimesheetExportOut_": {
         "properties": {
           "items": {
@@ -68997,6 +69748,22 @@
             },
             "type": "array",
             "title": "Opened Accounts"
+          },
+          "closed_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/site_yonetim__api__v1__structure__AccountOut"
+            },
+            "type": "array",
+            "title": "Closed Accounts",
+            "description": "kiracı eklenince sonlandırılan malik oturan (`-O`) hesapları"
+          },
+          "kept_open_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/PendingCloseAccountOut"
+            },
+            "type": "array",
+            "title": "Kept Open Accounts",
+            "description": "şimdilik açık kalan, günlük yapı işinin kapatacağı malik oturan hesapları"
           }
         },
         "type": "object",
@@ -70549,6 +71316,60 @@
         ],
         "title": "PendingAckOut"
       },
+      "PendingCloseAccountOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "reference_code": {
+            "type": "string",
+            "title": "Reference Code"
+          },
+          "person_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Person Id"
+          },
+          "is_closed": {
+            "type": "boolean",
+            "title": "Is Closed"
+          },
+          "pending_close": {
+            "type": "boolean",
+            "title": "Pending Close",
+            "description": "true: günlük yapı işi (`run-structure-jobs`) koşullar sağlanınca kapatacak"
+          },
+          "close_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Close From",
+            "description": "en erken kapanış: kiracı başlangıç ayının ertesi ayının 1'i (kıst malik payı bu tarihe kadar bu hesaba yazılır)"
+          },
+          "has_balance": {
+            "type": "boolean",
+            "title": "Has Balance",
+            "description": "true: bakiye sıfırlanana kadar açık kalır"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "reference_code",
+          "person_id",
+          "is_closed",
+          "pending_close",
+          "close_from",
+          "has_balance"
+        ],
+        "title": "PendingCloseAccountOut"
+      },
       "PendingNoticeOut": {
         "properties": {
           "notice_id": {
@@ -71491,6 +72312,10 @@
             },
             "type": "array",
             "title": "Allowed Modules"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PlanScope",
+            "description": "site: siteye atanır · organization: yönetim şirketi planı (portföy), siteye atanamaz"
           }
         },
         "type": "object",
@@ -71499,9 +72324,19 @@
           "name",
           "max_units",
           "max_storage_mb",
-          "allowed_modules"
+          "allowed_modules",
+          "scope"
         ],
         "title": "PlanOut"
+      },
+      "PlanScope": {
+        "type": "string",
+        "enum": [
+          "site",
+          "organization"
+        ],
+        "title": "PlanScope",
+        "description": "Plan kime satılır: site planları (Başlangıç/Standart/Pro) ya da yönetim şirketi planı.\n\nAyrı sütun yok: şirket planı, çoklu site portföyünü (`portfolio`) açan plandır — docs/01'de\nyalnız \"Yönetim Şirketi\" planı `portfolio`'yu içerir (\"Pro: portfolio hariç hepsi\")."
       },
       "PlanStatus": {
         "type": "string",
@@ -71726,6 +72561,125 @@
           "other"
         ],
         "title": "PolicyKind"
+      },
+      "PolicyPatch": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "insurer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Insurer"
+          },
+          "policy_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy No"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage"
+          },
+          "premium": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^-?\\d{1,16}\\.\\d{2}$",
+                "description": "Para: metin, 2 ondalık (TRY).",
+                "examples": [
+                  "1234.56"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premium"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "area": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 400
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "PolicyPatch",
+        "description": "Kısmi düzenleme: yalnız gönderilen alanlar değişir; gönderilmeyen alan olduğu gibi kalır.\nAlan `null` gönderilirse temizlenir (zorunlu alanda 422)."
       },
       "PolicyWarning": {
         "type": "string",
@@ -76756,6 +77710,15 @@
         ],
         "title": "RequestCategoryOut"
       },
+      "RequestChannel": {
+        "type": "string",
+        "enum": [
+          "resident",
+          "staff"
+        ],
+        "title": "RequestChannel",
+        "description": "Talebin açıldığı kanal (K18: yalnız **sakinin açtığı** talep sakin onayıyla kapanır)."
+      },
       "RequestConfirmIn": {
         "properties": {
           "solved": {
@@ -76931,7 +77894,7 @@
             },
             "type": "array",
             "title": "Allowed Transitions",
-            "description": "personelin seçebileceği durumlar (requests.assign yoksa boş)"
+            "description": "personelin seçebileceği durumlar (requests.assign / requests.assigned yoksa boş)"
           },
           "can_cancel": {
             "type": "boolean",
@@ -77006,7 +77969,25 @@
                 "type": "null"
               }
             ],
-            "title": "Assigned To"
+            "title": "Assigned To",
+            "description": "atanan kişinin adı ya da firma (görünen ad)"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id",
+            "description": "atanan personelin kullanıcı kimliği; firmaya / serbest metinle atanmışsa null"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/RequestChannel",
+            "description": "resident: sakin açtı (kapanış sakin onayıyla) · staff: personel açtı"
           },
           "department_id": {
             "anyOf": [
@@ -77178,6 +78159,8 @@
           "reported_by_person_id",
           "reporter_name",
           "assigned_to",
+          "assignee_id",
+          "channel",
           "department_id",
           "department_name",
           "due_at",
@@ -77421,7 +78404,7 @@
             },
             "type": "array",
             "title": "Allowed Transitions",
-            "description": "personelin seçebileceği durumlar (requests.assign yoksa boş)"
+            "description": "personelin seçebileceği durumlar (requests.assign / requests.assigned yoksa boş)"
           },
           "can_cancel": {
             "type": "boolean",
@@ -77496,7 +78479,25 @@
                 "type": "null"
               }
             ],
-            "title": "Assigned To"
+            "title": "Assigned To",
+            "description": "atanan kişinin adı ya da firma (görünen ad)"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id",
+            "description": "atanan personelin kullanıcı kimliği; firmaya / serbest metinle atanmışsa null"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/RequestChannel",
+            "description": "resident: sakin açtı (kapanış sakin onayıyla) · staff: personel açtı"
           },
           "department_id": {
             "anyOf": [
@@ -77660,6 +78661,8 @@
           "reported_by_person_id",
           "reporter_name",
           "assigned_to",
+          "assignee_id",
+          "channel",
           "department_id",
           "department_name",
           "due_at",
@@ -83507,6 +84510,136 @@
         ],
         "title": "SiteCreate"
       },
+      "SiteCreatedOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "organization_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization Id"
+          },
+          "property_kind": {
+            "type": "string",
+            "title": "Property Kind"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "iban": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iban"
+          },
+          "bank_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Name"
+          },
+          "modules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Modules"
+          },
+          "requested_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Slug",
+            "description": "istekte gönderilen adres eki (gönderilmediyse null; ad'dan üretildi)"
+          },
+          "slug_adjusted": {
+            "type": "boolean",
+            "title": "Slug Adjusted",
+            "description": "gönderilen adres eki kurala göre düzeltildi (küçük harf, Türkçe harf eşleme, boşluk → tire); kullanılan ek `slug`"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "plan_id",
+          "organization_id",
+          "property_kind",
+          "city",
+          "district",
+          "iban",
+          "bank_name",
+          "modules",
+          "requested_slug",
+          "slug_adjusted"
+        ],
+        "title": "SiteCreatedOut"
+      },
       "SiteFinanceOut": {
         "properties": {
           "charged": {
@@ -83666,6 +84799,62 @@
           "modules"
         ],
         "title": "SiteOut"
+      },
+      "SitePatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          }
+        },
+        "type": "object",
+        "title": "SitePatch",
+        "description": "Yalnız ad, adres ve konum; adres eki (`slug`) ve plan buradan değişmez."
       },
       "SitePlanUpdate": {
         "properties": {
@@ -86068,6 +87257,41 @@
         ],
         "title": "SupportTicketOut"
       },
+      "SupportTicketPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SupportTicketOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/TicketSummaryOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "summary"
+        ],
+        "title": "SupportTicketPage"
+      },
       "TariffWriteOut": {
         "properties": {
           "status": {
@@ -87313,11 +88537,23 @@
           },
           "first_breached": {
             "type": "boolean",
-            "title": "First Breached"
+            "title": "First Breached",
+            "description": "ilk yanıt hedefi aşıldı (geç yanıt ya da hâlâ yok)"
           },
           "resolve_breached": {
             "type": "boolean",
-            "title": "Resolve Breached"
+            "title": "Resolve Breached",
+            "description": "çözüm hedefi aşıldı"
+          },
+          "first_response_overdue": {
+            "type": "boolean",
+            "title": "First Response Overdue",
+            "description": "açık, hiç yanıtlanmamış ve ilk yanıt hedefi geçmiş"
+          },
+          "breached": {
+            "type": "boolean",
+            "title": "Breached",
+            "description": "SLA aşımı — ilk yanıt ya da çözüm hedefi aşıldı (iki ekranda tek tanım)"
           }
         },
         "type": "object",
@@ -87325,7 +88561,9 @@
           "first_due",
           "resolve_due",
           "first_breached",
-          "resolve_breached"
+          "resolve_breached",
+          "first_response_overdue",
+          "breached"
         ],
         "title": "TicketSlaOut"
       },
@@ -87339,6 +88577,39 @@
           "closed"
         ],
         "title": "TicketStatus"
+      },
+      "TicketSummaryOut": {
+        "properties": {
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "description": "açık bilet sayısı"
+          },
+          "sla_breached": {
+            "type": "integer",
+            "title": "Sla Breached",
+            "description": "açıkta SLA aşımı (`sla.breached`) olan bilet sayısı"
+          },
+          "first_response_overdue": {
+            "type": "integer",
+            "title": "First Response Overdue",
+            "description": "açıkta hiç yanıtlanmamış ve ilk yanıt hedefi geçmiş bilet sayısı"
+          },
+          "critical": {
+            "type": "integer",
+            "title": "Critical",
+            "description": "açıkta kritik öncelikli bilet sayısı"
+          }
+        },
+        "type": "object",
+        "required": [
+          "open",
+          "sla_breached",
+          "first_response_overdue",
+          "critical"
+        ],
+        "title": "TicketSummaryOut",
+        "description": "Açık biletlerin özeti — veritabanında sayılır; sayfadan ve `status` süzgecinden\nbağımsızdır. Açık = çözüldü/kapandı dışındaki durumlar."
       },
       "TimelinePlanOut": {
         "properties": {
@@ -92547,6 +93818,23 @@
         ],
         "title": "Written[CustomerOut]"
       },
+      "Written_CustomerSummaryOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CustomerSummaryOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[CustomerSummaryOut]"
+      },
       "Written_DelegationOut_": {
         "properties": {
           "data": {
@@ -94570,6 +95858,23 @@
           "message"
         ],
         "title": "Written[ShiftTemplateOut]"
+      },
+      "Written_SiteCreatedOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SiteCreatedOut"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "title": "Written[SiteCreatedOut]"
       },
       "Written_SiteOut_": {
         "properties": {

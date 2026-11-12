@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, BookOpen, LifeBuoy, ShieldCheck, Siren, Smile, ThumbsUp, Timer } from "lucide-react";
-import { api, get } from "../../api/client";
+import { ApiError, api, get } from "../../api/client";
 import type { Schemas, Written } from "../../api/types";
 import { useToast } from "../../components/toast";
-import { Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
+import { Badge, ConfirmButton, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, Segmented, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { S_ST, T_CAT, T_PRI, T_ST_PLATFORM as T_ST, getItems, type Article, type Session, type Ticket } from "../site/SupportPages";
+import { S_ST, T_CAT, T_PRI, T_ST_PLATFORM as T_ST, getItems, getTicketSummary, type Article, type Session, type Ticket } from "../site/SupportPages";
 
 type Overview = Schemas["OverviewOut"];
 
@@ -24,14 +24,16 @@ export function PlatformSupportPage() {
     mutationFn: () => { const s = siteList.find((x) => x.slug === (f.site_slug || siteList[0]?.slug)); return api<Written<Session>>("POST", "/platform/support-sessions", { body: { site_slug: s?.slug, site_name: s?.name, reason: f.reason, hours: Number(f.hours) } }); },
     onSuccess: (r) => { toast(r.message); setF((x) => ({ ...x, reason: "" })); qc.invalidateQueries({ queryKey: ["platform", "sessions"] }); },
   });
-  const open = (t.data ?? []).filter((x) => !["resolved", "closed"].includes(x.status));
+  // Göstergeler backend özetinden: sayfadan ve durum süzgecinden bağımsız, site paneliyle aynı tanım
+  const sum = useQuery({ queryKey: ["platform", "tickets", "summary"], queryFn: () => getTicketSummary("/platform/support-tickets") });
+  const s = sum.data;
   return (
     <div className="stack">
       <PageHead title="Destek" subtitle="Bilet SLA'sı varsayılan hedeflerle izleniyor (kritik 1/8 saat, yüksek 4/24, normal 8/72); paket bazlı SLA paket kararıyla." />
       <div className="grid grid--kpi rise">
-        <Kpi label="Açık bilet" icon={<LifeBuoy aria-hidden="true" />} value={open.length} />
-        <Kpi label="İlk yanıtı geciken" icon={<Timer aria-hidden="true" />} value={open.filter((x) => !x.first_response_at && x.sla.first_breached).length} tone={open.some((x) => !x.first_response_at && x.sla.first_breached) ? "danger" : "ok"} />
-        <Kpi label="Kritik" icon={<Siren aria-hidden="true" />} value={open.filter((x) => x.priority === "critical").length} tone={open.some((x) => x.priority === "critical") ? "warn" : undefined} />
+        <Kpi label="Açık bilet" icon={<LifeBuoy aria-hidden="true" />} value={s ? s.open : "…"} note={s ? `${s.sla_breached} tanesinde SLA aşımı` : undefined} tone={s && s.sla_breached > 0 ? "danger" : undefined} />
+        <Kpi label="İlk yanıtı geciken" icon={<Timer aria-hidden="true" />} value={s ? s.first_response_overdue : "…"} tone={s ? (s.first_response_overdue > 0 ? "danger" : "ok") : undefined} />
+        <Kpi label="Kritik" icon={<Siren aria-hidden="true" />} value={s ? s.critical : "…"} tone={s && s.critical > 0 ? "warn" : undefined} />
         <Kpi label="Destek oturumu" icon={<ShieldCheck aria-hidden="true" />} value={(sessions.data ?? []).filter((s) => s.status === "active").length}
           tone={(sessions.data ?? []).some((s) => s.status === "active") ? "danger" : undefined}
           note={`aktif · ${(sessions.data ?? []).filter((s) => s.status === "pending").length} onay bekliyor`} />
@@ -113,6 +115,7 @@ export function KnowledgeAdminPage() {
   const toast = useToast();
   const q = useQuery({ queryKey: ["platform", "kb"], queryFn: () => getItems<Article>("/knowledge-articles") });
   const [edit, setEdit] = useState<Article | null>(null);
+  const [tab, setTab] = useState<"live" | "archived">("live");
   const [f, setF] = useState({ title: "", body: "", audience: "staff", screens: "" });
   const m = useMutation({
     mutationFn: () => api<Written<Article>>(edit ? "PATCH" : "POST", edit ? `/platform/knowledge-articles/${edit.id}` : "/platform/knowledge-articles", { body: { ...f, screens: f.screens.split(",").map((s) => s.trim()).filter(Boolean) } }),
@@ -152,12 +155,50 @@ export function KnowledgeAdminPage() {
         </div>
         <div className="card__foot row" style={{ gap: "var(--s-2)" }}><SubmitButton busy={m.isPending}>{edit ? "Güncelle" : "Yayınla"}</SubmitButton>{edit && <button className="btn btn--ghost" type="button" onClick={() => { setEdit(null); setF({ title: "", body: "", audience: "staff", screens: "" }); }}>Vazgeç</button>}</div>
       </form>
-      {q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (q.data ?? []).length === 0 ? <Empty title="Makale yok" /> : q.data!.map((a) => (
+      <Segmented label="Makale durumu" value={tab} onChange={(v) => setTab(v as "live" | "archived")} options={[{ value: "live", label: "Yayında" }, { value: "archived", label: "Yayından kaldırılanlar" }]} />
+      {tab === "archived" ? <ArchivedArticles /> : q.isPending ? <Loading /> : q.isError ? <ErrorState error={q.error} /> : (q.data ?? []).length === 0 ? <Empty title="Makale yok" /> : q.data!.map((a) => (
         <div key={a.id} className="card"><div className="card__body row row--between" style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>
           <div><div className="strong">{a.title}</div><div className="small muted">{a.audience === "staff" ? "Personel" : "Sakin"} · ekranlar: {a.screens.join(", ") || "—"} · faydalı {a.helpful} · faydasız {a.not_helpful} · {a.updated_by}, {formatDateTime(a.updated_at)}</div></div>
-          <button className="btn btn--sm" type="button" onClick={() => startEdit(a)}>Düzenle</button>
+          <div className="row" style={{ gap: "var(--s-2)" }}>
+            <button className="btn btn--sm" type="button" onClick={() => startEdit(a)}>Düzenle</button>
+            <ArchiveButton a={a} archive />
+          </div>
         </div></div>
       ))}
     </div>
+  );
+}
+
+/** Yayından kaldır / yeniden yayınla. Arşivdeki makale sakin ve personel listesinde görünmez; 409 `already_archived` / `not_archived` bilgi olarak. */
+function ArchiveButton({ a, archive }: { a: Article; archive: boolean }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const m = useMutation({
+    mutationFn: () => api<Written<Article>>("POST", `/platform/knowledge-articles/${a.id}/${archive ? "archive" : "restore"}`),
+    onSuccess: (r) => { toast(r.message); qc.invalidateQueries({ queryKey: ["platform", "kb"] }); },
+    onError: (e) => { toast(e instanceof ApiError && e.status === 409 ? e.message : "İşlem tamamlanamadı.", e instanceof ApiError && e.status === 409 ? "info" : "danger"); qc.invalidateQueries({ queryKey: ["platform", "kb"] }); },
+  });
+  if (!archive) return <button className="btn btn--sm" type="button" disabled={m.isPending} onClick={() => m.mutate()}>Yeniden yayınla</button>;
+  return (
+    <ConfirmButton className="btn btn--ghost btn--sm" title="Makaleyi yayından kaldır" confirmLabel="Yayından kaldır"
+      body={<p className="mb-0"><strong>{a.title}</strong> sakin ve personel ekranlarındaki yardımdan kalkar. Silinmez; "Yayından kaldırılanlar" sekmesinden yeniden yayınlayabilirsiniz.</p>}
+      onConfirm={() => m.mutateAsync()}>Yayından kaldır</ConfirmButton>
+  );
+}
+
+function ArchivedArticles() {
+  const q = useQuery({ queryKey: ["platform", "kb", "archived"], queryFn: () => getItems<Article & { archived_at: string | null }>("/platform/knowledge-articles", { archived: "true" }) });
+  if (q.isPending) return <Loading />;
+  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
+  if (q.data.length === 0) return <Empty title="Yayından kaldırılan makale yok" icon={<BookOpen aria-hidden="true" />} />;
+  return (
+    <>
+      {q.data.map((a) => (
+        <div key={a.id} className="card"><div className="card__body row row--between" style={{ gap: "var(--s-2)", flexWrap: "wrap" }}>
+          <div><div className="strong">{a.title}</div><div className="small muted">{a.audience === "staff" ? "Personel" : "Sakin"} · yayından kaldırıldı {formatDateTime(a.archived_at)}</div></div>
+          <ArchiveButton a={a} archive={false} />
+        </div></div>
+      ))}
+    </>
   );
 }

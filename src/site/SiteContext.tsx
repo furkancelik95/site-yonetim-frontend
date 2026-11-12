@@ -20,6 +20,8 @@ export const P = {
   requestsRead: "requests.read",
   requestsCreate: "requests.create",
   requestsAssign: "requests.assign",
+  /** Yalnız kendine atanan ve kendi açtığı talepler (teknik personel). */
+  requestsAssigned: "requests.assigned",
   requestsSettings: "requests.settings",
   announcementsRead: "announcements.read",
   announcementsPublish: "announcements.publish",
