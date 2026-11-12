@@ -6,7 +6,7 @@ import { api, get } from "../../api/client";
 import type { Page, Schemas, Written } from "../../api/types";
 import { BarChart, Donut } from "../../components/charts";
 import { useToast } from "../../components/toast";
-import { Alert, Avatar, Badge, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
+import { Alert, Avatar, Badge, ConfirmButton, Empty, ErrorState, Field, FormError, IconChip, Kpi, Loading, PageHead, Pager, SubmitButton, fieldError } from "../../components/ui";
 import { formatInt } from "../../lib/format";
 import { moduleName, propertyKind } from "../../lib/labels";
 
@@ -28,6 +28,7 @@ export function PlatformOverviewPage() {
     placeholderData: keepPreviousData,
   });
   const plans = usePlans();
+  const [planDraft, setPlanDraft] = useState<Record<string, string>>({});
   const changePlan = useMutation({
     mutationFn: ({ siteId, planId }: { siteId: string; planId: string }) => api<Written<SiteOut>>("PATCH", `/platform/sites/${siteId}/plan`, { body: { plan_id: planId } }),
     onSuccess: (r) => { toast(r.message); qc.invalidateQueries({ queryKey: ["platform"] }); },
@@ -114,17 +115,35 @@ export function PlatformOverviewPage() {
                         <td className="small">{s.organization_name ?? "—"}</td>
                         <td className="right num">{formatInt(s.units)} / {s.max_units ?? "∞"} {s.over_cap && <Badge tone="danger">Aşıldı</Badge>}</td>
                         <td>
-                          <select
-                            aria-label={`${s.name} planı`}
-                            className="field__input"
-                            style={{ minHeight: 36, padding: "4px 8px" }}
-                            value={plans.data?.items.find((p) => p.name === s.plan_name)?.id ?? ""}
-                            disabled={changePlan.isPending || !plans.data}
-                            onChange={(e) => changePlan.mutate({ siteId: s.id, planId: e.target.value })}
-                          >
-                            {!s.plan_name && <option value="">Plan yok</option>}
-                            {plans.data?.items.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                          </select>
+                          {/* Plan değişikliği birim sınırını ve ücreti etkiler: seçim önce taslak, onayla kaydedilir */}
+                          {(() => {
+                            const current = plans.data?.items.find((p) => p.name === s.plan_name)?.id ?? "";
+                            const draft = planDraft[s.id] ?? current;
+                            const target = plans.data?.items.find((p) => p.id === draft);
+                            return (
+                              <div className="row" style={{ gap: "var(--s-2)", flexWrap: "nowrap" }}>
+                                <select
+                                  aria-label={`${s.name} planı`}
+                                  className="field__input"
+                                  style={{ minHeight: 36, padding: "4px 8px" }}
+                                  value={draft}
+                                  disabled={changePlan.isPending || !plans.data}
+                                  onChange={(e) => setPlanDraft((d) => ({ ...d, [s.id]: e.target.value }))}
+                                >
+                                  {!s.plan_name && <option value="">Plan yok</option>}
+                                  {plans.data?.items.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
+                                {draft !== current && target && (
+                                  <>
+                                    <ConfirmButton className="btn btn--primary btn--sm" title="Plan değişsin mi?" confirmLabel="Planı değiştir"
+                                      body={<p className="mb-0"><strong>{s.name}</strong> sitesinin planı <strong>{s.plan_name ?? "plansız"}</strong> → <strong>{target.name}</strong> olacak. Birim sınırı ve ücret buna göre değişir.</p>}
+                                      onConfirm={() => changePlan.mutateAsync({ siteId: s.id, planId: draft }).then(() => setPlanDraft((d) => { const n = { ...d }; delete n[s.id]; return n; }))}>Kaydet</ConfirmButton>
+                                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPlanDraft((d) => { const n = { ...d }; delete n[s.id]; return n; })}>Vazgeç</button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                       </tr>
                     ))}
@@ -334,7 +353,7 @@ export function IndexValuesPage() {
         const sorted = [...q.data].sort((a, b) => a.period.localeCompare(b.period));
         const last = sorted[sorted.length - 1];
         const prev = sorted[sorted.length - 2];
-        const pct = (v: number) => `%${v.toLocaleString("tr-TR")}`;
+        const pct = (v: number) => `%${v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         const dir = (a?: number, b?: number) => (a == null || b == null ? undefined : a > b ? "up" as const : a < b ? "down" as const : "flat" as const);
         return (
           <div className="grid grid--kpi rise">
@@ -351,8 +370,18 @@ export function IndexValuesPage() {
         <div className="card">
           <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">TÜFE yıllık değişim</span><span className="card__meta ml-auto">son {Math.min(12, q.data.length)} dönem</span></div>
           <div className="card__body">
-            <BarChart label="TÜFE yıllık değişim" format={(v) => `%${v.toLocaleString("tr-TR", { maximumFractionDigits: 1 })}`}
-              data={[...q.data].sort((a, b) => a.period.localeCompare(b.period)).slice(-12).map((v) => ({ label: v.period.slice(2).replace("-", "/"), value: v.tufe, sub: `ÜFE %${v.ufe.toLocaleString("tr-TR")}` }))}
+            <BarChart label="TÜFE yıllık değişim" format={(v) => `%${v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              data={[...q.data].sort((a, b) => a.period.localeCompare(b.period)).slice(-12).map((v) => ({ label: v.period.slice(2).replace("-", "/"), value: v.tufe, sub: `ÜFE %${v.ufe.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }))}
+              highlight={Math.min(12, q.data.length) - 1} />
+          </div>
+        </div>
+      )}
+      {q.data && q.data.length > 1 && (
+        <div className="card">
+          <div className="card__head"><span className="card__icon card__icon--accent"><BarChart3 aria-hidden="true" /></span><span className="card__title">ÜFE yıllık değişim</span><span className="card__meta ml-auto">son {Math.min(12, q.data.length)} dönem</span></div>
+          <div className="card__body">
+            <BarChart label="ÜFE yıllık değişim" format={(v) => `%${v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              data={[...q.data].sort((a, b) => a.period.localeCompare(b.period)).slice(-12).map((v) => ({ label: v.period.slice(2).replace("-", "/"), value: v.ufe, sub: `TÜFE %${v.tufe.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }))}
               highlight={Math.min(12, q.data.length) - 1} />
           </div>
         </div>
@@ -375,7 +404,7 @@ export function IndexValuesPage() {
         {q.isPending ? <Loading /> : q.isError ? <div className="card__body"><ErrorState error={q.error} /></div> : q.data.length === 0 ? <Empty title="Henüz değer girilmedi" icon={<TrendingUp aria-hidden="true" />}>TÜİK yıllık değişim oranını yukarıdan dönem dönem girin.</Empty> : (
           <div className="table-wrap"><table className="data"><caption className="visually-hidden">Endeks değerleri</caption>
             <thead><tr><th scope="col">Dönem</th><th scope="col" className="right">TÜFE %</th><th scope="col" className="right">ÜFE %</th><th scope="col">Giren</th></tr></thead>
-            <tbody>{q.data.map((v) => <tr key={v.period}><td>{v.period}</td><td className="right num">{v.tufe.toLocaleString("tr-TR")}</td><td className="right num">{v.ufe.toLocaleString("tr-TR")}</td><td className="small">{v.entered_by}</td></tr>)}</tbody>
+            <tbody>{q.data.map((v) => <tr key={v.period}><td>{v.period}</td><td className="right num">{v.tufe.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="right num">{v.ufe.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="small">{v.entered_by}</td></tr>)}</tbody>
           </table></div>
         )}
       </div></div>

@@ -3,11 +3,12 @@ import { Navigate, Outlet, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "../api/client";
 import { homePath, showsPortfolio, useAuth } from "../auth/AuthContext";
-import { ErrorState, Loading } from "../components/ui";
+import { ErrorState, Forbidden, Loading } from "../components/ui";
 import { MfaGraceBanner } from "../pages/auth/AccountPages";
 import { ViewAsBar, useViewAs } from "../components/ViewAs";
 import { StepUpDialog } from "../components/StepUpDialog";
-import { makeSiteCtx, SiteContext, type SiteDetail } from "../site/SiteContext";
+import { makeSiteCtx, SiteContext, useSite, type SiteDetail } from "../site/SiteContext";
+import { screenAllowed } from "../site/screenAccess";
 import { AppShell } from "./AppShell";
 
 /** Oturum yoksa girişe gönderir; parola değişikliği ya da 2FA kurulumu zorunluysa önce oraya; güncel
@@ -100,4 +101,12 @@ export function RootIndex({ portfolio }: { portfolio: ReactNode }) {
   if (!me) return <Navigate to="/giris" replace />;
   if (!showsPortfolio(me)) return <Navigate to={homePath(me)} replace />;
   return <AppShell title="Portföy">{portfolio}</AppShell>;
+}
+
+/** Site ekranı rota koruyucusu (test raporu #13): menüdeki izin yoksa sayfa hiç çizilmez,
+ * yalnız "yetkiniz yok" gösterilir. Kurallar site/screenAccess.ts'te. */
+export function RequireScreen({ path, children }: { path: string; children: ReactNode }) {
+  const ctx = useSite();
+  if (!screenAllowed(path, ctx)) return <Forbidden />;
+  return <>{children}</>;
 }

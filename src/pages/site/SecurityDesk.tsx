@@ -4,6 +4,7 @@ import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
+import "../../styles/p-guvenlik-form.css";
 import { Alert, Badge, ConfirmButton, Empty, Field, FormError, Loading, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime, todayIso } from "../../lib/format";
 import { plateInput } from "../../lib/input";
@@ -83,7 +84,7 @@ function Unannounced({ gate, method }: { gate: string; method: string | null }) 
       <div className="card__head"><span className="card__icon card__icon--info"><UserRoundPlus aria-hidden="true" /></span><span className="card__title">Habersiz ziyaretçi</span>{awaiting.length > 0 && <span className="ml-auto"><Badge tone="warn">{awaiting.length} onay bekliyor</Badge></span>}</div>
       <form className="card__body stack" style={{ gap: "var(--s-3)", borderBottom: "1px solid var(--line)" }} noValidate onSubmit={submit}>
         <FormError error={m.error} />
-        <UnitPicker label="Gideceği bölüm" source="lookup" value={unit} onChange={setUnit} error={fieldError(m.error, "unit_id")} />
+        <div className="unitpick-overlay"><UnitPicker label="Gideceği bölüm" source="lookup" value={unit} onChange={setUnit} error={fieldError(m.error, "unit_id")} /></div>
         <div className="grid grid--2">
           <Field label="Ad soyad" required error={fieldError(m.error, "full_name")}>{(p) => <input {...p} className="field__input" autoComplete="off" value={f.full_name} onChange={(e) => setF((x) => ({ ...x, full_name: e.target.value }))} />}</Field>
           <Field label="Tür">{(p) => <select {...p} className="field__input" value={f.kind} onChange={(e) => setF((x) => ({ ...x, kind: e.target.value }))}>{["guest", "cargo", "service", "contractor"].map((k) => <option key={k} value={k}>{visitorKind(k)}</option>)}</select>}</Field>

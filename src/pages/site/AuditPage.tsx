@@ -11,6 +11,29 @@ type Audit = Schemas["AuditOut"];
 
 const ACTIONS = ["create", "update", "delete", "import", "download", "export", "contact_view"];
 const ACTORS = ["user", "system", "delegate"];
+/** Denetim kaydındaki kayıt türü (backend tablo adı) → okunur ad. Tanımsız ad alt çizgisiz yazılır. */
+const ENTITY: Record<string, string> = {
+  persons: "Kişi", person: "Kişi", units: "Bölüm", unit: "Bölüm", blocks: "Blok", sites: "Site", site_memberships: "Site kullanıcısı",
+  site_role_assignments: "Rol ataması", site_roles: "Rol", invitations: "Davet", registrations: "Kayıt başvurusu", household_members: "Hane üyesi",
+  vehicles: "Araç", payments: "Tahsilat", payment: "Tahsilat", charges: "Tahakkuk", charge_runs: "Tahakkuk çalıştırması", charge_lines: "Tahakkuk satırı",
+  charge_adjustments: "Tahakkuk düzeltmesi", refunds: "İade", expenses: "Gider", expense: "Gider", recurring_expenses: "Tekrarlanan gider",
+  cash_accounts: "Kasa / banka hesabı", cash_movements: "Kasa hareketi", cash_days: "Kasa günü", ledger_entries: "Cari hareket", ledger_accounts: "Cari hesap",
+  budgets: "İşletme projesi", budget_plans: "Bütçe", payment_plans: "Ödeme planı", ad_hoc_charges: "Dönem dışı ücret", periods: "Dönem",
+  billing_rules: "Aidat kuralı", accounting_exports: "Muhasebe aktarımı", bank_imports: "Banka aktarımı", debtors: "Borçlu hesap", demand_letters: "İhtarname",
+  clearance_certificates: "Borçsuzluk belgesi", requests: "Talep", request_events: "Talep hareketi", request_internal_notes: "Talep iç notu",
+  announcements: "Duyuru", notifications: "Bildirim", emergencies: "Acil durum", polls: "Anket", meetings: "Toplantı", assemblies: "Genel kurul",
+  decision_book_entries: "Karar defteri", documents: "Belge", privacy_requests: "KVKK başvurusu", privacy_notices: "Aydınlatma metni",
+  transparency_reports: "Şeffaflık raporu", packages: "Kargo", visitor_invites: "Ziyaretçi daveti", visit_requests: "Kapı ziyaret onayı", gate_logs: "Kapı kaydı",
+  parking_violations: "Otopark ihlali", patrol_runs: "Devriye turu", patrol_plans: "Devriye planı", incidents: "Olay kaydı", shift_log_entries: "Nöbet defteri",
+  deposited_keys: "Emanet anahtar", key_loans: "Anahtar teslimi", permits: "Tadilat / taşınma izni", reservations: "Rezervasyon", meters: "Sayaç",
+  meter_readings: "Sayaç okuması", task_templates: "Rutin görev", maintenance_runs: "Periyodik bakım", technical_assets: "Teknik varlık", assets: "Demirbaş",
+  stock_items: "Stok", contracts: "Sözleşme", insurance_policies: "Sigorta poliçesi", purchase_requests: "Satın alma talebi", purchase_orders: "Sipariş",
+  vendors: "Tedarikçi", staff_members: "Personel", shift_weeks: "Vardiya haftası", shift_assignments: "Vardiya ataması", leave_requests: "İzin talebi",
+  approval_requests: "Onay talebi", approval_rules: "Onay kuralı", approval_delegations: "Yetki devri", support_tickets: "Destek bileti",
+  support_sessions: "Destek oturumu", view_as_sessions: "Sakin olarak görüntüleme", sms_account: "SMS hesabı", site_modules: "Modül", custom_fields: "Özel alan",
+  import_batches: "İçeri aktarma", audit_packages: "Denetim paketi",
+};
+const entityLabel = (e: string) => ENTITY[e] ?? e.replace(/_/g, " ").replace(/^./, (c) => c.toLocaleUpperCase("tr-TR"));
 
 /** Süzgeçten bağımsız sayılar: toplam, son 7 gün, bugün, silme (yalnız `total` okunur, page_size 1). */
 function AuditKpis() {
@@ -92,7 +115,7 @@ export function AuditPage() {
                           </div>
                         </td>
                         <td><Badge tone={a.action === "delete" ? "danger" : a.action === "create" ? "ok" : "muted"}>{auditAction(a.action)}</Badge></td>
-                        <td className="small"><span className="mono">{a.entity}</span>{a.entity_id && <div className="cell-sub mono">{a.entity_id.slice(0, 8)}…</div>}</td>
+                        <td className="small"><span title={a.entity_id ? `${a.entity} · ${a.entity_id}` : a.entity}>{entityLabel(a.entity)}</span></td>
                         <td className="right">
                           {(a.before || a.after || a.reason || a.request_id) && (
                             <button className="btn btn--ghost btn--sm" type="button" aria-expanded={open === a.id} onClick={() => setOpen(open === a.id ? null : a.id)}>Ayrıntı</button>

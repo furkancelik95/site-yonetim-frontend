@@ -6,7 +6,7 @@ import type { Schemas, Written } from "../../api/types";
 import { useToast } from "../../components/toast";
 import { Badge, Empty, ErrorState, Field, FormError, Kpi, Loading, PageHead, SubmitButton, fieldError } from "../../components/ui";
 import { formatDateTime } from "../../lib/format";
-import { S_ST, T_CAT, T_PRI, T_ST, getItems, type Article, type Session, type Ticket } from "../site/SupportPages";
+import { S_ST, T_CAT, T_PRI, T_ST_PLATFORM as T_ST, getItems, type Article, type Session, type Ticket } from "../site/SupportPages";
 
 type Overview = Schemas["OverviewOut"];
 

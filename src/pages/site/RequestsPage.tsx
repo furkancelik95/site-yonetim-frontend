@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { AlertTriangle, BarChart3, Columns3, Hourglass, Inbox, PieChart, Plus, Wrench } from "lucide-react";
-import { BarChart, Donut } from "../../components/charts";
+import { BarChart } from "../../components/charts";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Page, Schemas } from "../../api/types";
 import { UnitPicker, type PickedUnit } from "../../components/UnitPicker";
@@ -39,7 +39,15 @@ export function RequestsPage() {
   const asg = useSiteGet<Page<Req>>("/requests", { status: "assigned", page_size: 1 });
   const prog = useSiteGet<Page<Req>>("/requests", { status: "in_progress", page_size: 1 });
   const wait = useSiteGet<Page<Req>>("/requests", { status: "waiting", page_size: 1 });
-  const urgent = useSiteGet<Page<Req>>("/requests", { status: "open", priority: "urgent", page_size: 1 });
+  // Acil = aktif (açık, atandı, işlemde, beklemede) ve acil öncelikli — Bugün ekranıyla aynı tanım
+  // (backend services/dashboard.py OPEN_STATUSES = ACTIVE_STATUSES). Liste ucu tek durum süzer: dördü toplanır.
+  const urg = [
+    useSiteGet<Page<Req>>("/requests", { status: "open", priority: "urgent", page_size: 1 }),
+    useSiteGet<Page<Req>>("/requests", { status: "assigned", priority: "urgent", page_size: 1 }),
+    useSiteGet<Page<Req>>("/requests", { status: "in_progress", priority: "urgent", page_size: 1 }),
+    useSiteGet<Page<Req>>("/requests", { status: "waiting", priority: "urgent", page_size: 1 }),
+  ];
+  const urgentTotal = urg.every((q) => q.data) ? urg.reduce((a, q) => a + (q.data?.total ?? 0), 0) : undefined;
   const [adding, setAdding] = useState(false);
   const [managing, setManaging] = useState(false);
   const n = (q: { data?: Page<Req> }) => q.data?.total ?? "…";
@@ -57,7 +65,7 @@ export function RequestsPage() {
         <Kpi label="Açık" icon={<Inbox aria-hidden="true" />} value={n(open)} note="yeni gelen talepler" />
         <Kpi label="Atandı / işlemde" tone="accent" icon={<Wrench aria-hidden="true" />} value={asg.data && prog.data ? asg.data.total + prog.data.total : "…"} note={asg.data ? `${asg.data.total} atandı, ekip üzerinde` : "ekip üzerinde çalışıyor"} />
         <Kpi label="Beklemede" tone="warn" icon={<Hourglass aria-hidden="true" />} value={n(wait)} note="parça, firma ya da sakin bekleniyor" />
-        <Kpi label="Acil" tone={typeof urgent.data?.total === "number" && urgent.data.total > 0 ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={n(urgent)} note="açık ve acil öncelikli" />
+        <Kpi label="Acil" tone={urgentTotal ? "danger" : undefined} icon={<AlertTriangle aria-hidden="true" />} value={urgentTotal ?? "…"} note="sonuçlanmamış, acil öncelikli" />
       </div>
       {managing && <DepartmentManager onClose={() => setManaging(false)} />}
       {adding && <NewRequestForm onDone={() => setAdding(false)} />}
@@ -183,9 +191,9 @@ function RequestCharts() {
   const names = new Map<string, string>();
   for (const q of items) { byCat.set(q.category, (byCat.get(q.category) ?? 0) + 1); if (q.category_name) names.set(q.category, q.category_name); }
   const cats = [...byCat.entries()].sort((a, b) => b[1] - a[1]);
-  // 5'ten fazla dilim okunmaz: ilk 4 + "Diğer"
-  const top = cats.slice(0, 4).map(([k, v]) => ({ label: names.get(k) ?? requestCategory(k), value: v }));
-  const rest = cats.slice(4).reduce((a, [, v]) => a + v, 0);
+  // İlk 7 kategori + "Diğer" (Elektrik, Asansör gibi kategoriler "Diğer"e gömülmesin)
+  const top = cats.slice(0, 7).map(([k, v]) => ({ label: names.get(k) ?? requestCategory(k), value: v }));
+  const rest = cats.slice(7).reduce((a, [, v]) => a + v, 0);
   const segments = rest > 0 ? [...top, { label: "Diğer", value: rest }] : top;
 
   const now = new Date();
@@ -204,8 +212,22 @@ function RequestCharts() {
           <span className="card__title">Kategoriye göre</span>
           <span className="card__meta ml-auto">{meta}</span>
         </div>
-        <div className="card__body ops-pie">
-          <Donut label="Talep kategorileri" segments={segments} centerSub="talep" />
+        {/* 5'ten fazla dilimde halka okunmuyor: kategoriler yatay çubuk listesi */}
+        <div className="card__body">
+          <ul aria-label="Talep kategorileri" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "var(--s-2)" }}>
+            {segments.map((sg) => {
+              const max = Math.max(...segments.map((x) => x.value), 1);
+              return (
+                <li key={sg.label} style={{ display: "grid", gridTemplateColumns: "minmax(7rem, 11rem) 1fr 2.5rem", alignItems: "center", gap: "var(--s-3)" }}>
+                  <span className="small" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={sg.label}>{sg.label}</span>
+                  <span aria-hidden="true" style={{ height: 10, borderRadius: "var(--r-full)", background: "var(--bg-inset)", overflow: "hidden" }}>
+                    <span style={{ display: "block", height: "100%", width: `${(sg.value / max) * 100}%`, borderRadius: "var(--r-full)", background: "var(--accent)" }} />
+                  </span>
+                  <span className="small strong right" style={{ fontVariantNumeric: "tabular-nums" }}>{sg.value}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
       <div className="card">

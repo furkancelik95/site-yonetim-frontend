@@ -9,6 +9,7 @@ import { useUrlState } from "../../lib/hooks";
 import { incidentKind, packageStatus, visitorKind, visitorStatus, visitorTone } from "../../lib/labels";
 import { M, P, useSite } from "../../site/SiteContext";
 import { GateDesk, PatrolRunner, ShiftLogCard } from "./SecurityDesk";
+import "../../styles/p-guvenlik-form.css";
 
 type Pkg = Schemas["PackageOut"];
 type Visitor = Schemas["VisitorOut"];
@@ -106,7 +107,7 @@ function IncidentsCard() {
             <Field label="Tür" required error={fieldError(add.error, "kind")}>{(p) => <select {...p} className="field__input" value={f.kind} onChange={(e) => setF((x) => ({ ...x, kind: e.target.value }))}>{INCIDENT_KINDS.map((k) => <option key={k} value={k}>{incidentKind(k)}</option>)}</select>}</Field>
             <Field label="Yer" required error={fieldError(add.error, "location")}>{(p) => <input {...p} className="field__input" value={f.location} onChange={(e) => setF((x) => ({ ...x, location: e.target.value }))} placeholder="ör. B blok otopark" />}</Field>
           </div>
-          <UnitPicker label="İlgili bölüm (varsa)" source="lookup" value={unit} onChange={setUnit} allowEmptyLabel="ortak alan" />
+          <div className="unitpick-overlay"><UnitPicker label="İlgili bölüm (varsa)" source="lookup" value={unit} onChange={setUnit} allowEmptyLabel="ortak alan" /></div>
           <Field label="Ne oldu" required error={fieldError(add.error, "description")}>{(p) => <textarea {...p} className="field__input" rows={3} value={f.description} onChange={(e) => setF((x) => ({ ...x, description: e.target.value }))} />}</Field>
           <div><SubmitButton busy={add.isPending} className="btn btn--primary" disabled={!f.location.trim() || !f.description.trim()}>Olayı kaydet</SubmitButton></div>
         </div>
@@ -243,7 +244,7 @@ function PackagesCard() {
       <div className="card__head"><span className="card__icon card__icon--warn"><Package aria-hidden="true" /></span><span className="card__title">Kargo</span></div>
       <form className="card__body stack" style={{ gap: "var(--s-3)", borderBottom: "1px solid var(--line)" }} onSubmit={submit} noValidate>
         <FormError error={add.error} />
-        <UnitPicker label="Kargonun geldiği bölüm" source="lookup" value={unit} onChange={setUnit} error={unitErr} />
+        <div className="unitpick-overlay"><UnitPicker label="Kargonun geldiği bölüm" source="lookup" value={unit} onChange={setUnit} error={unitErr} /></div>
         <Field label="Kargo firması">{(p) => <input {...p} className="field__input" value={carrier} onChange={(e) => setCarrier(e.target.value)} placeholder="ör. Yurtiçi" />}</Field>
         <div><SubmitButton busy={add.isPending} className="btn btn--primary">Kargo geldi</SubmitButton></div>
         <p className="small muted mb-0">Sakine 4 haneli teslim kodu gösterilir; teslimde bu kod sorulur.</p>
@@ -290,19 +291,21 @@ function DeliverButton({ p }: { p: Pkg }) {
       body={
         <div className="stack" style={{ gap: "var(--s-3)" }}>
           <div className="field">
-            <label className="field__label" htmlFor={`code-${p.id}`}>Teslim kodu (4 hane)</label>
+            <label className="field__label" htmlFor={`code-${p.id}`}>Teslim kodu (4 hane) *</label>
             <input id={`code-${p.id}`} className="field__input mono" inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
           </div>
           <div className="field">
-            <label className="field__label" htmlFor={`to-${p.id}`}>Teslim alan</label>
+            <label className="field__label" htmlFor={`to-${p.id}`}>Teslim alan *</label>
             <input id={`to-${p.id}`} className="field__input" value={to} onChange={(e) => setTo(e.target.value)} />
             {dg.data && dg.data.length > 0 && <span className="field__hint">Teslim yetkilisi: {dg.data.map((d) => d.name).join(", ")} (sakinin kodunu söyler)</span>}
           </div>
         </div>
       }
       onConfirm={() => {
-        if (!/^\d{4}$/.test(code)) throw new Error("Teslim kodu 4 rakam olmalı.");
-        if (to.trim().length < 2) throw new Error("Teslim alanın adını yazın.");
+        // Önce kod: kod eksik/hatalıyken "teslim alan" hatası gösterilmez. (Kodun DOĞRULUĞU sunucuda,
+        // ad alanıyla aynı istekte denetlenir — ayrı doğrulama ucu yok.)
+        if (!/^\d{4}$/.test(code)) throw new Error("Önce sakinin 4 haneli teslim kodunu yazın.");
+        if (to.trim().length < 2) throw new Error("Kod yazıldı; şimdi teslim alanın adını yazın.");
         return m.mutateAsync({ pickup_code: code, delivered_to: to.trim() });
       }}
     >
@@ -336,7 +339,7 @@ function VisitorsCard() {
       <div className="card__head"><span className="card__icon card__icon--info"><UserRound aria-hidden="true" /></span><span className="card__title">Ziyaretçi</span><span className="card__meta ml-auto">bugün</span></div>
       <form className="card__body stack" style={{ gap: "var(--s-3)", borderBottom: "1px solid var(--line)" }} onSubmit={submit} noValidate>
         <FormError error={add.error} />
-        <UnitPicker label="Ziyaret edilen bölüm" source="lookup" value={unit} onChange={setUnit} error={unitErr} />
+        <div className="unitpick-overlay"><UnitPicker label="Ziyaret edilen bölüm" source="lookup" value={unit} onChange={setUnit} error={unitErr} /></div>
         <div className="grid grid--2">
           <Field label="Ad soyad" required error={fieldError(add.error, "full_name")}>{(p) => <input {...p} className="field__input" value={f.full_name} onChange={(e) => setF((x) => ({ ...x, full_name: e.target.value }))} />}</Field>
           <Field label="Tür">{(p) => <select {...p} className="field__input" value={f.kind} onChange={(e) => setF((x) => ({ ...x, kind: e.target.value }))}>{["guest", "cargo", "service", "contractor"].map((k) => <option key={k} value={k}>{visitorKind(k)}</option>)}</select>}</Field>

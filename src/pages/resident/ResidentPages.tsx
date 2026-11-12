@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import Decimal from "decimal.js";
-import { CalendarCheck, Car, Hammer, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
+import { CalendarCheck, Car, Hammer, HelpCircle, KeyRound, ShieldCheck, Siren, UserRoundCheck, ChevronRight, Copy, FileText, Inbox, Megaphone, Receipt, Users, Wrench } from "lucide-react";
 import { ApiError } from "../../api/client";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { AccountStatement, Page, Schemas } from "../../api/types";
@@ -145,6 +145,7 @@ export function ResidentHomePage() {
           <Link className="quick__tile" to={`${base}/acil-durum`}><span className="quick__icon" aria-hidden="true"><Siren /></span><span className="quick__label">Acil durum bilgileri</span></Link>
           {shows(M.documents) && <Link className="quick__tile" to={`${base}/belgeler`}><span className="quick__icon" aria-hidden="true"><FileText /></span><span className="quick__label">Belgeler</span></Link>}
           <Link className="quick__tile" to={`${base}/kvkk`}><span className="quick__icon" aria-hidden="true"><ShieldCheck /></span><span className="quick__label">Kişisel verilerim</span></Link>
+          <Link className="quick__tile" to={`${base}/sss`}><span className="quick__icon" aria-hidden="true"><HelpCircle /></span><span className="quick__label">Sıkça sorulanlar</span></Link>
         </nav>
       </div>
 
@@ -553,5 +554,6 @@ export { ResidentReservationPage } from "./ResidentReservationPage";
 export { ResidentEmergencyPage } from "./ResidentCommPages";
 export { ResidentTransparencyPage, ResidentTransparencyReportPage } from "./ResidentTransparencyPage";
 export { ResidentDocumentsPage, ResidentPrivacyPage } from "./ResidentRecordsPages";
+export { ResidentHelpPage } from "./ResidentHelpPage";
 import { RequestExtrasBlock } from "./ResidentServicePages";
 import { useRequestCategories } from "../site/requestCategories";

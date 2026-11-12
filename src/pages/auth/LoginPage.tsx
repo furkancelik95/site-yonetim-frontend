@@ -83,9 +83,12 @@ export function LoginPage() {
             <button type="button" role="tab" aria-selected={mode === "phone"} className={`btn btn--sm${mode === "phone" ? " btn--primary" : ""}`} onClick={() => setMode("phone")}>Telefon ile</button>
           </div>
           {mode === "email" ? <EmailLogin onDone={done} demo={demoEmail} /> : <PhoneLogin onDone={done} />}
-          <p className="small mt-4 mb-0">
-            <Link to="/parola-sifirla">Parolamı unuttum</Link>
-          </p>
+          {/* SMS girişinde parola yok: bağlantı yalnız e-posta sekmesinde */}
+          {mode === "email" && (
+            <p className="small mt-4 mb-0">
+              <Link to="/parola-sifirla">Parolamı unuttum</Link>
+            </p>
+          )}
         </>
       )}
     </AuthFrame>
@@ -108,8 +111,18 @@ function EmailLogin({ onDone, demo }: { onDone: (me: Me | null) => void; demo: {
     queueMicrotask(() => passwordRef.current?.focus());
   }
 
+  // Boş alan: düğmeyi sessizce pasif bırakmak yerine alandan çıkınca / gönderimde alanın altında söylenir
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const emailErr = touched.email && !email.trim() ? "E-posta adresinizi yazın." : undefined;
+  const passwordErr = touched.password && !password ? "Parolanızı yazın." : undefined;
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      setTouched({ email: true, password: true });
+      (document.getElementById(!email.trim() ? "email" : "password") as HTMLInputElement | null)?.focus();
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -125,19 +138,21 @@ function EmailLogin({ onDone, demo }: { onDone: (me: Me | null) => void; demo: {
     <form className="stack" style={{ gap: "var(--s-4)", marginTop: "var(--s-5)" }} onSubmit={submit} noValidate>
       <FormError error={error} />
       <div className="field">
-        <label className="field__label" htmlFor="email">E-posta</label>
-        <input className="field__input" id="email" type="email" inputMode="email" autoComplete="username" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+        <label className="field__label" htmlFor="email">E-posta<span aria-hidden="true"> *</span></label>
+        <input className="field__input" id="email" type="email" inputMode="email" autoComplete="username" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, email: true }))} aria-invalid={emailErr ? true : undefined} aria-describedby={emailErr ? "email-err" : undefined} />
+        {emailErr && <span className="field__error" id="email-err" role="alert">{emailErr}</span>}
       </div>
       <div className="field">
-        <label className="field__label" htmlFor="password">Parola</label>
+        <label className="field__label" htmlFor="password">Parola<span aria-hidden="true"> *</span></label>
         <div className="field__wrap">
-          <input ref={passwordRef} className="field__input" id="password" type={show ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input ref={passwordRef} className="field__input" id="password" type={show ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, password: true }))} aria-invalid={passwordErr ? true : undefined} aria-describedby={passwordErr ? "password-err" : undefined} />
           <button type="button" className="field__toggle" aria-label={show ? "Parolayı gizle" : "Parolayı göster"} aria-pressed={show} onClick={() => setShow((v) => !v)}>
             {show ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}
           </button>
         </div>
+        {passwordErr && <span className="field__error" id="password-err" role="alert">{passwordErr}</span>}
       </div>
-      <SubmitButton busy={busy} className="btn btn--primary" disabled={!email || !password}>Giriş yap</SubmitButton>
+      <SubmitButton busy={busy} className="btn btn--primary">Giriş yap</SubmitButton>
     </form>
   );
 }
