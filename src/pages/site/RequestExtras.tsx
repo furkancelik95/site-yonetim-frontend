@@ -108,7 +108,8 @@ export function ExtrasCard({ r }: { r: Detail }) {
   const [quoting, setQuoting] = useState(false);
   const { feedback, quote } = r;
   const active = !["closed", "cancelled"].includes(r.status);
-  const canQuote = can(P.requestsAssign) && !!r.unit_id && active && (!quote || ["rejected", "billed"].includes(quote.status));
+  const work = can(P.requestsAssign) || can(P.requestsAssigned);
+  const canQuote = work && !!r.unit_id && active && (!quote || ["rejected", "billed"].includes(quote.status));
   return (
     <>
       {feedback && (
@@ -124,7 +125,7 @@ export function ExtrasCard({ r }: { r: Detail }) {
           <div className="card__head"><span className="card__icon card__icon--accent"><Receipt aria-hidden="true" /></span><span className="card__title">Ücretli hizmet</span>{quote && <span className="ml-auto"><Badge tone={quoteTone(quote.status)}>{quote.status_label}</Badge></span>}</div>
           <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
             {quote && <QuoteView q={quote} />}
-            {quote?.status === "accepted" && can(P.requestsAssign) && <CompleteQuote q={quote} />}
+            {quote?.status === "accepted" && work && <CompleteQuote q={quote} />}
             {canQuote && (quoting ? <QuoteForm requestId={r.id} onDone={() => setQuoting(false)} /> : <div><button className="btn btn--sm" type="button" onClick={() => setQuoting(true)}><Plus aria-hidden="true" /> Teklif hazırla</button> <span className="small muted">Bölüm içi işte sakin onayı olmadan ücret yansımaz.</span></div>)}
           </div>
         </div>

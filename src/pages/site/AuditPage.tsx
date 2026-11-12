@@ -23,7 +23,7 @@ const ENTITY: Record<string, string> = {
   clearance_certificates: "Borçsuzluk belgesi", requests: "Talep", request_events: "Talep hareketi", request_internal_notes: "Talep iç notu",
   announcements: "Duyuru", notifications: "Bildirim", emergencies: "Acil durum", polls: "Anket", meetings: "Toplantı", assemblies: "Genel kurul",
   decision_book_entries: "Karar defteri", documents: "Belge", privacy_requests: "KVKK başvurusu", privacy_notices: "Aydınlatma metni",
-  transparency_reports: "Şeffaflık raporu", packages: "Kargo", visitor_invites: "Ziyaretçi daveti", visit_requests: "Kapı ziyaret onayı", gate_logs: "Kapı kaydı",
+  transparency_reports: "Şeffaflık raporu", packages: "Kargo", visitors: "Ziyaretçi", visitor_invites: "Ziyaretçi daveti", visit_requests: "Kapı ziyaret onayı", gate_logs: "Kapı kaydı",
   parking_violations: "Otopark ihlali", patrol_runs: "Devriye turu", patrol_plans: "Devriye planı", incidents: "Olay kaydı", shift_log_entries: "Nöbet defteri",
   deposited_keys: "Emanet anahtar", key_loans: "Anahtar teslimi", permits: "Tadilat / taşınma izni", reservations: "Rezervasyon", meters: "Sayaç",
   meter_readings: "Sayaç okuması", task_templates: "Rutin görev", maintenance_runs: "Periyodik bakım", technical_assets: "Teknik varlık", assets: "Demirbaş",

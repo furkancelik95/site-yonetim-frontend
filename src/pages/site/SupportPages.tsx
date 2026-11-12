@@ -10,7 +10,7 @@ import { formatDateTime } from "../../lib/format";
 import { useUrlState } from "../../lib/hooks";
 import { P, useSite } from "../../site/SiteContext";
 
-import type { Page } from "../../api/types";
+import type { Page, Schemas } from "../../api/types";
 
 /** Sayfalı listeyi (en çok 200) düz dizi olarak okur. */
 export async function getItems<T>(path: string, query?: Record<string, string | number | undefined>): Promise<T[]> {
@@ -22,8 +22,15 @@ function useSiteItems<T>(path: string) {
   return useQuery({ queryKey: ["site", site.slug, path, "items"], queryFn: () => getItems<T>(`/sites/${site.slug}${path}`), placeholderData: keepPreviousData });
 }
 
+export type TicketSummary = Schemas["TicketSummaryOut"];
+/** Bilet özeti (açık, SLA aşımı, ilk yanıtı geciken, kritik): veritabanında sayılır, sayfadan ve süzgeçten bağımsız.
+ * Site paneli ile platform aynı sayıyı gösterir. */
+export async function getTicketSummary(path: string): Promise<TicketSummary> {
+  return (await get<Page<Ticket> & { summary: TicketSummary }>(path, { page_size: 1 })).summary;
+}
+
 /** Servis isteği 82–84'teki şekiller. */
-export interface Ticket { id: string; number: string; site_slug: string; site_name: string; category: string; priority: string; title: string; context: { path: string; app_version: string; user_agent: string; correlation_id: string }; status: string; messages: { by: string; side: string; body: string; at: string }[]; created_by: string; created_at: string; first_response_at: string | null; resolved_at: string | null; sla: { first_due: string; resolve_due: string; first_breached: boolean; resolve_breached: boolean } }
+export interface Ticket { id: string; number: string; site_slug: string; site_name: string; category: string; priority: string; title: string; context: { path: string; app_version: string; user_agent: string; correlation_id: string }; status: string; messages: { by: string; side: string; body: string; at: string }[]; created_by: string; created_at: string; first_response_at: string | null; resolved_at: string | null; sla: { first_due: string; resolve_due: string; first_breached: boolean; resolve_breached: boolean; /** ilk yanıt ya da çözüm hedefi aşıldı — tek tanım */ breached: boolean } }
 export interface Article { id: string; title: string; body: string; audience: string; screens: string[]; helpful: number; not_helpful: number; updated_at: string; updated_by: string }
 export interface Session { id: string; site_slug: string; site_name: string; reason: string; hours: number; requested_by: string; requested_at: string; status: string; decided_by: string | null; decided_at: string | null; ends_at: string | null; reject_reason: string | null }
 
@@ -55,17 +62,19 @@ export function SupportPage() {
 
 /** Bant altı göstergeler: biletlerin durumu (liste ile aynı sorgu) ve destek oturumu talepleri. */
 function SupportKpis({ sessions }: { sessions: Session[] | undefined }) {
+  const { site } = useSite();
   const q = useSiteItems<Ticket>("/support-tickets");
-  if (q.isError) return null;
-  if (!q.data || !sessions) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
-  const open = q.data.filter((t) => t.status !== "resolved" && t.status !== "closed");
+  const sum = useQuery({ queryKey: ["site", site.slug, "/support-tickets", "summary"], queryFn: () => getTicketSummary(`/sites/${site.slug}/support-tickets`) });
+  if (q.isError || sum.isError) return null;
+  if (!q.data || !sum.data || !sessions) return <div className="grid grid--kpi">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton skel__kpi" />)}</div>;
+  const openCount = sum.data.open;
   const waiting = q.data.filter((t) => t.status === "waiting_customer").length;
-  const breached = open.filter((t) => t.sla.first_breached || t.sla.resolve_breached).length;
+  const breached = sum.data.sla_breached;
   const pendingS = sessions.filter((s) => s.status === "pending").length;
   const activeS = sessions.filter((s) => s.status === "active").length;
   return (
     <div className="grid grid--kpi rise">
-      <Kpi label="Açık bilet" tone={open.length > 0 ? "accent" : undefined} icon={<LifeBuoy aria-hidden="true" />} value={open.length} note={`${q.data.length} biletten`} />
+      <Kpi label="Açık bilet" tone={openCount > 0 ? "accent" : undefined} icon={<LifeBuoy aria-hidden="true" />} value={openCount} note={`${q.data.length} biletten`} />
       <Kpi label="Yanıtınız bekleniyor" tone={waiting > 0 ? "warn" : undefined} icon={<MessageSquare aria-hidden="true" />} value={waiting} note="destek ekibi sizden bilgi istedi" />
       <Kpi label="SLA aşımı" tone={breached > 0 ? "danger" : "ok"} icon={<Clock aria-hidden="true" />} value={breached} note="açık biletlerde süre aşıldı" />
       <Kpi label="Destek oturumu" tone={activeS > 0 ? "danger" : pendingS > 0 ? "warn" : undefined} icon={<ShieldCheck aria-hidden="true" />} value={activeS > 0 ? `${activeS} aktif` : pendingS} small={activeS > 0} note={pendingS > 0 ? `${pendingS} talep onayınızı bekliyor` : "onay bekleyen talep yok"} />

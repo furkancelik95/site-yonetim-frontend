@@ -85,6 +85,14 @@ export function formatDateTime(iso: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? "—" : dateTimeFmt.format(d);
 }
 
+const timeFmt = new Intl.DateTimeFormat(TR, { hour: "2-digit", minute: "2-digit" });
+/** ISO zaman damgası → "14:05" (yerel saat). */
+export function formatTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "—" : timeFmt.format(d);
+}
+
 /** "2026-06-01" → "Haziran 2026" */
 export function formatMonth(iso: string | null | undefined): string {
   if (!iso) return "—";

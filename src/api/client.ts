@@ -12,13 +12,16 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fields: FieldErrors | null;
+  /** 429'da `Retry-After` başlığı (saniye); yoksa null. */
+  readonly retryAfter: number | null;
 
-  constructor(status: number, code: string, message: string, fields: FieldErrors | null) {
+  constructor(status: number, code: string, message: string, fields: FieldErrors | null, retryAfter: number | null = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -137,7 +140,8 @@ async function toError(res: Response): Promise<ApiError> {
   } catch {
     // gövde JSON değil — varsayılan mesaj kalır
   }
-  return new ApiError(res.status, code, message, fields);
+  const ra = Number(res.headers.get("Retry-After"));
+  return new ApiError(res.status, code, message, fields, Number.isFinite(ra) && ra > 0 ? ra : null);
 }
 
 function defaultMessage(status: number) {

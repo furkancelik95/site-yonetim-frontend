@@ -164,6 +164,7 @@ function ReverseMovement({ m }: { m: Movement }) {
       body={
         <div className="stack" style={{ gap: "var(--s-3)" }}>
           <p className="mb-0">"{m.description}" için ters hareket atılır; orijinal kayıt yerinde kalır.</p>
+          {m.source === "transfer" && <p className="mb-0"><strong>Aktarımın iki tarafı da geri alınır.</strong> Diğer hesaptaki karşı hareket de ters kaydedilir; toplam bakiye değişmez.</p>}
           <div className="field">
             <label className="field__label" htmlFor={`mv-${m.id}`}>Gerekçe *</label>
             <input id={`mv-${m.id}`} className="field__input" value={reason} onChange={(e) => setReason(e.target.value)} />

@@ -175,7 +175,17 @@ function EndPartyButton({ unitId, party }: { unitId: string; party: Party }) {
 function AddPartyForm({ unitId, onDone }: { unitId: string; onDone: () => void }) {
   const [f, setF] = useState({ role: "tenant", start_date: todayIso(), share_percent: "100", first_name: "", last_name: "", phone: "", email: "" });
   const [person, setPerson] = useState<Person | null>(null);
-  const m = useSiteMutation<Record<string, unknown>, unknown>("POST", `/units/${unitId}/parties`, { onSuccess: onDone });
+  const toast = useToast();
+  // Kiracı eklenince malikin oturan (-O) hesabı hemen kapanmaz: kıst malik payı (K9) o aya yazılabilsin diye
+  // kiracının başladığı ay bitince, bakiye sıfırsa günlük iş kapatır.
+  const m = useSiteMutation<Record<string, unknown>, Schemas["PartyAdded"]>("POST", `/units/${unitId}/parties`, {
+    onSuccess: (r) => {
+      for (const a of r?.kept_open_accounts ?? []) {
+        if (a.pending_close) toast(`Malikin oturan hesabı (${a.reference_code}) ${formatDate(a.close_from)} tarihinde kapanacak${a.has_balance ? ", bakiye kapanınca" : ""}.`, "info");
+      }
+      onDone();
+    },
+  });
   const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   function submit(e: FormEvent) {
     e.preventDefault();

@@ -15,8 +15,18 @@ const CATEGORIES = ["urgent", "financial", "security", "operations", "governance
 
 /** Bildirimin bağlandığı kayda giden adres; bilinmeyen tür ya da sakin ekranı için yok. */
 function linkOf(n: Notification, slug: string, staff: boolean): string | null {
-  if (!staff && n.link_entity === "transparency_reports" && n.link_id) return `/sakin/${slug}/seffaflik/${n.link_id}`;
-  if (!staff || !n.link_entity) return null;
+  if (!staff) {
+    if (n.link_entity === "transparency_reports" && n.link_id) return `/sakin/${slug}/seffaflik/${n.link_id}`;
+    // announcement.ack_required: okuma onayı istenen duyuru
+    if (n.link_entity === "announcements" && n.link_id) return `/sakin/${slug}/duyurular/${n.link_id}`;
+    // package.received: kargo ve teslim kodu sakin ana sayfasında (bildirim metninde kod yok)
+    if (n.link_entity === "packages") return `/sakin/${slug}`;
+    if (n.link_entity === "requests") return `/sakin/${slug}/taleplerim`;
+    return null;
+  }
+  if (!n.link_entity) return null;
+  // request.assigned: talep atanan personele
+  if (n.link_entity === "requests" && n.link_id) return `/s/${slug}/talepler/${n.link_id}`;
   if (n.link_entity === "approval_requests" && n.link_id) return `/s/${slug}/onaylar/${n.link_id}`;
   if (n.link_entity === "approval_delegations") return `/s/${slug}/onaylar?sekme=devir`;
   return null;

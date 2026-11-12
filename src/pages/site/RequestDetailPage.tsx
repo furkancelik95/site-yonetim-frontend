@@ -24,6 +24,8 @@ export function RequestDetailPage() {
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const r = q.data;
+  // requests.assigned (teknik personel): kendi talebinde durum, yorum, iç not; atama/departman yok
+  const work = can(P.requestsAssign) || can(P.requestsAssigned);
   const CatIcon = categoryIcon(r.category);
   const catName = r.category_name || requestCategory(r.category);
 
@@ -44,7 +46,7 @@ export function RequestDetailPage() {
             <div className="kv"><span className="kv__k">Durum</span><span className="kv__v"><Badge tone={requestStatusTone(r.status)}>{r.status_label || requestStatus(r.status)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Öncelik</span><span className="kv__v"><Badge tone={priorityTone(r.priority)}>{requestPriority(r.priority)}</Badge></span></div>
             <div className="kv"><span className="kv__k">Bildiren</span><span className="kv__v">{r.reporter_name ?? r.created_by_name ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.reporter_name ?? r.created_by_name} size="sm" soft /><span>{r.reporter_name ?? r.created_by_name}</span></span> : "—"}</span></div>
-            <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} canAssign={can(P.requestsAssign)} /></span></div>
+            <div className="kv"><span className="kv__k">Departman</span><span className="kv__v"><DepartmentAssign requestId={r.id} current={r.department_id ?? null} currentName={r.department_name} canAssign={can(P.requestsAssign)} /></span></div>
             <div className="kv"><span className="kv__k">Atanan</span><span className="kv__v">{r.assigned_to ? <span className="cell-person" style={{ justifyContent: "flex-end" }}><Avatar name={r.assigned_to} size="sm" soft /><span>{r.assigned_to}</span></span> : "—"}</span></div>
             {r.due_at && <div className="kv"><span className="kv__k">Hedef</span><span className="kv__v">{formatDateTime(r.due_at)}</span></div>}
             <SlaCard s={r.sla} />
@@ -54,14 +56,14 @@ export function RequestDetailPage() {
         </div>
 
         <div className="stack">
-          {can(P.requestsAssign) && r.allowed_transitions.length > 0 && <StatusForm key={`${r.status}-${r.allowed_transitions.join()}`} r={r} />}
+          {work && r.allowed_transitions.length > 0 && <StatusForm key={`${r.status}-${r.allowed_transitions.join()}`} r={r} />}
           {can(P.requestsAssign) && !["closed", "cancelled"].includes(r.status) && <AssignForm r={r} />}
         </div>
       </div>
 
       <MergeCard r={r} />
       <ExtrasCard r={r} />
-      {can(P.requestsAssign) && <InternalNotes id={r.id} />}
+      {work && <InternalNotes id={r.id} />}
 
       <div className="card">
         <div className="card__head"><span className="card__icon card__icon--accent"><MessageSquare aria-hidden="true" /></span><span className="card__title">Geçmiş ve yanıtlar</span><span className="card__meta ml-auto">{r.events.length} hareket</span></div>
@@ -123,7 +125,7 @@ function StatusForm({ r }: { r: Detail }) {
         <Field label="Yeni durum">
           {(p) => <select {...p} className="field__input" value={status} onChange={(e) => setStatus(e.target.value as Detail["status"])}>{options.map((x) => <option key={x} value={x}>{requestStatus(x)}</option>)}</select>}
         </Field>
-        {r.status === "resolved" && r.reported_by_person_id && <p className="small muted mb-0">Sakin onayı bekleniyor; talep sakin onaylayınca ya da yanıt gelmezse kendiliğinden kapanır.</p>}
+        {r.status === "resolved" && r.channel === "resident" && <p className="small muted mb-0">Sakin onayı bekleniyor; talep sakin onaylayınca ya da yanıt gelmezse kendiliğinden kapanır.</p>}
         {/* Not yalnız Çözüldü (çözüm) ve İptal (gerekçe) için saklanır; diğer geçişlerde alan gösterilmez —
             ara not için "Yorum" ya da "İç not" kullanılır. */}
         {NEEDS_RESOLUTION.has(status) ? (
@@ -137,19 +139,54 @@ function StatusForm({ r }: { r: Detail }) {
   );
 }
 
+type Assignable = Schemas["AssignableOut"];
+
+/**
+ * Atama: varsayılan personel seçimi (`assignee_id`) — yalnız böyle atanan talep personelin listesine düşer.
+ * Firma / dış servis ikinci seçenek (`assignee`, serbest metin); hiçbir personelin listesine düşmez.
+ */
 function AssignForm({ r }: { r: Detail }) {
-  const [who, setWho] = useState(r.assigned_to ?? "");
-  const m = useSiteMutation<{ assignee: string }, Detail>("POST", `/requests/${r.id}/assign`);
+  const staff = useSiteGet<Assignable[]>("/requests/assignable-staff");
+  const byFirm = !r.assignee_id && !!r.assigned_to;
+  const [mode, setMode] = useState<"staff" | "firm">(byFirm ? "firm" : "staff");
+  const [staffId, setStaffId] = useState(r.assignee_id ?? "");
+  const [firm, setFirm] = useState(byFirm ? r.assigned_to ?? "" : "");
+  const m = useSiteMutation<Schemas["AssignIn"], Detail>("POST", `/requests/${r.id}/assign`);
+  const list = staff.data ?? [];
+  const unchanged = mode === "staff" ? !staffId || staffId === r.assignee_id : firm.trim().length < 2 || (byFirm && firm.trim() === r.assigned_to);
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    m.mutate(mode === "staff" ? { assignee_id: staffId } : { assignee: firm.trim() });
+  }
   return (
-    <form className="card" noValidate onSubmit={(e) => { e.preventDefault(); m.mutate({ assignee: who.trim() }); }}>
+    <form className="card" noValidate onSubmit={submit}>
       <div className="card__head"><span className="card__icon card__icon--accent"><UserCheck aria-hidden="true" /></span><span className="card__title">Ata</span></div>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
-        <Field label="Personel ya da firma" error={fieldError(m.error, "assignee")}>
-          {(p) => <input {...p} className="field__input" value={who} onChange={(e) => setWho(e.target.value)} placeholder="ör. Ergün Kılıç / Asansör Servis A.Ş." />}
-        </Field>
+        {mode === "staff" ? (
+          <>
+            <Field label="Personel" hint="Talep seçilen kişinin talep listesine düşer ve kendisine bildirim gider." error={fieldError(m.error, "assignee_id")}>
+              {(p) => (
+                <select {...p} className="field__input" value={staffId} disabled={staff.isPending || list.length === 0} onChange={(e) => setStaffId(e.target.value)}>
+                  <option value="">{staff.isPending ? "Yükleniyor…" : "Personel seçin"}</option>
+                  {list.map((x) => <option key={x.id} value={x.id}>{x.full_name}{x.roles.length > 0 && ` · ${x.roles.join(", ")}`}</option>)}
+                </select>
+              )}
+            </Field>
+            {staff.isError && <p className="small mb-0" role="alert">Personel listesi alınamadı. Sayfayı yenileyin ya da firma adıyla atayın.</p>}
+            {staff.data && list.length === 0 && <p className="small muted mb-0">Bu sitede talep işleyebilen personel yok. Site kullanıcılarından teknik personel ekleyin ya da firma adıyla atayın.</p>}
+            <div><button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode("firm")}>Firmaya ya da dış servise ata</button></div>
+          </>
+        ) : (
+          <>
+            <Field label="Firma ya da dış servis" required hint="Firmaya atanan talep hiçbir personelin listesine düşmez; takibi siz yaparsınız." error={fieldError(m.error, "assignee")}>
+              {(p) => <input {...p} className="field__input" maxLength={120} value={firm} onChange={(e) => setFirm(e.target.value)} placeholder="ör. Asansör Servis A.Ş." />}
+            </Field>
+            <div><button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode("staff")}>Personel listesinden seç</button></div>
+          </>
+        )}
       </div>
-      <div className="card__foot"><SubmitButton busy={m.isPending} className="btn" disabled={who.trim().length < 2 || who.trim() === r.assigned_to}>Ata</SubmitButton></div>
+      <div className="card__foot"><SubmitButton busy={m.isPending} className="btn" disabled={unchanged}>Ata</SubmitButton></div>
     </form>
   );
 }

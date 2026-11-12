@@ -3,14 +3,21 @@ import { Network, Pencil } from "lucide-react";
 import { useSiteGet, useSiteMutation } from "../../api/hooks";
 import type { Schemas } from "../../api/types";
 import { Badge, FormError, SubmitButton, fieldError } from "../../components/ui";
+import { P, useSite } from "../../site/SiteContext";
 
 export type Department = Schemas["DepartmentOut"];
 
-export const useDepartments = () => useSiteGet<Department[]>("/departments");
+/** Departman listesi `requests.read` ister; teknik personel (yalnız `requests.assigned`) için istek atılmaz. */
+export function useDepartments() {
+  const { can } = useSite();
+  return useSiteGet<Department[]>("/departments", undefined, { enabled: can(P.requestsRead) });
+}
 
 /** Liste ve panoda departmana göre süzme. */
 export function DepartmentFilter({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  const { can } = useSite();
   const d = useDepartments();
+  if (!can(P.requestsRead)) return null;
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>Departman</label>
@@ -23,10 +30,10 @@ export function DepartmentFilter({ id, value, onChange }: { id: string; value: s
 }
 
 /** Talep ayrıntısında departmana yönlendirme. */
-export function DepartmentAssign({ requestId, current, canAssign }: { requestId: string; current: string | null; canAssign: boolean }) {
+export function DepartmentAssign({ requestId, current, currentName, canAssign }: { requestId: string; current: string | null; currentName?: string | null; canAssign: boolean }) {
   const d = useDepartments();
   const m = useSiteMutation<{ department_id: string | null }, unknown>("POST", `/requests/${requestId}/department`);
-  const name = d.data?.find((x) => x.id === current)?.name;
+  const name = d.data?.find((x) => x.id === current)?.name ?? currentName;
   if (!canAssign) return <span>{name ?? "—"}</span>;
   return (
     <span className="row" style={{ gap: "var(--s-2)", justifyContent: "flex-end" }}>

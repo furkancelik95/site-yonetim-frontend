@@ -182,8 +182,8 @@ function TransferForm({ accounts, onDone }: { accounts: Account[]; onDone: () =>
       <div className="card__body stack" style={{ gap: "var(--s-3)" }}>
         <FormError error={m.error} />
         <div className="grid grid--kpi">
-          <Field label="Gönderen hesap">{(p) => <select {...p} className="field__input" value={f.from_id} onChange={up("from_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name} — {formatMoney(a.balance)}</option>)}</select>}</Field>
-          <Field label="Alan hesap" error={errs.to_id}>{(p) => <select {...p} className="field__input" value={f.to_id} onChange={up("to_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
+          <Field label="Gönderen hesap" error={fieldError(m.error, "from_id")}>{(p) => <select {...p} className="field__input" value={f.from_id} onChange={up("from_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name} — {formatMoney(a.balance)}</option>)}</select>}</Field>
+          <Field label="Alan hesap" error={errs.to_id ?? fieldError(m.error, "to_id")}>{(p) => <select {...p} className="field__input" value={f.to_id} onChange={up("to_id")}>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>}</Field>
           <Field label="Tutar (₺)" required error={errs.amount ?? fieldError(m.error, "amount")}>{(p) => <input {...p} className="field__input num" inputMode="decimal" value={f.amount} onChange={up("amount")} />}</Field>
           <Field label="Tarih">{(p) => <input {...p} className="field__input" type="date" value={f.date} onChange={up("date")} />}</Field>
           <Field label="Açıklama">{(p) => <input {...p} className="field__input" value={f.note} onChange={up("note")} />}</Field>
